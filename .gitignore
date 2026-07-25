@@ -1,0 +1,19 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+target/
+
+# Entorno — NUNCA commitear secretos
+.env
+.env.local
+*.local.properties
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.idea/
+*.iml

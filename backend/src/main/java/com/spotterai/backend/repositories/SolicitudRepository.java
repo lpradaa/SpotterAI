@@ -1,0 +1,27 @@
+package com.spotterai.backend.repositories;
+
+import com.spotterai.backend.models.Solicitud;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
+    
+    // 🔥 CORREGIDO: findFirstBy... evita el error 500 si hay solicitudes duplicadas por accidente
+    Optional<Solicitud> findFirstByEmisorIdAndReceptorId(Long emisorId, Long receptorId);
+
+    // Busca todas las solicitudes que ha recibido un usuario y que están en un estado concreto (ej: "PENDIENTE")
+    List<Solicitud> findByReceptorIdAndEstado(Long receptorId, String estado);
+    
+    // Busca todas las solicitudes aceptadas de un usuario (para saber quiénes son sus "Matches")
+    List<Solicitud> findByEmisorIdAndEstadoOrReceptorIdAndEstado(Long emisorId, String estado1, Long receptorId, String estado2);
+
+    // Búsqueda de solicitudes aceptadas por usuario
+    @Query("SELECT s FROM Solicitud s WHERE (s.emisor.id = :usuarioId OR s.receptor.id = :usuarioId) AND s.estado = 'ACEPTADA'")
+    List<Solicitud> findAceptadasPorUsuario(@Param("usuarioId") Long usuarioId);
+}

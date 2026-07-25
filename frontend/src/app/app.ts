@@ -7,8 +7,8 @@ import { Footer } from './components/footer/footer';
   selector: 'app-root',
   imports: [RouterOutlet, Header, Footer],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('FITCONNECT');
+  protected readonly title = signal('SpotterAI');
 }
