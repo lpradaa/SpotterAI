@@ -147,6 +147,27 @@
   white-space: nowrap;
 }
 
+/* Punto de mensajes sin leer. Va al final de la fila con margen automático para
+   que quede pegado al borde sea cual sea el largo del nombre. */
+.contacto__aviso {
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--sa-acento);
+  flex-shrink: 0;
+}
+
+.canal-caido {
+  margin: 0 0 $space-xs;
+  padding: 6px 10px;
+  border-radius: $radius-sm;
+  background: var(--sa-superficie-alt);
+  border: 1px solid var(--sa-borde);
+  color: var(--sa-texto-suave);
+  font-size: $text-xs;
+}
+
 /* ===================== Conversación ===================== */
 .conversacion {
   display: flex;

@@ -1,6 +1,8 @@
 package com.spotterai.backend.services;
 
 import com.spotterai.backend.dtos.SolicitudDTO;
+import com.spotterai.backend.eventos.CanalEventos;
+import com.spotterai.backend.eventos.TipoEvento;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.SolicitudRepository;
@@ -19,10 +21,13 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     private final SolicitudRepository solicitudRepository;
     private final UsuarioRepository usuarioRepository;
+    private final CanalEventos canalEventos;
 
-    public SolicitudServiceImpl(SolicitudRepository solicitudRepository, UsuarioRepository usuarioRepository) {
+    public SolicitudServiceImpl(SolicitudRepository solicitudRepository, UsuarioRepository usuarioRepository,
+                                CanalEventos canalEventos) {
         this.solicitudRepository = solicitudRepository;
         this.usuarioRepository = usuarioRepository;
+        this.canalEventos = canalEventos;
     }
 
     @Override
@@ -66,7 +71,14 @@ public class SolicitudServiceImpl implements SolicitudService {
         nueva.setEstado("PENDIENTE"); 
 
         Solicitud guardada = solicitudRepository.save(nueva);
-        return mapearADTO(guardada);
+        SolicitudDTO dto = mapearADTO(guardada);
+
+        // Esto es lo que de verdad se perdía sin tiempo real: una solicitud sin
+        // responder no se veía hasta recargar, y mientras tanto se pierde un
+        // compañero.
+        canalEventos.publicar(receptor.getId(), TipoEvento.SOLICITUD, dto);
+
+        return dto;
     }
 
     @Override
@@ -87,7 +99,12 @@ public class SolicitudServiceImpl implements SolicitudService {
 
         solicitud.setEstado(nuevoEstado);
         Solicitud actualizada = solicitudRepository.save(solicitud);
-        return mapearADTO(actualizada);
+        SolicitudDTO dto = mapearADTO(actualizada);
+
+        // Al emisor, que es quien está esperando respuesta.
+        canalEventos.publicar(solicitud.getEmisor().getId(), TipoEvento.SOLICITUD_RESPONDIDA, dto);
+
+        return dto;
     }
 
     @Override

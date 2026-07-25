@@ -7,6 +7,14 @@
       <span class="lista__contador">{{ conexiones.length }}</span>
     </header>
 
+    <!-- Solo cuando algo va mal. Si el canal está bien, no hay nada que decir:
+         el tiempo real que se nota es el que no se anuncia. -->
+    @if (estadoCanal() !== 'conectado') {
+      <p class="canal-caido" role="status">
+        Sin conexión en directo. Reintentando…
+      </p>
+    }
+
     <label class="buscador">
       <span class="visually-hidden">Buscar compañero</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -30,6 +38,11 @@
                     (click)="abrirChat(solicitud)">
               <app-avatar [nombre]="nombreODeId(solicitud).nombre" [tamano]="34" />
               <span class="contacto__nombre">{{ nombreODeId(solicitud).nombre }}</span>
+              @if (noLeidos.has(nombreODeId(solicitud).id)) {
+                <span class="contacto__aviso" title="Mensajes sin leer">
+                  <span class="visually-hidden">Mensajes sin leer</span>
+                </span>
+              }
             </button>
           </li>
         }

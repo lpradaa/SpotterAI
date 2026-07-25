@@ -43,6 +43,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Permitimos el login, el registro y la ruta de /error sin necesidad de token
                 .requestMatchers("/api/auth/**", "/api/usuarios/registro", "/error").permitAll()
+
+                // El canal de eventos no puede pasar por el filtro JWT: EventSource
+                // no permite mandar cabeceras. Se autentica con un ticket de un solo
+                // uso que se pide antes con el token (ver TicketsSse).
+                .requestMatchers("/api/eventos/suscribir").permitAll()
                 
                 // 🔥 MODIFICADO: Añadimos explícitamente /api/gimnasios a las rutas que requieren estar logueado
                 .requestMatchers("/api/usuarios/**", "/api/gimnasios/**").authenticated() 

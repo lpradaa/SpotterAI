@@ -1,8 +1,10 @@
-import { Component, signal, computed, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, signal, computed, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UsuarioService, Match, ExplicacionMatch } from '../../services/usuario.service';
+import { EventosService } from '../../services/eventos.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
 
@@ -17,6 +19,8 @@ export class DashboardComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private eventos = inject(EventosService);
+  private destroyRef = inject(DestroyRef);
 
   userName = signal(localStorage.getItem('usuario_nombre') || 'Usuario');
 
@@ -81,6 +85,35 @@ export class DashboardComponent implements OnInit {
     this.cargarSolicitudesPendientes();
     this.cargarGimnasios();
     this.cargarMiPerfil();
+    this.escucharEventos();
+  }
+
+  /**
+   * Esto es lo que más se echaba en falta: una solicitud sin responder no se veía
+   * hasta recargar la página, y mientras tanto se pierde un compañero.
+   */
+  private escucharEventos(): void {
+    this.eventos.solicitudes
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(solicitud => {
+        this.solicitudesPendientes = [solicitud, ...this.solicitudesPendientes];
+        this.mostrarToast(`${solicitud.emisorNombre} quiere entrenar contigo.`, 'success');
+        this.cdr.detectChanges();
+      });
+
+    this.eventos.respuestas
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(solicitud => {
+        const aceptada = solicitud.estado === 'ACEPTADA';
+        this.mostrarToast(
+          aceptada
+            ? `${solicitud.receptorNombre} ha aceptado tu solicitud.`
+            : `${solicitud.receptorNombre} ha rechazado tu solicitud.`,
+          aceptada ? 'success' : 'error'
+        );
+        // Cambia si el candidato pasa a conectado o vuelve a estar disponible.
+        this.cargarMatches();
+      });
   }
 
   private cargarMiPerfil(): void {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { EventosService } from '../../services/eventos.service';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +15,7 @@ import { AuthService } from '../../services/auth.service';
 export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private eventos = inject(EventosService);
 
   // 🔄 Interruptor de modo (Login vs Registro)
   isLoginMode = true;
@@ -57,6 +59,9 @@ export class LoginComponent {
       next: (response) => {
         console.log('¡Login correcto! Token guardado de forma segura.');
         this.isLoading.set(false);
+        // Ahora sí hay token: el canal de eventos ya puede abrirse. En el
+        // arranque de la app no pudo, porque aún no habíamos entrado.
+        this.eventos.conectar();
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {

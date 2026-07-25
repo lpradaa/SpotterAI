@@ -2,6 +2,7 @@ import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { TemaService } from '../../services/tema.service';
+import { EventosService } from '../../services/eventos.service';
 
 @Component({
   selector: 'app-header',
@@ -17,6 +18,7 @@ export class Header implements OnInit {
   // Inyectamos el router para poder redirigir al login
   private router = inject(Router);
   private tema = inject(TemaService);
+  private eventos = inject(EventosService);
 
   temaActual = this.tema.tema;
 
@@ -49,8 +51,12 @@ export class Header implements OnInit {
 
   // 🔥 NUEVO: Función real para cerrar sesión
   cerrarSesion() {
+    // 0. Cerramos el canal de eventos antes de borrar el token: si no, seguiría
+    //    reintentando conectar en bucle contra un backend que ya nos rechaza.
+    this.eventos.desconectar();
+
     // 1. Borramos el token y todos los datos de sesión del navegador
-    localStorage.clear(); 
+    localStorage.clear();
     
     // 2. Cerramos el panel y actualizamos el estado
     this.isLoggedIn.set(false);

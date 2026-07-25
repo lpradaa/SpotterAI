@@ -1,6 +1,8 @@
 package com.spotterai.backend.services;
 
 import com.spotterai.backend.dtos.MensajeDTO;
+import com.spotterai.backend.eventos.CanalEventos;
+import com.spotterai.backend.eventos.TipoEvento;
 import com.spotterai.backend.models.Mensaje;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.models.Solicitud;
@@ -18,11 +20,14 @@ public class MensajeServiceImpl implements MensajeService {
     private final MensajeRepository mensajeRepository;
     private final UsuarioRepository usuarioRepository;
     private final SolicitudRepository solicitudRepository; // Necesario para comprobar el Match
+    private final CanalEventos canalEventos;
 
-    public MensajeServiceImpl(MensajeRepository mensajeRepository, UsuarioRepository usuarioRepository, SolicitudRepository solicitudRepository) {
+    public MensajeServiceImpl(MensajeRepository mensajeRepository, UsuarioRepository usuarioRepository,
+                              SolicitudRepository solicitudRepository, CanalEventos canalEventos) {
         this.mensajeRepository = mensajeRepository;
         this.usuarioRepository = usuarioRepository;
         this.solicitudRepository = solicitudRepository;
+        this.canalEventos = canalEventos;
     }
 
     @Override
@@ -53,7 +58,14 @@ public class MensajeServiceImpl implements MensajeService {
         mensaje.setContenido(contenido);
 
         Mensaje guardado = mensajeRepository.save(mensaje);
-        return mapearADTO(guardado);
+        MensajeDTO dto = mapearADTO(guardado);
+
+        // El evento lleva el mensaje entero, no un aviso de "tienes algo nuevo".
+        // Así el receptor lo pinta directamente y no hay que volver a pedir el
+        // historial, que además podría llegar antes de que la fila sea visible.
+        canalEventos.publicar(receptor.getId(), TipoEvento.MENSAJE, dto);
+
+        return dto;
     }
 
     @Override
