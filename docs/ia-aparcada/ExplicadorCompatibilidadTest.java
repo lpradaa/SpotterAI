@@ -11,13 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Lo que se comprueba aqui es que la explicacion solo diga cosas que la
- * puntuacion respalda: ni factores que no sumaron, ni huecos de datos disfrazados
- * de motivo.
+ * Cubre el comportamiento del explicador que no depende de la API: el resumen que
+ * se le envia al modelo y la explicacion de respaldo cuando no hay clave.
  */
 class ExplicadorCompatibilidadTest {
 
-    private final ExplicadorCompatibilidad explicador = new ExplicadorCompatibilidad();
+    /** Sin clave configurada, el explicador nunca intenta llamar a la API. */
+    private final ExplicadorCompatibilidad explicador = new ExplicadorCompatibilidad("");
 
     private static PuntuacionCompatibilidad puntuacionConSolape() {
         return new PuntuacionCompatibilidad(
@@ -40,8 +40,8 @@ class ExplicadorCompatibilidadTest {
     }
 
     @Test
-    @DisplayName("El titular lleva el nombre y la puntuacion")
-    void titularConNombreYPuntuacion() {
+    @DisplayName("Sin clave de API se devuelve la explicacion de respaldo, no una excepcion")
+    void respaldoSinClave() {
         ExplicacionMatch e = explicador.explicar("Marta", puntuacionConSolape());
 
         assertTrue(e.titular().contains("Marta"));
@@ -50,8 +50,8 @@ class ExplicadorCompatibilidadTest {
     }
 
     @Test
-    @DisplayName("Solo se mencionan factores que aportaron puntos")
-    void omiteFactoresACero() {
+    @DisplayName("El respaldo solo menciona factores que aportaron puntos")
+    void respaldoOmiteFactoresACero() {
         ExplicacionMatch e = explicador.explicar("Marta", puntuacionConSolape());
 
         assertTrue(e.motivo().contains("Coincidís 4 horas"));
@@ -59,8 +59,8 @@ class ExplicadorCompatibilidadTest {
     }
 
     @Test
-    @DisplayName("Sin ningun factor positivo se sigue diciendo algo util")
-    void sinFactoresPositivos() {
+    @DisplayName("Sin ningun factor positivo el respaldo sigue diciendo algo util")
+    void respaldoSinFactoresPositivos() {
         PuntuacionCompatibilidad cero = new PuntuacionCompatibilidad(
                 0,
                 List.of(FactorCompatibilidad.evaluado("horario", 0, 40, "Vuestros horarios no coinciden")),
@@ -74,7 +74,7 @@ class ExplicadorCompatibilidadTest {
 
     @Test
     @DisplayName("Un factor sin datos no se cuela en la explicacion como si fuera un motivo")
-    void ignoraLosFactoresSinDatos() {
+    void respaldoIgnoraLosFactoresSinDatos() {
         PuntuacionCompatibilidad incompleta = new PuntuacionCompatibilidad(
                 100,
                 List.of(FactorCompatibilidad.evaluado("nivel", 100, 100, "Los dos entrenáis a nivel intermedio"),
@@ -85,6 +85,32 @@ class ExplicadorCompatibilidadTest {
 
         assertTrue(e.motivo().contains("nivel intermedio"));
         assertFalse(e.motivo().contains("Faltan los horarios"));
+    }
+
+    @Test
+    @DisplayName("El resumen enviado al modelo incluye total, desglose y franjas exactas")
+    void resumenParaElModelo() {
+        String resumen = explicador.construirResumen("Marta", puntuacionConSolape());
+
+        assertTrue(resumen.contains("Marta"));
+        assertTrue(resumen.contains("88 sobre 100"));
+        assertTrue(resumen.contains("Compatibilidad excelente"));
+        assertTrue(resumen.contains("horario: 36 de 40 puntos"));
+        assertTrue(resumen.contains("Martes 19:00-21:00"));
+    }
+
+    @Test
+    @DisplayName("Si no hay solape el resumen lo dice explicitamente")
+    void resumenSinSolape() {
+        PuntuacionCompatibilidad sinSolape = new PuntuacionCompatibilidad(
+                35,
+                List.of(FactorCompatibilidad.evaluado("nivel", 20, 20, "Mismo nivel"),
+                        FactorCompatibilidad.evaluado("gimnasio", 15, 15, "Mismo gimnasio")),
+                SolapeHorario.NINGUNO);
+
+        String resumen = explicador.construirResumen("Marta", sinSolape);
+
+        assertTrue(resumen.contains("No hay ninguna franja horaria en comun"));
     }
 
     @Test

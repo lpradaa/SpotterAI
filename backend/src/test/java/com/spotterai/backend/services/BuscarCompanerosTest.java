@@ -55,7 +55,7 @@ class BuscarCompanerosTest {
                 Mockito.mock(GimnasioRepository.class),
                 solicitudRepository,
                 disponibilidadRepository,
-                new ExplicadorCompatibilidad("")); // sin clave: nunca llama a la API
+                new ExplicadorCompatibilidad());
 
         gimnasio = new Gimnasio();
         gimnasio.setId(1L);

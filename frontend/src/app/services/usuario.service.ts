@@ -60,7 +60,7 @@ export class UsuarioService {
   private readonly entrenamientos = 'http://localhost:8080/api/entrenamientos';
   private readonly gimnasios = 'http://localhost:8080/api/gimnasios';
 
-  /** Candidatos puntuados y ordenados por compatibilidad. Sin coste de IA. */
+  /** Candidatos puntuados y ordenados por compatibilidad. */
   getMatches(): Observable<Match[]> {
     return this.http.get<Match[]>(`${this.usuarios}/matches`);
   }

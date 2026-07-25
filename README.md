@@ -42,7 +42,9 @@ El emparejamiento tiene dos capas, deliberadamente separadas:
 | Gimnasio | 15 |
 | Edad | 5 |
 
-**2. Explicación con IA** (`matching/ExplicadorCompatibilidad`) — Claude recibe el desglose ya calculado y lo redacta. **No puntúa**: así la nota sigue siendo auditable y el texto nunca puede contradecirla. Sin clave de API, la app funciona igual con una redacción más seca.
+**2. Explicación** (`matching/ExplicadorCompatibilidad`) — hila los textos que ya trae cada factor, sin inventar nada. Solo menciona factores que sumaron puntos, así que la explicación nunca puede contradecir a la nota que acompaña.
+
+> Hubo una versión que pasaba este desglose por la API de Claude para darle mejor prosa. Está aparcada en [`docs/ia-aparcada/`](docs/ia-aparcada/) con el motivo y las instrucciones para devolverla.
 
 ---
 
@@ -61,7 +63,6 @@ Variables de entorno del backend:
 | Variable | Obligatoria | Para qué |
 |---|---|---|
 | `JWT_SECRET` | Sí | Firma de tokens. Mínimo 32 caracteres — la app no arranca sin ella. |
-| `ANTHROPIC_API_KEY` | No | Explicaciones de compatibilidad redactadas. Sin ella se usa el texto determinista. |
 | `DB_USER`, `DB_PASSWORD`, `DB_NAME` | No | Por defecto `root` / vacía / `spotterai_db`. |
 | `FRONTEND_ORIGIN` | No | Por defecto `http://localhost:4200`. |
 
