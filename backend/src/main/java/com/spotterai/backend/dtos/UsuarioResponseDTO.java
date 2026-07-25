@@ -1,5 +1,7 @@
 package com.spotterai.backend.dtos;
 
+import java.util.List;
+
 public class UsuarioResponseDTO {
     private Long id;
     private String nombre;
@@ -19,6 +21,13 @@ public class UsuarioResponseDTO {
 
     private Boolean yaConectado = false;
     private Boolean solicitudPendiente = false;
+
+    // --- Compatibilidad (solo se rellena en los endpoints de match) ---
+    private Integer compatibilidad;          // 0-100
+    private String etiquetaCompatibilidad;   // "Muy compatibles"
+    private String resumenCompatibilidad;    // motivo principal, ya legible
+    private List<String> diasEnComun;        // dias con solape horario real
+    private Integer minutosEnComun;          // minutos semanales de solape
 
     // Constructor básico (usado en el registro)
     public UsuarioResponseDTO(Long id, String nombre, String email, Integer edad, String genero, Float peso) {
@@ -93,4 +102,19 @@ public class UsuarioResponseDTO {
     
     public String getGimnasioNombre() { return gimnasioNombre; }
     public void setGimnasioNombre(String gimnasioNombre) { this.gimnasioNombre = gimnasioNombre; }
+
+    public Integer getCompatibilidad() { return compatibilidad; }
+    public void setCompatibilidad(Integer compatibilidad) { this.compatibilidad = compatibilidad; }
+
+    public String getEtiquetaCompatibilidad() { return etiquetaCompatibilidad; }
+    public void setEtiquetaCompatibilidad(String etiquetaCompatibilidad) { this.etiquetaCompatibilidad = etiquetaCompatibilidad; }
+
+    public String getResumenCompatibilidad() { return resumenCompatibilidad; }
+    public void setResumenCompatibilidad(String resumenCompatibilidad) { this.resumenCompatibilidad = resumenCompatibilidad; }
+
+    public List<String> getDiasEnComun() { return diasEnComun; }
+    public void setDiasEnComun(List<String> diasEnComun) { this.diasEnComun = diasEnComun; }
+
+    public Integer getMinutosEnComun() { return minutosEnComun; }
+    public void setMinutosEnComun(Integer minutosEnComun) { this.minutosEnComun = minutosEnComun; }
 }

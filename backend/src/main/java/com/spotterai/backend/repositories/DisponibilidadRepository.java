@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -14,6 +15,10 @@ public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, 
     
     // Devuelve todos los horarios de un usuario concreto
     List<Disponibilidad> findByUsuarioId(Long usuarioId);
+
+    // Trae de una sola consulta los horarios de todos los candidatos a match.
+    // Evita el N+1 de pedirlos usuario por usuario al puntuar la lista.
+    List<Disponibilidad> findByUsuarioIdIn(Collection<Long> usuarioIds);
 
     // Devuelve quiénes entrenan un día concreto de la semana
     List<Disponibilidad> findByDiaSemanaIgnoreCase(String diaSemana);

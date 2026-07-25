@@ -24,4 +24,10 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
     // Búsqueda de solicitudes aceptadas por usuario
     @Query("SELECT s FROM Solicitud s WHERE (s.emisor.id = :usuarioId OR s.receptor.id = :usuarioId) AND s.estado = 'ACEPTADA'")
     List<Solicitud> findAceptadasPorUsuario(@Param("usuarioId") Long usuarioId);
+
+    // Todas las solicitudes en las que participa el usuario, en cualquier estado y
+    // direccion. Se carga una vez y se indexa en memoria para saber el estado de
+    // cada candidato sin lanzar dos consultas por candidato.
+    @Query("SELECT s FROM Solicitud s WHERE s.emisor.id = :usuarioId OR s.receptor.id = :usuarioId")
+    List<Solicitud> findTodasPorUsuario(@Param("usuarioId") Long usuarioId);
 }

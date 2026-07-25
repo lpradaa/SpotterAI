@@ -3,6 +3,10 @@ package com.spotterai.backend.services;
 import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.dtos.UsuarioRegistroDTO;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
+import com.spotterai.backend.matching.CalculadoraCompatibilidad;
+import com.spotterai.backend.matching.ExplicacionMatch;
+import com.spotterai.backend.matching.ExplicadorCompatibilidad;
+import com.spotterai.backend.matching.PuntuacionCompatibilidad;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Solicitud;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,13 +36,18 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final GimnasioRepository gimnasioRepository;
     private final SolicitudRepository solicitudRepository;
     private final DisponibilidadRepository disponibilidadRepository;
+    private final ExplicadorCompatibilidad explicador;
 
-    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, GimnasioRepository gimnasioRepository, SolicitudRepository solicitudRepository, DisponibilidadRepository disponibilidadRepository) {
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+                              GimnasioRepository gimnasioRepository, SolicitudRepository solicitudRepository,
+                              DisponibilidadRepository disponibilidadRepository,
+                              ExplicadorCompatibilidad explicador) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.gimnasioRepository = gimnasioRepository;
         this.solicitudRepository = solicitudRepository;
         this.disponibilidadRepository = disponibilidadRepository;
+        this.explicador = explicador;
     }
 
     @Override
@@ -146,32 +156,113 @@ public class UsuarioServiceImpl implements UsuarioService {
         return perfil;
     }
 
+    /**
+     * Puntua a todos los candidatos y los devuelve ordenados de mayor a menor
+     * compatibilidad.
+     *
+     * <p>Sustituye al filtro binario original (mismo gimnasio Y mismo nivel), que
+     * descartaba de golpe a cualquiera que no encajara exactamente e ignoraba por
+     * completo los horarios. Ahora el gimnasio y el nivel son factores que suman,
+     * no requisitos que excluyen, asi que un usuario sin gimnasio ya no revienta
+     * la pantalla: simplemente pierde esos puntos.
+     *
+     * <p>Cuatro consultas fijas, independientemente del numero de candidatos.
+     */
     @Override
     public List<UsuarioResponseDTO> buscarCompañeros(String email) {
-        Usuario miUsuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        List<Usuario> matches = usuarioRepository.buscarMatches(miUsuario.getGimnasio().getId(), miUsuario.getId(), miUsuario.getNivel());
+        Usuario miUsuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        return matches.stream().map(u -> {
-            // 🔥 EXTRAE EL NOMBRE DEL GIMNASIO AQUÍ
-            UsuarioResponseDTO dto = new UsuarioResponseDTO(
-                u.getId(), u.getNombre(), u.getEmail(), 
-                u.getEdad(), u.getGenero(), u.getPeso(), 
-                u.getNivel(), u.getObjetivos(), 
+        List<Usuario> candidatos = usuarioRepository.findByIdNot(miUsuario.getId());
+        if (candidatos.isEmpty()) return List.of();
+
+        List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(miUsuario.getId());
+        Map<Long, List<Disponibilidad>> horariosAjenos = cargarHorariosDe(candidatos);
+        Map<Long, String> estadoPorCompanero = indexarSolicitudes(miUsuario.getId());
+
+        return candidatos.stream()
+                .map(candidato -> {
+                    PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
+                            miUsuario, misHorarios,
+                            candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of()));
+                    return construirDtoDeMatch(candidato, puntuacion,
+                            estadoPorCompanero.get(candidato.getId()));
+                })
+                .sorted(Comparator.comparingInt(UsuarioResponseDTO::getCompatibilidad).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ExplicacionMatch explicarMatch(String email, Long otroUsuarioId) {
+        Usuario miUsuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        Usuario otro = usuarioRepository.findById(otroUsuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario sugerido no existe"));
+
+        if (miUsuario.getId().equals(otro.getId())) {
+            throw new IllegalArgumentException("No puedes pedir la compatibilidad contigo mismo.");
+        }
+
+        PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
+                miUsuario, disponibilidadRepository.findByUsuarioId(miUsuario.getId()),
+                otro, disponibilidadRepository.findByUsuarioId(otro.getId()));
+
+        return explicador.explicar(otro.getNombre(), puntuacion);
+    }
+
+    /** Una sola consulta para los horarios de todos los candidatos, agrupados por usuario. */
+    private Map<Long, List<Disponibilidad>> cargarHorariosDe(List<Usuario> candidatos) {
+        List<Long> ids = candidatos.stream().map(Usuario::getId).toList();
+        return disponibilidadRepository.findByUsuarioIdIn(ids).stream()
+                .filter(d -> d.getUsuario() != null)
+                .collect(Collectors.groupingBy(d -> d.getUsuario().getId()));
+    }
+
+    /**
+     * Indexa en memoria el estado de la solicitud frente a cada companero, en
+     * cualquiera de las dos direcciones. Antes esto costaba dos consultas por
+     * candidato.
+     */
+    private Map<Long, String> indexarSolicitudes(Long miId) {
+        Map<Long, String> porCompanero = new HashMap<>();
+        for (Solicitud s : solicitudRepository.findTodasPorUsuario(miId)) {
+            Long idCompanero = s.getEmisor().getId().equals(miId)
+                    ? s.getReceptor().getId()
+                    : s.getEmisor().getId();
+            // Si hubiera varias entre los mismos usuarios, ACEPTADA manda sobre el resto
+            porCompanero.merge(idCompanero, s.getEstado(),
+                    (previo, nuevo) -> "ACEPTADA".equals(previo) ? previo : nuevo);
+        }
+        return porCompanero;
+    }
+
+    private UsuarioResponseDTO construirDtoDeMatch(Usuario u, PuntuacionCompatibilidad puntuacion, String estadoSolicitud) {
+        UsuarioResponseDTO dto = aDTO(u);
+
+        dto.setCompatibilidad(puntuacion.total());
+        dto.setEtiquetaCompatibilidad(puntuacion.etiqueta());
+        dto.setResumenCompatibilidad(puntuacion.factorDominante().detalle());
+        dto.setDiasEnComun(puntuacion.solape().dias());
+        dto.setMinutosEnComun(puntuacion.solape().minutosSemanales());
+
+        // Los flags eran codigo muerto: la query anterior ya excluia a quien tuviera
+        // solicitud, asi que nunca podian ser true. Ahora los candidatos vienen todos
+        // y estos valores deciden si la tarjeta ofrece "Conectar" o "Chatear".
+        dto.setYaConectado("ACEPTADA".equals(estadoSolicitud));
+        dto.setSolicitudPendiente("PENDIENTE".equals(estadoSolicitud));
+
+        return dto;
+    }
+
+    /** Mapeo comun de entidad a DTO, para no repetir el constructor de 12 argumentos. */
+    private UsuarioResponseDTO aDTO(Usuario u) {
+        return new UsuarioResponseDTO(
+                u.getId(), u.getNombre(), u.getEmail(),
+                u.getEdad(), u.getGenero(), u.getPeso(),
+                u.getNivel(), u.getObjetivos(),
                 u.getGimnasio() != null ? u.getGimnasio().getId() : null,
                 u.getAvatar(), u.getBiografia(),
-                u.getGimnasio() != null ? u.getGimnasio().getNombre() : "Gimnasio Habitual"
-            );
-            
-            Optional<Solicitud> ida = solicitudRepository.findFirstByEmisorIdAndReceptorId(miUsuario.getId(), u.getId());
-            Optional<Solicitud> vuelta = solicitudRepository.findFirstByEmisorIdAndReceptorId(u.getId(), miUsuario.getId());
-            Solicitud sol = ida.orElse(vuelta.orElse(null));
-            
-            if (sol != null) {
-                dto.setYaConectado("ACEPTADA".equals(sol.getEstado()));
-                dto.setSolicitudPendiente("PENDIENTE".equals(sol.getEstado()));
-            }
-            return dto;
-        }).collect(Collectors.toList());
+                u.getGimnasio() != null ? u.getGimnasio().getNombre() : "Gimnasio Habitual");
     }
 
     @Override

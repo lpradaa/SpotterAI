@@ -108,6 +108,26 @@ public class UsuarioController {
     }
 
     /**
+     * Explicacion redactada de por que encajas con un usuario concreto.
+     * GET /api/usuarios/matches/{id}/explicacion
+     *
+     * <p>Va aparte de la lista a proposito: redactar cuesta una llamada al modelo,
+     * asi que se paga solo cuando el usuario abre una ficha, no en cada carga del
+     * dashboard.
+     */
+    @GetMapping("/matches/{id}/explicacion")
+    public ResponseEntity<?> explicarMatch(@PathVariable Long id) {
+        try {
+            String emailLogueado = SecurityContextHolder.getContext().getAuthentication().getName();
+            return ResponseEntity.ok(usuarioService.explicarMatch(emailLogueado, id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al generar la explicación del match.");
+        }
+    }
+
+    /**
      * 🔥 NUEVO: Explorar Comunidad (Modo Tinder)
      * GET http://localhost:8080/api/usuarios/explorar
      */

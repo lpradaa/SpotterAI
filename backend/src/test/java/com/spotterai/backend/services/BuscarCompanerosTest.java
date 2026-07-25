@@ -1,0 +1,192 @@
+package com.spotterai.backend.services;
+
+import com.spotterai.backend.dtos.UsuarioResponseDTO;
+import com.spotterai.backend.matching.ExplicadorCompatibilidad;
+import com.spotterai.backend.models.Disponibilidad;
+import com.spotterai.backend.models.Gimnasio;
+import com.spotterai.backend.models.Solicitud;
+import com.spotterai.backend.models.Usuario;
+import com.spotterai.backend.repositories.DisponibilidadRepository;
+import com.spotterai.backend.repositories.GimnasioRepository;
+import com.spotterai.backend.repositories.SolicitudRepository;
+import com.spotterai.backend.repositories.UsuarioRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * Comportamiento del emparejamiento a nivel de servicio: orden por compatibilidad,
+ * estado de la solicitud y numero de consultas.
+ */
+class BuscarCompanerosTest {
+
+    private UsuarioRepository usuarioRepository;
+    private DisponibilidadRepository disponibilidadRepository;
+    private SolicitudRepository solicitudRepository;
+    private UsuarioServiceImpl servicio;
+
+    private Gimnasio gimnasio;
+    private Usuario yo;
+
+    @BeforeEach
+    void preparar() {
+        usuarioRepository = Mockito.mock(UsuarioRepository.class);
+        disponibilidadRepository = Mockito.mock(DisponibilidadRepository.class);
+        solicitudRepository = Mockito.mock(SolicitudRepository.class);
+
+        servicio = new UsuarioServiceImpl(
+                usuarioRepository,
+                Mockito.mock(PasswordEncoder.class),
+                Mockito.mock(GimnasioRepository.class),
+                solicitudRepository,
+                disponibilidadRepository,
+                new ExplicadorCompatibilidad("")); // sin clave: nunca llama a la API
+
+        gimnasio = new Gimnasio();
+        gimnasio.setId(1L);
+        gimnasio.setNombre("McFit Centro");
+
+        yo = usuario(1L, "Luis", "Intermedio", "Hipertrofia", 28, gimnasio);
+        when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));
+        when(solicitudRepository.findTodasPorUsuario(anyLong())).thenReturn(List.of());
+    }
+
+    private static Usuario usuario(Long id, String nombre, String nivel, String objetivo,
+                                   Integer edad, Gimnasio gimnasio) {
+        Usuario u = new Usuario();
+        u.setId(id);
+        u.setNombre(nombre);
+        u.setEmail(nombre.toLowerCase() + "@test.com");
+        u.setNivel(nivel);
+        u.setObjetivos(objetivo);
+        u.setEdad(edad);
+        u.setGimnasio(gimnasio);
+        return u;
+    }
+
+    private static Disponibilidad franja(Usuario u, String dia, String inicio, String fin) {
+        return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), u);
+    }
+
+    @Test
+    @DisplayName("Los candidatos salen ordenados de mayor a menor compatibilidad")
+    void ordenaPorCompatibilidad() {
+        Usuario coincide = usuario(2L, "Marta", "Intermedio", "Hipertrofia", 29, gimnasio);
+        Usuario noCoincide = usuario(3L, "Ana", "Avanzado", "Resistencia", 45, gimnasio);
+
+        when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of(noCoincide, coincide));
+        when(disponibilidadRepository.findByUsuarioId(1L))
+                .thenReturn(List.of(franja(yo, "Lunes", "18:00", "20:00")));
+        when(disponibilidadRepository.findByUsuarioIdIn(any()))
+                .thenReturn(List.of(
+                        franja(coincide, "Lunes", "18:00", "20:00"),   // solapa entero
+                        franja(noCoincide, "Domingo", "08:00", "10:00"))); // no solapa
+
+        List<UsuarioResponseDTO> resultado = servicio.buscarCompañeros("luis@test.com");
+
+        assertEquals(2, resultado.size());
+        assertEquals("Marta", resultado.get(0).getNombre());
+        assertTrue(resultado.get(0).getCompatibilidad() > resultado.get(1).getCompatibilidad());
+        assertEquals(List.of("Lunes"), resultado.get(0).getDiasEnComun());
+        assertEquals(120, resultado.get(0).getMinutosEnComun());
+    }
+
+    @Test
+    @DisplayName("Un usuario sin gimnasio ya no revienta: solo pierde esos puntos")
+    void sinGimnasioNoLanzaExcepcion() {
+        Usuario sinGimnasio = usuario(1L, "Luis", "Intermedio", "Hipertrofia", 28, null);
+        when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(sinGimnasio));
+        when(usuarioRepository.findByIdNot(1L))
+                .thenReturn(List.of(usuario(2L, "Marta", "Intermedio", "Hipertrofia", 29, gimnasio)));
+        when(disponibilidadRepository.findByUsuarioId(1L)).thenReturn(List.of());
+        when(disponibilidadRepository.findByUsuarioIdIn(any())).thenReturn(List.of());
+
+        List<UsuarioResponseDTO> resultado = servicio.buscarCompañeros("luis@test.com");
+
+        assertEquals(1, resultado.size());
+        // 20 nivel + 20 objetivo + 5 edad; pierde horario y gimnasio
+        assertEquals(45, resultado.get(0).getCompatibilidad());
+    }
+
+    @Test
+    @DisplayName("El estado de la solicitud llega al DTO en ambas direcciones")
+    void reflejaEstadoDeLaSolicitud() {
+        Usuario aceptado = usuario(2L, "Marta", "Intermedio", "Hipertrofia", 29, gimnasio);
+        Usuario pendiente = usuario(3L, "Ana", "Intermedio", "Hipertrofia", 29, gimnasio);
+
+        when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of(aceptado, pendiente));
+        when(disponibilidadRepository.findByUsuarioId(1L)).thenReturn(List.of());
+        when(disponibilidadRepository.findByUsuarioIdIn(any())).thenReturn(List.of());
+
+        Solicitud ida = new Solicitud();       // yo -> Marta
+        ida.setEmisor(yo);
+        ida.setReceptor(aceptado);
+        ida.setEstado("ACEPTADA");
+
+        Solicitud vuelta = new Solicitud();    // Ana -> yo
+        vuelta.setEmisor(pendiente);
+        vuelta.setReceptor(yo);
+        vuelta.setEstado("PENDIENTE");
+
+        when(solicitudRepository.findTodasPorUsuario(1L)).thenReturn(List.of(ida, vuelta));
+
+        List<UsuarioResponseDTO> resultado = servicio.buscarCompañeros("luis@test.com");
+
+        UsuarioResponseDTO marta = resultado.stream()
+                .filter(d -> d.getNombre().equals("Marta")).findFirst().orElseThrow();
+        UsuarioResponseDTO ana = resultado.stream()
+                .filter(d -> d.getNombre().equals("Ana")).findFirst().orElseThrow();
+
+        assertTrue(marta.getYaConectado());
+        assertFalse(marta.getSolicitudPendiente());
+        assertFalse(ana.getYaConectado());
+        assertTrue(ana.getSolicitudPendiente());
+    }
+
+    @Test
+    @DisplayName("El numero de consultas no crece con el numero de candidatos")
+    void sinConsultasPorCandidato() {
+        List<Usuario> muchos = List.of(
+                usuario(2L, "A", "Intermedio", "Fuerza", 30, gimnasio),
+                usuario(3L, "B", "Intermedio", "Fuerza", 30, gimnasio),
+                usuario(4L, "C", "Intermedio", "Fuerza", 30, gimnasio),
+                usuario(5L, "D", "Intermedio", "Fuerza", 30, gimnasio));
+
+        when(usuarioRepository.findByIdNot(1L)).thenReturn(muchos);
+        when(disponibilidadRepository.findByUsuarioId(1L)).thenReturn(List.of());
+        when(disponibilidadRepository.findByUsuarioIdIn(any())).thenReturn(List.of());
+
+        servicio.buscarCompañeros("luis@test.com");
+
+        // Una sola consulta agrupada de horarios y una de solicitudes, con 4 candidatos.
+        verify(disponibilidadRepository, times(1)).findByUsuarioIdIn(any());
+        verify(solicitudRepository, times(1)).findTodasPorUsuario(1L);
+        // El metodo antiguo lanzaba dos consultas por candidato; ya no se usa.
+        verify(solicitudRepository, Mockito.never())
+                .findFirstByEmisorIdAndReceptorId(anyLong(), anyLong());
+    }
+
+    @Test
+    @DisplayName("Sin candidatos se devuelve lista vacia sin tocar la base de datos")
+    void sinCandidatos() {
+        when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of());
+
+        assertTrue(servicio.buscarCompañeros("luis@test.com").isEmpty());
+        verify(disponibilidadRepository, Mockito.never()).findByUsuarioIdIn(any());
+    }
+}
