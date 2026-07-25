@@ -3,7 +3,6 @@ import { LoginComponent } from './components/login/login';
 import { DashboardComponent } from './components/dashboard/dashboard'; 
 import { SolicitudesComponent } from './components/solicitudes/solicitudes';
 import { MisConexionesComponent } from './components/mis-conexiones/mis-conexiones';
-import { ChatComponent } from './components/chat/chat'; 
 import { Explore } from './components/explore/explore';
 import { authGuard } from './guards/auth.guard'; // 🔥 Importamos el cerrojo de seguridad
 
@@ -17,8 +16,10 @@ export const routes: Routes = [
   { path: 'conexiones', component: MisConexionesComponent, canActivate: [authGuard] },
   { path: 'explorar', component: Explore, canActivate: [authGuard] },
   
-  // 💬 El chat DEBE estar aquí arriba, antes de las redirecciones comodín
-  { path: 'chat/:id', component: ChatComponent, canActivate: [authGuard] }, 
+  // Los mensajes viven en /conexiones. Antes habia ademas /chat/:id con una
+  // segunda implementacion copiada, que se ha eliminado: se llega igual con
+  // /conexiones?con=ID y solo hay un sitio que mantener.
+  { path: 'chat/:id', redirectTo: 'conexiones', pathMatch: 'full' },
 
   // Redirecciones por defecto
   { path: '', redirectTo: '/login', pathMatch: 'full' },

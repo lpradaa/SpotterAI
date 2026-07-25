@@ -37,6 +37,15 @@ public class UsuarioResponseDTO {
      */
     private Boolean compatibilidadIncompleta;
 
+    /**
+     * Tramos concretos en los que coincidis, para poder dibujar la rejilla semanal
+     * en vez de limitarse a enumerar los dias.
+     */
+    private List<FranjaComunDTO> franjasEnComun;
+
+    /** Un tramo compartido, tal y como lo necesita la interfaz para pintarlo. */
+    public record FranjaComunDTO(String dia, String inicio, String fin, boolean ambosFijos) {}
+
     // Constructor básico (usado en el registro)
     public UsuarioResponseDTO(Long id, String nombre, String email, Integer edad, String genero, Float peso) {
         this.id = id;
@@ -132,5 +141,10 @@ public class UsuarioResponseDTO {
     public Boolean getCompatibilidadIncompleta() { return compatibilidadIncompleta; }
     public void setCompatibilidadIncompleta(Boolean compatibilidadIncompleta) {
         this.compatibilidadIncompleta = compatibilidadIncompleta;
+    }
+
+    public List<FranjaComunDTO> getFranjasEnComun() { return franjasEnComun; }
+    public void setFranjasEnComun(List<FranjaComunDTO> franjasEnComun) {
+        this.franjasEnComun = franjasEnComun;
     }
 }

@@ -94,7 +94,9 @@ public class ExplicadorCompatibilidad {
                 .collect(Collectors.joining("\n"));
 
         String franjas = puntuacion.solape().hayCoincidencia()
-                ? "\nFranjas exactas en comun: " + String.join(", ", puntuacion.solape().franjas())
+                ? "\nFranjas exactas en comun: " + puntuacion.solape().franjas().stream()
+                        .map(FranjaComun::describir)
+                        .collect(Collectors.joining(", "))
                 : "\nNo hay ninguna franja horaria en comun.";
 
         return """

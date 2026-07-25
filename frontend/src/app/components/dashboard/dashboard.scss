@@ -1,11 +1,12 @@
 @import '../../../scss/index';
+@import '../../../scss/componentes';
 
 /* ===========================================================================
    Tablero de SpotterAI
    ---------------------------------------------------------------------------
-   Todo el color sale de las custom properties de _tokens.scss, de modo que el
-   tema oscuro funciona sin duplicar reglas. Se han eliminado los estilos en
-   linea que tenia la plantilla del TFG.
+   Botones, chips, campos, velos y avisos viven en scss/_componentes.scss:
+   estaban duplicados aqui y en explorar, y dos copias divergen a la primera
+   correccion que solo se aplica en una. Aqui queda solo lo propio del tablero.
    =========================================================================== */
 
 :host {
@@ -31,7 +32,6 @@
   border: 1px solid var(--sa-borde);
   border-radius: $radius-lg;
   padding: $space-md;
-  box-shadow: var(--sa-sombra-sm);
 }
 
 .tarjeta__titulo {
@@ -63,295 +63,89 @@
   }
 }
 
-.vacio {
-  color: var(--sa-texto-suave);
-  font-size: $text-sm;
-  margin: 0;
-  padding: $space-sm 0;
-}
-
-/* ===================== Bienvenida ===================== */
-.bienvenida {
-  display: flex;
-  flex-direction: column;
-  gap: $space-md;
-  padding: $space-md;
-  border-radius: $radius-lg;
-  color: #f5f2ef;
-  // Degradado de ascua sobre carbon: la identidad de la marca en un vistazo
-  background:
-    radial-gradient(120% 140% at 100% 0%, rgba(194, 65, 12, 0.55) 0%, transparent 60%),
-    linear-gradient(135deg, #241c17 0%, #191512 100%);
-  box-shadow: var(--sa-sombra-md);
-
-  @include tablet {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: $space-lg;
-  }
-}
-
-.bienvenida__texto {
-  flex: 1;
-  min-width: 0;
-}
-
-.bienvenida__titulo {
-  font-size: $text-3xl;
-  font-weight: $font-bold;
-  margin: $space-xs 0;
-
-  @include tablet {
-    font-size: $text-4xl;
-  }
-}
-
-.bienvenida__resumen {
-  margin: 0 0 $space-sm;
-  max-width: 52ch;
-  color: rgba(245, 242, 239, 0.78);
-  font-size: $text-sm;
-  line-height: $leading-normal;
-
-  strong {
-    color: #fdba8c;
-    font-weight: $font-semibold;
-  }
-}
-
-.etiqueta-nivel {
-  display: inline-block;
-  font-family: $font-display;
-  font-size: $text-xs;
-  font-weight: $font-semibold;
-  letter-spacing: $tracking-wide;
-  text-transform: uppercase;
-  color: #fdba8c;
-  border: 1px solid rgba(253, 186, 140, 0.35);
-  border-radius: $radius-full;
-  padding: 3px 10px;
-}
-
-.bienvenida__acciones {
+/* ===================== Barra de estado =====================
+   Densa y horizontal. Antes esto era un banner con degradado, saludo grande y
+   anillo de progreso: el movimiento por defecto de cualquier plantilla, y
+   ocupaba el mejor espacio de la pantalla sin decir nada accionable. */
+.barra {
   display: flex;
   flex-wrap: wrap;
-  gap: $space-xs;
-}
-
-/* ===================== Botones ===================== */
-.btn {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: $font-display;
-  font-size: $text-sm;
-  font-weight: $font-semibold;
-  padding: 11px 18px;
-  border-radius: $radius-full;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: background-color var(--sa-transicion), transform var(--sa-transicion),
-              border-color var(--sa-transicion), color var(--sa-transicion);
-  white-space: nowrap;
-
-  &:active:not(:disabled) {
-    transform: translateY(1px);
-  }
-
-  &:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
-  &--primario {
-    background: var(--sa-acento);
-    color: var(--sa-sobre-acento);
-
-    &:hover:not(:disabled) {
-      background: var(--sa-acento-hover);
-    }
-  }
-
-  &--exito {
-    background: var(--sa-exito);
-    color: #ffffff;
-
-    &:hover:not(:disabled) {
-      filter: brightness(1.08);
-    }
-  }
-
-  &--fantasma {
-    background: transparent;
-    color: currentColor;
-    border-color: currentColor;
-    opacity: 0.85;
-
-    &:hover:not(:disabled) {
-      opacity: 1;
-      background: rgba(128, 128, 128, 0.12);
-    }
-  }
-
-  &--pequeno {
-    padding: 6px 12px;
-    font-size: $text-xs;
-    background: var(--sa-superficie-alt);
-    color: var(--sa-texto);
-    border-color: var(--sa-borde);
-
-    &:hover:not(:disabled) {
-      border-color: var(--sa-acento);
-      color: var(--sa-acento-texto);
-    }
-  }
-
-  &--ancho {
-    width: 100%;
-  }
-}
-
-.btn__contador {
-  font-size: $text-xs;
-  background: rgba(0, 0, 0, 0.22);
-  border-radius: $radius-full;
-  padding: 1px 8px;
-}
-
-.btn-icono {
-  font-family: $font-display;
-  font-size: $text-xs;
-  font-weight: $font-semibold;
-  padding: 6px 12px;
-  border-radius: $radius-full;
-  border: 1px solid var(--sa-borde);
+  gap: $space-sm $space-md;
+  padding: $space-sm $space-md;
+  border-radius: $radius-md;
   background: var(--sa-superficie);
-  color: var(--sa-texto-suave);
-  cursor: pointer;
-  transition: all var(--sa-transicion);
-
-  &--si:hover {
-    border-color: var(--sa-exito);
-    color: var(--sa-exito);
-    background: var(--sa-exito-suave);
-  }
-
-  &--no:hover {
-    border-color: var(--sa-error);
-    color: var(--sa-error);
-  }
+  border: 1px solid var(--sa-borde);
 }
 
-/* ===================== Anillo de progreso ===================== */
-.progreso {
-  position: relative;
-  width: 132px;
-  height: 132px;
+.barra__identidad {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.barra__avatar {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  border-radius: 50%;
+  background: var(--sa-superficie-alt);
+  border: 1px solid var(--sa-borde);
   flex-shrink: 0;
-  align-self: center;
 }
 
-.progreso__svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
+.barra__nombre {
+  font-size: $text-lg;
+  font-weight: $font-semibold;
+  line-height: 1.2;
 }
 
-.progreso__pista,
-.progreso__valor {
-  fill: none;
-  stroke-width: 3;
+.barra__meta {
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
 }
 
-.progreso__pista {
-  stroke: rgba(245, 242, 239, 0.16);
+.barra__cifras {
+  display: flex;
+  gap: $space-md;
+  margin: 0;
 }
 
-.progreso__valor {
-  stroke: #fb7a45;
-  stroke-linecap: round;
-  transition: stroke-dasharray 600ms cubic-bezier(0.2, 0, 0.2, 1);
-}
-
-.progreso__centro {
-  position: absolute;
-  inset: 0;
+.dato {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-}
+  gap: 1px;
 
-.progreso__cifra {
-  font-family: $font-display;
-  font-size: $text-2xl;
-  font-weight: $font-bold;
-  color: #f5f2ef;
+  dt {
+    font-size: 10px;
+    letter-spacing: $tracking-wide;
+    text-transform: uppercase;
+    color: var(--sa-texto-tenue);
+  }
 
-  &--logrado {
-    color: #86efac;
+  dd {
+    margin: 0;
+    font-family: $font-display;
+    font-size: $text-xl;
+    font-weight: $font-bold;
+    line-height: 1;
+    color: var(--sa-texto);
   }
 }
 
-.progreso__pie {
-  font-size: 10px;
-  letter-spacing: $tracking-wide;
-  text-transform: uppercase;
-  color: rgba(245, 242, 239, 0.6);
-}
-
-/* ===================== Meta semanal ===================== */
-.meta__cabecera {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: $space-xs;
-}
-
-.meta__valor {
-  font-family: $font-display;
-  font-weight: $font-bold;
-  color: var(--sa-acento-texto);
-}
-
-.meta__slider {
-  width: 100%;
-  height: 6px;
-  appearance: none;
-  border-radius: $radius-full;
-  background: var(--sa-superficie-alt);
-  outline: none;
-
-  &::-webkit-slider-thumb {
-    appearance: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--sa-acento);
-    border: 3px solid var(--sa-superficie);
-    box-shadow: var(--sa-sombra-sm);
-    cursor: pointer;
-  }
-
-  &::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--sa-acento);
-    border: 3px solid var(--sa-superficie);
-    cursor: pointer;
-  }
-}
-
-.meta__escala {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-  font-size: $text-xs;
+.dato__de {
+  font-size: $text-sm;
+  font-weight: $font-medium;
   color: var(--sa-texto-tenue);
+}
+
+.barra__acciones {
+  display: flex;
+  gap: $space-xs;
 }
 
 /* ===================== Rejilla de columnas ===================== */
@@ -361,7 +155,7 @@
   gap: $space-md;
 
   @include desktop {
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 300px;
     align-items: start;
   }
 }
@@ -372,7 +166,7 @@
   gap: $space-md;
 }
 
-/* ===================== Tarjeta de match ===================== */
+/* ===================== Fila de match ===================== */
 .lista-matches {
   list-style: none;
   margin: 0;
@@ -384,48 +178,34 @@
 
 .match {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas:
-    'avatar info'
-    'puntos puntos'
-    'accion accion';
+    'marcador info'
+    'semana   semana'
+    'accion   accion';
   gap: $space-xs $space-sm;
   align-items: center;
   padding: $space-sm;
   border: 1px solid var(--sa-borde);
   border-radius: $radius-md;
   background: var(--sa-superficie);
-  transition: border-color var(--sa-transicion), box-shadow var(--sa-transicion);
+  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
 
   &:hover {
     border-color: var(--sa-borde-fuerte);
-    box-shadow: var(--sa-sombra-sm);
+    background: var(--sa-superficie-alt);
   }
 
-  // El borde izquierdo codifica el tramo de compatibilidad de un vistazo
-  border-left: 3px solid var(--sa-comp-baja);
-
-  &[data-tramo='media'] { border-left-color: var(--sa-comp-media); }
-  &[data-tramo='alta'] { border-left-color: var(--sa-comp-alta); }
-
-  @include tablet {
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
-    grid-template-areas: 'avatar info puntos accion';
-    gap: $space-sm;
+  @include desktop {
+    grid-template-columns: auto minmax(0, 1fr) 232px auto;
+    grid-template-areas: 'marcador info semana accion';
+    gap: $space-md;
   }
 }
 
-.match__avatar {
-  grid-area: avatar;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  border-radius: 50%;
-  background: var(--sa-superficie-alt);
-  border: 1px solid var(--sa-borde);
+.marcador {
+  grid-area: marcador;
+  min-width: 64px;
 }
 
 .match__info {
@@ -436,8 +216,20 @@
 .match__linea1 {
   display: flex;
   align-items: center;
-  gap: $space-xs;
+  gap: 6px;
   flex-wrap: wrap;
+}
+
+.match__avatar {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  border-radius: 50%;
+  background: var(--sa-superficie-alt);
+  border: 1px solid var(--sa-borde);
+  flex-shrink: 0;
 }
 
 .match__nombre {
@@ -447,7 +239,7 @@
 }
 
 .match__motivo {
-  margin: 2px 0 4px;
+  margin: 3px 0 2px;
   font-size: $text-sm;
   color: var(--sa-texto-suave);
   line-height: $leading-snug;
@@ -466,61 +258,9 @@
   color: var(--sa-borde-fuerte);
 }
 
-.match__dias {
-  display: inline-flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.match__puntuacion {
-  grid-area: puntos;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 116px;
-
-  @include tablet {
-    align-items: flex-end;
-  }
-}
-
-.match__cifra {
-  font-family: $font-display;
-  font-size: $text-2xl;
-  font-weight: $font-bold;
-  line-height: 1;
-  color: var(--sa-texto);
-
-  small {
-    font-size: $text-sm;
-    font-weight: $font-medium;
-    color: var(--sa-texto-tenue);
-    margin-left: 1px;
-  }
-}
-
-.match__etiqueta {
-  font-size: $text-xs;
-  color: var(--sa-texto-suave);
-}
-
-.barra {
-  width: 100%;
-  height: 4px;
-  margin-top: 4px;
-  border-radius: $radius-full;
-  background: var(--sa-superficie-alt);
-  overflow: hidden;
-}
-
-.barra__relleno {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--sa-comp-baja);
-  transition: width 500ms cubic-bezier(0.2, 0, 0.2, 1);
-
-  .match[data-tramo='media'] & { background: var(--sa-comp-media); }
-  .match[data-tramo='alta'] & { background: var(--sa-comp-alta); }
+.match__semana {
+  grid-area: semana;
+  min-width: 0;
 }
 
 .match__accion {
@@ -529,83 +269,9 @@
   .btn {
     width: 100%;
 
-    @include tablet {
+    @include desktop {
       width: auto;
     }
-  }
-}
-
-/* ===================== Chips ===================== */
-.chip {
-  display: inline-block;
-  font-size: $text-xs;
-  font-weight: $font-medium;
-  padding: 2px 9px;
-  border-radius: $radius-full;
-  white-space: nowrap;
-
-  &--nivel {
-    background: var(--sa-superficie-alt);
-    color: var(--sa-texto-suave);
-    border: 1px solid var(--sa-borde);
-  }
-
-  &--dia {
-    background: var(--sa-acento-suave);
-    color: var(--sa-acento-texto);
-  }
-
-  &--objetivo {
-    background: var(--sa-acento-suave);
-    color: var(--sa-acento-texto);
-    font-weight: $font-semibold;
-  }
-
-  // Coincidencia con compromiso por ambas partes: el dato mas fiable que hay,
-  // asi que es lo unico de la tarjeta que usa el color de exito.
-  &--fija {
-    background: var(--sa-exito-suave);
-    color: var(--sa-exito);
-    font-weight: $font-semibold;
-  }
-
-  // Aviso honesto: la puntuacion se ha calculado sin algun factor
-  &--parcial {
-    background: transparent;
-    color: var(--sa-texto-tenue);
-    border: 1px dashed var(--sa-borde-fuerte);
-  }
-}
-
-/* --- Conmutador "Voy siempre" / "Puedo ir" --- */
-.conmutador {
-  font-family: $font-display;
-  font-size: $text-xs;
-  font-weight: $font-semibold;
-  padding: 7px 12px;
-  border-radius: $radius-full;
-  border: 1px solid var(--sa-borde);
-  background: var(--sa-superficie);
-  color: var(--sa-texto-suave);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--sa-transicion);
-
-  &:hover:not(:disabled) {
-    border-color: var(--sa-acento);
-    color: var(--sa-acento-texto);
-  }
-
-  &--activo {
-    background: var(--sa-exito-suave);
-    border-color: var(--sa-exito);
-    color: var(--sa-exito);
-  }
-
-  // Cupo agotado: se ve que no está disponible, no que esté roto
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
   }
 }
 
@@ -632,9 +298,7 @@
   font-size: $text-sm;
   color: var(--sa-texto-suave);
 
-  strong {
-    color: var(--sa-texto);
-  }
+  strong { color: var(--sa-texto); }
 }
 
 .solicitud__botones {
@@ -655,9 +319,8 @@
 .perfil__avatar {
   width: 68px;
   height: 68px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   font-size: 34px;
   border-radius: 50%;
   background: var(--sa-superficie-alt);
@@ -730,16 +393,10 @@
 
 /* ===================== Modales ===================== */
 .velo {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: $space-sm;
-  background: rgba(25, 21, 18, 0.55);
-  backdrop-filter: blur(3px);
-  animation: aparecer 160ms ease-out;
 }
 
 .modal {
@@ -756,7 +413,8 @@
   animation: subir 200ms cubic-bezier(0.2, 0, 0.2, 1);
 
   &--estrecho { max-width: 420px; }
-  &--sugerencia { max-width: 460px; }
+  // La rejilla necesita ancho para que las siete columnas se lean
+  &--sugerencia { max-width: 560px; }
 }
 
 .modal__cabecera {
@@ -767,9 +425,7 @@
   padding: $space-sm $space-md;
   border-bottom: 1px solid var(--sa-borde);
 
-  h2 {
-    font-size: $text-xl;
-  }
+  h2 { font-size: $text-xl; }
 }
 
 .modal__cuerpo {
@@ -788,31 +444,11 @@
   border-top: 1px solid var(--sa-borde);
 }
 
-.cerrar {
+.modal > .cerrar {
   position: absolute;
   top: $space-sm;
   right: $space-sm;
   z-index: 1;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: var(--sa-superficie-alt);
-  color: var(--sa-texto-suave);
-  cursor: pointer;
-  transition: all var(--sa-transicion);
-
-  &:hover {
-    background: var(--sa-acento-suave);
-    color: var(--sa-acento-texto);
-  }
-}
-
-.modal__cabecera .cerrar {
-  position: static;
 }
 
 /* ===================== Formularios ===================== */
@@ -847,6 +483,8 @@
   font-size: $text-xs;
   color: var(--sa-texto-suave);
   line-height: $leading-snug;
+
+  strong { color: var(--sa-texto); }
 }
 
 .rejilla-campos {
@@ -855,58 +493,88 @@
   gap: $space-xs;
 }
 
-.campo {
+/* --- Selector de color de identidad --- */
+.colores {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  > span {
-    font-size: $text-xs;
-    font-weight: $font-medium;
-    color: var(--sa-texto-suave);
-  }
-
-  input,
-  select {
-    padding: 10px 12px;
-    border: 1px solid var(--sa-borde);
-    border-radius: $radius-sm;
-    background: var(--sa-superficie);
-    color: var(--sa-texto);
-    transition: border-color var(--sa-transicion);
-
-    &:hover {
-      border-color: var(--sa-borde-fuerte);
-    }
-  }
+  align-items: center;
+  gap: $space-sm;
 }
 
-.rejilla-emojis {
+.colores__opciones {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
-.emoji {
-  width: 44px;
-  height: 44px;
-  font-size: 22px;
-  border-radius: $radius-sm;
+.color {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
   border: 2px solid transparent;
-  background: var(--sa-superficie-alt);
+  background: var(--tono);
   cursor: pointer;
-  transition: all var(--sa-transicion);
+  transition: transform var(--sa-transicion), box-shadow var(--sa-transicion);
 
-  &:hover {
-    transform: scale(1.08);
-  }
+  &[data-color='ascua'] { --tono: var(--sa-av-ascua); }
+  &[data-color='ambar'] { --tono: var(--sa-av-ambar); }
+  &[data-color='oliva'] { --tono: var(--sa-av-oliva); }
+  &[data-color='acero'] { --tono: var(--sa-av-acero); }
+  &[data-color='ciruela'] { --tono: var(--sa-av-ciruela); }
+  &[data-color='pizarra'] { --tono: var(--sa-av-pizarra); }
 
+  &:hover { transform: scale(1.12); }
+
+  // El seleccionado se marca con un anillo separado, que se ve sobre cualquier tono
   &--activo {
-    border-color: var(--sa-acento);
-    background: var(--sa-acento-suave);
+    box-shadow: 0 0 0 2px var(--sa-superficie-elevada), 0 0 0 4px var(--tono);
   }
 }
 
+/* --- Meta semanal (dentro del perfil) --- */
+.meta__valor {
+  font-family: $font-display;
+  font-weight: $font-bold;
+  color: var(--sa-acento-texto);
+}
+
+.meta__slider {
+  width: 100%;
+  height: 6px;
+  appearance: none;
+  border-radius: $radius-full;
+  background: var(--sa-superficie-alt);
+  outline: none;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sa-acento);
+    border: 3px solid var(--sa-superficie);
+    cursor: pointer;
+  }
+
+  &::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sa-acento);
+    border: 3px solid var(--sa-superficie);
+    cursor: pointer;
+  }
+}
+
+.meta__escala {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+}
+
+/* --- Filas de horario --- */
 .fila-horario {
   display: flex;
   align-items: center;
@@ -929,12 +597,42 @@
     padding: 8px 10px;
     border: 1px solid var(--sa-borde);
     border-radius: $radius-sm;
-    background: var(--sa-superficie);
+    background: var(--sa-superficie-alt);
     color: var(--sa-texto);
   }
 
-  select {
-    flex: 1 1 120px;
+  select { flex: 1 1 120px; }
+}
+
+/* --- Conmutador "Voy siempre" / "Puedo ir" --- */
+.conmutador {
+  font-family: $font-display;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  padding: 7px 12px;
+  border-radius: $radius-full;
+  border: 1px solid var(--sa-borde);
+  background: var(--sa-superficie);
+  color: var(--sa-texto-suave);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--sa-transicion);
+
+  &:hover:not(:disabled) {
+    border-color: var(--sa-acento);
+    color: var(--sa-acento-texto);
+  }
+
+  &--activo {
+    background: var(--sa-exito-suave);
+    border-color: var(--sa-exito);
+    color: var(--sa-exito);
+  }
+
+  // Cupo agotado: se ve que no esta disponible, no que este roto
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 }
 
@@ -946,15 +644,23 @@
   align-items: center;
   gap: $space-xs;
   overflow-y: auto;
+
+  // Los hijos de un contenedor flex se comprimen por debajo de su contenido si
+  // no cabe todo. En pantallas estrechas eso hacia que el texto de la
+  // explicacion se saliera de su caja y se solapara con lo de arriba y lo de
+  // abajo. Que no encoja ninguno y que la ficha entera desplace.
+  > * {
+    flex-shrink: 0;
+    max-width: 100%;
+  }
 }
 
 .sugerencia__avatar {
-  width: 92px;
-  height: 92px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 44px;
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
   border-radius: 50%;
   background: var(--sa-superficie-alt);
   border: 3px solid var(--sa-acento);
@@ -989,14 +695,16 @@
   color: var(--sa-texto-suave);
 }
 
-/* --- Explicación redactada --- */
+/* --- Explicacion redactada --- */
 .explicacion {
   width: 100%;
-  min-height: 84px;
+  min-height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 6px;
+  // Sin esto, el texto largo no rompe y ensancha el modal en movil
+  overflow-wrap: anywhere;
   padding: $space-sm;
   border-radius: $radius-md;
   background: var(--sa-acento-suave);
@@ -1067,13 +775,17 @@
   }
 }
 
-.sugerencia__horario {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+.sugerencia__semana {
   width: 100%;
   padding: $space-xs 0;
+}
+
+.sugerencia__semana-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-xs;
+  margin-bottom: 6px;
 }
 
 .sugerencia__horario-titulo {
@@ -1081,13 +793,6 @@
   text-transform: uppercase;
   letter-spacing: $tracking-wide;
   color: var(--sa-texto-tenue);
-}
-
-.sugerencia__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  justify-content: center;
 }
 
 .sugerencia__horario-total {
@@ -1132,41 +837,7 @@
   color: var(--sa-texto-tenue);
 }
 
-/* ===================== Aviso flotante ===================== */
-.aviso {
-  position: fixed;
-  left: 50%;
-  bottom: $space-md;
-  z-index: 1100;
-  transform: translate(-50%, 140%);
-  max-width: min(92vw, 420px);
-  padding: 12px 20px;
-  border-radius: $radius-full;
-  background: var(--sa-texto);
-  color: var(--sa-fondo);
-  font-size: $text-sm;
-  box-shadow: var(--sa-sombra-lg);
-  opacity: 0;
-  transition: transform 260ms cubic-bezier(0.2, 0, 0.2, 1), opacity 260ms;
-  pointer-events: none;
-
-  &--visible {
-    transform: translate(-50%, 0);
-    opacity: 1;
-  }
-
-  &--error {
-    background: var(--sa-error);
-    color: #ffffff;
-  }
-}
-
 /* ===================== Animaciones ===================== */
-@keyframes aparecer {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 @keyframes subir {
   from { opacity: 0; transform: translateY(12px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }

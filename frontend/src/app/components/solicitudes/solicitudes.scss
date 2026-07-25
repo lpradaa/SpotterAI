@@ -1,100 +1,118 @@
-/* 1. Importamos el archivo maestro */
 @import '../../../scss/index';
+@import '../../../scss/componentes';
+
+:host {
+  display: block;
+}
 
 .dashboard {
-  padding: $space-lg;
+  padding: $space-md $space-sm $space-xl;
   max-width: 1000px;
   margin: 0 auto;
+
+  @include tablet {
+    padding: $space-lg $space-md $space-xl;
+  }
 }
 
 .header-section {
-  margin-bottom: $space-lg;
+  margin-bottom: $space-md;
 
-  &__title { 
-    font-size: $text-3xl; 
-    font-weight: $font-extrabold; 
-    margin: 0 0 $space-xs 0; 
-    color: $text-main; 
+  &__title {
+    font-size: $text-2xl;
+    font-weight: $font-bold;
+    margin: 0 0 4px 0;
+    color: var(--sa-texto);
   }
-  
-  &__subtitle { 
-    color: $text-muted; 
-    font-size: $text-base; 
-    margin: 0; 
+
+  &__subtitle {
+    color: var(--sa-texto-suave);
+    font-size: $text-sm;
+    margin: 0;
   }
 }
 
-/* --- ESTADO VACÍO --- */
+/* --- Estado vacío --- */
 .empty-state {
   text-align: center;
-  padding: 4rem $space-md;
-  background: $bg-card;
+  padding: $space-xl $space-md;
+  background: var(--sa-superficie);
   border-radius: $radius-lg;
-  border: 1px dashed $border;
-  
-  &__icon { font-size: 4rem; margin-bottom: $space-sm; }
-  h3 { color: $text-main; margin-bottom: $space-xs; }
-  p { color: $text-muted; }
+  border: 1px dashed var(--sa-borde);
+
+  &__icon { display: none; } // Se sustituye por texto: los emoticonos fuera
+
+  h3 { color: var(--sa-texto); margin-bottom: $space-xs; }
+  p { color: var(--sa-texto-suave); font-size: $text-sm; }
 }
 
-/* --- TARJETAS DE SOLICITUDES --- */
+/* --- Tarjetas de solicitudes --- */
 .matches-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: $space-md;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: $space-sm;
 }
 
 .match-card {
-  background: $bg-card;
-  border-radius: $radius-lg;
-  padding: $space-md;
+  background: var(--sa-superficie);
+  border-radius: $radius-md;
+  padding: $space-sm;
   display: flex;
   flex-direction: column;
-  gap: $space-md;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  border: 1px solid $border;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: $space-sm;
+  border: 1px solid var(--sa-borde);
+  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    border-color: var(--sa-borde-fuerte);
+    background: var(--sa-superficie-alt);
   }
 
   &__avatar {
-    width: 48px; height: 48px; background: $input-bg; color: $text-muted;
-    border-radius: $radius-md; display: flex; align-items: center; justify-content: center;
-    font-weight: $font-bold; font-size: $text-lg;
+    width: 44px;
+    height: 44px;
+    background: var(--sa-superficie-alt);
+    border: 1px solid var(--sa-borde);
+    color: var(--sa-texto);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: $font-display;
+    font-weight: $font-bold;
+    font-size: $text-base;
   }
 
-  &__header h4 { margin: 0; font-size: $text-lg; font-weight: $font-bold; color: $text-main; }
-  &__gym { margin: 0; font-size: $text-sm; color: $text-muted; }
+  &__header h4 {
+    margin: 0;
+    font-size: $text-base;
+    font-weight: $font-semibold;
+    color: var(--sa-texto);
+  }
+
+  &__gym {
+    margin: 0;
+    font-size: $text-xs;
+    color: var(--sa-texto-tenue);
+  }
 }
 
 .badge {
-  padding: 4px $space-sm; border-radius: $radius-full; font-size: $text-xs; font-weight: $font-bold;
-  text-transform: uppercase;
-  
-  &--pendiente { background-color: rgba(#ed8936, 0.1); color: #ed8936; }
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+
+  &--pendiente {
+    background: var(--sa-acento-suave);
+    color: var(--sa-acento-texto);
+  }
 }
 
-/* --- BOTONES DOBLES --- */
+/* --- Botones dobles --- */
 .action-buttons {
-  display: flex; gap: $space-sm; margin-top: auto;
-}
+  display: flex;
+  gap: $space-xs;
+  margin-top: auto;
 
-.btn {
-  flex: 1; border: none; padding: 12px; font-size: $text-sm; font-weight: $font-semibold;
-  border-radius: $radius-sm; cursor: pointer; transition: transform 0.1s, background-color 0.2s;
-  
-  &:active { transform: scale(0.96); }
-
-  &--accept {
-    background-color: $accent; color: white;
-    &:hover { background-color: darken($accent, 10%); }
-  }
-
-  &--reject {
-    background-color: $input-bg; color: $text-muted;
-    &:hover { background-color: darken($input-bg, 5%); color: $color-danger; }
-  }
+  .btn { flex: 1; }
 }

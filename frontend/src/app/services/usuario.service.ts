@@ -2,6 +2,15 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+/** Un tramo en el que dos usuarios coinciden. */
+export interface FranjaComun {
+  dia: string;
+  inicio: string;
+  fin: string;
+  /** Los dos declaran ir siempre a esa franja. */
+  ambosFijos: boolean;
+}
+
 /** Un candidato a compañero de entrenamiento, tal y como lo devuelve el backend. */
 export interface Match {
   id: number;
@@ -27,6 +36,8 @@ export interface Match {
   diasFijosEnComun: number;
   /** La puntuación se calculó sin algún factor por falta de datos. */
   compatibilidadIncompleta: boolean;
+  /** Tramos concretos en común, para poder dibujar la semana. */
+  franjasEnComun: FranjaComun[];
 
   yaConectado: boolean;
   solicitudPendiente: boolean;

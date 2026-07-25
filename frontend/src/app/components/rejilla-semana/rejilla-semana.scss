@@ -1,0 +1,188 @@
+@import '../../../scss/index';
+
+:host {
+  display: block;
+}
+
+.rejilla-vacia {
+  margin: 0;
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+}
+
+.rejilla {
+  display: flex;
+  gap: 8px;
+}
+
+/* --- Columna de horas --- */
+.rejilla__horas {
+  position: relative;
+  width: 30px;
+  flex-shrink: 0;
+  // Se alinea con el lienzo, saltando la altura de la cabecera de dias
+  margin-top: 18px;
+  height: 190px;
+}
+
+.rejilla__hora {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--sa-texto-tenue);
+  line-height: 1;
+}
+
+.rejilla__cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Cabecera de dias --- */
+.rejilla__dias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  height: 18px;
+}
+
+.rejilla__dia {
+  font-family: $font-display;
+  font-size: 10px;
+  font-weight: $font-semibold;
+  letter-spacing: $tracking-wide;
+  text-transform: uppercase;
+  color: var(--sa-texto-tenue);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* --- Lienzo --- */
+.rejilla__lienzo {
+  position: relative;
+  height: 190px;
+  border-radius: $radius-sm;
+  background: var(--sa-rejilla-fondo);
+  border: 1px solid var(--sa-rejilla-linea);
+  overflow: hidden;
+
+  // Separadores de columna dibujados con el propio fondo: siete franjas sin
+  // necesidad de siete elementos vacios en el DOM
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(100% / 7 - 1px),
+    var(--sa-rejilla-linea) calc(100% / 7 - 1px),
+    var(--sa-rejilla-linea) calc(100% / 7)
+  );
+}
+
+/* Lineas de hora, de referencia */
+.rejilla__linea {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--sa-rejilla-linea);
+  pointer-events: none;
+}
+
+/* --- Bloques --- */
+.bloque {
+  position: absolute;
+  // La geometria (left, width, top, height) la calcula el componente
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* Mi disponibilidad: presente pero sin gritar, es el contexto */
+.bloque--mio {
+  background: var(--sa-rejilla-mia);
+}
+
+/* El compromiso propio se marca con un borde lateral, sin robar protagonismo */
+.bloque--mio.bloque--fijo {
+  box-shadow: inset 2px 0 0 var(--sa-borde-fuerte);
+}
+
+/* El solape: esto es lo que el usuario ha venido a ver */
+.bloque--solape {
+  background: var(--sa-rejilla-solape);
+  box-shadow: 0 0 12px -2px var(--sa-rejilla-solape);
+}
+
+/* Compromiso por ambas partes: el dato mas fiable del sistema.
+   Se distingue con trama, no solo con color, para que se lea tambien sin
+   percibir bien el matiz. */
+.bloque--ancla {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      var(--sa-rejilla-ancla) 0 3px,
+      var(--sa-rejilla-solape) 3px 6px
+    );
+  box-shadow: 0 0 14px -1px var(--sa-rejilla-ancla);
+}
+
+/* --- Modo compacto: cabe en una fila de lista --- */
+.rejilla--compacta {
+  .rejilla__lienzo {
+    height: 34px;
+  }
+
+  .rejilla__dias {
+    height: 12px;
+    gap: 1px;
+  }
+
+  .rejilla__dia {
+    font-size: 8px;
+  }
+
+  .bloque {
+    border-radius: 2px;
+  }
+
+  // A este tamaño el resplandor solo emborrona
+  .bloque--solape,
+  .bloque--ancla {
+    box-shadow: none;
+  }
+}
+
+/* --- Leyenda --- */
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-sm;
+  list-style: none;
+  margin: $space-xs 0 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: $text-xs;
+    color: var(--sa-texto-suave);
+  }
+}
+
+.muestra {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+
+  &--mio { background: var(--sa-rejilla-mia); }
+  &--solape { background: var(--sa-rejilla-solape); }
+  &--ancla {
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--sa-rejilla-ancla) 0 3px,
+      var(--sa-rejilla-solape) 3px 6px
+    );
+  }
+}

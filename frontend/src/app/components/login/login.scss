@@ -40,9 +40,12 @@
   display: flex;
   width: 100%;
   max-width: 1000px;
-  background: white;
+  // Tokens en vez de blanco fijo: si no, la pantalla de acceso se queda en
+  // claro mientras el resto de la aplicacion va en oscuro.
+  background: var(--sa-superficie);
+  border: 1px solid var(--sa-borde);
   border-radius: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--sa-sombra-lg);
   overflow: hidden; /* Corta los bordes para el panel izquierdo */
   min-height: 600px;
 }
@@ -129,8 +132,8 @@
 .login-header {
   margin-bottom: $space-xl;
   
-  .title { font-size: $text-3xl; font-weight: $font-extrabold; color: $text-main; margin: 0 0 8px 0; letter-spacing: -0.5px; }
-  .subtitle { color: $text-muted; font-size: $text-base; margin: 0; }
+  .title { font-size: $text-3xl; font-weight: $font-extrabold; color: var(--sa-texto); margin: 0 0 8px 0; letter-spacing: -0.5px; }
+  .subtitle { color: var(--sa-texto-suave); font-size: $text-base; margin: 0; }
 }
 
 /* --- Inputs y Formularios --- */
@@ -139,36 +142,36 @@
 .half-width { flex: 1; }
 
 .form-group {
-  label { display: block; font-size: 13px; font-weight: 700; color: $text-main; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  label { display: block; font-size: 13px; font-weight: 700; color: var(--sa-texto-suave); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 }
 
 .input-container {
   position: relative;
 
   .icon {
-    position: absolute; top: 50%; transform: translateY(-50%); left: 16px; display: flex; align-items: center; color: #94a3b8; transition: color 0.2s;
+    position: absolute; top: 50%; transform: translateY(-50%); left: 16px; display: flex; align-items: center; color: var(--sa-texto-tenue); transition: color 0.2s;
   }
 
   input, select {
-    width: 100%; padding: 14px 16px 14px 45px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 15px; color: $text-main; font-weight: 500; transition: all 0.3s ease; outline: none; appearance: none;
-    
-    &::placeholder { color: #94a3b8; font-weight: 400; }
-    
+    width: 100%; padding: 14px 16px 14px 45px; background-color: var(--sa-superficie-alt); border: 1px solid var(--sa-borde); border-radius: 12px; font-size: 15px; color: var(--sa-texto); font-weight: 500; transition: all 0.3s ease; outline: none; appearance: none;
+
+    &::placeholder { color: var(--sa-texto-tenue); font-weight: 400; }
+
     &:focus {
-      background-color: white; border-color: $accent; box-shadow: 0 0 0 4px rgba($accent, 0.15);
-      + .icon, ~ .icon { color: $accent; } /* Ilumina el icono al hacer focus */
+      border-color: var(--sa-acento);
+      + .icon, ~ .icon { color: var(--sa-acento); } /* Ilumina el icono al hacer focus */
     }
   }
 
   /* Flecha personalizada para el select */
   &.select-container::after {
-    content: "▼"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #94a3b8; pointer-events: none;
+    content: "▼"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--sa-texto-tenue); pointer-events: none;
   }
 }
 
 /* --- Banner de Error --- */
 .error-banner {
-  background: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; animation: shake 0.4s ease-in-out;
+  background: transparent; border: 1px solid var(--sa-error); border-left-width: 4px; color: var(--sa-error); padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; animation: shake 0.4s ease-in-out;
 }
 
 @keyframes shake {
@@ -177,16 +180,16 @@
 
 /* --- Botón de Submit --- */
 .submit-btn {
-  width: 100%; margin-top: 10px; background: $accent; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 20px -10px $accent; transition: all 0.2s ease;
-  
+  width: 100%; margin-top: 10px; background: var(--sa-acento); color: var(--sa-sobre-acento); border: none; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s ease;
+
   .arrow { transition: transform 0.2s ease; }
-  
+
   &:hover:not(:disabled) {
-    transform: translateY(-2px); box-shadow: 0 15px 25px -10px $accent; background: darken($accent, 5%);
+    transform: translateY(-2px); background: var(--sa-acento-hover);
     .arrow { transform: translateX(5px); }
   }
 
-  &:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
+  &:disabled { background: var(--sa-superficie-alt); color: var(--sa-texto-tenue); cursor: not-allowed; transform: none; }
 }
 
 /* Spinner CSS */
@@ -195,12 +198,12 @@
 
 /* --- Footer --- */
 .login-footer {
-  text-align: center; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;
-  
-  p { color: $text-muted; font-size: 15px; margin: 0; }
-  
+  text-align: center; margin-top: 30px; border-top: 1px solid var(--sa-borde); padding-top: 20px;
+
+  p { color: var(--sa-texto-suave); font-size: 15px; margin: 0; }
+
   .toggle-btn {
-    background: none; border: none; color: $accent; font-weight: 700; font-size: 15px; cursor: pointer; padding: 0 5px; transition: color 0.2s;
-    &:hover { color: darken($accent, 10%); text-decoration: underline; }
+    background: none; border: none; color: var(--sa-acento-texto); font-weight: 700; font-size: 15px; cursor: pointer; padding: 0 5px; transition: color 0.2s;
+    &:hover { color: var(--sa-acento); text-decoration: underline; }
   }
 }

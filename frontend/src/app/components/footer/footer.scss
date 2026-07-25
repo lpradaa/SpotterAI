@@ -1,28 +1,24 @@
 @import '../../../scss/index';
 
+/* El pie usaba $bg-card, que es blanco fijo: con el tema oscuro dejaba una
+   franja blanca al fondo de todas las pantallas. Ahora sigue los tokens. */
 .footer {
-  background-color: $bg-card;
+  background-color: var(--sa-superficie);
   text-align: center;
-  padding: $space-lg $space-md; 
-  border-top: 1px solid $border;
-  margin-top: auto; 
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.02);
+  padding: $space-md;
+  border-top: 1px solid var(--sa-borde);
+  margin-top: auto;
 
   &__text {
-    color: $text-muted;
+    color: var(--sa-texto-tenue);
     margin: 0;
-    font-size: $text-sm;
-    font-weight: $font-semibold;
-    letter-spacing: 0.3px;
-    a {
-      color: $accent;
-      text-decoration: none;
-      transition: color 0.2s ease;
+    font-size: $text-xs;
 
-      &:hover {
-        color: darken($accent, 15%);
-        text-decoration: underline;
-      }
+    a {
+      color: var(--sa-acento-texto);
+      text-decoration: none;
+
+      &:hover { text-decoration: underline; }
     }
   }
 }

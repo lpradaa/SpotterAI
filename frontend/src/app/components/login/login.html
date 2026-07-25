@@ -7,25 +7,29 @@
     
     <div class="login-branding">
       <div class="branding-content">
-        <svg viewBox="0 0 68 50" class="logo-giant" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="25" cy="25" r="20" fill="rgba(255,255,255,0.2)"/>
-          <circle cx="43" cy="25" r="20" fill="rgba(255,255,255,0.4)"/>
-          <path d="M 37 14 L 26 27 L 32 27 L 29 38 L 43 23 L 35 23 Z" fill="#ffffff" />
+        <!-- El mismo isotipo que la cabecera: barra con discos y el arco de la
+             mano que asiste, que es lo que hace un spotter. -->
+        <svg viewBox="0 0 60 46" class="logo-giant" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="10" y="18" width="40" height="5" rx="2.5" fill="rgba(255,255,255,0.9)"/>
+          <rect x="6" y="11" width="7" height="19" rx="3.5" fill="rgba(255,255,255,0.9)"/>
+          <rect x="47" y="11" width="7" height="19" rx="3.5" fill="rgba(255,255,255,0.9)"/>
+          <path d="M 12 34 Q 30 44 48 34" fill="none" stroke="rgba(255,255,255,0.55)"
+                stroke-width="4" stroke-linecap="round"/>
         </svg>
         <h2>SpotterAI</h2>
-        <p>Tu compañero de entrenamiento ideal está a un clic de distancia.</p>
-        
-        <div class="features-list">
-          <div class="feature-item"><span>🎯</span> Encuentra gente de tu nivel</div>
-          <div class="feature-item"><span>📍</span> Conecta en tu mismo gimnasio</div>
-          <div class="feature-item"><span>💪</span> Alcanza tus metas semanales</div>
-        </div>
+        <p>Encuentra a la persona con la que entrenar, no a cualquiera.</p>
+
+        <ul class="features-list">
+          <li class="feature-item">Cruzamos vuestros horarios reales, no solo el perfil</li>
+          <li class="feature-item">Te decimos por qué encajáis, con los días concretos</li>
+          <li class="feature-item">Y llevas el registro de lo que entrenas</li>
+        </ul>
       </div>
     </div>
 
     <div class="login-form-section">
       <header class="login-header">
-        <h1 class="title">{{ isLoginMode ? '¡Hola de nuevo! 👋' : 'Únete a SpotterAI 💪' }}</h1>
+        <h1 class="title">{{ isLoginMode ? 'Hola de nuevo' : 'Crea tu cuenta' }}</h1>
         <p class="subtitle">
           {{ isLoginMode ? 'Inicia sesión para continuar' : 'Crea tu cuenta gratis' }}
         </p>
@@ -92,7 +96,7 @@
 
         @if (errorMessage()) {
           <div class="error-banner">
-            <span class="error-icon">⚠️</span> {{ errorMessage() }}
+            {{ errorMessage() }}
           </div>
         }
 

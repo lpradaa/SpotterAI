@@ -1,0 +1,315 @@
+/* ===========================================================================
+   Componentes compartidos
+   ---------------------------------------------------------------------------
+   Botones, chips, campos, velos y avisos que usan varias pantallas. Estaban
+   duplicados en cada componente, que es como los sistemas de diseño se
+   deshacen: dos copias divergen a la primera correccion que solo se aplica en
+   una. Angular encapsula los estilos por componente, asi que esto se importa
+   donde haga falta y sigue quedando limitado a su vista.
+   =========================================================================== */
+
+/* ===================== Botones ===================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: $font-display;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  padding: 10px 18px;
+  border-radius: $radius-full;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--sa-transicion), transform var(--sa-transicion),
+              border-color var(--sa-transicion), color var(--sa-transicion);
+
+  &:active:not(:disabled) { transform: translateY(1px); }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--primario {
+    background: var(--sa-acento);
+    color: var(--sa-sobre-acento);
+
+    &:hover:not(:disabled) { background: var(--sa-acento-hover); }
+  }
+
+  &--exito {
+    background: var(--sa-exito);
+    color: var(--sa-fondo);
+
+    &:hover:not(:disabled) { filter: brightness(1.1); }
+  }
+
+  &--fantasma {
+    background: transparent;
+    color: var(--sa-texto-suave);
+    border-color: var(--sa-borde-fuerte);
+
+    &:hover:not(:disabled) {
+      color: var(--sa-texto);
+      border-color: var(--sa-texto-suave);
+    }
+  }
+
+  &--pequeno {
+    padding: 6px 12px;
+    font-size: $text-xs;
+    background: var(--sa-superficie-alt);
+    color: var(--sa-texto);
+    border-color: var(--sa-borde);
+
+    &:hover:not(:disabled) { border-color: var(--sa-acento); }
+  }
+
+  &--ancho { width: 100%; }
+}
+
+.btn__contador {
+  font-size: $text-xs;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: $radius-full;
+  padding: 1px 8px;
+}
+
+/* Punto de aviso: hay filtros puestos */
+.btn__punto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sa-acento);
+}
+
+.btn-icono {
+  font-family: $font-display;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  padding: 6px 12px;
+  border-radius: $radius-full;
+  border: 1px solid var(--sa-borde);
+  background: var(--sa-superficie);
+  color: var(--sa-texto-suave);
+  cursor: pointer;
+  transition: all var(--sa-transicion);
+
+  &--si:hover {
+    border-color: var(--sa-exito);
+    color: var(--sa-exito);
+  }
+
+  &--no:hover {
+    border-color: var(--sa-error);
+    color: var(--sa-error);
+  }
+}
+
+/* ===================== Marcador de compatibilidad =====================
+   Para un producto cuya salida es un numero, ese numero tiene que ser el
+   elemento mejor tratado de la interfaz. El color codifica el tramo. */
+.marcador {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  color: var(--sa-comp-baja);
+
+  [data-tramo='media'] & { color: var(--sa-comp-media); }
+  [data-tramo='alta'] & { color: var(--sa-comp-alta); }
+}
+
+.marcador__cifra {
+  font-family: $font-display;
+  font-size: $text-4xl;
+  font-weight: $font-bold;
+  line-height: 0.9;
+  letter-spacing: $tracking-tight;
+}
+
+.marcador__unidad {
+  font-family: $font-display;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  opacity: 0.6;
+}
+
+/* ===================== Chips ===================== */
+.chip {
+  display: inline-block;
+  font-size: $text-xs;
+  font-weight: $font-medium;
+  padding: 2px 9px;
+  border-radius: $radius-full;
+  white-space: nowrap;
+
+  &--nivel {
+    background: var(--sa-superficie-alt);
+    color: var(--sa-texto-suave);
+    border: 1px solid var(--sa-borde);
+  }
+
+  &--dia,
+  &--objetivo {
+    background: var(--sa-acento-suave);
+    color: var(--sa-acento-texto);
+  }
+
+  // Compromiso mutuo: el dato mas fiable, lo unico que usa el color de exito
+  &--fija {
+    background: var(--sa-exito-suave);
+    color: var(--sa-exito);
+    font-weight: $font-semibold;
+  }
+
+  // Aviso honesto: la puntuacion se calculo sin algun factor
+  &--parcial {
+    background: transparent;
+    color: var(--sa-texto-tenue);
+    border: 1px dashed var(--sa-borde-fuerte);
+  }
+}
+
+/* ===================== Campos de formulario ===================== */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: none;
+  margin: 0;
+  padding: 0;
+
+  > span,
+  > legend {
+    font-size: $text-xs;
+    font-weight: $font-medium;
+    color: var(--sa-texto-suave);
+    padding: 0;
+  }
+
+  input,
+  select {
+    padding: 10px 12px;
+    border: 1px solid var(--sa-borde);
+    border-radius: $radius-sm;
+    background: var(--sa-superficie-alt);
+    color: var(--sa-texto);
+    transition: border-color var(--sa-transicion);
+
+    &:hover { border-color: var(--sa-borde-fuerte); }
+  }
+}
+
+.rango {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  input { flex: 1; min-width: 0; }
+  span { color: var(--sa-texto-tenue); }
+}
+
+/* ===================== Velo y cierre ===================== */
+.velo {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  animation: sa-aparecer 160ms ease-out;
+}
+
+.cerrar {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--sa-superficie-alt);
+  color: var(--sa-texto-suave);
+  cursor: pointer;
+  transition: all var(--sa-transicion);
+
+  &:hover {
+    background: var(--sa-acento-suave);
+    color: var(--sa-acento-texto);
+  }
+}
+
+/* ===================== Estados vacios ===================== */
+.vacio {
+  color: var(--sa-texto-suave);
+  font-size: $text-sm;
+  margin: 0;
+  padding: $space-sm 0;
+}
+
+.vacio-grande {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-xl $space-md;
+  text-align: center;
+  border: 1px dashed var(--sa-borde);
+  border-radius: $radius-lg;
+
+  h2 {
+    font-size: $text-xl;
+    color: var(--sa-texto);
+  }
+
+  p {
+    margin: 0;
+    color: var(--sa-texto-suave);
+    font-size: $text-sm;
+  }
+}
+
+/* ===================== Aviso flotante ===================== */
+.aviso {
+  position: fixed;
+  left: 50%;
+  bottom: $space-md;
+  z-index: 1100;
+  transform: translate(-50%, 140%);
+  max-width: min(92vw, 420px);
+  padding: 12px 20px;
+  border-radius: $radius-full;
+  background: var(--sa-superficie-elevada);
+  border: 1px solid var(--sa-borde-fuerte);
+  color: var(--sa-texto);
+  font-size: $text-sm;
+  box-shadow: var(--sa-sombra-lg);
+  opacity: 0;
+  transition: transform 260ms cubic-bezier(0.2, 0, 0.2, 1), opacity 260ms;
+  pointer-events: none;
+
+  &--visible {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+
+  &--error {
+    border-color: var(--sa-error);
+    color: var(--sa-error);
+  }
+}
+
+/* Solo para lectores de pantalla */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes sa-aparecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

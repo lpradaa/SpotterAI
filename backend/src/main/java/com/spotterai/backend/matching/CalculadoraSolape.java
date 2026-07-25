@@ -49,7 +49,7 @@ public final class CalculadoraSolape {
         // LinkedHashMap/Set para conservar el orden en que encontramos los dias
         Map<String, Integer> minutosPorDia = new LinkedHashMap<>();
         Set<String> diasAncla = new LinkedHashSet<>();
-        List<String> franjas = new ArrayList<>();
+        List<FranjaComun> franjas = new ArrayList<>();
 
         for (Disponibilidad mia : unos) {
             String dia = DiasSemana.clave(mia.getDiaSemana());
@@ -74,7 +74,9 @@ public final class CalculadoraSolape {
                     diasAncla.add(dia);
                 }
 
-                franjas.add(describir(dia, inicio, fin, mia.isHabitual() && suya.isHabitual()));
+                franjas.add(new FranjaComun(
+                        DiasSemana.desdeClave(dia), inicio, fin,
+                        mia.isHabitual() && suya.isHabitual()));
             }
         }
 
@@ -93,11 +95,6 @@ public final class CalculadoraSolape {
         if (unoHabitual && otroHabitual) return CONFIANZA_AMBOS_HABITUALES;
         if (unoHabitual || otroHabitual) return CONFIANZA_UNO_HABITUAL;
         return CONFIANZA_NINGUNO_HABITUAL;
-    }
-
-    private static String describir(String dia, LocalTime inicio, LocalTime fin, boolean ancla) {
-        String base = "%s %s-%s".formatted(DiasSemana.desdeClave(dia), inicio, fin);
-        return ancla ? base + " (los dos vais siempre)" : base;
     }
 
     private static Map<String, List<Disponibilidad>> agruparPorDia(List<Disponibilidad> disponibilidades) {

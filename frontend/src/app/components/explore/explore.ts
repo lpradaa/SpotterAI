@@ -1,26 +1,29 @@
 import { Component, signal, computed, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioService, Match } from '../../services/usuario.service';
+import { RejillaSemana, Franja } from '../rejilla-semana/rejilla-semana';
 
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RejillaSemana],
   templateUrl: './explore.html',
   styleUrl: './explore.scss'
 })
 export class Explore implements OnInit {
   private usuarioService = inject(UsuarioService);
-  private cdr = inject(ChangeDetectorRef); // 🔥 Inyectado para forzar el repintado de la vista
+  private cdr = inject(ChangeDetectorRef);
 
-  usuarios = signal<any[]>([]); 
+  usuarios = signal<Match[]>([]);
   isFiltrosOpen = signal(false);
 
-  // 🔥 Filtros avanzados ampliados
-  filtrosActivos = signal({ 
-    busqueda: '', 
-    nivel: '', 
+  /** Mis franjas, que sirven de fondo en la rejilla de cada ficha. */
+  misHorarios = signal<Franja[]>([]);
+
+  filtrosActivos = signal({
+    busqueda: '',
+    nivel: '',
     objetivo: '',
     gimnasio: '',
     genero: '',
@@ -28,83 +31,100 @@ export class Explore implements OnInit {
     edadMax: null as number | null
   });
 
-  // 🔥 VARIABLES PARA EL TOAST NOTIFICATION
   toast: { show: boolean, message: string, type: 'success' | 'error' } = { show: false, message: '', type: 'success' };
   private toastTimeout: any;
 
-  // 🔥 Extraemos los gimnasios únicos de la base de datos para el filtro
-  gimnasiosDisponibles = computed(() => {
-    const gyms = this.usuarios()
-      .map(u => u.gimnasioNombre)
-      .filter(gym => gym); // Quitamos los nulos
-    return [...new Set(gyms)]; // Filtramos para que no salgan repetidos
+  /** Gimnasios presentes en los resultados, para poblar el filtro. */
+  gimnasiosDisponibles = computed(() =>
+    [...new Set(this.usuarios().map(u => u.gimnasioNombre).filter((g): g is string => !!g))]
+  );
+
+  hayFiltrosActivos = computed(() => {
+    const f = this.filtrosActivos();
+    return !!(f.nivel || f.objetivo || f.gimnasio || f.genero || f.edadMin || f.edadMax || f.busqueda.trim());
   });
 
   usuariosFiltrados = computed(() => {
-    let list = this.usuarios();
+    let lista = this.usuarios();
     const f = this.filtrosActivos();
-    
-    // Búsqueda por texto
-    if (f.busqueda.trim()) list = list.filter(u => u.nombre.toLowerCase().includes(f.busqueda.toLowerCase()));
-    
-    // Selectores exactos
-    if (f.nivel) list = list.filter(u => u.nivel === f.nivel);
-    if (f.objetivo) list = list.filter(u => u.objetivos === f.objetivo);
-    if (f.gimnasio) list = list.filter(u => u.gimnasioNombre === f.gimnasio);
-    if (f.genero) list = list.filter(u => u.genero === f.genero);
-    
-    // Rango de edades
-    if (f.edadMin !== null && f.edadMin > 0) list = list.filter(u => u.edad >= f.edadMin!);
-    if (f.edadMax !== null && f.edadMax > 0) list = list.filter(u => u.edad <= f.edadMax!);
-    
-    return list;
+
+    if (f.busqueda.trim()) {
+      const termino = f.busqueda.toLowerCase();
+      lista = lista.filter(u => u.nombre.toLowerCase().includes(termino));
+    }
+    if (f.nivel) lista = lista.filter(u => u.nivel === f.nivel);
+    if (f.objetivo) lista = lista.filter(u => u.objetivos === f.objetivo);
+    if (f.gimnasio) lista = lista.filter(u => u.gimnasioNombre === f.gimnasio);
+    if (f.genero) lista = lista.filter(u => u.genero === f.genero);
+    if (f.edadMin !== null && f.edadMin > 0) lista = lista.filter(u => (u.edad ?? 0) >= f.edadMin!);
+    if (f.edadMax !== null && f.edadMax > 0) lista = lista.filter(u => (u.edad ?? 0) <= f.edadMax!);
+
+    return lista;
   });
 
-  ngOnInit() { this.cargarComunidad(); }
-
-  // 🔥 FUNCIÓN PARA MOSTRAR EL TOAST (Reemplaza a los alert)
-  mostrarToast(mensaje: string, tipo: 'success' | 'error' = 'success') {
-    this.toast = { show: true, message: mensaje, type: tipo };
-    if (this.cdr) this.cdr.detectChanges();
-
-    if (this.toastTimeout) clearTimeout(this.toastTimeout);
-    
-    this.toastTimeout = setTimeout(() => {
-      this.toast.show = false;
-      if (this.cdr) this.cdr.detectChanges();
-    }, 3000); 
+  ngOnInit(): void {
+    this.cargarComunidad();
+    this.cargarMisHorarios();
   }
 
-  cargarComunidad() {
+  private cargarComunidad(): void {
     this.usuarioService.getExplorarUsuarios().subscribe({
-      next: (data) => this.usuarios.set(data),
-      error: (err) => console.error('Error cargando usuarios:', err)
+      next: (data) => { this.usuarios.set(data || []); this.cdr.detectChanges(); },
+      error: (err) => console.error('Error cargando la comunidad:', err)
     });
   }
 
-  toggleFiltros() { this.isFiltrosOpen.update(v => !v); }
-  
-  actualizarFiltros(campo: string, evento: any) {
-    const valor = evento.target ? evento.target.value : evento;
+  /** Sin mis horarios la rejilla no tiene fondo sobre el que dibujar el solape. */
+  private cargarMisHorarios(): void {
+    this.usuarioService.getMiPerfil().subscribe({
+      next: (perfil) => { this.misHorarios.set(perfil?.horarios || []); this.cdr.detectChanges(); },
+      error: (err) => console.error('Error cargando mis horarios:', err)
+    });
+  }
+
+  mostrarToast(mensaje: string, tipo: 'success' | 'error' = 'success'): void {
+    this.toast = { show: true, message: mensaje, type: tipo };
+    this.cdr.detectChanges();
+
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastTimeout = setTimeout(() => {
+      this.toast.show = false;
+      this.cdr.detectChanges();
+    }, 3000);
+  }
+
+  toggleFiltros(): void { this.isFiltrosOpen.update(v => !v); }
+
+  actualizarFiltros(campo: string, evento: any): void {
+    const valor = evento?.target ? evento.target.value : evento;
     this.filtrosActivos.update(f => ({ ...f, [campo]: valor }));
   }
 
-  resetearFiltros() {
-    this.filtrosActivos.set({ 
-      busqueda: '', nivel: '', objetivo: '', 
-      gimnasio: '', genero: '', edadMin: null, edadMax: null 
+  resetearFiltros(): void {
+    this.filtrosActivos.set({
+      busqueda: '', nivel: '', objetivo: '',
+      gimnasio: '', genero: '', edadMin: null, edadMax: null
     });
   }
 
-  conectarConUsuario(id: number) {
+  /** Tramo de compatibilidad, para no repetir umbrales en la plantilla. */
+  tramo(puntuacion: number): 'alta' | 'media' | 'baja' {
+    if (puntuacion >= 70) return 'alta';
+    if (puntuacion >= 40) return 'media';
+    return 'baja';
+  }
+
+  conectarConUsuario(id: number): void {
     this.usuarioService.enviarSolicitudConexion(id).subscribe({
       next: () => {
-        this.mostrarToast('¡Solicitud enviada con éxito!', 'success'); // 🔥 Usamos el toast
-        this.usuarios.update(list => list.filter(u => u.id !== id));
+        this.mostrarToast('Solicitud enviada.');
+        // Sale de la lista: explorar muestra solo a quien no has escrito todavía
+        this.usuarios.update(lista => lista.filter(u => u.id !== id));
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
-        this.mostrarToast('Hubo un problema al conectar con el usuario.', 'error'); // 🔥 Usamos el toast
+        this.mostrarToast('No se pudo enviar la solicitud.', 'error');
       }
     });
   }

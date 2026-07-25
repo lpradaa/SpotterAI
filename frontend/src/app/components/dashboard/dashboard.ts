@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UsuarioService, Match, ExplicacionMatch } from '../../services/usuario.service';
+import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
+import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -42,11 +44,16 @@ export class DashboardComponent implements OnInit {
 
   // --- Modal de perfil ---
   isModalOpen = false;
-  emojisDisponibles = ['💪', '🏋️', '🏃', '🧘', '🚴', '🥊', '🤸', '🏊', '🏆', '🔥', '🦍', '🦄'];
+  /**
+   * Colores de identidad. Antes esto era una rejilla de emoticonos, que además
+   * de no parecer un producto serio no identificaba a nadie: dos personas con
+   * el mismo emoji eran indistinguibles en una lista.
+   */
+  coloresAvatar = COLORES_AVATAR;
   diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
   perfilForm: any = {
-    avatar: '💪', edad: null, genero: '', peso: null, nivel: 'Intermedio',
+    avatar: '', edad: null, genero: '', peso: null, nivel: 'Intermedio',
     objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', horarios: [], metaSemanal: 4
   };
 
@@ -86,7 +93,7 @@ export class DashboardComponent implements OnInit {
         const meta = metaGuardada ? parseInt(metaGuardada, 10) : 4;
 
         this.perfilForm = {
-          avatar: data.avatar || '💪', edad: data.edad, genero: data.genero, peso: data.peso,
+          avatar: data.avatar || '', edad: data.edad, genero: data.genero, peso: data.peso,
           nivel: data.nivel || 'Intermedio', objetivos: data.objetivos, gimnasioId: data.gimnasioId,
           horarios: data.horarios || [], metaSemanal: meta
         };
@@ -262,8 +269,15 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  /**
+   * Lleva a la conversación con ese compañero.
+   *
+   * Antes esto abría /chat/:id, una segunda implementación del chat copiada de
+   * la de conexiones. Ahora los mensajes viven en un solo sitio y el compañero
+   * llega como parámetro para abrirlo directamente.
+   */
   irAlChat(usuarioId: number): void {
-    this.router.navigate(['/chat', usuarioId]);
+    this.router.navigate(['/conexiones'], { queryParams: { con: usuarioId } });
   }
 
   // --- Presentación ---
@@ -288,7 +302,7 @@ export class DashboardComponent implements OnInit {
   // --- Modales de perfil y entrenamiento ---
   abrirModal(): void { this.isModalOpen = true; this.cdr.detectChanges(); }
   cerrarModal(): void { this.isModalOpen = false; this.cdr.detectChanges(); }
-  seleccionarAvatar(emoji: string): void { this.perfilForm.avatar = emoji; }
+  seleccionarAvatar(color: string): void { this.perfilForm.avatar = color; }
   agregarHorario(): void {
     this.perfilForm.horarios.push({
       diaSemana: 'Lunes', horaInicio: '10:00', horaFin: '12:00', habitual: false

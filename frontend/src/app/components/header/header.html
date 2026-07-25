@@ -34,14 +34,36 @@
                 stroke-width="4" stroke-linecap="round" opacity="0.55" />
         </g>
 
+        <!-- currentColor lo fija .header__logo-container: sin color explicito el
+             enlace heredaba el azul de link por defecto del navegador. -->
         <text x="66" y="27" font-family="'Space Grotesk', system-ui, sans-serif" font-size="26"
               font-weight="700" fill="currentColor" dominant-baseline="middle"
-              letter-spacing="-0.5">Spotter<tspan font-weight="500" fill="#c2410c">AI</tspan></text>
+              letter-spacing="-0.5">Spotter<tspan font-weight="500"
+              fill="var(--sa-acento)">AI</tspan></text>
       </svg>
     </a>
   </div>
   
-  <div class="header__right"></div>
+  <div class="header__right">
+    <button class="header__button" (click)="alternarTema()"
+            [attr.aria-label]="'Cambiar a tema ' + (temaActual() === 'oscuro' ? 'claro' : 'oscuro')"
+            [title]="'Cambiar a tema ' + (temaActual() === 'oscuro' ? 'claro' : 'oscuro')">
+      @if (temaActual() === 'oscuro') {
+        <!-- Sol: pasar a claro -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+      } @else {
+        <!-- Luna: pasar a oscuro -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+        </svg>
+      }
+    </button>
+  </div>
 </header>
 
 <div class="backdrop" [class.backdrop--show]="isSidebarOpen()" (click)="toggleSidebar()"></div>
@@ -68,16 +90,31 @@
   <hr class="sidebar__divider" />
 
   <nav class="sidebar__nav">
+    <!-- Iconos de trazo en vez de emoticonos: se tiñen con currentColor y
+         siguen el estado activo del enlace, cosa que un emoji no puede hacer. -->
     <a routerLink="/dashboard" class="sidebar__nav-item" routerLinkActive="sidebar__nav-item--active" (click)="toggleSidebar()">
-      <span class="sidebar__nav-icon">🏠</span> Dashboard
+      <svg class="sidebar__nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect>
+        <rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect>
+      </svg>
+      Tablero
     </a>
-    
+
     <a routerLink="/conexiones" class="sidebar__nav-item" routerLinkActive="sidebar__nav-item--active" (click)="toggleSidebar()">
-      <span class="sidebar__nav-icon">🤝</span> Mis Compañeros
+      <svg class="sidebar__nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      Compañeros
     </a>
 
     <a routerLink="/explorar" class="sidebar__nav-item" routerLinkActive="sidebar__nav-item--active" (click)="toggleSidebar()">
-      <span class="sidebar__nav-icon">🔍</span> Explorar Compañeros
+      <svg class="sidebar__nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+      </svg>
+      Explorar
     </a>
   </nav>
 

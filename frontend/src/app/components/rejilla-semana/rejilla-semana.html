@@ -1,0 +1,52 @@
+@if (!hayDatos()) {
+  <p class="rejilla-vacia">Sin horarios que cruzar todavía.</p>
+} @else {
+  <div class="rejilla" [class.rejilla--compacta]="modo() === 'compacta'">
+
+    @if (modo() === 'completa') {
+      <div class="rejilla__horas" aria-hidden="true">
+        @for (h of horasVisibles(); track h) {
+          <span class="rejilla__hora" [style.top.%]="posicionHora(h)">{{ h }}h</span>
+        }
+      </div>
+    }
+
+    <div class="rejilla__cuerpo">
+      <!-- Cabecera de días -->
+      <div class="rejilla__dias" aria-hidden="true">
+        @for (dia of dias; track dia; let i = $index) {
+          <span class="rejilla__dia">{{ modo() === 'compacta' ? abreviados[i] : dia.slice(0, 3) }}</span>
+        }
+      </div>
+
+      <!-- Lienzo: columnas por día, bloques posicionados en porcentaje -->
+      <div class="rejilla__lienzo">
+        @if (modo() === 'completa') {
+          @for (h of horasVisibles(); track h) {
+            <span class="rejilla__linea" [style.top.%]="posicionHora(h)" aria-hidden="true"></span>
+          }
+        }
+
+        <!-- Mi disponibilidad, de fondo -->
+        @for (b of bloquesMios(); track $index) {
+          <span class="bloque bloque--mio" [class.bloque--fijo]="b.fijo" [ngStyle]="estiloBloque(b)"></span>
+        }
+
+        <!-- El solape, encima -->
+        @for (b of bloquesSolape(); track $index) {
+          <span class="bloque bloque--solape" [class.bloque--ancla]="b.fijo" [ngStyle]="estiloBloque(b)"></span>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (modo() === 'completa') {
+    <ul class="leyenda">
+      <li><span class="muestra muestra--mio"></span>Tu disponibilidad</li>
+      @if (haySolape()) {
+        <li><span class="muestra muestra--solape"></span>Coincidís</li>
+        <li><span class="muestra muestra--ancla"></span>Los dos vais siempre</li>
+      }
+    </ul>
+  }
+}

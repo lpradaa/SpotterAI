@@ -1,121 +1,214 @@
-@use '../../../scss/index' as *;
+@import '../../../scss/index';
+@import '../../../scss/componentes';
 
-.explore-wrapper {
-  padding: $space-lg;
-  max-width: 1400px;
+:host {
+  display: block;
+}
+
+.explorar {
+  max-width: 1180px;
   margin: 0 auto;
-}
+  padding: $space-md $space-sm $space-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
 
-/* --- BARRA SUPERIOR HORIZONTAL --- */
-.top-action-bar {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: $space-xl; background: white; padding: 15px 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid $border;
-
-  .search-box {
-    display: flex; align-items: center; gap: 10px; width: 60%;
-    .icon { font-size: 1.2rem; color: $text-muted; }
-    input { width: 100%; border: none; outline: none; font-size: 1rem; color: $text-main; &::placeholder { color: $text-muted; } }
-  }
-
-  .btn-filters {
-    background: $text-main; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: $font-bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: transform 0.1s; position: relative;
-    &:hover { background: $accent; }
-    &:active { transform: scale(0.95); }
-    .badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; display: flex; justify-content: center; align-items: center; font-weight: bold;}
+  @include tablet {
+    padding: $space-lg $space-md $space-xl;
   }
 }
 
-/* --- CUADRÍCULA Y TARJETAS --- */
-.explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: $space-lg; }
-.user-card { background: white; border-radius: 16px; border: 1px solid $border; padding: $space-lg; display: flex; flex-direction: column; gap: $space-md; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: transform 0.2s, box-shadow 0.2s; &:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); } &__header { display: flex; align-items: center; gap: 15px; .avatar { width: 60px; height: 60px; border-radius: 50%; background: rgba($accent, 0.1); color: $accent; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; font-weight: $font-extrabold; } .info { display: flex; flex-direction: column; gap: 4px; h3 { margin: 0; font-size: $text-lg; font-weight: $font-extrabold; color: $text-main; } .gym-badge { font-size: 12px; color: $text-muted; font-weight: $font-bold; } } } &__body { display: flex; flex-direction: column; gap: 15px; border-top: 1px dashed $border; padding-top: 15px; .tags { display: flex; gap: 8px; flex-wrap: wrap; .tag { padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: $font-extrabold; text-transform: uppercase; } .tag--level { background: #f1f5f9; color: #475569; } .tag--focus { background: rgba($accent, 0.1); color: $accent; } } .bio { font-size: 14px; color: $text-muted; font-style: italic; line-height: 1.5; margin: 0; flex-grow: 1; } .stats { display: flex; justify-content: flex-start; gap: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; .stat { display: flex; flex-direction: column; gap: 2px; .label { font-size: 10px; color: $text-muted; font-weight: $font-bold; text-transform: uppercase;} .value { font-size: 14px; font-weight: $font-extrabold; color: $text-main; text-transform: capitalize; } } } } &__footer { margin-top: auto; .btn-connect { width: 100%; background: $text-main; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: $font-bold; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; &:hover { background: $accent; } &:active { transform: scale(0.98); } } } }
-.empty-state { text-align: center; margin: 2rem auto; padding: 3rem; background: white; border-radius: 16px; border: 1px dashed $border; max-width: 450px; .icon { font-size: 3rem; margin-bottom: 10px; } h2 { margin: 0 0 10px 0; color: $text-main; } p { color: $text-muted; margin-bottom: 20px;} .btn-reset { margin-top: 10px; background: rgba($accent, 0.1); color: $accent; border: none; padding: 10px 20px; border-radius: 8px; font-weight: $font-bold; cursor: pointer; transition: 0.2s; &:hover { background: $accent; color: white; } } }
-
-/* =========================================
-   🔥 PANEL DESLIZANTE (OFFCANVAS DRAWER)
-   ========================================= */
-
-.drawer-overlay {
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000; backdrop-filter: blur(2px); animation: fadeIn 0.3s forwards;
+/* ===================== Cabecera ===================== */
+.explorar__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $space-sm;
 }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.drawer {
-  position: fixed; top: 0; right: -400px; width: 400px; max-width: 100%; height: 100vh; background: white; box-shadow: -5px 0 25px rgba(0,0,0,0.1); z-index: 1001; transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column;
-
-  &.open { right: 0; }
-
-  .drawer-header {
-    display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; border-bottom: 1px solid $border;
-    h2 { margin: 0; font-size: 1.2rem; color: $text-main; }
-    .btn-close { background: none; border: none; font-size: 1.5rem; color: $text-muted; cursor: pointer; transition: color 0.2s; &:hover { color: #ef4444; } }
-  }
-
-  .drawer-body {
-    padding: 25px; display: flex; flex-direction: column; gap: 20px; flex-grow: 1; overflow-y: auto;
-    
-    .filter-group {
-      display: flex; flex-direction: column; gap: 8px;
-      label { font-size: 12px; font-weight: $font-bold; color: $text-muted; text-transform: uppercase; }
-      
-      select, input {
-        padding: 10px 12px; border: 1px solid $border; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; color: $text-main;
-        &:focus { border-color: $accent; box-shadow: 0 0 0 2px rgba($accent, 0.1); }
-      }
-      
-      .age-range {
-        display: flex; align-items: center; gap: 10px;
-        input { width: 50%; }
-        span { color: $text-muted; font-weight: bold; }
-      }
-    }
-    
-    .btn-clear {
-      margin-top: 10px; padding: 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; font-weight: $font-bold; cursor: pointer; transition: background 0.2s;
-      &:hover { background: #fca5a5; }
-    }
-  }
+.explorar__titulo {
+  font-size: $text-2xl;
+  font-weight: $font-bold;
 }
 
-/* =========================================
-   🍞 TOAST NOTIFICATIONS
-   ========================================= */
-.custom-toast {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background: white;
-  border-left: 5px solid #10b981; 
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  padding: 16px 24px;
-  border-radius: 8px;
+.explorar__resumen {
+  margin: 2px 0 0;
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+}
+
+.explorar__controles {
   display: flex;
   align-items: center;
-  gap: 15px;
-  z-index: 9999; 
-  
-  transform: translateY(100px);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+  gap: $space-xs;
+}
 
-  &.show {
-    transform: translateY(0);
-    opacity: 1;
+.buscador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: $radius-full;
+  background: var(--sa-superficie);
+  border: 1px solid var(--sa-borde);
+  color: var(--sa-texto-tenue);
+  transition: border-color var(--sa-transicion);
+
+  &:focus-within {
+    border-color: var(--sa-acento);
+  }
+
+  input {
+    border: none;
+    background: transparent;
+    color: var(--sa-texto);
+    padding: 9px 0;
+    width: 180px;
+    outline: none;
+
+    &::placeholder { color: var(--sa-texto-tenue); }
+  }
+}
+
+/* ===================== Fichas ===================== */
+.fichas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: $space-sm;
+}
+
+.ficha {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+  padding: $space-sm;
+  border-radius: $radius-md;
+  background: var(--sa-superficie);
+  border: 1px solid var(--sa-borde);
+  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
+
+  &:hover {
+    border-color: var(--sa-borde-fuerte);
+    background: var(--sa-superficie-alt);
+  }
+}
+
+.ficha__cabecera {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+}
+
+.ficha__avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  border-radius: 50%;
+  background: var(--sa-superficie-alt);
+  border: 1px solid var(--sa-borde);
+  flex-shrink: 0;
+}
+
+.ficha__quien {
+  min-width: 0;
+  margin-right: auto;
+}
+
+.ficha__nombre {
+  font-size: $text-base;
+  font-weight: $font-semibold;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ficha__gimnasio {
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+}
+
+// En la ficha el marcador es mas contenido que en la lista del tablero:
+// aqui compite con menos elementos y no necesita tanto tamaño
+.ficha .marcador__cifra {
+  font-size: $text-2xl;
+}
+
+.ficha__motivo {
+  margin: 0;
+  font-size: $text-sm;
+  line-height: $leading-snug;
+  color: var(--sa-texto-suave);
+  // Dos lineas como maximo: si no, las fichas dejan de alinearse entre si
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ficha__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 2px;
+}
+
+/* ===================== Panel de filtros ===================== */
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  width: 320px;
+  max-width: 88vw;
+  display: flex;
+  flex-direction: column;
+  background: var(--sa-superficie-elevada);
+  border-left: 1px solid var(--sa-borde);
+  // Se saca del todo: con solo translateX(100%) asomaba por el ancho de la
+  // barra de desplazamiento, porque right:0 se mide sobre el area util y la
+  // ventana es mas ancha. Y visibility lo saca ademas del orden de tabulacion,
+  // que si no dejaba botones alcanzables con el panel cerrado.
+  transform: translateX(calc(100% + 24px));
+  visibility: hidden;
+  transition: transform 240ms cubic-bezier(0.2, 0, 0.2, 1), visibility 240ms;
+  box-shadow: var(--sa-sombra-lg);
+
+  &--abierto {
+    transform: translateX(0);
     visibility: visible;
   }
+}
 
-  &.error {
-    border-left-color: #ef4444; 
-  }
+.panel__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-sm $space-md;
+  border-bottom: 1px solid var(--sa-borde);
 
-  .toast-icon {
-    font-size: 1.5rem;
-  }
+  h2 { font-size: $text-lg; }
+}
 
-  .toast-message {
-    color: #1f2937;
-    font-weight: 700;
-    font-size: 0.95rem;
-    margin: 0;
-  }
+.panel__cuerpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: $space-md;
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.panel__pie {
+  padding: $space-sm $space-md;
+  border-top: 1px solid var(--sa-borde);
 }

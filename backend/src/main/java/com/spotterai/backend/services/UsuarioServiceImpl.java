@@ -272,6 +272,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         dto.setMinutosEnComun(puntuacion.solape().minutosSemanales());
         dto.setDiasFijosEnComun(puntuacion.solape().diasAncla());
         dto.setCompatibilidadIncompleta(!puntuacion.esCompleta());
+        dto.setFranjasEnComun(puntuacion.solape().franjas().stream()
+                .map(f -> new UsuarioResponseDTO.FranjaComunDTO(
+                        f.dia(), f.inicio().toString(), f.fin().toString(), f.ambosFijos()))
+                .toList());
 
         // Los flags eran codigo muerto: la query anterior ya excluia a quien tuviera
         // solicitud, asi que nunca podian ser true. Ahora los candidatos vienen todos
@@ -293,26 +297,39 @@ public class UsuarioServiceImpl implements UsuarioService {
                 u.getGimnasio() != null ? u.getGimnasio().getNombre() : "Gimnasio Habitual");
     }
 
+    /**
+     * La comunidad entera, con quien todavia no hay ninguna solicitud.
+     *
+     * <p>Devuelve exactamente la misma informacion que las sugerencias: puntuacion,
+     * franjas en comun y desglose. Antes era una lista sin puntuar, de modo que la
+     * pantalla de explorar mostraba perfiles sueltos y no habia forma de saber si
+     * merecia la pena escribir a alguien. Un solo camino de calculo para las dos
+     * vistas: el tablero enseña la cabeza de la lista y explorar deja filtrarla.
+     */
     @Override
     public List<UsuarioResponseDTO> explorarComunidad(String email) {
         Usuario miUsuario = usuarioRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        
-        List<Usuario> todosMenosYo = usuarioRepository.findByIdNot(miUsuario.getId());
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        return todosMenosYo.stream().filter(u -> {
-            boolean hayIda = solicitudRepository.findFirstByEmisorIdAndReceptorId(miUsuario.getId(), u.getId()).isPresent();
-            boolean hayVuelta = solicitudRepository.findFirstByEmisorIdAndReceptorId(u.getId(), miUsuario.getId()).isPresent();
-            
-            return !hayIda && !hayVuelta;
-            
-        }).map(u -> new UsuarioResponseDTO(
-            u.getId(), u.getNombre(), u.getEmail(), 
-            u.getEdad(), u.getGenero(), u.getPeso(), 
-            u.getNivel(), u.getObjetivos(), 
-            u.getGimnasio() != null ? u.getGimnasio().getId() : null,
-            u.getAvatar(), u.getBiografia(),
-            u.getGimnasio() != null ? u.getGimnasio().getNombre() : "Gimnasio Habitual" // 🔥 EXTRAE EL NOMBRE DEL GIMNASIO AQUÍ
-        )).collect(Collectors.toList());
+        Map<Long, String> estadoPorCompanero = indexarSolicitudes(miUsuario.getId());
+
+        List<Usuario> candidatos = usuarioRepository.findByIdNot(miUsuario.getId()).stream()
+                .filter(u -> !estadoPorCompanero.containsKey(u.getId()))
+                .toList();
+
+        if (candidatos.isEmpty()) return List.of();
+
+        List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(miUsuario.getId());
+        Map<Long, List<Disponibilidad>> horariosAjenos = cargarHorariosDe(candidatos);
+
+        return candidatos.stream()
+                .map(candidato -> construirDtoDeMatch(
+                        candidato,
+                        CalculadoraCompatibilidad.calcular(
+                                miUsuario, misHorarios,
+                                candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of())),
+                        null))
+                .sorted(Comparator.comparingInt(UsuarioResponseDTO::getCompatibilidad).reversed())
+                .collect(Collectors.toList());
     }
 }

@@ -1,124 +1,159 @@
-<div class="explore-wrapper">
-  
-  <header class="top-action-bar">
-    <div class="search-box">
-      <span class="icon">🔍</span>
-      <input type="text" placeholder="Buscar por nombre..." 
-             [ngModel]="filtrosActivos().busqueda" 
-             (ngModelChange)="actualizarFiltros('busqueda', $event)">
+<div class="explorar">
+
+  <header class="explorar__cabecera">
+    <div>
+      <h1 class="explorar__titulo">Explorar</h1>
+      <p class="explorar__resumen">
+        {{ usuariosFiltrados().length }} de {{ usuarios().length }}
+        {{ usuarios().length === 1 ? 'persona' : 'personas' }} con las que aún no has contactado
+      </p>
     </div>
-    <button class="btn-filters" (click)="toggleFiltros()">
-      ⚙️ Filtros Avanzados
-      <span class="badge" *ngIf="filtrosActivos().nivel || filtrosActivos().objetivo || filtrosActivos().gimnasio || filtrosActivos().genero || filtrosActivos().edadMin || filtrosActivos().edadMax">!</span>
-    </button>
+
+    <div class="explorar__controles">
+      <label class="buscador">
+        <span class="visually-hidden">Buscar por nombre</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+        </svg>
+        <input type="text" placeholder="Buscar por nombre"
+               [ngModel]="filtrosActivos().busqueda"
+               (ngModelChange)="actualizarFiltros('busqueda', $event)">
+      </label>
+
+      <button class="btn btn--pequeno" (click)="toggleFiltros()">
+        Filtros
+        @if (hayFiltrosActivos()) { <span class="btn__punto" aria-label="Hay filtros activos"></span> }
+      </button>
+    </div>
   </header>
 
-  <main class="explore-grid" *ngIf="usuariosFiltrados().length > 0; else emptyState">
-    <article class="user-card" *ngFor="let user of usuariosFiltrados()">
-      
-      <div class="user-card__header">
-        <div class="avatar">{{ user.avatar || user.nombre.charAt(0) }}</div>
-        <div class="info">
-          <h3>{{ user.nombre }}</h3>
-          <span class="gym-badge">📍 {{ user.gimnasioNombre || 'Sin gimnasio asignado' }}</span>
-        </div>
-      </div>
-
-      <div class="user-card__body">
-        <div class="tags">
-          <span class="tag tag--level">{{ user.nivel || 'Nivel no definido' }}</span>
-          <span class="tag tag--focus">{{ user.objetivos || 'Salud General' }}</span>
-        </div>
-        
-        <p class="bio">"{{ user.biografia || 'Hola, estoy buscando un compañero de entrenamiento para motivarnos mutuamente.' }}"</p>
-        
-        <div class="stats">
-          <div class="stat"><span class="label">Edad</span><span class="value">{{ user.edad || '-' }}</span></div>
-          <div class="stat"><span class="label">Género</span><span class="value">{{ user.genero || '-' }}</span></div>
-          <div class="stat"><span class="label">Peso</span><span class="value">{{ user.peso ? user.peso + ' kg' : '-' }}</span></div>
-        </div>
-      </div>
-
-      <div class="user-card__footer">
-        <button class="btn-connect" (click)="conectarConUsuario(user.id)">👋 Conectar</button>
-      </div>
-
-    </article>
-  </main>
-
-  <ng-template #emptyState>
-    <div class="empty-state">
-      <div class="icon">🏜️</div>
-      <h2>No hay resultados</h2>
-      <p>No hemos encontrado compañeros con esa combinación de filtros.</p>
-      <button class="btn-reset" (click)="resetearFiltros()">Quitar filtros</button>
+  @if (usuariosFiltrados().length === 0) {
+    <div class="vacio-grande">
+      <h2>Sin resultados</h2>
+      <p>No hay nadie que encaje con esa combinación de filtros.</p>
+      @if (hayFiltrosActivos()) {
+        <button class="btn btn--fantasma" (click)="resetearFiltros()">Quitar filtros</button>
+      }
     </div>
-  </ng-template>
+  } @else {
+    <ul class="fichas">
+      @for (usuario of usuariosFiltrados(); track usuario.id) {
+        <li class="ficha" [attr.data-tramo]="tramo(usuario.compatibilidad)">
 
-  <div class="drawer-overlay" *ngIf="isFiltrosOpen()" (click)="toggleFiltros()"></div>
-  
-  <aside class="drawer" [class.open]="isFiltrosOpen()">
-    <div class="drawer-header">
-      <h2>Ajustar Filtros</h2>
-      <button class="btn-close" (click)="toggleFiltros()">✕</button>
-    </div>
+          <div class="ficha__cabecera">
+            <span class="ficha__avatar" aria-hidden="true">
+              {{ usuario.avatar || usuario.nombre.charAt(0).toUpperCase() }}
+            </span>
+            <div class="ficha__quien">
+              <h3 class="ficha__nombre">{{ usuario.nombre }}</h3>
+              <span class="ficha__gimnasio">{{ usuario.gimnasioNombre || 'Sin gimnasio' }}</span>
+            </div>
+            <div class="marcador">
+              <span class="marcador__cifra cifra">{{ usuario.compatibilidad }}</span>
+              <span class="marcador__unidad">%</span>
+            </div>
+          </div>
 
-    <div class="drawer-body">
-      
-      <div class="filter-group">
-        <label>Gimnasio</label>
+          <p class="ficha__motivo">{{ usuario.resumenCompatibilidad }}</p>
+
+          <!-- La semana: aquí es donde se decide si merece la pena escribir -->
+          <app-rejilla-semana
+            modo="compacta"
+            [misFranjas]="misHorarios()"
+            [solape]="usuario.franjasEnComun || []" />
+
+          <div class="ficha__etiquetas">
+            <span class="chip chip--nivel">{{ usuario.nivel || 'Sin nivel' }}</span>
+            @if (usuario.objetivos) { <span class="chip chip--objetivo">{{ usuario.objetivos }}</span> }
+            @if (usuario.diasFijosEnComun > 0) {
+              <span class="chip chip--fija">
+                {{ usuario.diasFijosEnComun }} {{ usuario.diasFijosEnComun === 1 ? 'día fijo' : 'días fijos' }}
+              </span>
+            }
+            @if (usuario.compatibilidadIncompleta) {
+              <span class="chip chip--parcial">Datos incompletos</span>
+            }
+          </div>
+
+          <button class="btn btn--primario btn--ancho" (click)="conectarConUsuario(usuario.id)">
+            Conectar
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- ================= Panel de filtros ================= -->
+  @if (isFiltrosOpen()) {
+    <div class="velo" (click)="toggleFiltros()"></div>
+  }
+
+  <aside class="panel" [class.panel--abierto]="isFiltrosOpen()"
+         role="dialog" aria-label="Filtros de búsqueda">
+    <header class="panel__cabecera">
+      <h2>Filtros</h2>
+      <button class="cerrar" (click)="toggleFiltros()" aria-label="Cerrar filtros">✕</button>
+    </header>
+
+    <div class="panel__cuerpo">
+      <label class="campo">
+        <span>Gimnasio</span>
         <select [ngModel]="filtrosActivos().gimnasio" (change)="actualizarFiltros('gimnasio', $event)">
-          <option value="">Todos los gimnasios</option>
-          <option *ngFor="let gym of gimnasiosDisponibles()" [value]="gym">{{ gym }}</option>
+          <option value="">Todos</option>
+          @for (gym of gimnasiosDisponibles(); track gym) { <option [value]="gym">{{ gym }}</option> }
         </select>
-      </div>
+      </label>
 
-      <div class="filter-group">
-        <label>Género</label>
-        <select [ngModel]="filtrosActivos().genero" (change)="actualizarFiltros('genero', $event)">
-          <option value="">Cualquier género</option>
-          <option value="Masculino">Masculino</option>
-          <option value="Femenino">Femenino</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label>Rango de Edad</label>
-        <div class="age-range">
-          <input type="number" placeholder="Mínima" [ngModel]="filtrosActivos().edadMin" (ngModelChange)="actualizarFiltros('edadMin', $event)">
-          <span>-</span>
-          <input type="number" placeholder="Máxima" [ngModel]="filtrosActivos().edadMax" (ngModelChange)="actualizarFiltros('edadMax', $event)">
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <label>Nivel de experiencia</label>
+      <label class="campo">
+        <span>Nivel</span>
         <select [ngModel]="filtrosActivos().nivel" (change)="actualizarFiltros('nivel', $event)">
-          <option value="">Cualquier nivel</option>
+          <option value="">Cualquiera</option>
           <option value="Principiante">Principiante</option>
           <option value="Intermedio">Intermedio</option>
           <option value="Avanzado">Avanzado</option>
         </select>
-      </div>
+      </label>
 
-      <div class="filter-group">
-        <label>Objetivo principal</label>
+      <label class="campo">
+        <span>Objetivo</span>
         <select [ngModel]="filtrosActivos().objetivo" (change)="actualizarFiltros('objetivo', $event)">
-          <option value="">Cualquier objetivo</option>
+          <option value="">Cualquiera</option>
           <option value="Hipertrofia">Hipertrofia</option>
           <option value="Fuerza">Fuerza</option>
           <option value="Pérdida de peso">Pérdida de peso</option>
           <option value="Resistencia">Resistencia</option>
         </select>
-      </div>
-      
-      <button class="btn-clear" (click)="resetearFiltros()">🗑️ Limpiar todos los filtros</button>
+      </label>
+
+      <label class="campo">
+        <span>Género</span>
+        <select [ngModel]="filtrosActivos().genero" (change)="actualizarFiltros('genero', $event)">
+          <option value="">Cualquiera</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Femenino">Femenino</option>
+        </select>
+      </label>
+
+      <fieldset class="campo campo--rango">
+        <legend>Edad</legend>
+        <div class="rango">
+          <input type="number" placeholder="Desde" aria-label="Edad mínima"
+                 [ngModel]="filtrosActivos().edadMin" (ngModelChange)="actualizarFiltros('edadMin', $event)">
+          <span aria-hidden="true">–</span>
+          <input type="number" placeholder="Hasta" aria-label="Edad máxima"
+                 [ngModel]="filtrosActivos().edadMax" (ngModelChange)="actualizarFiltros('edadMax', $event)">
+        </div>
+      </fieldset>
     </div>
+
+    <footer class="panel__pie">
+      <button class="btn btn--fantasma btn--ancho" (click)="resetearFiltros()">Limpiar</button>
+    </footer>
   </aside>
 
-  <div class="custom-toast" [class.show]="toast.show" [class.error]="toast.type === 'error'">
-    <div class="toast-icon">{{ toast.type === 'error' ? '❌' : '✅' }}</div>
-    <div class="toast-message">{{ toast.message }}</div>
+  <div class="aviso" [class.aviso--visible]="toast.show" [class.aviso--error]="toast.type === 'error'"
+       role="status" aria-live="polite">
+    {{ toast.message }}
   </div>
-
 </div>

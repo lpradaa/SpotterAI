@@ -32,6 +32,9 @@
       align-items: center;
       text-decoration: none;
       cursor: pointer;
+      // Sin esto el SVG hereda el color de enlace del navegador y el logotipo
+      // sale en azul
+      color: var(--sa-texto);
       .logo-svg {
         height: 40px; 
         width: 200px; 

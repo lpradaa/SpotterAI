@@ -1,133 +1,133 @@
 /* ===========================================================================
-   Tokens de tema (custom properties)
+   Tokens de tema
    ---------------------------------------------------------------------------
-   Capa nueva sobre la paleta SCSS. Las variables SCSS siguen existiendo porque
-   los componentes heredados usan darken() y rgba() sobre ellas, que se
-   resuelven en compilacion y no admiten var(). Estas custom properties son
-   para lo que necesita cambiar en tiempo de ejecucion: el tema claro/oscuro.
+   Oscuro por defecto: encaja con el mundo del gimnasio y hace que el naranja
+   ascua funcione como luz, no como mancha. El claro sigue disponible y el
+   usuario puede forzarlo con data-tema="claro" en el elemento raiz.
 
-   El tema sigue a la preferencia del sistema y puede forzarse poniendo
-   data-tema="claro" u "oscuro" en el elemento raiz.
+   Las variables SCSS de _colors.scss siguen existiendo porque los componentes
+   heredados usan darken() y rgba(), que se resuelven en compilacion y no
+   admiten var(). Lo nuevo usa solo estas custom properties.
    =========================================================================== */
 
 :root {
-  /* Superficies */
+  /* --- Superficies, de mas hundida a mas elevada --- */
+  --sa-fondo: #0e0c0b;
+  --sa-superficie: #171412;
+  --sa-superficie-alt: #1f1b18;
+  --sa-superficie-elevada: #262120;
+
+  /* --- Texto --- */
+  --sa-texto: #f5f1ed;
+  --sa-texto-suave: #a39a92;
+  --sa-texto-tenue: #6f6660;
+
+  /* --- Lineas --- */
+  --sa-borde: #2a2523;
+  --sa-borde-fuerte: #3d3632;
+
+  /* --- Acento: ascua --- */
+  --sa-acento: #ff7a45;
+  --sa-acento-hover: #ff9468;
+  --sa-acento-suave: #2b1610;
+  --sa-acento-texto: #ffb28c;
+  --sa-sobre-acento: #1a0c05;
+
+  /* --- Estados --- */
+  --sa-exito: #4ade80;
+  --sa-exito-suave: #12261a;
+  --sa-aviso: #fbbf24;
+  --sa-error: #f87171;
+
+  /* --- Escala de compatibilidad --- */
+  --sa-comp-baja: #6f6660;
+  --sa-comp-media: #fbbf24;
+  --sa-comp-alta: #ff7a45;
+
+  /* --- Rejilla semanal --- */
+  --sa-rejilla-fondo: #131110;
+  --sa-rejilla-linea: #262120;
+  --sa-rejilla-mia: #443a33;          // mi disponibilidad, de fondo
+  --sa-rejilla-solape: #ff7a45;       // donde coincidimos
+  --sa-rejilla-ancla: #ffcfb3;        // donde ambos vamos siempre
+
+  /* --- Identidad: colores de avatar ---
+     Apagados a proposito: identifican a una persona, no compiten con el acento
+     de la marca ni con la escala de compatibilidad. */
+  --sa-av-ascua: #ff9468;
+  --sa-av-ambar: #e6b455;
+  --sa-av-oliva: #a3c26a;
+  --sa-av-acero: #74b3d6;
+  --sa-av-ciruela: #c48ac4;
+  --sa-av-pizarra: #a8a29a;
+
+  /* --- Sombras: en oscuro pesan poco, el relieve lo dan los bordes --- */
+  --sa-sombra-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --sa-sombra-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --sa-sombra-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
+
+  /* --- Movimiento --- */
+  --sa-transicion: 160ms cubic-bezier(0.2, 0, 0.2, 1);
+  --sa-transicion-lenta: 420ms cubic-bezier(0.2, 0, 0.2, 1);
+
+  color-scheme: dark;
+}
+
+/* --- Tema claro: solo si el usuario lo pide explicitamente --- */
+:root[data-tema='claro'] {
   --sa-fondo: #f7f5f2;
   --sa-superficie: #ffffff;
-  --sa-superficie-alt: #f6f3f0;
+  --sa-superficie-alt: #f3efeb;
   --sa-superficie-elevada: #ffffff;
 
-  /* Texto */
   --sa-texto: #191512;
   --sa-texto-suave: #6b6259;
   --sa-texto-tenue: #a8a29a;
 
-  /* Lineas */
   --sa-borde: #e7e2dc;
   --sa-borde-fuerte: #d6cfc6;
 
-  /* Acento */
   --sa-acento: #c2410c;
   --sa-acento-hover: #9a3412;
   --sa-acento-suave: #fff1ea;
   --sa-acento-texto: #7c2d12;
   --sa-sobre-acento: #ffffff;
 
-  /* Estados */
   --sa-exito: #15803d;
   --sa-exito-suave: #eaf6ee;
   --sa-aviso: #b45309;
   --sa-error: #b91c1c;
 
-  /* Escala de compatibilidad: de tibio a ascua */
   --sa-comp-baja: #a8a29a;
   --sa-comp-media: #d97706;
   --sa-comp-alta: #c2410c;
 
-  /* Sombras: calidas, no grises azuladas */
+  --sa-rejilla-fondo: #faf8f6;
+  --sa-rejilla-linea: #ece7e1;
+  --sa-rejilla-mia: #e8e0d8;
+  --sa-rejilla-solape: #c2410c;
+  --sa-rejilla-ancla: #7c2d12;
+
+  // Los mismos tonos bajan de luminosidad para leerse sobre fondo claro
+  --sa-av-ascua: #b8430f;
+  --sa-av-ambar: #96690b;
+  --sa-av-oliva: #55701f;
+  --sa-av-acero: #1f6389;
+  --sa-av-ciruela: #7d3d7d;
+  --sa-av-pizarra: #57534e;
+
   --sa-sombra-sm: 0 1px 2px rgba(41, 26, 16, 0.06);
   --sa-sombra-md: 0 4px 12px rgba(41, 26, 16, 0.08);
   --sa-sombra-lg: 0 16px 40px rgba(41, 26, 16, 0.12);
 
-  /* Movimiento */
-  --sa-transicion: 160ms cubic-bezier(0.2, 0, 0.2, 1);
-}
-
-/* --- Tema oscuro: por preferencia del sistema --- */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-tema='claro']) {
-    --sa-fondo: #131110;
-    --sa-superficie: #1c1917;
-    --sa-superficie-alt: #232019;
-    --sa-superficie-elevada: #262220;
-
-    --sa-texto: #f5f2ef;
-    --sa-texto-suave: #a8a29a;
-    --sa-texto-tenue: #78716c;
-
-    --sa-borde: #302b27;
-    --sa-borde-fuerte: #443c36;
-
-    /* El ascua se aclara para mantener contraste sobre fondo oscuro */
-    --sa-acento: #fb7a45;
-    --sa-acento-hover: #fd9668;
-    --sa-acento-suave: #2a1710;
-    --sa-acento-texto: #fdba8c;
-    --sa-sobre-acento: #1a0e07;
-
-    --sa-exito: #4ade80;
-    --sa-exito-suave: #14261a;
-    --sa-aviso: #fbbf24;
-    --sa-error: #f87171;
-
-    --sa-comp-baja: #78716c;
-    --sa-comp-media: #fbbf24;
-    --sa-comp-alta: #fb7a45;
-
-    --sa-sombra-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --sa-sombra-md: 0 4px 12px rgba(0, 0, 0, 0.45);
-    --sa-sombra-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
-  }
-}
-
-/* --- Tema oscuro forzado desde la interfaz --- */
-:root[data-tema='oscuro'] {
-  --sa-fondo: #131110;
-  --sa-superficie: #1c1917;
-  --sa-superficie-alt: #232019;
-  --sa-superficie-elevada: #262220;
-
-  --sa-texto: #f5f2ef;
-  --sa-texto-suave: #a8a29a;
-  --sa-texto-tenue: #78716c;
-
-  --sa-borde: #302b27;
-  --sa-borde-fuerte: #443c36;
-
-  --sa-acento: #fb7a45;
-  --sa-acento-hover: #fd9668;
-  --sa-acento-suave: #2a1710;
-  --sa-acento-texto: #fdba8c;
-  --sa-sobre-acento: #1a0e07;
-
-  --sa-exito: #4ade80;
-  --sa-exito-suave: #14261a;
-  --sa-aviso: #fbbf24;
-  --sa-error: #f87171;
-
-  --sa-comp-baja: #78716c;
-  --sa-comp-media: #fbbf24;
-  --sa-comp-alta: #fb7a45;
-
-  --sa-sombra-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --sa-sombra-md: 0 4px 12px rgba(0, 0, 0, 0.45);
-  --sa-sombra-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+  color-scheme: light;
 }
 
 /* Quien haya pedido menos movimiento, que no lo sufra */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --sa-transicion: 1ms;
+    --sa-transicion-lenta: 1ms;
   }
 
   *,

@@ -37,7 +37,9 @@ class CalculadoraSolapeTest {
 
         assertEquals(60, solape.minutosSemanales());
         assertEquals(List.of("Lunes"), solape.dias());
-        assertEquals(List.of("Lunes 20:00-21:00"), solape.franjas());
+        assertEquals(
+                List.of(new FranjaComun("Lunes", LocalTime.of(20, 0), LocalTime.of(21, 0), false)),
+                solape.franjas());
     }
 
     @Test
@@ -69,7 +71,8 @@ class CalculadoraSolapeTest {
                 List.of(franja("Miércoles", "18:00", "20:00"), franja("Sábado", "10:00", "11:00")));
 
         assertEquals(List.of("Miércoles", "Sábado"), solape.dias());
-        assertTrue(solape.franjas().contains("Miércoles 18:00-20:00"));
+        assertTrue(solape.franjas().stream().anyMatch(f -> f.dia().equals("Miércoles")));
+        assertTrue(solape.franjas().stream().anyMatch(f -> f.describir().startsWith("Miércoles 18:00")));
     }
 
     @Test

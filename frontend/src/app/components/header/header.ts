@@ -1,6 +1,7 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { TemaService } from '../../services/tema.service';
 
 @Component({
   selector: 'app-header',
@@ -15,6 +16,13 @@ export class Header implements OnInit {
   
   // Inyectamos el router para poder redirigir al login
   private router = inject(Router);
+  private tema = inject(TemaService);
+
+  temaActual = this.tema.tema;
+
+  alternarTema(): void {
+    this.tema.alternar();
+  }
 
   // Variables dinámicas para el usuario
   currentUser = signal({

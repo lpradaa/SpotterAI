@@ -15,14 +15,14 @@ import java.util.List;
  * @param diasAncla        dias en los que <em>ambos</em> declaran ir siempre. Es la
  *                         señal mas fiable de toda la aplicacion
  * @param dias             dias con alguna coincidencia, en orden natural
- * @param franjas          descripcion legible de cada coincidencia
+ * @param franjas          tramos concretos en comun, para poder dibujarlos
  */
 public record SolapeHorario(
         int minutosSemanales,
         double minutosEfectivos,
         int diasAncla,
         List<String> dias,
-        List<String> franjas) {
+        List<FranjaComun> franjas) {
 
     public static final SolapeHorario NINGUNO =
             new SolapeHorario(0, 0, 0, List.of(), List.of());

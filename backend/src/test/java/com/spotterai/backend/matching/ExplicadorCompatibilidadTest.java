@@ -3,6 +3,7 @@ package com.spotterai.backend.matching;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +34,9 @@ class ExplicadorCompatibilidadTest {
                         FactorCompatibilidad.evaluado("edad", 0, 5,
                                 "Os lleváis 15 años")),
                 new SolapeHorario(240, 240, 2, List.of("Martes", "Jueves"),
-                        List.of("Martes 19:00-21:00", "Jueves 19:00-21:00")));
+                        List.of(
+                                new FranjaComun("Martes", LocalTime.of(19, 0), LocalTime.of(21, 0), true),
+                                new FranjaComun("Jueves", LocalTime.of(19, 0), LocalTime.of(21, 0), true))));
     }
 
     @Test

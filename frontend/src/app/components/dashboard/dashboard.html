@@ -1,72 +1,41 @@
 <div class="tablero">
 
-  <!-- ================= Cabecera ================= -->
-  <section class="bienvenida">
-    <div class="bienvenida__texto">
-      <span class="etiqueta-nivel">Nivel {{ perfilForm.nivel }}</span>
-      <h1 class="bienvenida__titulo">Hola, {{ userName() }}</h1>
-
-      @if (mejorSugerencia(); as mejor) {
-        <p class="bienvenida__resumen">
-          Tu mejor coincidencia ahora mismo es
-          <strong>{{ mejor.nombre }}</strong>, con un
-          <strong>{{ mejor.compatibilidad }}%</strong> de compatibilidad.
-          @if (mejor.diasEnComun?.length) {
-            Coincidís {{ formatearSolape(mejor.minutosEnComun) }} a la semana.
-          }
-        </p>
-      } @else {
-        <p class="bienvenida__resumen">
-          Todavía no hay sugerencias nuevas. Añade tus horarios en el perfil para
-          que podamos cruzarlos con los del resto.
-        </p>
-      }
-
-      <div class="bienvenida__acciones">
-        <button class="btn btn--primario" (click)="abrirSugerencias()">
-          Ver sugerencias
-          @if (sugerencias().length) {
-            <span class="btn__contador">{{ sugerencias().length }}</span>
-          }
-        </button>
-        <button class="btn btn--fantasma" (click)="abrirModal()">Editar perfil</button>
-      </div>
-    </div>
-
-    <!-- Anillo de progreso semanal -->
-    <div class="progreso">
-      <svg viewBox="0 0 36 36" class="progreso__svg" aria-hidden="true">
-        <path class="progreso__pista"
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-        <path class="progreso__valor"
-              [attr.stroke-dasharray]="progressPercentage() + ', 100'"
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-      </svg>
-      <div class="progreso__centro">
-        <span class="progreso__cifra cifra"
-              [class.progreso__cifra--logrado]="completedDays() >= totalDays()">
-          {{ completedDays() }}/{{ totalDays() }}
-        </span>
-        <span class="progreso__pie">
-          {{ completedDays() >= totalDays() ? 'Meta cumplida' : 'sesiones' }}
+  <!-- ================= Barra de estado =================
+       Sustituye a la cabecera con degradado y saludo: ocupaba el espacio más
+       valioso de la pantalla para decir "Hola, Luis". Ahora ese espacio lo usa
+       lo único que importa al entrar: con quién puedes entrenar y cuándo. -->
+  <header class="barra">
+    <div class="barra__identidad">
+      <app-avatar [nombre]="userName()" [valor]="perfilForm.avatar" [tamano]="40" />
+      <div>
+        <h1 class="barra__nombre">{{ userName() }}</h1>
+        <span class="barra__meta">
+          {{ perfilForm.nivel || 'Sin nivel' }}
+          @if (perfilForm.objetivos) { · {{ perfilForm.objetivos }} }
         </span>
       </div>
     </div>
-  </section>
 
-  <!-- ================= Meta semanal ================= -->
-  <section class="tarjeta meta">
-    <div class="meta__cabecera">
-      <h2 class="tarjeta__titulo">Meta semanal</h2>
-      <span class="meta__valor cifra">{{ totalDays() }} {{ totalDays() === 1 ? 'día' : 'días' }}</span>
+    <dl class="barra__cifras">
+      <div class="dato">
+        <dt>Compatibles</dt>
+        <dd class="cifra">{{ matches().length }}</dd>
+      </div>
+      <div class="dato">
+        <dt>Sin conectar</dt>
+        <dd class="cifra">{{ sugerencias().length }}</dd>
+      </div>
+      <div class="dato">
+        <dt>Esta semana</dt>
+        <dd class="cifra">{{ completedDays() }}<span class="dato__de">/{{ totalDays() }}</span></dd>
+      </div>
+    </dl>
+
+    <div class="barra__acciones">
+      <button class="btn btn--primario" (click)="abrirSugerencias()">Ver sugerencias</button>
+      <button class="btn btn--fantasma" (click)="abrirModal()">Perfil</button>
     </div>
-    <input type="range" min="1" max="7" class="meta__slider"
-           [value]="totalDays()" (input)="actualizarMetaDesdeSlider($event)"
-           aria-label="Días de entrenamiento por semana" />
-    <div class="meta__escala" aria-hidden="true">
-      @for (n of [1,2,3,4,5,6,7]; track n) { <span>{{ n }}</span> }
-    </div>
-  </section>
+  </header>
 
   <div class="tablero__columnas">
 
@@ -88,33 +57,21 @@
             @for (usuario of matches(); track usuario.id) {
               <li class="match" [attr.data-tramo]="tramo(usuario.compatibilidad)">
 
-                <div class="match__avatar" aria-hidden="true">
-                  {{ usuario.avatar || (usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '?') }}
+                <!-- Puntuación: para un producto cuya salida es un número, ese
+                     número tiene que ser el elemento mejor tratado de la fila. -->
+                <div class="marcador">
+                  <span class="marcador__cifra cifra">{{ usuario.compatibilidad }}</span>
+                  <span class="marcador__unidad">%</span>
                 </div>
 
                 <div class="match__info">
                   <div class="match__linea1">
+                    <app-avatar [nombre]="usuario.nombre" [valor]="usuario.avatar" [tamano]="24" />
                     <h3 class="match__nombre">{{ usuario.nombre }}</h3>
                     <span class="chip chip--nivel">{{ usuario.nivel || 'Sin nivel' }}</span>
-                  </div>
-
-                  <p class="match__motivo">{{ usuario.resumenCompatibilidad }}</p>
-
-                  <div class="match__meta">
-                    <!-- El TFG leía aquí usuario.gimnasio?.nombre, campo que el
-                         backend nunca envió: siempre salía el texto de reserva. -->
-                    <span class="match__gimnasio">{{ usuario.gimnasioNombre || 'Sin gimnasio' }}</span>
-                    @if (usuario.diasEnComun?.length) {
-                      <span class="match__separador" aria-hidden="true">·</span>
-                      <span class="match__dias">
-                        @for (dia of usuario.diasEnComun; track dia) {
-                          <span class="chip chip--dia">{{ dia }}</span>
-                        }
-                      </span>
-                    }
                     @if (usuario.diasFijosEnComun > 0) {
                       <span class="chip chip--fija" title="Los dos vais siempre a esa hora">
-                        {{ usuario.diasFijosEnComun === 1 ? 'Coincidís fijo' : 'Coincidís fijo ' + usuario.diasFijosEnComun + ' días' }}
+                        {{ usuario.diasFijosEnComun }} {{ usuario.diasFijosEnComun === 1 ? 'día fijo' : 'días fijos' }}
                       </span>
                     }
                     @if (usuario.compatibilidadIncompleta) {
@@ -123,15 +80,27 @@
                       </span>
                     }
                   </div>
+
+                  <p class="match__motivo">{{ usuario.resumenCompatibilidad }}</p>
+
+                  <div class="match__meta">
+                    <!-- El TFG leía aquí usuario.gimnasio?.nombre, campo que el
+                         backend nunca envió: siempre salía el texto de reserva. -->
+                    <span>{{ usuario.gimnasioNombre || 'Sin gimnasio' }}</span>
+                    @if (usuario.minutosEnComun) {
+                      <span class="match__separador" aria-hidden="true">·</span>
+                      <span>{{ formatearSolape(usuario.minutosEnComun) }} en común</span>
+                    }
+                  </div>
                 </div>
 
-                <div class="match__puntuacion">
-                  <span class="match__cifra cifra">{{ usuario.compatibilidad }}<small>%</small></span>
-                  <span class="match__etiqueta">{{ usuario.etiquetaCompatibilidad }}</span>
-                  <div class="barra" role="img"
-                       [attr.aria-label]="usuario.compatibilidad + ' por ciento de compatibilidad'">
-                    <div class="barra__relleno" [style.width.%]="usuario.compatibilidad"></div>
-                  </div>
+                <!-- La semana, dibujada. Aquí es donde se ve de un vistazo si
+                     coincidís de verdad, en vez de leer una lista de días. -->
+                <div class="match__semana">
+                  <app-rejilla-semana
+                    modo="compacta"
+                    [misFranjas]="perfilForm.horarios"
+                    [solape]="usuario.franjasEnComun || []" />
                 </div>
 
                 <div class="match__accion">
@@ -179,7 +148,7 @@
 
       <section class="tarjeta perfil">
         <div class="perfil__cabecera">
-          <div class="perfil__avatar" aria-hidden="true">{{ perfilForm.avatar }}</div>
+          <app-avatar [nombre]="userName()" [valor]="perfilForm.avatar" [tamano]="68" />
           <h2 class="perfil__nombre">{{ userName() }}</h2>
           <span class="chip chip--objetivo">{{ perfilForm.objetivos || 'Sin objetivo' }}</span>
         </div>
@@ -225,9 +194,7 @@
 
       @if (sugerenciaActual(); as candidato) {
         <div class="sugerencia">
-          <div class="sugerencia__avatar" aria-hidden="true">
-            {{ candidato.avatar || candidato.nombre.charAt(0).toUpperCase() }}
-          </div>
+          <app-avatar [nombre]="candidato.nombre" [valor]="candidato.avatar" [tamano]="84" />
 
           <h2 class="sugerencia__nombre" id="titulo-sugerencia">{{ candidato.nombre }}</h2>
 
@@ -257,19 +224,20 @@
             <div><dt>Gimnasio</dt><dd>{{ candidato.gimnasioNombre || '—' }}</dd></div>
           </dl>
 
-          @if (candidato.diasEnComun?.length) {
-            <div class="sugerencia__horario">
-              <span class="sugerencia__horario-titulo">Coincidís</span>
-              <div class="sugerencia__chips">
-                @for (dia of candidato.diasEnComun; track dia) {
-                  <span class="chip chip--dia">{{ dia }}</span>
-                }
-              </div>
-              <span class="sugerencia__horario-total cifra">
-                {{ formatearSolape(candidato.minutosEnComun) }} a la semana
-              </span>
+          <!-- La semana completa: se ve exactamente cuándo entrenaríais juntos -->
+          <div class="sugerencia__semana">
+            <div class="sugerencia__semana-cabecera">
+              <span class="sugerencia__horario-titulo">Vuestra semana</span>
+              @if (candidato.minutosEnComun) {
+                <span class="sugerencia__horario-total cifra">
+                  {{ formatearSolape(candidato.minutosEnComun) }} en común
+                </span>
+              }
             </div>
-          }
+            <app-rejilla-semana
+              [misFranjas]="perfilForm.horarios"
+              [solape]="candidato.franjasEnComun || []" />
+          </div>
 
           <button class="btn btn--primario btn--ancho" (click)="conectarConSugerenciaActual()">
             Conectar con {{ candidato.nombre.split(' ')[0] }}
@@ -302,13 +270,23 @@
 
       <div class="modal__cuerpo">
         <fieldset class="bloque">
-          <legend class="bloque__titulo">Avatar</legend>
-          <div class="rejilla-emojis">
-            @for (emoji of emojisDisponibles; track emoji) {
-              <button class="emoji" [class.emoji--activo]="perfilForm.avatar === emoji"
-                      (click)="seleccionarAvatar(emoji)"
-                      [attr.aria-pressed]="perfilForm.avatar === emoji">{{ emoji }}</button>
-            }
+          <legend class="bloque__titulo">Tu color</legend>
+          <p class="bloque__ayuda">
+            Tu inicial te identifica en las listas; el color es para distinguirte de un vistazo.
+          </p>
+          <div class="colores">
+            <app-avatar [nombre]="userName()" [valor]="perfilForm.avatar" [tamano]="44" />
+            <div class="colores__opciones">
+              @for (color of coloresAvatar; track color) {
+                <button type="button"
+                        class="color"
+                        [class.color--activo]="perfilForm.avatar === color"
+                        [attr.data-color]="color"
+                        [attr.aria-label]="'Color ' + color"
+                        [attr.aria-pressed]="perfilForm.avatar === color"
+                        (click)="seleccionarAvatar(color)"></button>
+              }
+            </div>
           </div>
         </fieldset>
 
@@ -335,6 +313,19 @@
             <label class="campo"><span>Edad</span><input type="number" [(ngModel)]="perfilForm.edad"></label>
             <label class="campo"><span>Peso (kg)</span><input type="number" [(ngModel)]="perfilForm.peso"></label>
             <label class="campo"><span>Género</span><input type="text" [(ngModel)]="perfilForm.genero"></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="bloque">
+          <div class="bloque__cabecera">
+            <legend class="bloque__titulo">Meta semanal</legend>
+            <span class="meta__valor cifra">{{ totalDays() }} {{ totalDays() === 1 ? 'día' : 'días' }}</span>
+          </div>
+          <input type="range" min="1" max="7" class="meta__slider"
+                 [value]="totalDays()" (input)="actualizarMetaDesdeSlider($event)"
+                 aria-label="Días de entrenamiento por semana" />
+          <div class="meta__escala" aria-hidden="true">
+            @for (n of [1,2,3,4,5,6,7]; track n) { <span>{{ n }}</span> }
           </div>
         </fieldset>
 
