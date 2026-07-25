@@ -560,6 +560,53 @@
     color: var(--sa-acento-texto);
     font-weight: $font-semibold;
   }
+
+  // Coincidencia con compromiso por ambas partes: el dato mas fiable que hay,
+  // asi que es lo unico de la tarjeta que usa el color de exito.
+  &--fija {
+    background: var(--sa-exito-suave);
+    color: var(--sa-exito);
+    font-weight: $font-semibold;
+  }
+
+  // Aviso honesto: la puntuacion se ha calculado sin algun factor
+  &--parcial {
+    background: transparent;
+    color: var(--sa-texto-tenue);
+    border: 1px dashed var(--sa-borde-fuerte);
+  }
+}
+
+/* --- Conmutador "Voy siempre" / "Puedo ir" --- */
+.conmutador {
+  font-family: $font-display;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  padding: 7px 12px;
+  border-radius: $radius-full;
+  border: 1px solid var(--sa-borde);
+  background: var(--sa-superficie);
+  color: var(--sa-texto-suave);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--sa-transicion);
+
+  &:hover:not(:disabled) {
+    border-color: var(--sa-acento);
+    color: var(--sa-acento-texto);
+  }
+
+  &--activo {
+    background: var(--sa-exito-suave);
+    border-color: var(--sa-exito);
+    color: var(--sa-exito);
+  }
+
+  // Cupo agotado: se ve que no está disponible, no que esté roto
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 /* ===================== Solicitudes ===================== */
@@ -865,6 +912,17 @@
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border-left: 3px solid transparent;
+  border-radius: $radius-sm;
+  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
+
+  // Las franjas fijas se distinguen de un vistazo entre las demas
+  &--fija {
+    border-left-color: var(--sa-exito);
+    background: var(--sa-exito-suave);
+  }
 
   select,
   input {

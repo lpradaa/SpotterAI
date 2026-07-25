@@ -23,6 +23,10 @@ export interface Match {
   resumenCompatibilidad: string;
   diasEnComun: string[];
   minutosEnComun: number;
+  /** Días a los que ambos declaran ir siempre. La señal más fiable que hay. */
+  diasFijosEnComun: number;
+  /** La puntuación se calculó sin algún factor por falta de datos. */
+  compatibilidadIncompleta: boolean;
 
   yaConectado: boolean;
   solicitudPendiente: boolean;

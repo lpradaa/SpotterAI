@@ -6,6 +6,7 @@ import com.spotterai.backend.dtos.UsuarioResponseDTO;
 import com.spotterai.backend.matching.CalculadoraCompatibilidad;
 import com.spotterai.backend.matching.DiasSemana;
 import com.spotterai.backend.matching.ExplicacionMatch;
+import com.spotterai.backend.matching.FactorCompatibilidad;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.matching.PuntuacionCompatibilidad;
 import com.spotterai.backend.models.Disponibilidad;
@@ -36,6 +37,15 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final GimnasioRepository gimnasioRepository;
     private final SolicitudRepository solicitudRepository;
+    /**
+     * Maximo de franjas que un usuario puede marcar como habituales.
+     *
+     * <p>Sin tope, todo el mundo las marcaria todas y el campo dejaria de informar,
+     * igual que unos deslizadores que todos ponen al maximo. Tres obliga a elegir
+     * cuales son de verdad las anclas de la semana.
+     */
+    static final int MAX_FRANJAS_HABITUALES = 3;
+
     private final DisponibilidadRepository disponibilidadRepository;
     private final ExplicadorCompatibilidad explicador;
 
@@ -103,8 +113,16 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         if (dto.getHorarios() != null) {
             disponibilidadRepository.deleteByUsuarioId(guardado.getId());
-            
+
+            // Tope de franjas habituales: si se pudiera marcar todo, el campo dejaria
+            // de distinguir nada y volveriamos a tener un unico nivel de compromiso.
+            // Obligar a elegir es lo que hace que la señal informe.
+            int habitualesUsadas = 0;
+
             for (UsuarioPerfilDTO.HorarioDTO horario : dto.getHorarios()) {
+                boolean habitual = horario.isHabitual() && habitualesUsadas < MAX_FRANJAS_HABITUALES;
+                if (habitual) habitualesUsadas++;
+
                 // Se guarda siempre la forma canonica ("Miércoles", no "miercoles").
                 // Si no, el desplegable del perfil no encuentra el valor entre sus
                 // opciones, se queda en blanco y al siguiente guardado escribe un
@@ -113,7 +131,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                     DiasSemana.canonico(horario.getDiaSemana()),
                     LocalTime.parse(horario.getHoraInicio()),
                     LocalTime.parse(horario.getHoraFin()),
-                    guardado
+                    guardado,
+                    habitual
                 );
                 disponibilidadRepository.save(nuevaDisp);
             }
@@ -151,8 +170,9 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .stream().map(d -> {
                     UsuarioPerfilDTO.HorarioDTO h = new UsuarioPerfilDTO.HorarioDTO();
                     h.setDiaSemana(d.getDiaSemana());
-                    h.setHoraInicio(d.getHoraInicio().toString()); 
+                    h.setHoraInicio(d.getHoraInicio().toString());
                     h.setHoraFin(d.getHoraFin().toString());
+                    h.setHabitual(d.isHabitual());
                     return h;
                 }).collect(Collectors.toList());
 
@@ -246,9 +266,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         dto.setCompatibilidad(puntuacion.total());
         dto.setEtiquetaCompatibilidad(puntuacion.etiqueta());
-        dto.setResumenCompatibilidad(puntuacion.factorDominante().detalle());
+        FactorCompatibilidad dominante = puntuacion.factorDominante();
+        dto.setResumenCompatibilidad(dominante != null ? dominante.detalle() : "Perfil sin datos suficientes");
         dto.setDiasEnComun(puntuacion.solape().dias());
         dto.setMinutosEnComun(puntuacion.solape().minutosSemanales());
+        dto.setDiasFijosEnComun(puntuacion.solape().diasAncla());
+        dto.setCompatibilidadIncompleta(!puntuacion.esCompleta());
 
         // Los flags eran codigo muerto: la query anterior ya excluia a quien tuviera
         // solicitud, asi que nunca podian ser true. Ahora los candidatos vienen todos

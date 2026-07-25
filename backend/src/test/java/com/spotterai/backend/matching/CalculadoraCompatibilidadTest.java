@@ -31,8 +31,14 @@ class CalculadoraCompatibilidadTest {
         return u;
     }
 
+    /** Franja sin compromiso: "puedo ir". */
     private static Disponibilidad franja(String dia, String inicio, String fin) {
-        return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null);
+        return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null, false);
+    }
+
+    /** Franja con compromiso: "voy siempre". */
+    private static Disponibilidad fija(String dia, String inicio, String fin) {
+        return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null, true);
     }
 
     private static double puntosDe(PuntuacionCompatibilidad p, String factor) {
@@ -42,21 +48,39 @@ class CalculadoraCompatibilidadTest {
     }
 
     @Test
-    @DisplayName("Dos perfiles identicos con horarios de sobra puntuan 100")
+    @DisplayName("La compatibilidad maxima exige compromiso, no solo disponibilidad")
     void compatibilidadPerfecta() {
         Gimnasio g = gimnasio(1L, "McFit Centro");
         Usuario a = usuario("Intermedio", "Hipertrofia", 28, g);
         Usuario b = usuario("Intermedio", "Hipertrofia", 29, g);
 
-        List<Disponibilidad> horarios = List.of(
+        // Las tres franjas con compromiso mutuo: el maximo del tope permitido
+        List<Disponibilidad> conCompromiso = List.of(
+                fija("Lunes", "18:00", "20:00"),
+                fija("Miercoles", "18:00", "20:00"),
+                fija("Viernes", "18:00", "20:00"));
+
+        assertEquals(100, CalculadoraCompatibilidad.calcular(a, conCompromiso, b, conCompromiso).total());
+
+        // Basta con que una de las tres sea solo disponibilidad para no llegar al tope
+        List<Disponibilidad> casiTodoFirme = List.of(
+                fija("Lunes", "18:00", "20:00"),
+                fija("Miercoles", "18:00", "20:00"),
+                franja("Viernes", "18:00", "20:00"));
+
+        assertTrue(CalculadoraCompatibilidad.calcular(a, casiTodoFirme, b, casiTodoFirme).total() < 100);
+
+        // Las mismas horas, pero sin que ninguno se comprometa, no llegan al maximo:
+        // es disponibilidad, no una cita.
+        List<Disponibilidad> soloDisponibles = List.of(
                 franja("Lunes", "18:00", "20:00"),
                 franja("Miercoles", "18:00", "20:00"),
                 franja("Viernes", "18:00", "20:00"));
 
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(a, horarios, b, horarios);
-
-        assertEquals(100, p.total());
-        assertEquals("Compatibilidad excelente", p.etiqueta());
+        PuntuacionCompatibilidad vaga =
+                CalculadoraCompatibilidad.calcular(a, soloDisponibles, b, soloDisponibles);
+        assertTrue(vaga.total() < 100);
+        assertTrue(vaga.total() > 60, "Aun asi debe puntuar bien: %d".formatted(vaga.total()));
     }
 
     @Test
@@ -131,19 +155,41 @@ class CalculadoraCompatibilidadTest {
     }
 
     @Test
-    @DisplayName("El factor dominante identifica el punto fuerte del match")
+    @DisplayName("El factor dominante ignora los que no se han podido evaluar")
     void factorDominante() {
         Gimnasio g = gimnasio(1L, "Gym");
+        // Compromiso mutuo tres dias: el horario debe ser lo que mande, pese a que
+        // nivel y objetivo esten en las antipodas.
         List<Disponibilidad> h = List.of(
-                franja("Lunes", "18:00", "21:00"),
-                franja("Miercoles", "18:00", "21:00"),
-                franja("Viernes", "18:00", "21:00"));
+                fija("Lunes", "18:00", "21:00"),
+                fija("Miercoles", "18:00", "21:00"),
+                fija("Viernes", "18:00", "21:00"));
 
         PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
                 usuario("Principiante", "Fuerza", 20, g), h,
                 usuario("Avanzado", "Resistencia", 45, g), h);
 
         assertEquals("horario", p.factorDominante().nombre());
-        assertTrue(p.solape().hayCoincidencia());
+        assertTrue(p.solape().hayAncla());
+    }
+
+    @Test
+    @DisplayName("Sin compromiso, el horario deja de mandar frente a los demas factores")
+    void sinCompromisoElHorarioPesaMenos() {
+        Gimnasio g = gimnasio(1L, "Gym");
+        List<Disponibilidad> h = List.of(
+                franja("Lunes", "18:00", "21:00"),
+                franja("Miercoles", "18:00", "21:00"));
+
+        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+                usuario("Intermedio", "Hipertrofia", 30, g), h,
+                usuario("Intermedio", "Hipertrofia", 30, g), h);
+
+        // Con disponibilidad vaga, nivel y objetivo aportan mas que el horario:
+        // es la respuesta correcta a "puedo a muchas horas" y evita que declarar
+        // rango de sobra sea la mejor estrategia.
+        double horario = puntosDe(p, "horario");
+        assertTrue(horario < puntosDe(p, "nivel"),
+                "El horario sin compromiso saco %.1f".formatted(horario));
     }
 }

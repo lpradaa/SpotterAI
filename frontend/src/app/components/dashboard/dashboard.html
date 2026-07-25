@@ -112,6 +112,16 @@
                         }
                       </span>
                     }
+                    @if (usuario.diasFijosEnComun > 0) {
+                      <span class="chip chip--fija" title="Los dos vais siempre a esa hora">
+                        {{ usuario.diasFijosEnComun === 1 ? 'Coincidís fijo' : 'Coincidís fijo ' + usuario.diasFijosEnComun + ' días' }}
+                      </span>
+                    }
+                    @if (usuario.compatibilidadIncompleta) {
+                      <span class="chip chip--parcial" title="Faltan datos en alguno de los dos perfiles">
+                        Datos incompletos
+                      </span>
+                    }
                   </div>
                 </div>
 
@@ -354,22 +364,40 @@
             <button class="btn btn--pequeno" (click)="agregarHorario()">Añadir día</button>
           </div>
           <p class="bloque__ayuda">
-            Es el dato que más pesa en el emparejamiento: sin horarios en común no
-            hay entrenamiento posible.
+            Es el dato que más pesa en el emparejamiento. Marca <strong>Voy siempre</strong>
+            en las franjas a las que acudes de forma fija: coincidir una hora a la que
+            los dos vais seguro cuenta más que muchas horas de disponibilidad suelta.
+            Puedes marcar hasta {{ maxHabituales }}.
           </p>
+
           @for (h of perfilForm.horarios; track $index; let i = $index) {
-            <div class="fila-horario">
+            <div class="fila-horario" [class.fila-horario--fija]="h.habitual">
               <select [(ngModel)]="h.diaSemana" aria-label="Día de la semana">
                 @for (dia of diasSemana; track dia) { <option [value]="dia">{{ dia }}</option> }
               </select>
               <input type="time" [(ngModel)]="h.horaInicio" aria-label="Hora de inicio">
               <span aria-hidden="true">–</span>
               <input type="time" [(ngModel)]="h.horaFin" aria-label="Hora de fin">
+
+              <button type="button"
+                      class="conmutador"
+                      [class.conmutador--activo]="h.habitual"
+                      [disabled]="!puedeMarcarHabitual(h)"
+                      [attr.aria-pressed]="!!h.habitual"
+                      (click)="alternarHabitual(h)">
+                {{ h.habitual ? 'Voy siempre' : 'Puedo ir' }}
+              </button>
+
               <button class="btn-icono btn-icono--no" (click)="eliminarHorario(i)">Quitar</button>
             </div>
           }
+
           @if (perfilForm.horarios.length === 0) {
             <p class="vacio">No tienes horarios añadidos.</p>
+          } @else {
+            <p class="bloque__ayuda">
+              Franjas fijas: {{ habitualesMarcadas() }} de {{ maxHabituales }}
+            </p>
           }
         </fieldset>
       </div>

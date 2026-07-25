@@ -31,11 +31,17 @@ public class UsuarioPerfilDTO {
     public List<HorarioDTO> getHorarios() { return horarios; }
     public void setHorarios(List<HorarioDTO> horarios) { this.horarios = horarios; }
 
-    // 🔥 NUEVA CLASE INTERNA: Estructura del JSON de horarios
+    /** Estructura del JSON de horarios. */
     public static class HorarioDTO {
         private String diaSemana;
         private String horaInicio;
         private String horaFin;
+
+        /**
+         * Si el usuario va seguro a esta franja ("Voy siempre") o solo podria ir.
+         * Opcional: si no llega, cuenta como disponibilidad sin compromiso.
+         */
+        private boolean habitual;
 
         public String getDiaSemana() { return diaSemana; }
         public void setDiaSemana(String diaSemana) { this.diaSemana = diaSemana; }
@@ -43,5 +49,7 @@ public class UsuarioPerfilDTO {
         public void setHoraInicio(String horaInicio) { this.horaInicio = horaInicio; }
         public String getHoraFin() { return horaFin; }
         public void setHoraFin(String horaFin) { this.horaFin = horaFin; }
+        public boolean isHabitual() { return habitual; }
+        public void setHabitual(boolean habitual) { this.habitual = habitual; }
     }
 }

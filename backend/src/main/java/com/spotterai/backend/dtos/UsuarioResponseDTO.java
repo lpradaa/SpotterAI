@@ -28,6 +28,14 @@ public class UsuarioResponseDTO {
     private String resumenCompatibilidad;    // motivo principal, ya legible
     private List<String> diasEnComun;        // dias con solape horario real
     private Integer minutosEnComun;          // minutos semanales de solape
+    private Integer diasFijosEnComun;        // dias a los que ambos van siempre
+
+    /**
+     * Si la puntuacion se ha calculado sin algun factor por falta de datos.
+     * La interfaz lo usa para avisar en vez de presentar el numero como si lo
+     * supieramos todo.
+     */
+    private Boolean compatibilidadIncompleta;
 
     // Constructor básico (usado en el registro)
     public UsuarioResponseDTO(Long id, String nombre, String email, Integer edad, String genero, Float peso) {
@@ -117,4 +125,12 @@ public class UsuarioResponseDTO {
 
     public Integer getMinutosEnComun() { return minutosEnComun; }
     public void setMinutosEnComun(Integer minutosEnComun) { this.minutosEnComun = minutosEnComun; }
+
+    public Integer getDiasFijosEnComun() { return diasFijosEnComun; }
+    public void setDiasFijosEnComun(Integer diasFijosEnComun) { this.diasFijosEnComun = diasFijosEnComun; }
+
+    public Boolean getCompatibilidadIncompleta() { return compatibilidadIncompleta; }
+    public void setCompatibilidadIncompleta(Boolean compatibilidadIncompleta) {
+        this.compatibilidadIncompleta = compatibilidadIncompleta;
+    }
 }

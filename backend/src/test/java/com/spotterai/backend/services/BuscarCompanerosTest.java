@@ -107,7 +107,7 @@ class BuscarCompanerosTest {
     }
 
     @Test
-    @DisplayName("Un usuario sin gimnasio ya no revienta: solo pierde esos puntos")
+    @DisplayName("Un perfil incompleto no revienta ni penaliza: se puntua con lo que hay")
     void sinGimnasioNoLanzaExcepcion() {
         Usuario sinGimnasio = usuario(1L, "Luis", "Intermedio", "Hipertrofia", 28, null);
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(sinGimnasio));
@@ -119,8 +119,14 @@ class BuscarCompanerosTest {
         List<UsuarioResponseDTO> resultado = servicio.buscarCompañeros("luis@test.com");
 
         assertEquals(1, resultado.size());
-        // 20 nivel + 20 objetivo + 5 edad; pierde horario y gimnasio
-        assertEquals(45, resultado.get(0).getCompatibilidad());
+        // Horario y gimnasio no se pueden evaluar y reparten su peso entre nivel,
+        // objetivo y edad, que coinciden del todo. La nota sube respecto al 45 que
+        // daba antes (no rellenar el perfil ya no penaliza como un mal encaje), pero
+        // se queda lejos de 100 porque falta mas de la mitad de la evidencia.
+        int compatibilidad = resultado.get(0).getCompatibilidad();
+        assertTrue(compatibilidad > 45, "Deberia subir respecto al modelo anterior: %d".formatted(compatibilidad));
+        assertTrue(compatibilidad < 80, "Con medio perfil no puede acercarse al maximo: %d".formatted(compatibilidad));
+        assertTrue(resultado.get(0).getCompatibilidadIncompleta());
     }
 
     @Test

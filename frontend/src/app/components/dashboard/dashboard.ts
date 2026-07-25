@@ -290,9 +290,39 @@ export class DashboardComponent implements OnInit {
   cerrarModal(): void { this.isModalOpen = false; this.cdr.detectChanges(); }
   seleccionarAvatar(emoji: string): void { this.perfilForm.avatar = emoji; }
   agregarHorario(): void {
-    this.perfilForm.horarios.push({ diaSemana: 'Lunes', horaInicio: '10:00', horaFin: '12:00' });
+    this.perfilForm.horarios.push({
+      diaSemana: 'Lunes', horaInicio: '10:00', horaFin: '12:00', habitual: false
+    });
   }
   eliminarHorario(index: number): void { this.perfilForm.horarios.splice(index, 1); }
+
+  /**
+   * Tope de franjas marcadas como "Voy siempre".
+   *
+   * Sin tope todo el mundo las marcaría todas y el campo dejaría de distinguir
+   * nada, igual que unos deslizadores que todos ponen al máximo. El backend
+   * aplica el mismo límite: esto solo evita que la interfaz prometa algo que
+   * luego se recorta al guardar.
+   */
+  readonly maxHabituales = 3;
+
+  habitualesMarcadas(): number {
+    return this.perfilForm.horarios.filter((h: any) => h.habitual).length;
+  }
+
+  /** Si esta franja puede pasar a habitual, o ya se ha agotado el cupo. */
+  puedeMarcarHabitual(horario: any): boolean {
+    return horario.habitual || this.habitualesMarcadas() < this.maxHabituales;
+  }
+
+  alternarHabitual(horario: any): void {
+    if (!this.puedeMarcarHabitual(horario)) {
+      this.mostrarToast(`Puedes marcar ${this.maxHabituales} franjas como fijas.`, 'error');
+      return;
+    }
+    horario.habitual = !horario.habitual;
+    this.cdr.detectChanges();
+  }
 
   guardarPerfil(): void {
     localStorage.setItem('meta_semanal_' + this.userName(), this.perfilForm.metaSemanal.toString());
