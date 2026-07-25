@@ -1,0 +1,72 @@
+@import '../../../scss/index';
+
+/*
+ * Ocho columnas: la de las horas y los siete dias. Se usa grid de verdad y no
+ * posicionamiento absoluto como en la rejilla de solo lectura, porque aqui cada
+ * celda es un objetivo de clic y conviene que el navegador la mida.
+ */
+.editable {
+  display: grid;
+  grid-template-columns: 2.2rem repeat(7, 1fr);
+  gap: 2px;
+  width: 100%;
+}
+
+.editable__esquina {
+  // Hueco sobre la columna de horas
+}
+
+.editable__dia {
+  text-align: center;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  color: var(--sa-texto-suave);
+  padding-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* En pantallas estrechas no cabe "Lun": se pasa a una letra. */
+.editable__dia-corto { display: none; }
+
+@media (max-width: 560px) {
+  .editable { grid-template-columns: 1.6rem repeat(7, 1fr); }
+  .editable__dia-largo { display: none; }
+  .editable__dia-corto { display: inline; }
+}
+
+.editable__hora {
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+  text-align: right;
+  padding-right: 6px;
+  line-height: 1;
+  align-self: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.celda {
+  // 30px es lo minimo comodo para el dedo sin que la rejilla entera se dispare
+  // de alto: son 17 filas.
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid var(--sa-borde);
+  border-radius: 3px;
+  background: var(--sa-superficie-alt);
+  cursor: pointer;
+  transition: background-color var(--sa-transicion), border-color var(--sa-transicion);
+
+  &:hover {
+    border-color: var(--sa-acento);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sa-acento);
+    outline-offset: 1px;
+  }
+
+  &--pintada {
+    background: var(--sa-acento);
+    border-color: var(--sa-acento);
+  }
+}

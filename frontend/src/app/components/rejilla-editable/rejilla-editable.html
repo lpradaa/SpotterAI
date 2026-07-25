@@ -1,0 +1,23 @@
+<div class="editable">
+  <div class="editable__esquina" aria-hidden="true"></div>
+
+  @for (dia of dias; track dia; let i = $index) {
+    <div class="editable__dia" [title]="dia">
+      <span class="editable__dia-largo">{{ dia.slice(0, 3) }}</span>
+      <span class="editable__dia-corto">{{ abreviados[i] }}</span>
+    </div>
+  }
+
+  @for (hora of horas; track hora) {
+    <div class="editable__hora">{{ hora }}h</div>
+
+    @for (dia of dias; track dia; let i = $index) {
+      <button type="button"
+              class="celda"
+              [class.celda--pintada]="estaPintada(i, hora)"
+              (click)="alternar(i, hora)"
+              [attr.aria-pressed]="estaPintada(i, hora)"
+              [attr.aria-label]="dia + ' de ' + hora + ' a ' + (hora + 1)"></button>
+    }
+  }
+</div>

@@ -1,0 +1,81 @@
+@import '../../../scss/index';
+@import '../../../scss/componentes';
+
+.bienvenida {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: $space-lg $space-md $space-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.bienvenida__cabecera {
+  text-align: center;
+}
+
+.bienvenida__titulo {
+  font-family: $font-display;
+  font-size: $text-3xl;
+  font-weight: $font-bold;
+  color: var(--sa-texto);
+  margin: 0 0 $space-xs;
+  letter-spacing: -0.02em;
+}
+
+.bienvenida__texto {
+  margin: 0 auto;
+  max-width: 52ch;
+  color: var(--sa-texto-suave);
+  font-size: $text-sm;
+  line-height: 1.6;
+
+  strong { color: var(--sa-texto); }
+}
+
+.bienvenida__panel {
+  background: var(--sa-superficie);
+  border: 1px solid var(--sa-borde);
+  border-radius: $radius-lg;
+  padding: $space-md;
+}
+
+.bienvenida__instruccion {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-sm;
+  flex-wrap: wrap;
+  margin-bottom: $space-sm;
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+
+  strong { color: var(--sa-texto); }
+}
+
+.bienvenida__cuenta {
+  font-family: $font-display;
+  font-weight: $font-bold;
+  color: var(--sa-acento);
+  font-variant-numeric: tabular-nums;
+}
+
+.bienvenida__nota {
+  margin: $space-sm 0 0;
+  font-size: $text-xs;
+  line-height: 1.5;
+  color: var(--sa-texto-suave);
+}
+
+.bienvenida__pie {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+  flex-wrap: wrap;
+}
+
+.bienvenida__pista {
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+}

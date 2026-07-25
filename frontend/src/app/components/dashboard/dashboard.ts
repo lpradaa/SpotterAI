@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UsuarioService, Match, ExplicacionMatch } from '../../services/usuario.service';
 import { EventosService } from '../../services/eventos.service';
+import { PerfilEstadoService } from '../../services/perfil-estado.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
 
@@ -20,6 +21,7 @@ export class DashboardComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private eventos = inject(EventosService);
+  private perfilEstado = inject(PerfilEstadoService);
   private destroyRef = inject(DestroyRef);
 
   userName = signal(localStorage.getItem('usuario_nombre') || 'Usuario');
@@ -383,6 +385,9 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.mostrarToast('Perfil actualizado.');
         this.cerrarModal();
+        // Aqui se pueden borrar todos los horarios, asi que el guardian no puede
+        // seguir creyendo lo que sabia antes.
+        this.perfilEstado.olvidar();
         // Cambiar horarios altera la compatibilidad con todo el mundo, así que se
         // recargan perfil y matches. Antes se llamaba a ngOnInit() a mano.
         this.cargarMiPerfil();

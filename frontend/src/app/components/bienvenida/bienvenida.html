@@ -1,0 +1,48 @@
+<div class="bienvenida">
+  <header class="bienvenida__cabecera">
+    <h1 class="bienvenida__titulo">
+      @if (nombre()) { {{ nombre() }}, ¿cuándo entrenas? } @else { ¿Cuándo entrenas? }
+    </h1>
+    <p class="bienvenida__texto">
+      Es lo único que necesitamos para empezar. Buscamos gente que coincida contigo
+      en el gimnasio, así que sin saber tus horas no hay nada que cruzar: pesa el
+      <strong>40&nbsp;%</strong> de la compatibilidad, más que el nivel y el objetivo juntos.
+    </p>
+  </header>
+
+  <div class="bienvenida__panel">
+    <div class="bienvenida__instruccion">
+      <span>Marca las horas a las que <strong>podrías</strong> ir</span>
+      @if (horasTotales() > 0) {
+        <span class="bienvenida__cuenta">
+          {{ horasTotales() }} {{ horasTotales() === 1 ? 'hora' : 'horas' }} a la semana
+        </span>
+      }
+    </div>
+
+    <app-rejilla-editable
+      [franjasIniciales]="franjasIniciales()"
+      (cambio)="alCambiar($event)" />
+
+    <p class="bienvenida__nota">
+      Pinta con holgura: esto es cuándo <em>puedes</em>, no un compromiso. Cuando
+      sepas a qué vas siempre, podrás marcarlo en tu perfil y contará mucho más.
+    </p>
+  </div>
+
+  @if (error()) {
+    <p class="aviso" role="alert">{{ error() }}</p>
+  }
+
+  <footer class="bienvenida__pie">
+    <button class="btn btn--primario"
+            [disabled]="!puedeContinuar() || guardando()"
+            (click)="guardar()">
+      @if (guardando()) { Guardando… } @else { Continuar }
+    </button>
+
+    @if (!puedeContinuar()) {
+      <span class="bienvenida__pista">Marca al menos una hora para continuar</span>
+    }
+  </footer>
+</div>
