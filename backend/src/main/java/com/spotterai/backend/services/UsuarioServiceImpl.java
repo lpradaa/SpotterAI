@@ -4,6 +4,7 @@ import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.dtos.UsuarioRegistroDTO;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
 import com.spotterai.backend.matching.CalculadoraCompatibilidad;
+import com.spotterai.backend.matching.DiasSemana;
 import com.spotterai.backend.matching.ExplicacionMatch;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.matching.PuntuacionCompatibilidad;
@@ -104,8 +105,12 @@ public class UsuarioServiceImpl implements UsuarioService {
             disponibilidadRepository.deleteByUsuarioId(guardado.getId());
             
             for (UsuarioPerfilDTO.HorarioDTO horario : dto.getHorarios()) {
+                // Se guarda siempre la forma canonica ("Miércoles", no "miercoles").
+                // Si no, el desplegable del perfil no encuentra el valor entre sus
+                // opciones, se queda en blanco y al siguiente guardado escribe un
+                // dia vacio que ya no cruza con nadie.
                 Disponibilidad nuevaDisp = new Disponibilidad(
-                    horario.getDiaSemana(),
+                    DiasSemana.canonico(horario.getDiaSemana()),
                     LocalTime.parse(horario.getHoraInicio()),
                     LocalTime.parse(horario.getHoraFin()),
                     guardado

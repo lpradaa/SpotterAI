@@ -2,13 +2,11 @@ package com.spotterai.backend.matching;
 
 import com.spotterai.backend.models.Disponibilidad;
 
-import java.text.Normalizer;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -17,25 +15,12 @@ import java.util.Map;
  *
  * <p>Es la pieza central del emparejamiento: dos personas con el mismo nivel y el
  * mismo objetivo no sirven de nada si nunca coinciden.
+ *
+ * <p>La comparacion de dias se delega en {@link DiasSemana}, que tambien usa el
+ * servicio de perfil al guardar, de modo que exista una sola definicion de que
+ * significa "el mismo dia".
  */
 public final class CalculadoraSolape {
-
-    /** Orden natural de la semana. Las claves van sin tildes, como las normalizadas. */
-    private static final List<String> ORDEN_SEMANA =
-            List.of("lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo");
-
-    /**
-     * Forma con la que cada dia se le muestra al usuario. Se compara sin tildes para
-     * que "Miércoles" y "Miercoles" cuenten igual, pero se presenta bien escrito.
-     */
-    private static final Map<String, String> NOMBRE_VISIBLE = Map.of(
-            "lunes", "Lunes",
-            "martes", "Martes",
-            "miercoles", "Miércoles",
-            "jueves", "Jueves",
-            "viernes", "Viernes",
-            "sabado", "Sábado",
-            "domingo", "Domingo");
 
     private CalculadoraSolape() {}
 
@@ -52,7 +37,7 @@ public final class CalculadoraSolape {
         List<String> franjas = new ArrayList<>();
 
         for (Disponibilidad mia : unos) {
-            String dia = normalizarDia(mia.getDiaSemana());
+            String dia = DiasSemana.clave(mia.getDiaSemana());
             if (dia == null || mia.getHoraInicio() == null || mia.getHoraFin() == null) continue;
 
             for (Disponibilidad suya : porDiaOtros.getOrDefault(dia, List.of())) {
@@ -66,15 +51,15 @@ public final class CalculadoraSolape {
 
                 minutosTotales += minutos;
                 minutosPorDia.merge(dia, minutos, Integer::sum);
-                franjas.add("%s %s-%s".formatted(nombreVisible(dia), inicio, fin));
+                franjas.add("%s %s-%s".formatted(DiasSemana.desdeClave(dia), inicio, fin));
             }
         }
 
         if (minutosTotales == 0) return SolapeHorario.NINGUNO;
 
         List<String> dias = minutosPorDia.keySet().stream()
-                .sorted(Comparator.comparingInt(ORDEN_SEMANA::indexOf))
-                .map(CalculadoraSolape::nombreVisible)
+                .sorted(Comparator.comparingInt(DiasSemana::posicion))
+                .map(DiasSemana::desdeClave)
                 .toList();
 
         return new SolapeHorario(minutosTotales, dias, List.copyOf(franjas));
@@ -83,23 +68,11 @@ public final class CalculadoraSolape {
     private static Map<String, List<Disponibilidad>> agruparPorDia(List<Disponibilidad> disponibilidades) {
         Map<String, List<Disponibilidad>> porDia = new LinkedHashMap<>();
         for (Disponibilidad d : disponibilidades) {
-            String dia = normalizarDia(d.getDiaSemana());
+            String dia = DiasSemana.clave(d.getDiaSemana());
             if (dia == null) continue;
             porDia.computeIfAbsent(dia, k -> new ArrayList<>()).add(d);
         }
         return porDia;
-    }
-
-    /**
-     * Deja el dia en minusculas y sin tildes para que "Miércoles", "miercoles" y
-     * "MIERCOLES" cuenten como el mismo dia. Devuelve null si no reconoce el valor.
-     */
-    static String normalizarDia(String dia) {
-        if (dia == null || dia.isBlank()) return null;
-        String limpio = Normalizer.normalize(dia.trim(), Normalizer.Form.NFD)
-                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
-                .toLowerCase(Locale.ROOT);
-        return ORDEN_SEMANA.contains(limpio) ? limpio : null;
     }
 
     private static int minutosEntre(LocalTime inicio, LocalTime fin) {
@@ -112,10 +85,5 @@ public final class CalculadoraSolape {
 
     private static LocalTime minimo(LocalTime a, LocalTime b) {
         return a.isBefore(b) ? a : b;
-    }
-
-    /** Devuelve el dia tal y como debe leerse, con tilde si le corresponde. */
-    private static String nombreVisible(String diaNormalizado) {
-        return NOMBRE_VISIBLE.getOrDefault(diaNormalizado, diaNormalizado);
     }
 }
