@@ -1,12 +1,11 @@
 @use '../../../scss/index' as *;
 
-// Variables heredadas de tu diseño de Chat
-$chat-bg: #efeae2; 
-$header-bg: #f0f2f5; 
-$chat-header-bg: #008069; 
-$bubble-sent: #d9fdd3; 
+// Colores locales del chat, ya alineados con la paleta de SpotterAI
+$chat-bg: #f3efeb;
+$header-bg: #f6f3f0;
+$chat-header-bg: #241c17;
+$bubble-sent: #ffe4d3;
 $bubble-received: #ffffff;
-$chat-pattern: "https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png";
 
 /* ================================
    CONTENEDOR PRINCIPAL
@@ -86,8 +85,9 @@ $chat-pattern: "https://user-images.githubusercontent.com/15075759/28719144-86dc
   display: flex;
   flex-direction: column;
   background-color: $chat-bg;
-  background-image: url($chat-pattern);
-  background-size: 400px;
+  // Trama propia en CSS, sin depender de una imagen externa
+  background-image: radial-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size: 18px 18px;
   position: relative;
 
   /* Pantalla de bienvenida por defecto */

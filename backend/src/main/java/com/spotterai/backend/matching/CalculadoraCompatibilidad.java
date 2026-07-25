@@ -74,7 +74,7 @@ public final class CalculadoraCompatibilidad {
     private static FactorCompatibilidad factorHorario(SolapeHorario solape) {
         if (!solape.hayCoincidencia()) {
             return new FactorCompatibilidad("horario", 0, PESO_HORARIO,
-                    "Vuestros horarios no coinciden en ningun momento de la semana");
+                    "Vuestros horarios no coinciden en ningún momento de la semana");
         }
 
         // Dos componentes: cuanto tiempo coincidis y en cuantos dias distintos.
@@ -84,7 +84,7 @@ public final class CalculadoraCompatibilidad {
         double porDias = Math.min(1.0, solape.dias().size() / DIAS_SOLAPE_IDEAL);
         double ratio = porTiempo * 0.7 + porDias * 0.3;
 
-        String detalle = "Coincidis %s a la semana en %s".formatted(
+        String detalle = "Coincidís %s a la semana en %s".formatted(
                 formatearDuracion(solape.minutosSemanales()),
                 enumerar(solape.dias()));
 
@@ -107,9 +107,9 @@ public final class CalculadoraCompatibilidad {
         int distancia = Math.abs(a - b);
         return switch (distancia) {
             case 0 -> new FactorCompatibilidad("nivel", PESO_NIVEL, PESO_NIVEL,
-                    "Los dos entrenais a nivel " + suNivel.toLowerCase(Locale.ROOT));
+                    "Los dos entrenáis a nivel " + suNivel.toLowerCase(Locale.ROOT));
             case 1 -> new FactorCompatibilidad("nivel", PESO_NIVEL / 2, PESO_NIVEL,
-                    "Estais en niveles contiguos (%s y %s), asumible con algun ajuste de cargas"
+                    "Estáis en niveles contiguos (%s y %s), asumible ajustando las cargas"
                             .formatted(miNivel, suNivel));
             default -> new FactorCompatibilidad("nivel", 0, PESO_NIVEL,
                     "Hay dos escalones de diferencia entre %s y %s".formatted(miNivel, suNivel));
@@ -126,7 +126,7 @@ public final class CalculadoraCompatibilidad {
         }
         if (a.equals(b)) {
             return new FactorCompatibilidad("objetivo", PESO_OBJETIVO, PESO_OBJETIVO,
-                    "Buscais lo mismo: " + suObjetivo.toLowerCase(Locale.ROOT));
+                    "Buscáis lo mismo: " + suObjetivo.toLowerCase(Locale.ROOT));
         }
         boolean afines = OBJETIVOS_AFINES.stream().anyMatch(g -> g.contains(a) && g.contains(b));
         if (afines) {
@@ -134,7 +134,7 @@ public final class CalculadoraCompatibilidad {
                     "Objetivos distintos pero compatibles: %s y %s".formatted(miObjetivo, suObjetivo));
         }
         return new FactorCompatibilidad("objetivo", 0, PESO_OBJETIVO,
-                "Entrenais para cosas distintas: %s frente a %s".formatted(miObjetivo, suObjetivo));
+                "Entrenáis para cosas distintas: %s frente a %s".formatted(miObjetivo, suObjetivo));
     }
 
     private static FactorCompatibilidad factorGimnasio(Usuario yo, Usuario otro) {
@@ -148,9 +148,9 @@ public final class CalculadoraCompatibilidad {
         if (mio.equals(suyo)) {
             String nombre = otro.getGimnasio().getNombre();
             return new FactorCompatibilidad("gimnasio", PESO_GIMNASIO, PESO_GIMNASIO,
-                    "Entrenais en el mismo gimnasio: " + nombre);
+                    "Entrenáis en el mismo gimnasio: " + nombre);
         }
-        return new FactorCompatibilidad("gimnasio", 0, PESO_GIMNASIO, "Entrenais en gimnasios distintos");
+        return new FactorCompatibilidad("gimnasio", 0, PESO_GIMNASIO, "Entrenáis en gimnasios distintos");
     }
 
     private static FactorCompatibilidad factorEdad(Integer miEdad, Integer suEdad) {
@@ -167,8 +167,8 @@ public final class CalculadoraCompatibilidad {
         else puntos = 0;
 
         String detalle = diferencia <= 3
-                ? "Teneis practicamente la misma edad"
-                : "Os llevais %d anos".formatted(diferencia);
+                ? "Tenéis prácticamente la misma edad"
+                : "Os lleváis %d años".formatted(diferencia);
         return new FactorCompatibilidad("edad", puntos, PESO_EDAD, detalle);
     }
 

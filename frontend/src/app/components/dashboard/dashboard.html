@@ -1,346 +1,429 @@
-<div class="dashboard">
-  <section class="welcome-card">
-    <div class="welcome-card__content">
-      <span class="welcome-card__badge">NIVEL {{ perfilForm.nivel | uppercase }}</span>
-      <h2 class="welcome-card__title">¡A por todas, {{ userName() }}! 💪</h2>
-      <p class="welcome-card__description">
-        Tu constancia está dando frutos. Hoy tienes <strong>{{ newProfiles() }} nuevos perfiles compatibles</strong> en tu gimnasio habitual.
-      </p>
-      <div style="display: flex; gap: 10px;">
-        <button class="welcome-card__button" (click)="buscarTopMatch()">👀 Ver sugerencias</button>
-        <button class="welcome-card__button welcome-card__button--outline" (click)="abrirModal()">⚙️ Editar Mi Perfil</button>
+<div class="tablero">
+
+  <!-- ================= Cabecera ================= -->
+  <section class="bienvenida">
+    <div class="bienvenida__texto">
+      <span class="etiqueta-nivel">Nivel {{ perfilForm.nivel }}</span>
+      <h1 class="bienvenida__titulo">Hola, {{ userName() }}</h1>
+
+      @if (mejorSugerencia(); as mejor) {
+        <p class="bienvenida__resumen">
+          Tu mejor coincidencia ahora mismo es
+          <strong>{{ mejor.nombre }}</strong>, con un
+          <strong>{{ mejor.compatibilidad }}%</strong> de compatibilidad.
+          @if (mejor.diasEnComun?.length) {
+            Coincidís {{ formatearSolape(mejor.minutosEnComun) }} a la semana.
+          }
+        </p>
+      } @else {
+        <p class="bienvenida__resumen">
+          Todavía no hay sugerencias nuevas. Añade tus horarios en el perfil para
+          que podamos cruzarlos con los del resto.
+        </p>
+      }
+
+      <div class="bienvenida__acciones">
+        <button class="btn btn--primario" (click)="abrirSugerencias()">
+          Ver sugerencias
+          @if (sugerencias().length) {
+            <span class="btn__contador">{{ sugerencias().length }}</span>
+          }
+        </button>
+        <button class="btn btn--fantasma" (click)="abrirModal()">Editar perfil</button>
       </div>
     </div>
 
-    <div class="welcome-card__progress">
-      <div class="progress-circle">
-        <svg viewBox="0 0 36 36" class="progress-circle__svg">
-          <path class="progress-circle__bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-          <path class="progress-circle__value" [attr.stroke-dasharray]="progressPercentage() + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-        </svg>
-        <div class="progress-circle__text">
-          <span class="progress-circle__fraction" [style.color]="completedDays() >= totalDays() ? '#2ecc71' : 'white'">
-            {{ completedDays() }}/{{ totalDays() }}
-          </span>
-          <span class="progress-circle__label" *ngIf="completedDays() < totalDays()">DÍAS</span>
-          <span class="progress-circle__label" *ngIf="completedDays() >= totalDays()" style="color: #2ecc71; font-size: 10px; font-weight: 800;">¡RETO SUPERADO!</span>
-        </div>
+    <!-- Anillo de progreso semanal -->
+    <div class="progreso">
+      <svg viewBox="0 0 36 36" class="progreso__svg" aria-hidden="true">
+        <path class="progreso__pista"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        <path class="progreso__valor"
+              [attr.stroke-dasharray]="progressPercentage() + ', 100'"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+      </svg>
+      <div class="progreso__centro">
+        <span class="progreso__cifra cifra"
+              [class.progreso__cifra--logrado]="completedDays() >= totalDays()">
+          {{ completedDays() }}/{{ totalDays() }}
+        </span>
+        <span class="progreso__pie">
+          {{ completedDays() >= totalDays() ? 'Meta cumplida' : 'sesiones' }}
+        </span>
       </div>
     </div>
   </section>
 
-  <section class="meta-card">
-    <div class="meta-card__header">
-      <h3>🎯 Ajustar mi Meta Semanal</h3>
-      <span class="meta-card__value">{{ totalDays() }} {{ totalDays() === 1 ? 'día' : 'días' }}</span>
+  <!-- ================= Meta semanal ================= -->
+  <section class="tarjeta meta">
+    <div class="meta__cabecera">
+      <h2 class="tarjeta__titulo">Meta semanal</h2>
+      <span class="meta__valor cifra">{{ totalDays() }} {{ totalDays() === 1 ? 'día' : 'días' }}</span>
     </div>
-    <div class="meta-card__slider-container">
-      <input 
-        type="range" 
-        min="1" 
-        max="7" 
-        [value]="totalDays()" 
-        (input)="actualizarMetaDesdeSlider($event)"
-        class="slider"
-      />
-      <div class="meta-card__slider-labels">
-        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
-      </div>
+    <input type="range" min="1" max="7" class="meta__slider"
+           [value]="totalDays()" (input)="actualizarMetaDesdeSlider($event)"
+           aria-label="Días de entrenamiento por semana" />
+    <div class="meta__escala" aria-hidden="true">
+      @for (n of [1,2,3,4,5,6,7]; track n) { <span>{{ n }}</span> }
     </div>
   </section>
 
-  <div class="dashboard-layout">
-    
-    <div class="main-column">
-      <section class="matches-container" *ngIf="usuariosCompatibles && usuariosCompatibles.length > 0">
-        <h3 class="matches-container__title">Compañeros disponibles en tu gimnasio</h3>
-        
-        <div class="matches-grid">
-          <div class="match-card" *ngFor="let user of usuariosCompatibles">
-            <div class="match-card__avatar">
-              <span>{{ user.avatar ? user.avatar : (user.nombre ? user.nombre.charAt(0).toUpperCase() : 'U') }}</span>
-            </div>
+  <div class="tablero__columnas">
 
-            <div class="match-card__body">
-              <div class="match-card__header">
-                <h4>{{ user.nombre }}</h4>
-                <span class="badge" [className]="'badge badge--' + (user.nivel ? user.nivel.toLowerCase() : 'intermedio')">
-                  {{ user.nivel || 'Intermedio' }}
-                </span>
-              </div>
-              
-              <p class="match-card__gym">
-                <span>📍</span> {{ user.gimnasio?.nombre || 'Gimnasio Habitual' }}
-              </p>
-            </div>
-
-            <div class="match-card__actions" style="display: flex; gap: 10px;">
-              <button *ngIf="!user.yaConConnected"
-                class="match-card__btn" 
-                (click)="conectarConUsuario(user.id)"
-                [disabled]="user.solicitudPendiente"
-                [style.opacity]="user.solicitudPendiente ? 0.5 : 1">
-                {{ user.solicitudPendiente ? '⏳ Pendiente' : '👋 Conectar' }}
-              </button>
-              
-              <button *ngIf="user.yaConectado"
-                class="match-card__btn" 
-                style="background-color: #2ecc71; border-color: #2ecc71;" 
-                (click)="irAlChat(user.id)">
-                💬 Chatear
-              </button>
-            </div>
-          </div>
+    <!-- ================= Compañeros sugeridos ================= -->
+    <main class="columna-principal">
+      <section class="tarjeta">
+        <div class="seccion__cabecera">
+          <h2 class="tarjeta__titulo">Compañeros compatibles</h2>
+          <span class="seccion__contador">{{ matches().length }}</span>
         </div>
+
+        @if (matches().length === 0) {
+          <p class="vacio">
+            Todavía no hay nadie con quien compararte. En cuanto haya más gente
+            aparecerá aquí, ordenada por compatibilidad.
+          </p>
+        } @else {
+          <ul class="lista-matches">
+            @for (usuario of matches(); track usuario.id) {
+              <li class="match" [attr.data-tramo]="tramo(usuario.compatibilidad)">
+
+                <div class="match__avatar" aria-hidden="true">
+                  {{ usuario.avatar || (usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '?') }}
+                </div>
+
+                <div class="match__info">
+                  <div class="match__linea1">
+                    <h3 class="match__nombre">{{ usuario.nombre }}</h3>
+                    <span class="chip chip--nivel">{{ usuario.nivel || 'Sin nivel' }}</span>
+                  </div>
+
+                  <p class="match__motivo">{{ usuario.resumenCompatibilidad }}</p>
+
+                  <div class="match__meta">
+                    <!-- El TFG leía aquí usuario.gimnasio?.nombre, campo que el
+                         backend nunca envió: siempre salía el texto de reserva. -->
+                    <span class="match__gimnasio">{{ usuario.gimnasioNombre || 'Sin gimnasio' }}</span>
+                    @if (usuario.diasEnComun?.length) {
+                      <span class="match__separador" aria-hidden="true">·</span>
+                      <span class="match__dias">
+                        @for (dia of usuario.diasEnComun; track dia) {
+                          <span class="chip chip--dia">{{ dia }}</span>
+                        }
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <div class="match__puntuacion">
+                  <span class="match__cifra cifra">{{ usuario.compatibilidad }}<small>%</small></span>
+                  <span class="match__etiqueta">{{ usuario.etiquetaCompatibilidad }}</span>
+                  <div class="barra" role="img"
+                       [attr.aria-label]="usuario.compatibilidad + ' por ciento de compatibilidad'">
+                    <div class="barra__relleno" [style.width.%]="usuario.compatibilidad"></div>
+                  </div>
+                </div>
+
+                <div class="match__accion">
+                  <!-- Antes había un typo (yaConConnected) que hacía aparecer los
+                       dos botones a la vez para todo el mundo. -->
+                  @if (usuario.yaConectado) {
+                    <button class="btn btn--exito" (click)="irAlChat(usuario.id)">Escribir</button>
+                  } @else if (usuario.solicitudPendiente) {
+                    <button class="btn btn--fantasma" disabled>Pendiente</button>
+                  } @else {
+                    <button class="btn btn--primario" (click)="conectarConUsuario(usuario.id)">Conectar</button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
       </section>
-    </div>
+    </main>
 
-    <aside class="sidebar-column">
+    <!-- ================= Lateral ================= -->
+    <aside class="columna-lateral">
 
-      <div class="notifications-widget" *ngIf="solicitudesPendientes.length > 0">
-        <div class="notifications-header">
-          <h3>🔔 Solicitudes Nuevas</h3>
-          <span class="notifications-count">{{ solicitudesPendientes.length }}</span>
-        </div>
-        <div class="request-list">
-          <div class="request-item" *ngFor="let sol of solicitudesPendientes">
-            <div class="request-info">
-              <strong>{{ sol.emisorNombre }}</strong> te ha enviado una solicitud.
-            </div>
-            <div class="request-actions">
-              <button class="btn-accept" (click)="responderSolicitud(sol.id, 'ACEPTADA')" title="Aceptar">✅</button>
-              <button class="btn-reject" (click)="responderSolicitud(sol.id, 'RECHAZADA')" title="Rechazar">❌</button>
-            </div>
+      @if (solicitudesPendientes.length > 0) {
+        <section class="tarjeta">
+          <div class="seccion__cabecera">
+            <h2 class="tarjeta__titulo">Solicitudes</h2>
+            <span class="seccion__contador seccion__contador--aviso">{{ solicitudesPendientes.length }}</span>
           </div>
-        </div>
-      </div>
-      
-      <div class="profile-widget">
-        <div class="profile-widget__header">
-          <div class="avatar-giant">{{ perfilForm.avatar }}</div>
-          <h3>{{ userName() }}</h3>
-          <span class="goal-badge">{{ perfilForm.objetivos || 'Sin objetivo' }}</span>
-        </div>
-        <div class="profile-widget__stats">
-          <div class="stat"><span class="label">Nivel</span><span class="value">{{ perfilForm.nivel || '-' }}</span></div>
-          <div class="stat"><span class="label">Peso</span><span class="value">{{ perfilForm.peso ? perfilForm.peso + 'kg' : '-' }}</span></div>
-          <div class="stat"><span class="label">Edad</span><span class="value">{{ perfilForm.edad || '-' }}</span></div>
-        </div>
-      </div>
+          <ul class="lista-solicitudes">
+            @for (sol of solicitudesPendientes; track sol.id) {
+              <li class="solicitud">
+                <span class="solicitud__texto"><strong>{{ sol.emisorNombre }}</strong> quiere entrenar contigo</span>
+                <div class="solicitud__botones">
+                  <button class="btn-icono btn-icono--si"
+                          (click)="responderSolicitud(sol.id, 'ACEPTADA')">Aceptar</button>
+                  <button class="btn-icono btn-icono--no"
+                          (click)="responderSolicitud(sol.id, 'RECHAZADA')">Rechazar</button>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
 
-      <div class="workouts-widget">
-        <div class="workouts-header">
-          <h3>Mi Actividad</h3>
-          <button class="add-workout-btn" (click)="abrirModalEntrenamiento()">+ Registrar</button>
+      <section class="tarjeta perfil">
+        <div class="perfil__cabecera">
+          <div class="perfil__avatar" aria-hidden="true">{{ perfilForm.avatar }}</div>
+          <h2 class="perfil__nombre">{{ userName() }}</h2>
+          <span class="chip chip--objetivo">{{ perfilForm.objetivos || 'Sin objetivo' }}</span>
         </div>
-        
-        <div class="workout-timeline">
-          <div class="timeline-item" *ngFor="let ent of historialEntrenamientos">
-            <div class="timeline-icon">🔥</div>
-            <div class="timeline-content">
-              <strong>{{ ent.tipo }}</strong> ({{ ent.duracionMinutos }} min)
-              <span class="date">{{ ent.fecha }} • {{ ent.lugarONotas }}</span>
-            </div>
-          </div>
-          <p *ngIf="historialEntrenamientos.length === 0" class="empty-state">Aún no has registrado entrenamientos. ¡Empieza hoy!</p>
-        </div>
-      </div>
+        <dl class="perfil__datos">
+          <div><dt>Nivel</dt><dd>{{ perfilForm.nivel || '—' }}</dd></div>
+          <div><dt>Peso</dt><dd class="cifra">{{ perfilForm.peso ? perfilForm.peso + ' kg' : '—' }}</dd></div>
+          <div><dt>Edad</dt><dd class="cifra">{{ perfilForm.edad || '—' }}</dd></div>
+        </dl>
+      </section>
 
+      <section class="tarjeta">
+        <div class="seccion__cabecera">
+          <h2 class="tarjeta__titulo">Mi actividad</h2>
+          <button class="btn btn--pequeno" (click)="abrirModalEntrenamiento()">Registrar</button>
+        </div>
+
+        @if (historialEntrenamientos.length === 0) {
+          <p class="vacio">Aún no has registrado entrenamientos.</p>
+        } @else {
+          <ul class="linea-tiempo">
+            @for (ent of historialEntrenamientos; track $index) {
+              <li class="entreno">
+                <div class="entreno__cuerpo">
+                  <strong>{{ ent.tipo }}</strong>
+                  <span class="entreno__duracion cifra">{{ ent.duracionMinutos }} min</span>
+                </div>
+                <span class="entreno__fecha">{{ ent.fecha }}{{ ent.lugarONotas ? ' · ' + ent.lugarONotas : '' }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
     </aside>
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="isModalOpen" (click)="cerrarModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>⚙️ Editar Mi Perfil</h2>
-      <button class="close-btn" (click)="cerrarModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      
-      <div class="form-section">
-        <h3>1. Elige tu Avatar</h3>
-        <div class="avatar-preview">Tu avatar actual: <span>{{ perfilForm.avatar }}</span></div>
-        <div class="emoji-grid">
-          <button *ngFor="let emoji of emojisDisponibles" 
-                  class="emoji-btn" 
-                  [class.active]="perfilForm.avatar === emoji"
-                  (click)="seleccionarAvatar(emoji)">
-            {{ emoji }}
+<!-- ================= Modal: sugerencias ================= -->
+@if (isSugerenciasOpen()) {
+  <div class="velo" (click)="cerrarSugerencias()">
+    <div class="modal modal--sugerencia" (click)="$event.stopPropagation()"
+         role="dialog" aria-modal="true" aria-labelledby="titulo-sugerencia">
+      <button class="cerrar" (click)="cerrarSugerencias()" aria-label="Cerrar">✕</button>
+
+      @if (sugerenciaActual(); as candidato) {
+        <div class="sugerencia">
+          <div class="sugerencia__avatar" aria-hidden="true">
+            {{ candidato.avatar || candidato.nombre.charAt(0).toUpperCase() }}
+          </div>
+
+          <h2 class="sugerencia__nombre" id="titulo-sugerencia">{{ candidato.nombre }}</h2>
+
+          <div class="sugerencia__puntuacion" [attr.data-tramo]="tramo(candidato.compatibilidad)">
+            <span class="sugerencia__cifra cifra">{{ candidato.compatibilidad }}%</span>
+            <span class="sugerencia__etiqueta">{{ candidato.etiquetaCompatibilidad }}</span>
+          </div>
+
+          <!-- Explicación redactada, pedida al abrir cada ficha -->
+          <div class="explicacion" aria-live="polite">
+            @if (cargandoExplicacion()) {
+              <div class="explicacion__cargando">
+                <span class="puntos" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>Analizando vuestra compatibilidad…</span>
+              </div>
+            } @else if (explicacion(); as texto) {
+              <p class="explicacion__titular">{{ texto.titular }}</p>
+              <p class="explicacion__motivo">{{ texto.motivo }}</p>
+            } @else {
+              <p class="explicacion__motivo">{{ candidato.resumenCompatibilidad }}</p>
+            }
+          </div>
+
+          <dl class="sugerencia__datos">
+            <div><dt>Nivel</dt><dd>{{ candidato.nivel || '—' }}</dd></div>
+            <div><dt>Objetivo</dt><dd>{{ candidato.objetivos || '—' }}</dd></div>
+            <div><dt>Gimnasio</dt><dd>{{ candidato.gimnasioNombre || '—' }}</dd></div>
+          </dl>
+
+          @if (candidato.diasEnComun?.length) {
+            <div class="sugerencia__horario">
+              <span class="sugerencia__horario-titulo">Coincidís</span>
+              <div class="sugerencia__chips">
+                @for (dia of candidato.diasEnComun; track dia) {
+                  <span class="chip chip--dia">{{ dia }}</span>
+                }
+              </div>
+              <span class="sugerencia__horario-total cifra">
+                {{ formatearSolape(candidato.minutosEnComun) }} a la semana
+              </span>
+            </div>
+          }
+
+          <button class="btn btn--primario btn--ancho" (click)="conectarConSugerenciaActual()">
+            Conectar con {{ candidato.nombre.split(' ')[0] }}
           </button>
-        </div>
-      </div>
 
-      <div class="form-section">
-        <h3>2. Datos Físicos y Objetivos</h3>
-        <div class="form-grid">
-          <div class="input-group">
-            <label>Nivel</label>
-            <select [(ngModel)]="perfilForm.nivel">
-              <option value="Principiante">Principiante</option>
-              <option value="Intermedio">Intermedio</option>
-              <option value="Avanzado">Avanzado</option>
+          <div class="paginador">
+            <button class="paginador__btn" (click)="anteriorSugerencia()"
+                    [disabled]="indiceActual() === 0" aria-label="Sugerencia anterior">←</button>
+            <span class="paginador__posicion cifra">
+              {{ indiceActual() + 1 }} de {{ sugerencias().length }}
+            </span>
+            <button class="paginador__btn" (click)="siguienteSugerencia()"
+                    [disabled]="indiceActual() === sugerencias().length - 1"
+                    aria-label="Sugerencia siguiente">→</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- ================= Modal: perfil ================= -->
+@if (isModalOpen) {
+  <div class="velo" (click)="cerrarModal()">
+    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <header class="modal__cabecera">
+        <h2>Editar perfil</h2>
+        <button class="cerrar" (click)="cerrarModal()" aria-label="Cerrar">✕</button>
+      </header>
+
+      <div class="modal__cuerpo">
+        <fieldset class="bloque">
+          <legend class="bloque__titulo">Avatar</legend>
+          <div class="rejilla-emojis">
+            @for (emoji of emojisDisponibles; track emoji) {
+              <button class="emoji" [class.emoji--activo]="perfilForm.avatar === emoji"
+                      (click)="seleccionarAvatar(emoji)"
+                      [attr.aria-pressed]="perfilForm.avatar === emoji">{{ emoji }}</button>
+            }
+          </div>
+        </fieldset>
+
+        <fieldset class="bloque">
+          <legend class="bloque__titulo">Datos y objetivos</legend>
+          <div class="rejilla-campos">
+            <label class="campo">
+              <span>Nivel</span>
+              <select [(ngModel)]="perfilForm.nivel">
+                <option value="Principiante">Principiante</option>
+                <option value="Intermedio">Intermedio</option>
+                <option value="Avanzado">Avanzado</option>
+              </select>
+            </label>
+            <label class="campo">
+              <span>Objetivo</span>
+              <select [(ngModel)]="perfilForm.objetivos">
+                <option value="Hipertrofia">Hipertrofia</option>
+                <option value="Fuerza">Fuerza</option>
+                <option value="Pérdida de peso">Pérdida de peso</option>
+                <option value="Resistencia">Resistencia</option>
+              </select>
+            </label>
+            <label class="campo"><span>Edad</span><input type="number" [(ngModel)]="perfilForm.edad"></label>
+            <label class="campo"><span>Peso (kg)</span><input type="number" [(ngModel)]="perfilForm.peso"></label>
+            <label class="campo"><span>Género</span><input type="text" [(ngModel)]="perfilForm.genero"></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="bloque">
+          <legend class="bloque__titulo">Gimnasio habitual</legend>
+          <label class="campo">
+            <span>¿Dónde entrenas?</span>
+            <select [(ngModel)]="perfilForm.gimnasioId" (change)="toggleNuevoGimnasio($event)">
+              <option [value]="null">Selecciona tu gimnasio</option>
+              @for (g of gimnasios; track g.id) {
+                <option [value]="g.id">{{ g.nombre }}</option>
+              }
+              <option value="NUEVO">+ Añadir uno nuevo</option>
             </select>
+          </label>
+          @if (mostrarInputGimnasio) {
+            <label class="campo">
+              <span>Nombre del gimnasio</span>
+              <input type="text" [(ngModel)]="nuevoGimnasioNombre" placeholder="Ej: McFit Centro">
+            </label>
+          }
+        </fieldset>
+
+        <fieldset class="bloque">
+          <div class="bloque__cabecera">
+            <legend class="bloque__titulo">Horarios de entrenamiento</legend>
+            <button class="btn btn--pequeno" (click)="agregarHorario()">Añadir día</button>
           </div>
-          <div class="input-group">
-            <label>Objetivo Principal</label>
-            <select [(ngModel)]="perfilForm.objetivos">
-              <option value="Hipertrofia">Hipertrofia</option>
-              <option value="Fuerza">Fuerza</option>
-              <option value="Pérdida de peso">Pérdida de peso</option>
-              <option value="Resistencia">Resistencia</option>
-            </select>
-          </div>
-          <div class="input-group"><label>Edad</label><input type="number" [(ngModel)]="perfilForm.edad"></div>
-          <div class="input-group"><label>Peso (Kg)</label><input type="number" [(ngModel)]="perfilForm.peso"></div>
-          <div class="input-group"><label>Género</label><input type="text" [(ngModel)]="perfilForm.genero"></div>
-        </div>
-      </div>
-
-      <div class="form-section">
-        <h3>3. Gimnasio Habitual</h3>
-        <div class="input-group">
-          <label>¿Dónde entrenas?</label>
-          <select [(ngModel)]="perfilForm.gimnasioId" (change)="toggleNuevoGimnasio($event)">
-            <option [value]="null">Selecciona tu gimnasio</option>
-            <option *ngFor="let g of gimnasios" [value]="g.id">{{ g.nombre }}</option>
-            <option value="NUEVO">+ Añadir nuevo gimnasio</option>
-          </select>
-        </div>
-        <div class="input-group" *ngIf="mostrarInputGimnasio" style="margin-top: 10px;">
-          <label>Nombre del nuevo gimnasio</label>
-          <input type="text" [(ngModel)]="nuevoGimnasioNombre" placeholder="Ej: McFit Centro">
-        </div>
-      </div>
-
-      <div class="form-section">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3>4. Horarios de Entrenamiento</h3>
-          <button class="add-btn" (click)="agregarHorario()">+ Añadir día</button>
-        </div>
-        <div class="horario-row" *ngFor="let h of perfilForm.horarios; let i = index">
-          <select [(ngModel)]="h.diaSemana">
-            <option *ngFor="let dia of diasSemana" [value]="dia">{{ dia }}</option>
-          </select>
-          <input type="time" [(ngModel)]="h.horaInicio">
-          <span>a</span>
-          <input type="time" [(ngModel)]="h.horaFin">
-          <button class="delete-btn" (click)="eliminarHorario(i)">🗑️</button>
-        </div>
-        <p *ngIf="perfilForm.horarios.length === 0" style="color: #64748b; font-size: 14px;">No tienes horarios añadidos. ¡Añade uno para encontrar matches!</p>
-      </div>
-
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
-      <button class="btn-save" (click)="guardarPerfil()">Guardar Cambios</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" *ngIf="isEntrenamientoModalOpen" (click)="cerrarModalEntrenamiento()">
-  <div class="modal-content" style="max-width: 400px;" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>🏋️ Registrar Entrenamiento</h2>
-      <button class="close-btn" (click)="cerrarModalEntrenamiento()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="input-group"><label>Fecha</label><input type="date" [(ngModel)]="nuevoEntrenamiento.fecha"></div>
-      <div class="input-group">
-        <label>Tipo de entrenamiento</label>
-        <select [(ngModel)]="nuevoEntrenamiento.tipo">
-          <option value="Fuerza (Torso)">Fuerza (Torso)</option>
-          <option value="Fuerza (Pierna)">Fuerza (Pierna)</option>
-          <option value="Fuerza (Fullbody)">Fuerza (Fullbody)</option>
-          <option value="Cardio LISS">Cardio LISS</option>
-          <option value="HIIT">HIIT</option>
-          <option value="Clase dirigida">Clase dirigida</option>
-        </select>
-      </div>
-      <div class="input-group"><label>Duración (Minutos)</label><input type="number" [(ngModel)]="nuevoEntrenamiento.duracionMinutos" placeholder="Ej: 60"></div>
-      <div class="input-group"><label>Notas o Gimnasio</label><input type="text" [(ngModel)]="nuevoEntrenamiento.lugarONotas" placeholder="Ej: Récord en prensa, molestias hombro..."></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="cerrarModalEntrenamiento()">Cancelar</button>
-      <button class="btn-save" (click)="guardarEntrenamiento()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" *ngIf="isTopMatchModalOpen" (click)="cerrarTopMatchModal()">
-  <div class="modal-content match-modal" style="max-width: 450px; text-align: center; padding: 0;" (click)="$event.stopPropagation()">
-    
-    <div style="position: relative; padding: 20px;">
-      <button class="close-btn" style="position: absolute; top: 15px; right: 15px;" (click)="cerrarTopMatchModal()">✕</button>
-
-      <div *ngIf="isCalculatingMatch" class="calculating-state" style="padding: 40px 20px;">
-        <svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 20px auto; display: block;">
-          <g fill="none" fill-rule="evenodd">
-            <g transform="translate(2 2)" stroke-width="4">
-              <circle stroke="#e2e8f0" cx="23" cy="23" r="20"/>
-              <path d="M43 23c0-11.046-8.954-20-20-20" stroke="#2ecc71" stroke-linecap="round">
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 23 23"
-                  to="360 23 23"
-                  dur="0.8s"
-                  repeatCount="indefinite"/>
-              </path>
-            </g>
-          </g>
-        </svg>
-        <h3 style="margin: 0 0 8px 0; color: #1e293b;">Analizando compatibilidad...</h3>
-        <p style="color: #64748b; margin: 0;">Buscando a tu compañero ideal de entrenamiento</p>
-      </div>
-
-      <div *ngIf="!isCalculatingMatch && disponiblesList.length === 0" class="empty-state" style="padding: 40px 20px;">
-        <div style="font-size: 50px; margin-bottom: 20px;">🌵</div>
-        <h3>Sin coincidencias exactas</h3>
-        <p style="color: #64748b; margin-bottom: 20px;">Has conectado o revisado a todos los usuarios compatibles.</p>
-        <button class="btn-cancel" style="width: 100%;" (click)="cerrarTopMatchModal()">Volver al Dashboard</button>
-      </div>
-
-      <div *ngIf="!isCalculatingMatch && topMatchUser" class="match-presentation">
-        <div class="match-card-large" style="padding: 20px 0;">
-          <div class="avatar-giant" style="font-size: 70px; width: 120px; height: 120px; margin: 0 auto 20px auto; background: rgba(46, 204, 113, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid #2ecc71;">
-            {{ topMatchUser.avatar ? topMatchUser.avatar : topMatchUser.nombre.charAt(0).toUpperCase() }}
-          </div>
-          <h2 style="margin: 0 0 10px 0; font-size: 24px; color: #1e293b;">{{ topMatchUser.nombre }}</h2>
-          <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
-            <span class="badge badge--{{ topMatchUser.nivel ? topMatchUser.nivel.toLowerCase() : 'intermedio' }}">{{ topMatchUser.nivel || 'Intermedio' }}</span>
-            <span class="goal-badge" style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ topMatchUser.objetivos || 'Fitness' }}</span>
-          </div>
-          <p style="color: #64748b; margin-bottom: 25px; line-height: 1.6;">
-            <span>📍</span> {{ topMatchUser.gimnasioNombre || 'Gimnasio Habitual' }}<br>
-            Edad: {{ topMatchUser.edad || '-' }} años • Peso: {{ topMatchUser.peso || '-' }} kg
+          <p class="bloque__ayuda">
+            Es el dato que más pesa en el emparejamiento: sin horarios en común no
+            hay entrenamiento posible.
           </p>
-
-          <div class="match-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-            <button class="btn-nav" (click)="anteriorMatch()" [disabled]="currentMatchIndex === 0" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" [style.opacity]="currentMatchIndex === 0 ? 0.3 : 1">
-              ◀
-            </button>
-            
-            <button class="btn-save" style="padding: 14px 28px; font-size: 15px; border-radius: 30px; box-shadow: 0 10px 20px -10px #2ecc71; border: none; background: #2ecc71; color: white; font-weight: bold; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" (click)="conectarConTopMatch()">
-              👋 Conectar con {{ topMatchUser.nombre.split(' ')[0] }}
-            </button>
-            
-            <button class="btn-nav" (click)="siguienteMatch()" [disabled]="currentMatchIndex === disponiblesList.length - 1" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" [style.opacity]="currentMatchIndex === disponiblesList.length - 1 ? 0.3 : 1">
-              ▶
-            </button>
-          </div>
-          
-          <p style="font-size: 13px; color: #94a3b8; margin-top: 25px; font-weight: 500;">
-            Sugerencia {{ currentMatchIndex + 1 }} de {{ disponiblesList.length }}
-          </p>
-        </div>
+          @for (h of perfilForm.horarios; track $index; let i = $index) {
+            <div class="fila-horario">
+              <select [(ngModel)]="h.diaSemana" aria-label="Día de la semana">
+                @for (dia of diasSemana; track dia) { <option [value]="dia">{{ dia }}</option> }
+              </select>
+              <input type="time" [(ngModel)]="h.horaInicio" aria-label="Hora de inicio">
+              <span aria-hidden="true">–</span>
+              <input type="time" [(ngModel)]="h.horaFin" aria-label="Hora de fin">
+              <button class="btn-icono btn-icono--no" (click)="eliminarHorario(i)">Quitar</button>
+            </div>
+          }
+          @if (perfilForm.horarios.length === 0) {
+            <p class="vacio">No tienes horarios añadidos.</p>
+          }
+        </fieldset>
       </div>
+
+      <footer class="modal__pie">
+        <button class="btn btn--fantasma" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn--primario" (click)="guardarPerfil()">Guardar cambios</button>
+      </footer>
     </div>
-
   </div>
-</div>
+}
 
-<div class="custom-toast" [class.show]="toast.show" [class.error]="toast.type === 'error'">
-  <div class="toast-icon">{{ toast.type === 'error' ? '❌' : '✅' }}</div>
-  <div class="toast-message">{{ toast.message }}</div>
+<!-- ================= Modal: entrenamiento ================= -->
+@if (isEntrenamientoModalOpen) {
+  <div class="velo" (click)="cerrarModalEntrenamiento()">
+    <div class="modal modal--estrecho" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <header class="modal__cabecera">
+        <h2>Registrar entrenamiento</h2>
+        <button class="cerrar" (click)="cerrarModalEntrenamiento()" aria-label="Cerrar">✕</button>
+      </header>
+
+      <div class="modal__cuerpo">
+        <label class="campo"><span>Fecha</span><input type="date" [(ngModel)]="nuevoEntrenamiento.fecha"></label>
+        <label class="campo">
+          <span>Tipo</span>
+          <select [(ngModel)]="nuevoEntrenamiento.tipo">
+            <option value="Fuerza (Torso)">Fuerza (Torso)</option>
+            <option value="Fuerza (Pierna)">Fuerza (Pierna)</option>
+            <option value="Fuerza (Fullbody)">Fuerza (Fullbody)</option>
+            <option value="Cardio LISS">Cardio LISS</option>
+            <option value="HIIT">HIIT</option>
+            <option value="Clase dirigida">Clase dirigida</option>
+          </select>
+        </label>
+        <label class="campo">
+          <span>Duración (minutos)</span>
+          <input type="number" [(ngModel)]="nuevoEntrenamiento.duracionMinutos" placeholder="60">
+        </label>
+        <label class="campo">
+          <span>Notas</span>
+          <input type="text" [(ngModel)]="nuevoEntrenamiento.lugarONotas" placeholder="Récord en prensa…">
+        </label>
+      </div>
+
+      <footer class="modal__pie">
+        <button class="btn btn--fantasma" (click)="cerrarModalEntrenamiento()">Cancelar</button>
+        <button class="btn btn--primario" (click)="guardarEntrenamiento()">Guardar</button>
+      </footer>
+    </div>
+  </div>
+}
+
+<!-- ================= Aviso ================= -->
+<div class="aviso" [class.aviso--visible]="toast.show" [class.aviso--error]="toast.type === 'error'"
+     role="status" aria-live="polite">
+  {{ toast.message }}
 </div>

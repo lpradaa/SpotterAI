@@ -62,6 +62,17 @@ class CalculadoraSolapeTest {
     }
 
     @Test
+    @DisplayName("Los dias se comparan sin tilde pero se muestran con ella")
+    void muestraElDiaBienEscrito() {
+        SolapeHorario solape = CalculadoraSolape.calcular(
+                List.of(franja("Miercoles", "18:00", "20:00"), franja("Sabado", "10:00", "11:00")),
+                List.of(franja("Miércoles", "18:00", "20:00"), franja("Sábado", "10:00", "11:00")));
+
+        assertEquals(List.of("Miércoles", "Sábado"), solape.dias());
+        assertTrue(solape.franjas().contains("Miércoles 18:00-20:00"));
+    }
+
+    @Test
     @DisplayName("Los minutos se suman entre varios dias y se ordenan por semana")
     void sumaVariosDiasEnOrden() {
         SolapeHorario solape = CalculadoraSolape.calcular(

@@ -1,24 +1,60 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Archivo:wght@400;500;600;700&display=swap');
 
 @import './scss/index';
 
-html, body {
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
   margin: 0;
   padding-top: 70px;
-  font-family: $font-primary; 
-  
-  color: $text-main;
-  background-color: $bg-body-start;
-  
+  font-family: $font-primary;
+  font-size: $text-base;
+  line-height: $leading-normal;
+
+  color: var(--sa-texto);
+  background-color: var(--sa-fondo);
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-button, input, select, textarea {
-  font-family: inherit;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: $font-display;
+  line-height: $leading-tight;
+  letter-spacing: $tracking-tight;
+  margin: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
+button,
+input,
+select,
+textarea {
   font-family: inherit;
+  font-size: inherit;
+}
+
+/* Foco visible y coherente en toda la aplicacion. El navegador lo da por
+   defecto, pero varios componentes hacen outline:none al estilar inputs. */
+:focus-visible {
+  outline: 2px solid var(--sa-acento);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Las cifras de puntuacion no deben bailar al actualizarse */
+.cifra {
+  font-variant-numeric: tabular-nums;
 }

@@ -1,21 +1,49 @@
-/* --- Paleta de SpotterAI --- */
-$bg-body-start: #ecfeff;
+/* ===========================================================================
+   Paleta de SpotterAI
+   ---------------------------------------------------------------------------
+   Identidad: hierro y esfuerzo. Neutros calidos (no el gris azulado por
+   defecto) y un naranja ascua como acento, que evoca el metal caliente y la
+   intensidad del entrenamiento. Deliberadamente lejos del verde menta del TFG
+   y de los degradados morados de cualquier plantilla.
+
+   Siguen siendo variables SCSS con colores reales, no var(--x), porque los
+   componentes usan darken() y rgba() sobre ellas y esas funciones se resuelven
+   en tiempo de compilacion. La capa de tokens CSS con tema claro/oscuro vive
+   en _tokens.scss.
+   =========================================================================== */
+
+/* --- Acento: naranja ascua. Contraste suficiente con texto blanco encima --- */
+$accent: #c2410c;
+$accent-hover: #9a3412;
+$accent-soft: #fff1ea;
+$accent-ink: #7c2d12; // acento legible como texto sobre fondo claro
+
+/* --- Neutros calidos --- */
+$bg-body-start: #f7f5f2;
 $bg-body-end: #ffffff;
 $bg-card: #ffffff;
-$text-main: #1f2937;
-$text-muted: #64748b;
-$accent: #10b981; 
-$gradient-end: #22d3ee; 
-$border: #e2e8f0;
-$input-bg: #f8fafc;
-$text-placeholder: #94a3b8;
-$color-danger: #e53e3e;
+$input-bg: #f6f3f0;
 
-// Variables de color "WhatsApp"
-$chat-bg: #efeae2; 
-$header-bg: #008069; // Verde WhatsApp oscuro
+$text-main: #191512;
+$text-muted: #6b6259;
+$text-placeholder: #a8a29a;
+$border: #e7e2dc;
+
+/* --- Estados --- */
+$color-success: #15803d;
+$color-warning: #b45309;
+$color-danger: #b91c1c;
+
+/* Cierre del degradado de cabecera: ambar, para dar recorrido al acento */
+$gradient-end: #f59e0b;
+
+/* --- Chat ---
+   Se abandona el clon literal de WhatsApp del TFG y se alinea con la paleta
+   propia, conservando la lectura de burbuja emisor/receptor. */
+$chat-bg: #f3efeb;
+$header-bg: #241c17;
 $header-text: #ffffff;
-$bubble-sent: #d9fdd3; // Verde claro WhatsApp
+$bubble-sent: #ffe4d3;
 $bubble-received: #ffffff;
-$accent-color: #00a884; // Botón enviar
-$chat-pattern: "https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png";
+$accent-color: $accent;
+$chat-pattern: "";

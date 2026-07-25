@@ -1,7 +1,13 @@
-/* --- Tipografía --- */
+/* ===========================================================================
+   Tipografia
+   ---------------------------------------------------------------------------
+   Space Grotesk para titulares: grotesca tecnica, con caracter, lejos de la
+   neutralidad de Inter o Roboto. Archivo para texto corrido: familia de formas
+   emparentada y mas comoda en parrafo.
+   =========================================================================== */
 
-/* Familias tipográficas */
-$font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+$font-display: 'Space Grotesk', 'Archivo', system-ui, sans-serif;
+$font-primary: 'Archivo', system-ui, -apple-system, sans-serif;
 
 /* Tamaños de fuente (en píxeles) */
 $text-xs: 12px;
@@ -20,3 +26,12 @@ $font-medium: 500;
 $font-semibold: 600;
 $font-bold: 700;
 $font-extrabold: 800;
+
+/* Interlineado */
+$leading-tight: 1.15;
+$leading-snug: 1.35;
+$leading-normal: 1.6;
+
+/* Espaciado entre letras: los titulares grandes piden negativo */
+$tracking-tight: -0.02em;
+$tracking-wide: 0.06em;

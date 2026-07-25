@@ -117,7 +117,7 @@ public class ExplicadorCompatibilidad {
                 .collect(Collectors.joining(". "));
 
         if (motivo.isBlank()) {
-            motivo = "No hemos encontrado puntos en comun claros entre vuestros perfiles.";
+            motivo = "No hemos encontrado puntos en común claros entre vuestros perfiles.";
         } else {
             motivo += ".";
         }

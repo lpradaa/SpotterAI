@@ -1,90 +1,101 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
+/** Un candidato a compañero de entrenamiento, tal y como lo devuelve el backend. */
+export interface Match {
+  id: number;
+  nombre: string;
+  email: string;
+  edad: number | null;
+  genero: string | null;
+  peso: number | null;
+  nivel: string | null;
+  objetivos: string | null;
+  avatar: string | null;
+  biografia: string | null;
+  gimnasioId: number | null;
+  gimnasioNombre: string | null;
+
+  // Compatibilidad: solo llega en los endpoints de match
+  compatibilidad: number;
+  etiquetaCompatibilidad: string;
+  resumenCompatibilidad: string;
+  diasEnComun: string[];
+  minutosEnComun: number;
+
+  yaConectado: boolean;
+  solicitudPendiente: boolean;
+}
+
+/** Explicación redactada de un match concreto. */
+export interface ExplicacionMatch {
+  titular: string;
+  motivo: string;
+}
+
+@Injectable({ providedIn: 'root' })
 export class UsuarioService {
-  // URLs de tu backend en Spring Boot
-  private apiUrlUsuarios = 'http://localhost:8080/api/usuarios';
-  private apiUrlSolicitudes = 'http://localhost:8080/api/solicitudes';
-  private apiUrlEntrenamientos = 'http://localhost:8080/api/entrenamientos';
-  private apiUrlGimnasios = 'http://localhost:8080/api/gimnasios'; // 🔥 NUEVO
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  // jwtInterceptor inyecta la cabecera Authorization en cada petición, así que
+  // no hace falta construirla a mano método a método como se hacía antes.
+  private readonly usuarios = 'http://localhost:8080/api/usuarios';
+  private readonly solicitudes = 'http://localhost:8080/api/solicitudes';
+  private readonly entrenamientos = 'http://localhost:8080/api/entrenamientos';
+  private readonly gimnasios = 'http://localhost:8080/api/gimnasios';
 
-  // 1. Obtener la lista de matches (Compañeros compatibles)
-  getMatches(): Observable<any[]> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.get<any[]>(`${this.apiUrlUsuarios}/matches`, { headers });
+  /** Candidatos puntuados y ordenados por compatibilidad. Sin coste de IA. */
+  getMatches(): Observable<Match[]> {
+    return this.http.get<Match[]>(`${this.usuarios}/matches`);
   }
 
-  // 2. Enviar una solicitud de conexión a otro usuario
-  enviarSolicitudConexion(receptorId: number): Observable<any> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.post<any>(`${this.apiUrlSolicitudes}/enviar/${receptorId}`, {}, { headers });
+  /**
+   * Explicación redactada de un match concreto.
+   * Va aparte de la lista porque cuesta una llamada al modelo: se pide solo
+   * cuando el usuario abre una ficha.
+   */
+  getExplicacionMatch(usuarioId: number): Observable<ExplicacionMatch> {
+    return this.http.get<ExplicacionMatch>(`${this.usuarios}/matches/${usuarioId}/explicacion`);
   }
 
-  // 3. Obtener las solicitudes que me han enviado y están PENDIENTES
+  enviarSolicitudConexion(receptorId: number): Observable<unknown> {
+    return this.http.post(`${this.solicitudes}/enviar/${receptorId}`, {});
+  }
+
   obtenerSolicitudesPendientes(): Observable<any[]> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.get<any[]>(`${this.apiUrlSolicitudes}/pendientes`, { headers });
+    return this.http.get<any[]>(`${this.solicitudes}/pendientes`);
   }
 
-  // 4. Aceptar o Rechazar una solicitud
-  responderSolicitud(solicitudId: number, estado: 'ACEPTADA' | 'RECHAZADA'): Observable<any> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.put<any>(`${this.apiUrlSolicitudes}/responder/${solicitudId}?estado=${estado}`, {}, { headers });
+  responderSolicitud(solicitudId: number, estado: 'ACEPTADA' | 'RECHAZADA'): Observable<unknown> {
+    return this.http.put(`${this.solicitudes}/responder/${solicitudId}?estado=${estado}`, {});
   }
 
-  // 5. Obtener compañeros (Solicitudes ACEPTADAS)
   obtenerMisConexiones(): Observable<any[]> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.get<any[]>(`${this.apiUrlSolicitudes}/aceptadas`, { headers });
+    return this.http.get<any[]>(`${this.solicitudes}/aceptadas`);
   }
 
-  // 6. Actualizar el perfil del usuario (Avatar, Datos y Horarios)
-  actualizarPerfil(perfilData: any): Observable<any> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.put<any>(`${this.apiUrlUsuarios}/perfil`, perfilData, { headers });
+  actualizarPerfil(perfilData: unknown): Observable<any> {
+    return this.http.put<any>(`${this.usuarios}/perfil`, perfilData);
   }
 
-  // 7. Obtener mi perfil real (incluyendo el Avatar)
   getMiPerfil(): Observable<any> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.get<any>(`${this.apiUrlUsuarios}/perfil`, { headers });
+    return this.http.get<any>(`${this.usuarios}/perfil`);
   }
 
-  registrarEntrenamiento(data: any): Observable<any> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.post<any>(this.apiUrlEntrenamientos, data, { headers });
+  registrarEntrenamiento(data: unknown): Observable<unknown> {
+    return this.http.post(this.entrenamientos, data);
   }
 
   getMisEntrenamientos(): Observable<any[]> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.get<any[]>(this.apiUrlEntrenamientos, { headers });
+    return this.http.get<any[]>(this.entrenamientos);
   }
 
   getExplorarUsuarios(): Observable<any[]> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.get<any[]>(`${this.apiUrlUsuarios}/explorar`, { headers });
+    return this.http.get<any[]>(`${this.usuarios}/explorar`);
   }
 
-  // 🔥 CORREGIDO: Ruta URL correcta y se le pasa el Token JWT
   getGimnasios(): Observable<any[]> {
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.get<any[]>(this.apiUrlGimnasios, { headers });
+    return this.http.get<any[]>(this.gimnasios);
   }
 }

@@ -7,13 +7,15 @@
   display: flex;
   flex-direction: column;
   background-color: $chat-bg;
-  background-image: url($chat-pattern);
-  background-size: 400px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  // Trama propia en CSS. Antes se traia una imagen alojada en GitHub: una
+  // dependencia externa en la ruta de render que podia desaparecer sin aviso.
+  background-image: radial-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size: 18px 18px;
+  border-radius: $radius-md;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   overflow: hidden;
-  font-family: system-ui, -apple-system, sans-serif;
-  border: 1px solid #d1d1d1;
+  font-family: inherit;
+  border: 1px solid $border;
 }
 
 /* --- CABECERA --- */

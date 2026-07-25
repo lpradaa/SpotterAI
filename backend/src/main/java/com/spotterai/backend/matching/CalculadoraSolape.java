@@ -20,9 +20,22 @@ import java.util.Map;
  */
 public final class CalculadoraSolape {
 
-    /** Orden natural de la semana, para presentar los dias como los lee una persona. */
+    /** Orden natural de la semana. Las claves van sin tildes, como las normalizadas. */
     private static final List<String> ORDEN_SEMANA =
             List.of("lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo");
+
+    /**
+     * Forma con la que cada dia se le muestra al usuario. Se compara sin tildes para
+     * que "Miércoles" y "Miercoles" cuenten igual, pero se presenta bien escrito.
+     */
+    private static final Map<String, String> NOMBRE_VISIBLE = Map.of(
+            "lunes", "Lunes",
+            "martes", "Martes",
+            "miercoles", "Miércoles",
+            "jueves", "Jueves",
+            "viernes", "Viernes",
+            "sabado", "Sábado",
+            "domingo", "Domingo");
 
     private CalculadoraSolape() {}
 
@@ -53,7 +66,7 @@ public final class CalculadoraSolape {
 
                 minutosTotales += minutos;
                 minutosPorDia.merge(dia, minutos, Integer::sum);
-                franjas.add("%s %s-%s".formatted(capitalizar(dia), inicio, fin));
+                franjas.add("%s %s-%s".formatted(nombreVisible(dia), inicio, fin));
             }
         }
 
@@ -61,7 +74,7 @@ public final class CalculadoraSolape {
 
         List<String> dias = minutosPorDia.keySet().stream()
                 .sorted(Comparator.comparingInt(ORDEN_SEMANA::indexOf))
-                .map(CalculadoraSolape::capitalizar)
+                .map(CalculadoraSolape::nombreVisible)
                 .toList();
 
         return new SolapeHorario(minutosTotales, dias, List.copyOf(franjas));
@@ -101,7 +114,8 @@ public final class CalculadoraSolape {
         return a.isBefore(b) ? a : b;
     }
 
-    private static String capitalizar(String palabra) {
-        return Character.toUpperCase(palabra.charAt(0)) + palabra.substring(1);
+    /** Devuelve el dia tal y como debe leerse, con tilde si le corresponde. */
+    private static String nombreVisible(String diaNormalizado) {
+        return NOMBRE_VISIBLE.getOrDefault(diaNormalizado, diaNormalizado);
     }
 }
