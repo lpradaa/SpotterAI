@@ -37,6 +37,28 @@
     </div>
   </header>
 
+  <!-- ================= Lo que te está costando puntos =================
+       No es "perfil completo al 60 %". Ese número no se puede decidir; los
+       puntos que no puedes ganar con nadie, sí. Solo aparece si falta algo. -->
+  @if (huecoPrincipal(); as hueco) {
+    <aside class="rendimiento">
+      <div class="rendimiento__texto">
+        <p class="rendimiento__titular">
+          Te falta <strong>{{ hueco.nombre | lowercase }}</strong>:
+          <span class="rendimiento__puntos">−{{ hueco.puntos }} puntos</span>
+          de compatibilidad con cualquiera.
+        </p>
+        <p class="rendimiento__motivo">
+          {{ hueco.motivo }}
+          @if (puntosEnJuego() > hueco.puntos) {
+            Contando todo lo que falta, quedan {{ puntosEnJuego() }} de 100 fuera de juego.
+          }
+        </p>
+      </div>
+      <button class="btn btn--primario btn--pequeno" (click)="abrirModal()">Completar</button>
+    </aside>
+  }
+
   <div class="tablero__columnas">
 
     <!-- ================= Compañeros sugeridos ================= -->
@@ -296,6 +318,7 @@
             <label class="campo">
               <span>Nivel</span>
               <select [(ngModel)]="perfilForm.nivel">
+                <option value="" disabled>Elige tu nivel</option>
                 <option value="Principiante">Principiante</option>
                 <option value="Intermedio">Intermedio</option>
                 <option value="Avanzado">Avanzado</option>
@@ -304,6 +327,7 @@
             <label class="campo">
               <span>Objetivo</span>
               <select [(ngModel)]="perfilForm.objetivos">
+                <option value="" disabled>Elige tu objetivo</option>
                 <option value="Hipertrofia">Hipertrofia</option>
                 <option value="Fuerza">Fuerza</option>
                 <option value="Pérdida de peso">Pérdida de peso</option>

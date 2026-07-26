@@ -67,6 +67,49 @@
    Densa y horizontal. Antes esto era un banner con degradado, saludo grande y
    anillo de progreso: el movimiento por defecto de cualquier plantilla, y
    ocupaba el mejor espacio de la pantalla sin decir nada accionable. */
+/* ===================== Aviso de perfil incompleto =====================
+   Usa el acento en el número y no en el fondo entero: es información, no una
+   alarma, y un bloque naranja competiría con las puntuaciones de los matches,
+   que son lo que de verdad hay que mirar en esta pantalla. */
+.rendimiento {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  flex-wrap: wrap;
+  padding: 12px $space-md;
+  border: 1px solid var(--sa-borde);
+  border-left: 3px solid var(--sa-acento);
+  border-radius: $radius-md;
+  background: var(--sa-superficie);
+}
+
+.rendimiento__texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.rendimiento__titular {
+  margin: 0;
+  font-size: $text-sm;
+  color: var(--sa-texto);
+
+  strong { font-weight: $font-semibold; }
+}
+
+.rendimiento__puntos {
+  font-family: $font-display;
+  font-weight: $font-bold;
+  color: var(--sa-acento);
+  font-variant-numeric: tabular-nums;
+}
+
+.rendimiento__motivo {
+  margin: 2px 0 0;
+  font-size: $text-xs;
+  line-height: 1.5;
+  color: var(--sa-texto-suave);
+}
+
 .barra {
   display: flex;
   flex-wrap: wrap;

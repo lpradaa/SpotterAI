@@ -61,13 +61,26 @@ export class DashboardComponent implements OnInit {
   diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
   perfilForm: any = {
-    avatar: '', edad: null, genero: '', peso: null, nivel: 'Intermedio',
+    avatar: '', edad: null, genero: '', peso: null, nivel: '',
     objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', biografia: '',
     horarios: [], metaSemanal: 4
   };
 
   /** Coincide con el limite de la columna y con el recorte del servidor. */
   readonly maxBiografia = 280;
+
+  /**
+   * Lo que le falta al perfil, en puntos de compatibilidad perdidos.
+   *
+   * Los números los da el backend, que es donde viven los pesos del cálculo.
+   * Copiarlos aquí sería garantizar que algún día digan cosas distintas.
+   */
+  rendimiento = signal<{ puntosEnJuego: number, huecos: any[] } | null>(null);
+
+  puntosEnJuego = computed(() => this.rendimiento()?.puntosEnJuego ?? 0);
+
+  /** Solo el más caro: una lista de cinco cosas no la lee nadie. */
+  huecoPrincipal = computed(() => this.rendimiento()?.huecos?.[0] ?? null);
 
   restanteBiografia(): number {
     return this.maxBiografia - (this.perfilForm.biografia?.length ?? 0);
@@ -136,10 +149,14 @@ export class DashboardComponent implements OnInit {
 
         this.perfilForm = {
           avatar: data.avatar || '', edad: data.edad, genero: data.genero, peso: data.peso,
-          nivel: data.nivel || 'Intermedio', objetivos: data.objetivos, gimnasioId: data.gimnasioId,
+          // Sin defecto inventado: rellenar 'Intermedio' hacía que la barra
+          // mostrara un nivel que nadie había elegido, al lado de un aviso que
+          // decía que faltaba justo eso.
+          nivel: data.nivel || '', objetivos: data.objetivos || '', gimnasioId: data.gimnasioId,
           biografia: data.biografia || '',
           horarios: data.horarios || [], metaSemanal: data.metaSemanal || 4
         };
+        this.rendimiento.set(data.rendimiento ?? null);
         this.calcularProgresoSemanal();
         this.cdr.detectChanges();
       },

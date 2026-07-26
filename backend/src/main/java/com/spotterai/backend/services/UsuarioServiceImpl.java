@@ -9,6 +9,7 @@ import com.spotterai.backend.matching.ExplicacionMatch;
 import com.spotterai.backend.matching.FactorCompatibilidad;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.matching.PuntuacionCompatibilidad;
+import com.spotterai.backend.matching.RendimientoDelPerfil;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Solicitud;
@@ -191,6 +192,12 @@ public class UsuarioServiceImpl implements UsuarioService {
         perfil.put("avatar", usuario.getAvatar());
         perfil.put("biografia", usuario.getBiografia());
         perfil.put("metaSemanal", usuario.getMetaSemanal() != null ? usuario.getMetaSemanal() : 4);
+
+        // Viaja con el perfil y no en un endpoint aparte: se calcula de los
+        // mismos datos que ya estamos leyendo, y quien pinta el perfil es quien
+        // necesita saber que le falta.
+        List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(usuario.getId());
+        perfil.put("rendimiento", RendimientoDelPerfil.de(usuario, !misHorarios.isEmpty()));
 
         List<UsuarioPerfilDTO.HorarioDTO> horarios = disponibilidadRepository.findByUsuarioId(usuario.getId())
                 .stream().map(d -> {

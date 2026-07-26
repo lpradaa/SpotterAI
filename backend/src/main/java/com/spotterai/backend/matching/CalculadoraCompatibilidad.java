@@ -33,11 +33,14 @@ import java.util.Set;
  */
 public final class CalculadoraCompatibilidad {
 
-    private static final double PESO_HORARIO = 40;
-    private static final double PESO_NIVEL = 20;
-    private static final double PESO_OBJETIVO = 20;
-    private static final double PESO_GIMNASIO = 15;
-    private static final double PESO_EDAD = 5;
+    // Visibles fuera para que el aviso de "esto te esta costando puntos" use los
+    // mismos numeros que el calculo. Duplicarlos en el frontend seria garantizar
+    // que un dia digan cosas distintas.
+    static final double PESO_HORARIO = 40;
+    static final double PESO_NIVEL = 20;
+    static final double PESO_OBJETIVO = 20;
+    static final double PESO_GIMNASIO = 15;
+    static final double PESO_EDAD = 5;
 
     /** Minutos efectivos semanales a partir de los cuales el solape es de sobra. */
     private static final double MINUTOS_SOLAPE_IDEAL = 300; // 5 h/semana
