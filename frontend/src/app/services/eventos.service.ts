@@ -39,6 +39,7 @@ export class EventosService {
   private readonly _mensajes = new Subject<any>();
   private readonly _solicitudes = new Subject<any>();
   private readonly _respuestas = new Subject<any>();
+  private readonly _relacionesDeshechas = new Subject<any>();
 
   /** Mensaje de chat recibido, con su contenido completo. */
   readonly mensajes = this._mensajes.asObservable();
@@ -46,6 +47,8 @@ export class EventosService {
   readonly solicitudes = this._solicitudes.asObservable();
   /** Han aceptado o rechazado una solicitud tuya. */
   readonly respuestas = this._respuestas.asObservable();
+  /** Alguien ha retirado su solicitud o ha dejado de ser compañero tuyo. */
+  readonly relacionesDeshechas = this._relacionesDeshechas.asObservable();
 
   async conectar(): Promise<void> {
     if (this.fuente || !localStorage.getItem('token')) return;
@@ -79,6 +82,7 @@ export class EventosService {
     fuente.addEventListener('mensaje', e => this.emitir(this._mensajes, e));
     fuente.addEventListener('solicitud', e => this.emitir(this._solicitudes, e));
     fuente.addEventListener('solicitud-respondida', e => this.emitir(this._respuestas, e));
+    fuente.addEventListener('relacion-deshecha', e => this.emitir(this._relacionesDeshechas, e));
 
     fuente.onerror = () => {
       // Se llega aquí tanto por un corte real como por el vencimiento normal de

@@ -318,6 +318,20 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  /**
+   * Retira una solicitud enviada. Vuelve a dejar a esa persona como candidata.
+   */
+  retirarSolicitud(usuario: Match): void {
+    this.usuarioService.deshacerRelacion(usuario.id).subscribe({
+      next: () => {
+        this.matches.update(lista =>
+          lista.map(m => m.id === usuario.id ? { ...m, solicitudPendiente: false } : m));
+        this.mostrarToast(`Solicitud a ${usuario.nombre} retirada.`);
+      },
+      error: () => this.mostrarToast('No se ha podido retirar la solicitud.', 'error')
+    });
+  }
+
   responderSolicitud(solicitudId: number, estado: 'ACEPTADA' | 'RECHAZADA'): void {
     this.usuarioService.responderSolicitud(solicitudId, estado).subscribe({
       next: () => {

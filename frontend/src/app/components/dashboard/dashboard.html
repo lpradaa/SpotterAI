@@ -131,7 +131,14 @@
                   @if (usuario.yaConectado) {
                     <button class="btn btn--exito" (click)="irAlChat(usuario.id)">Escribir</button>
                   } @else if (usuario.solicitudPendiente) {
-                    <button class="btn btn--fantasma" disabled>Pendiente</button>
+                    <!-- Antes esto era un botón inerte que decía "Pendiente" y
+                         no dejaba salida: con la restricción única, una
+                         solicitud enviada por error bloqueaba a esa persona
+                         para siempre. -->
+                    <button class="btn btn--fantasma" (click)="retirarSolicitud(usuario)"
+                            [title]="'Retirar la solicitud enviada a ' + usuario.nombre">
+                      Retirar
+                    </button>
                   } @else {
                     <button class="btn btn--primario" (click)="conectarConUsuario(usuario.id)">Conectar</button>
                   }

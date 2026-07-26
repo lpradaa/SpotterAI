@@ -86,6 +86,16 @@ export class UsuarioService {
     return this.http.put(`${this.solicitudes}/responder/${solicitudId}?estado=${estado}`, {});
   }
 
+  /**
+   * Retira una solicitud enviada o deja de ser compañero de alguien.
+   *
+   * Va por usuario y no por identificador de solicitud porque quien lo usa sabe
+   * con quién quiere deshacer, no el número de la fila.
+   */
+  deshacerRelacion(otroUsuarioId: number): Observable<void> {
+    return this.http.delete<void>(`${this.solicitudes}/con/${otroUsuarioId}`);
+  }
+
   // obtenerMisConexiones se ha ido: la lista de compañeros la sirve ahora
   // MensajesService.conversaciones(), que ademas trae el ultimo mensaje y lo
   // pendiente. Era el unico consumidor de /solicitudes/aceptadas desde el front.

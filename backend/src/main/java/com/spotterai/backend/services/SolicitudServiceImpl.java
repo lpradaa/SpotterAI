@@ -4,6 +4,7 @@ import com.spotterai.backend.dtos.SolicitudDTO;
 import com.spotterai.backend.eventos.CanalEventos;
 import com.spotterai.backend.eventos.TipoEvento;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.SolicitudRepository;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -126,6 +128,35 @@ public class SolicitudServiceImpl implements SolicitudService {
         List<Solicitud> pendientes = solicitudRepository.findByReceptorIdAndEstado(receptor.getId(), "PENDIENTE");
         
         return pendientes.stream().map(this::mapearADTO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void deshacerRelacion(String email, Long otroUsuarioId) {
+        Usuario yo = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Se busca en los dos sentidos porque una solicitud no tiene dueño: la
+        // relacion es la misma la mandara quien la mandara.
+        Solicitud relacion = solicitudRepository.findFirstByEmisorIdAndReceptorId(yo.getId(), otroUsuarioId)
+                .or(() -> solicitudRepository.findFirstByEmisorIdAndReceptorId(otroUsuarioId, yo.getId()))
+                .orElseThrow(() -> new IllegalArgumentException("No hay ninguna relación con ese usuario."));
+
+        // Una solicitud que te han enviado a ti y sigue pendiente no se retira,
+        // se responde: para eso estan aceptar y rechazar, que ademas avisan a
+        // quien la mando.
+        boolean pendienteAjena = "PENDIENTE".equals(relacion.getEstado())
+                && relacion.getReceptor().getId().equals(yo.getId());
+        if (pendienteAjena) {
+            throw new SecurityException("Esa solicitud es tuya para responderla, no para retirarla.");
+        }
+
+        solicitudRepository.delete(relacion);
+
+        // Se borra en vez de marcarla: con la restriccion unica, dejar la fila
+        // impediria volver a conectar con esa persona nunca mas.
+        canalEventos.publicar(otroUsuarioId, TipoEvento.RELACION_DESHECHA,
+                Map.of("usuarioId", yo.getId(), "nombre", yo.getNombre()));
     }
 
     private SolicitudDTO mapearADTO(Solicitud s) {

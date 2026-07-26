@@ -91,10 +91,27 @@
       <header class="conversacion__cabecera">
         <button class="volver" (click)="cerrarChat()" aria-label="Volver a la lista">←</button>
         <app-avatar [nombre]="chatActivo()!.nombre" [valor]="chatActivo()!.avatar ?? ''" [tamano]="34" />
-        <div>
+        <div class="conversacion__quien">
           <h2 class="conversacion__nombre">{{ chatActivo()!.nombre }}</h2>
           <span class="conversacion__estado">Compañero de entrenamiento</span>
         </div>
+
+        @if (confirmandoBorrado()) {
+          <div class="conversacion__confirmar">
+            <span>¿Dejar de ser compañeros?</span>
+            <button class="btn btn--fantasma btn--pequeno" (click)="confirmandoBorrado.set(false)">No</button>
+            <button class="btn btn--primario btn--pequeno" (click)="eliminarCompanero()">Sí</button>
+          </div>
+        } @else {
+          <button class="btn-icono" (click)="confirmandoBorrado.set(true)"
+                  aria-label="Dejar de ser compañeros" title="Dejar de ser compañeros">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle><path d="M22 11h-6"></path>
+            </svg>
+          </button>
+        }
       </header>
 
       <div class="mensajes" #scrollMe>

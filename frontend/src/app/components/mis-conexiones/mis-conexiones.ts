@@ -9,6 +9,7 @@ import { ActivatedRoute } from '@angular/router';
 import { EventosService } from '../../services/eventos.service';
 import { MensajesService, Conversacion, Mensaje } from '../../services/mensajes.service';
 import { AvisosService } from '../../services/avisos.service';
+import { UsuarioService } from '../../services/usuario.service';
 import { Avatar } from '../avatar/avatar';
 
 @Component({
@@ -24,6 +25,7 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
   private eventos = inject(EventosService);
   private mensajes = inject(MensajesService);
   private avisos = inject(AvisosService);
+  private usuarios = inject(UsuarioService);
   private destroyRef = inject(DestroyRef);
 
   @ViewChild('scrollMe') private myScrollContainer!: ElementRef;
@@ -40,6 +42,9 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
   enviando = signal(false);
 
   estadoCanal = this.eventos.estado;
+
+  /** Confirmación en línea, sin diálogo del navegador. */
+  confirmandoBorrado = signal(false);
 
   /** Suma de lo pendiente, para el contador de la cabecera de la lista. */
   totalSinLeer = computed(() =>
@@ -100,6 +105,10 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
       .subscribe(solicitud => {
         if (solicitud.estado === 'ACEPTADA') this.cargarConversaciones();
       });
+
+    this.eventos.relacionesDeshechas
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(datos => this.alDeshacerseLaRelacion(datos));
   }
 
   private alLlegarMensaje(msg: Mensaje): void {
@@ -145,11 +154,43 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
   cerrarChat(): void {
     this.chatActivo.set(null);
     this.historial.set([]);
+    this.confirmandoBorrado.set(false);
+    this.cdr.detectChanges();
+  }
+
+  eliminarCompanero(): void {
+    const destino = this.chatActivo();
+    if (!destino) return;
+
+    this.usuarios.deshacerRelacion(destino.usuarioId).subscribe({
+      next: () => {
+        this.conversaciones.update(lista => lista.filter(c => c.usuarioId !== destino.usuarioId));
+        this.cerrarChat();
+      },
+      error: err => {
+        console.error('Error al eliminar el compañero:', err);
+        this.confirmandoBorrado.set(false);
+      }
+    });
+  }
+
+  /**
+   * El otro lado ha deshecho la relación.
+   *
+   * Sin esto seguirías viendo un chat que ya no existe, y el primer mensaje que
+   * mandaras se llevaría un 403 sin ninguna explicación.
+   */
+  private alDeshacerseLaRelacion(datos: { usuarioId: number }): void {
+    const id = Number(datos.usuarioId);
+    this.conversaciones.update(lista => lista.filter(c => c.usuarioId !== id));
+
+    if (this.chatActivo()?.usuarioId === id) this.cerrarChat();
     this.cdr.detectChanges();
   }
 
   abrirChat(conversacion: Conversacion): void {
     this.chatActivo.set(conversacion);
+    this.confirmandoBorrado.set(false);
 
     // El backend las marca leídas al servir el historial, así que el contador
     // local se pone a cero sin esperar a la respuesta.

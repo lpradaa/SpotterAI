@@ -267,6 +267,29 @@
   background: var(--sa-superficie-alt);
 }
 
+/* Empuja lo que venga después (el botón de eliminar) al extremo derecho. */
+.conversacion__quien {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Confirmación en línea en vez de un confirm() del navegador, que bloquea la
+   página y no se parece a nada del resto de la interfaz. */
+.conversacion__confirmar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+
+  span { white-space: nowrap; }
+}
+
+@media (max-width: 420px) {
+  // A este ancho la pregunta entera no cabe junto al nombre.
+  .conversacion__confirmar span { display: none; }
+}
+
 .volver {
   width: 32px;
   height: 32px;

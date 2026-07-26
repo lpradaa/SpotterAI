@@ -16,7 +16,15 @@ public enum TipoEvento {
     SOLICITUD("solicitud"),
 
     /** Han aceptado o rechazado una solicitud que enviaste tú. */
-    SOLICITUD_RESPONDIDA("solicitud-respondida");
+    SOLICITUD_RESPONDIDA("solicitud-respondida"),
+
+    /**
+     * Alguien ha retirado su solicitud o ha dejado de ser compañero tuyo.
+     *
+     * Hace falta avisar porque si no la otra persona sigue viendo un chat que ya
+     * no existe, y el primer mensaje que mande se lleva un 403 sin explicacion.
+     */
+    RELACION_DESHECHA("relacion-deshecha");
 
     private final String clave;
 

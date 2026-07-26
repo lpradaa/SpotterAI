@@ -78,4 +78,24 @@ public class SolicitudController {
         return ResponseEntity.ok(solicitudService.obtenerAceptadas(email));
     }
 
+    /**
+     * 5. DESHACER LA RELACIÓN CON ALGUIEN
+     * DELETE http://localhost:8080/api/solicitudes/con/{otroUsuarioId}
+     *
+     * Retira una solicitud que enviaste o deja de ser compañero. Sin esto, y con
+     * la restricción única en la base, enviar una solicitud por error bloqueaba
+     * ese par para siempre.
+     */
+    @DeleteMapping("/con/{otroUsuarioId}")
+    public ResponseEntity<?> deshacerRelacion(@PathVariable Long otroUsuarioId) {
+        try {
+            solicitudService.deshacerRelacion(obtenerEmailAutenticado(), otroUsuarioId);
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }
