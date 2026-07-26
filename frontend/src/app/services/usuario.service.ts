@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { api } from '../config/api';
 
 /** Un tramo en el que dos usuarios coinciden. */
 export interface FranjaComun {
@@ -55,10 +56,10 @@ export class UsuarioService {
 
   // jwtInterceptor inyecta la cabecera Authorization en cada petición, así que
   // no hace falta construirla a mano método a método como se hacía antes.
-  private readonly usuarios = 'http://localhost:8080/api/usuarios';
-  private readonly solicitudes = 'http://localhost:8080/api/solicitudes';
-  private readonly entrenamientos = 'http://localhost:8080/api/entrenamientos';
-  private readonly gimnasios = 'http://localhost:8080/api/gimnasios';
+  private readonly usuarios = api('/api/usuarios');
+  private readonly solicitudes = api('/api/solicitudes');
+  private readonly entrenamientos = api('/api/entrenamientos');
+  private readonly gimnasios = api('/api/gimnasios');
 
   /** Candidatos puntuados y ordenados por compatibilidad. */
   getMatches(): Observable<Match[]> {

@@ -1,0 +1,63 @@
+# Levanta SpotterAI entero: base de datos, backend y frontend.
+#
+#   docker compose up
+#
+# La aplicación queda en http://localhost:4200. El backend no publica puerto a
+# propósito: todo el tráfico pasa por nginx, que es lo que hace que el frontend
+# no necesite saber dónde vive la API.
+
+services:
+  base:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-spotterai}
+      MARIADB_DATABASE: ${DB_NAME:-spotterai_db}
+      # utf8mb4 desde el principio: la aplicación está en español y con la
+      # codificación por defecto los acentos se guardan mal.
+      MARIADB_AUTO_UPGRADE: "1"
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+    volumes:
+      - datos-base:/var/lib/mysql
+    healthcheck:
+      # El backend arranca con ddl-auto=validate y Flyway: si la base no está
+      # lista, no reintenta, se cae. De ahí que espere al healthcheck.
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  backend:
+    build: ./backend
+    depends_on:
+      base:
+        condition: service_healthy
+    environment:
+      DB_HOST: base
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-spotterai_db}
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-spotterai}
+      # Sin valor por defecto seguro a propósito: para desarrollo vale este,
+      # pero cualquier despliegue real tiene que ponerlo en un .env.
+      JWT_SECRET: ${JWT_SECRET:-clave-de-desarrollo-cambiala-antes-de-desplegar-nada}
+      # nginx sirve la aplicación desde su propio origen, así que las peticiones
+      # ya no cruzan orígenes. Se mantiene por si alguien ataca la API directa.
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:4200}
+      MEDIOS_DIR: /app/medios
+    volumes:
+      # Fuera de la imagen: si no, cada despliegue borra las fotos subidas.
+      - medios:/app/medios
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  datos-base:
+  medios:

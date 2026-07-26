@@ -121,6 +121,15 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setAvatar(dto.getAvatar());
         usuario.setBiografia(recortar(dto.getBiografia(), MAX_BIOGRAFIA));
 
+        // Solo se acepta una ruta servida por nosotros. Sin esta comprobacion, el
+        // campo seria un hueco para meter la URL de cualquier sitio y hacer que
+        // todos los navegadores que vieran el perfil la pidieran.
+        if (dto.getFotoUrl() == null || dto.getFotoUrl().isBlank()) {
+            usuario.setFotoUrl(null);
+        } else if (dto.getFotoUrl().startsWith("/api/medios/")) {
+            usuario.setFotoUrl(dto.getFotoUrl());
+        }
+
         // Solo si llega: una pantalla que edite el perfil sin tocar la meta no
         // deberia borrarla por omision.
         if (dto.getMetaSemanal() != null) {
@@ -203,6 +212,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         perfil.put("objetivos", usuario.getObjetivos());
         perfil.put("gimnasioId", usuario.getGimnasio() != null ? usuario.getGimnasio().getId() : null);
         perfil.put("avatar", usuario.getAvatar());
+        // Sin esta linea la foto se guardaba pero no volvia, asi que al recargar
+        // la pantalla desaparecia. Es el tercer campo al que le pasa lo mismo:
+        // este mapa se construye a mano y añadir una columna no obliga a nada.
+        perfil.put("fotoUrl", usuario.getFotoUrl());
         perfil.put("biografia", usuario.getBiografia());
         perfil.put("metaSemanal", usuario.getMetaSemanal() != null ? usuario.getMetaSemanal() : 4);
 

@@ -8,36 +8,12 @@
    donde haga falta y sigue quedando limitado a su vista.
    =========================================================================== */
 
-/* ===================== Material =====================
-   Textura de metal cepillado: lineas de un pixel a opacidad muy baja. No se ve
-   como textura, se nota como que la superficie tiene grano en vez de ser un
-   rectangulo de color plano. Por encima de un 3 % ya ensucia el texto encima.
+/* El mixin `cepillado` vive en scss/_material.scss: un mixin no genera CSS
+   hasta que alguien lo usa, asi que puede importarse por componente sin coste.
+   Estas reglas de aqui abajo, en cambio, son CSS hecho y se cargan una sola vez
+   desde styles.scss. */
 
-   Se aplica con una clase y no a todas las superficies: si todo tiene grano,
-   nada lo tiene. */
-@mixin cepillado {
-  background-image: repeating-linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.022) 0,
-    rgba(255, 255, 255, 0.022) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-}
-
-:root[data-tema='claro'] {
-  // Sobre fondo claro el mismo grano en blanco no se ve: hay que restar luz
-  .cepillado {
-    background-image: repeating-linear-gradient(
-      180deg,
-      rgba(41, 26, 16, 0.018) 0,
-      rgba(41, 26, 16, 0.018) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-  }
-}
-
+/* Grano de metal, para quien lo quiera como clase */
 .cepillado {
   @include cepillado;
 }

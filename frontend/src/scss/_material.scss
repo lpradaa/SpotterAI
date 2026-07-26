@@ -1,0 +1,32 @@
+/* ===========================================================================
+   Material
+   ---------------------------------------------------------------------------
+   Mixins del lenguaje visual de gimnasio. Van aqui y no en _componentes.scss
+   porque un mixin no genera CSS hasta que alguien lo usa: puede importarse en
+   cada componente sin coste, mientras que _componentes.scss son reglas hechas
+   y copiarlas en seis sitios reventaba los presupuestos de tamaño.
+   =========================================================================== */
+
+/* Textura de metal cepillado: lineas de un pixel a opacidad muy baja. No se ve
+   como textura, se nota como que la superficie tiene grano en vez de ser un
+   rectangulo de color plano. Por encima de un 3 % ya ensucia el texto encima. */
+@mixin cepillado {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.022) 0,
+    rgba(255, 255, 255, 0.022) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+
+  // Sobre fondo claro el mismo grano en blanco no se ve: hay que restar luz
+  :root[data-tema='claro'] & {
+    background-image: repeating-linear-gradient(
+      180deg,
+      rgba(41, 26, 16, 0.018) 0,
+      rgba(41, 26, 16, 0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+}

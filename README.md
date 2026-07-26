@@ -58,9 +58,29 @@ Dos decisiones del motor que no son obvias:
 
 ---
 
-## Arrancar en local
+## Arrancar
 
-**Requisitos:** JDK 21, Node 20+, MySQL en marcha.
+### Con Docker — un comando
+
+**Requisitos:** Docker.
+
+```bash
+docker compose up
+```
+
+La aplicación queda en **http://localhost:4200**. Levanta MariaDB, backend y frontend; Flyway crea el esquema en la primera arranque. El backend no publica puerto: todo pasa por nginx, que reenvía `/api` al contenedor del backend. Eso es lo que permite que el frontend compilado no lleve dentro ninguna dirección concreta, y de paso elimina el CORS.
+
+Para un despliegue de verdad, pon tu propio secreto en un `.env`:
+
+```bash
+echo "JWT_SECRET=$(openssl rand -base64 48)" > .env
+```
+
+Las fotos y vídeos van en un volumen (`medios`), no dentro de la imagen: si no, cada despliegue borraría lo que haya subido la gente.
+
+### Sin Docker
+
+**Requisitos:** JDK 21, Node 20+, MySQL o MariaDB en marcha.
 
 Crea la base de datos, vacía:
 
@@ -95,6 +115,18 @@ Frontend (`:4200`):
 ```bash
 cd frontend && npm install && npm start
 ```
+
+El frontend llama al backend con rutas relativas (`/api/…`) y quien las reenvía es el proxy de `ng serve`, configurado en `frontend/proxy.conf.json`.
+
+---
+
+## Integración continua
+
+Cada push a `main` y cada pull request ejecuta [este workflow](.github/workflows/ci.yml):
+
+- **Backend** — `./mvnw verify`, los 84 tests sobre H2 en memoria. Si algo falla, sube los informes de surefire como artefacto.
+- **Frontend** — `npm ci` y compilación de producción. `ci` y no `install`: falla si `package.json` y el lock se han desincronizado, que es justo lo que interesa saber.
+- **Imágenes** — construye las dos imágenes Docker (sin publicarlas). Comprueba que los `Dockerfile` siguen siendo válidos, que es lo que se rompe sin que nadie lo note hasta que alguien intenta levantar el proyecto.
 
 ---
 

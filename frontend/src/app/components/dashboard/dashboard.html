@@ -313,18 +313,38 @@
             Tu inicial te identifica en las listas; el color es para distinguirte de un vistazo.
           </p>
           <div class="colores">
-            <app-avatar [nombre]="userName()" [valor]="perfilForm.avatar" [tamano]="44" />
+            <app-avatar [nombre]="userName()" [valor]="perfilForm.avatar"
+                        [foto]="urlFoto()" [tamano]="56" />
+
             <div class="colores__opciones">
               @for (color of coloresAvatar; track color) {
                 <button type="button"
                         class="color"
-                        [class.color--activo]="perfilForm.avatar === color"
+                        [class.color--activo]="perfilForm.avatar === color && !perfilForm.fotoUrl"
                         [attr.data-color]="color"
                         [attr.aria-label]="'Color ' + color"
-                        [attr.aria-pressed]="perfilForm.avatar === color"
+                        [attr.aria-pressed]="perfilForm.avatar === color && !perfilForm.fotoUrl"
                         (click)="seleccionarAvatar(color)"></button>
               }
             </div>
+          </div>
+
+          <!-- La foto es opcional a propósito: obligar a subir una para empezar
+               a usar la aplicación es una barrera, y las iniciales identifican
+               igual de bien mientras tanto. -->
+          <div class="foto-acciones">
+            <label class="btn btn--fantasma btn--pequeno">
+              @if (subiendoFoto()) { Subiendo… }
+              @else if (perfilForm.fotoUrl) { Cambiar foto }
+              @else { Subir una foto }
+              <input type="file" accept="image/*" (change)="alElegirFoto($event)" hidden>
+            </label>
+
+            @if (perfilForm.fotoUrl) {
+              <button type="button" class="btn btn--fantasma btn--pequeno" (click)="quitarFoto()">
+                Quitar
+              </button>
+            }
           </div>
         </fieldset>
 

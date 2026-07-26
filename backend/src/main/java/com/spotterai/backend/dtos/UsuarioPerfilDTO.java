@@ -27,6 +27,16 @@ public class UsuarioPerfilDTO {
      */
     private Integer metaSemanal;
 
+    /**
+     * Ruta de la foto de perfil, ya subida a /api/medios.
+     *
+     * Faltaba aqui, que es el mismo fallo que tenia la biografia: la columna
+     * existia, el avatar sabia pintarla y el perfil publico la devolvia, pero
+     * sin campo en este DTO cualquier valor que mandara el frontend se
+     * descartaba en silencio.
+     */
+    private String fotoUrl;
+
     private List<HorarioDTO> horarios; // 👈 NUEVO: Lista de horarios que llegarán desde Angular
 
     // Getters y Setters
@@ -48,6 +58,8 @@ public class UsuarioPerfilDTO {
     public void setBiografia(String biografia) { this.biografia = biografia; }
     public Integer getMetaSemanal() { return metaSemanal; }
     public void setMetaSemanal(Integer metaSemanal) { this.metaSemanal = metaSemanal; }
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
     public List<HorarioDTO> getHorarios() { return horarios; }
     public void setHorarios(List<HorarioDTO> horarios) { this.horarios = horarios; }
 

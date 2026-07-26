@@ -1,5 +1,4 @@
 @import '../../../scss/index';
-@import '../../../scss/componentes';
 
 /* ===========================================================================
    Tablero de SpotterAI
@@ -737,6 +736,15 @@
   display: flex;
   align-items: center;
   gap: $space-sm;
+}
+
+.foto-acciones {
+  display: flex;
+  gap: 6px;
+  margin-top: $space-xs;
+
+  // El input de archivo real va oculto: su control nativo no se puede estilar
+  label { cursor: pointer; }
 }
 
 .colores__opciones {

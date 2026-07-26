@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend · 84 tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Compilar y pasar los tests
+        working-directory: backend
+        # Los tests usan H2 en memoria y Flyway va apagado ahí, así que no hace
+        # falta levantar ninguna base de datos para esto.
+        env:
+          JWT_SECRET: clave-solo-para-ci-no-es-un-secreto-real
+        run: ./mvnw -B verify
+
+      - name: Guardar los informes si algo falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informes-surefire
+          path: backend/target/surefire-reports/
+
+  frontend:
+    name: Frontend · compilación
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: frontend
+        # ci y no install: instala exactamente lo del lock y falla si se han
+        # desincronizado, que es justo lo que queremos saber aquí.
+        run: npm ci
+
+      - name: Compilar para producción
+        working-directory: frontend
+        run: npm run build -- --configuration production
+
+  imagenes:
+    name: Imágenes Docker
+    runs-on: ubuntu-latest
+    # Solo si lo anterior pasa: construir imágenes de código que no compila no
+    # aporta ninguna señal nueva y tarda varios minutos.
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Se construyen pero no se publican: esto comprueba que los Dockerfile
+      # siguen siendo válidos, que es lo que se rompe sin que nadie lo note
+      # hasta que alguien intenta levantar el proyecto.
+      - name: Construir imagen del backend
+        run: docker build -t spotterai-backend ./backend
+
+      - name: Construir imagen del frontend
+        run: docker build -t spotterai-frontend ./frontend

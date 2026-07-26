@@ -1,13 +1,14 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { api } from '../config/api';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private URL_AUTH = 'http://localhost:8080/api/auth'; 
+  private URL_AUTH = api('/api/auth'); 
 
   // Almacén reactivo del Token recuperado del almacenamiento del navegador
   currentUserToken = signal<string | null>(localStorage.getItem('token'));
@@ -37,7 +38,7 @@ export class AuthService {
   // 🔥 MODIFICADO: Ahora apunta al endpoint correcto del backend para registrar usuarios
   // Fíjate en la última palabra de la URL (/registro)
   register(nuevoUsuario: any): Observable<any> {
-    return this.http.post<any>('http://localhost:8080/api/usuarios/registro', nuevoUsuario);
+    return this.http.post<any>(api('/api/usuarios/registro'), nuevoUsuario);
   }
 
   logout(): void {

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { api } from '../config/api';
 
 export interface Mensaje {
   id: number;
@@ -34,31 +35,31 @@ export interface Conversacion {
 export class MensajesService {
 
   private http = inject(HttpClient);
-  private readonly api = 'http://localhost:8080/api/mensajes';
+  private readonly base = api('/api/mensajes');
 
   /** Compañeros con su último mensaje, ya ordenados por actividad. */
   conversaciones(): Observable<Conversacion[]> {
-    return this.http.get<Conversacion[]>(`${this.api}/conversaciones`);
+    return this.http.get<Conversacion[]>(`${this.base}/conversaciones`);
   }
 
   /** Trae el historial y, de paso, marca la conversación como leída. */
   historial(otroId: number): Observable<Mensaje[]> {
-    return this.http.get<Mensaje[]>(`${this.api}/historial/${otroId}`);
+    return this.http.get<Mensaje[]>(`${this.base}/historial/${otroId}`);
   }
 
   enviar(receptorId: number, contenido: string): Observable<Mensaje> {
     // Objeto y no texto suelto: el endpoint le quitaba las comillas al cuerpo
     // crudo para deshacer el entrecomillado de JSON y se llevaba por delante
     // las que hubieras escrito tú.
-    return this.http.post<Mensaje>(`${this.api}/enviar/${receptorId}`, { contenido });
+    return this.http.post<Mensaje>(`${this.base}/enviar/${receptorId}`, { contenido });
   }
 
   /** Para un mensaje que llega con esa conversación ya abierta. */
   marcarLeida(otroId: number): Observable<void> {
-    return this.http.post<void>(`${this.api}/leidos/${otroId}`, {});
+    return this.http.post<void>(`${this.base}/leidos/${otroId}`, {});
   }
 
   totalSinLeer(): Observable<number> {
-    return this.http.get<{ total: number }>(`${this.api}/sin-leer`).pipe(map(r => r.total));
+    return this.http.get<{ total: number }>(`${this.base}/sin-leer`).pipe(map(r => r.total));
   }
 }

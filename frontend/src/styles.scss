@@ -2,6 +2,13 @@
 
 @import './scss/index';
 
+// Botones, chips, campos, velos y avisos. Van aqui y no importados por cada
+// componente que los usa: importarlos copia el fichero entero en cada uno, y
+// con seis copias de 8,8 KB el build de produccion reventaba los presupuestos
+// de tamaño de Angular en siete de ocho componentes. Son clases genericas, que
+// es exactamente lo que debe vivir en la hoja global.
+@import './scss/componentes';
+
 *,
 *::before,
 *::after {

@@ -1,6 +1,7 @@
 import { Injectable, NgZone, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
+import { api } from '../config/api';
 import { firstValueFrom } from 'rxjs';
 
 /** Estado del canal, para poder avisar en la interfaz cuando se cae. */
@@ -23,7 +24,7 @@ export class EventosService {
   private http = inject(HttpClient);
   private zona = inject(NgZone);
 
-  private readonly apiUrl = 'http://localhost:8080/api/eventos';
+  private readonly apiUrl = api('/api/eventos');
 
   private static readonly ESPERA_INICIAL_MS = 1_000;
   private static readonly ESPERA_MAXIMA_MS = 30_000;

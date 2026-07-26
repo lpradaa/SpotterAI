@@ -161,6 +161,7 @@ export class DashboardComponent implements OnInit {
           horarios: data.horarios || [], metaSemanal: data.metaSemanal || 4
         };
         this.perfilForm.fotoUrl = data.fotoUrl ?? null;
+        this.fotoActual.set(data.fotoUrl ?? null);
         this.rendimiento.set(data.rendimiento ?? null);
         this.cargarMisHitos();
         this.calcularProgresoSemanal();
@@ -329,7 +330,45 @@ export class DashboardComponent implements OnInit {
   subiendo = signal(false);
   nuevoHito = { titulo: '', descripcion: '', fecha: '', medioUrl: null as string | null, medioTipo: null as string | null };
 
-  urlFoto = computed(() => this.perfiles.urlDeMedio(this.perfilForm.fotoUrl));
+  /**
+   * Señal aparte y no un computed sobre perfilForm: perfilForm es un objeto
+   * plano, así que cambiarle un campo no notifica a nadie y la foto no se
+   * refrescaría al subirla.
+   */
+  fotoActual = signal<string | null>(null);
+  subiendoFoto = signal(false);
+
+  urlFoto = computed(() => this.perfiles.urlDeMedio(this.fotoActual()));
+
+  alElegirFoto(evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    if (!archivo) return;
+
+    this.subiendoFoto.set(true);
+    this.perfiles.subirMedio(archivo).subscribe({
+      next: r => {
+        this.perfilForm.fotoUrl = r.url;
+        this.fotoActual.set(r.url);
+        this.subiendoFoto.set(false);
+        // Sin esto, elegir el mismo archivo dos veces seguidas no dispara change
+        entrada.value = '';
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        this.subiendoFoto.set(false);
+        entrada.value = '';
+        this.mostrarToast(
+          typeof err?.error === 'string' ? err.error : 'No se ha podido subir la foto.', 'error');
+      }
+    });
+  }
+
+  quitarFoto(): void {
+    this.perfilForm.fotoUrl = null;
+    this.fotoActual.set(null);
+    this.cdr.detectChanges();
+  }
 
   urlMedio(ruta: string | null): string | null {
     return this.perfiles.urlDeMedio(ruta);
@@ -472,7 +511,14 @@ export class DashboardComponent implements OnInit {
   // --- Modales de perfil y entrenamiento ---
   abrirModal(): void { this.isModalOpen = true; this.cdr.detectChanges(); }
   cerrarModal(): void { this.isModalOpen = false; this.cdr.detectChanges(); }
-  seleccionarAvatar(color: string): void { this.perfilForm.avatar = color; }
+  /**
+   * Elegir un color implica querer las iniciales: con foto puesta, el color no
+   * se ve por ningún lado y el selector parecería estropeado.
+   */
+  seleccionarAvatar(color: string): void {
+    this.perfilForm.avatar = color;
+    this.quitarFoto();
+  }
   agregarHorario(): void {
     this.perfilForm.horarios.push({
       diaSemana: 'Lunes', horaInicio: '10:00', horaFin: '12:00', habitual: false

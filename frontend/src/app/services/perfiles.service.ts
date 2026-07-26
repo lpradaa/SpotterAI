@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE } from '../config/api';
 
 export interface Hito {
   id: number;
@@ -41,7 +42,7 @@ export interface PerfilPublico {
 export class PerfilesService {
 
   private http = inject(HttpClient);
-  private readonly origen = 'http://localhost:8080';
+  private readonly origen = API_BASE;
 
   verPerfil(usuarioId: number): Observable<PerfilPublico> {
     return this.http.get<PerfilPublico>(`${this.origen}/api/usuarios/${usuarioId}/perfil`);
