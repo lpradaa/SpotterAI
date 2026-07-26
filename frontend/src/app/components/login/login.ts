@@ -1,7 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EventosService } from '../../services/eventos.service';
 
@@ -12,10 +12,20 @@ import { EventosService } from '../../services/eventos.service';
   templateUrl: './login.html',
   styleUrl: './login.scss' // OJO: he cambiado .css a .scss para que coincida con tu archivo
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private eventos = inject(EventosService);
+  private route = inject(ActivatedRoute);
+
+  ngOnInit(): void {
+    // El interceptor manda aquí cuando el token muere con la app abierta. Sin
+    // este aviso, la persona aparece en el login sin saber por qué y cree que
+    // algo se ha roto.
+    if (this.route.snapshot.queryParamMap.get('sesion') === 'caducada') {
+      this.errorMessage.set('Tu sesión ha caducado. Vuelve a entrar.');
+    }
+  }
 
   // 🔄 Interruptor de modo (Login vs Registro)
   isLoginMode = true;

@@ -2,7 +2,7 @@
 
 Encuentra a la persona con la que entrenar. No a cualquiera: a la que coincide contigo en gimnasio, nivel, objetivo **y horario real**.
 
-> Evolución del TFG *FitConnect*, reconstruida sobre un motor de compatibilidad con IA y una interfaz rediseñada.
+> Evolución del TFG *FitConnect*, reconstruida sobre un motor de compatibilidad que cruza horarios al minuto y una interfaz rediseñada.
 
 ---
 

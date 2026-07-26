@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SpotterAI">
+  <!--
+    Icono de pestaña. Es el isotipo de la cabecera, pero sobre fondo lleno y con
+    las piezas mas gruesas: a 16 px, que es el tamano real en el que se ve, un
+    trazo fino desaparece y el arco de la mano se convierte en una mancha.
+  -->
+  <defs>
+    <linearGradient id="ascua" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#c2410c" />
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="url(#ascua)" />
+
+  <g fill="#ffffff">
+    <!-- Barra -->
+    <rect x="14" y="29" width="36" height="6" rx="3" />
+    <!-- Discos -->
+    <rect x="8" y="20" width="9" height="24" rx="4" />
+    <rect x="47" y="20" width="9" height="24" rx="4" />
+  </g>
+</svg>

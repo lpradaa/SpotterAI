@@ -11,8 +11,8 @@
 	<groupId>com.spotterai</groupId>
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>backend</name>
-	<description/>
+	<name>spotterai-backend</name>
+	<description>Motor de compatibilidad y API de SpotterAI</description>
 	<url/>
 	<licenses>
 		<license/>

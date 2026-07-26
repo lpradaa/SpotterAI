@@ -3,6 +3,7 @@ package com.spotterai.backend.services;
 import com.spotterai.backend.dtos.SolicitudDTO;
 import com.spotterai.backend.eventos.CanalEventos;
 import com.spotterai.backend.eventos.TipoEvento;
+import org.springframework.dao.DataIntegrityViolationException;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.SolicitudRepository;
@@ -70,7 +71,17 @@ public class SolicitudServiceImpl implements SolicitudService {
         nueva.setReceptor(receptor);
         nueva.setEstado("PENDIENTE"); 
 
-        Solicitud guardada = solicitudRepository.save(nueva);
+        Solicitud guardada;
+        try {
+            guardada = solicitudRepository.save(nueva);
+        } catch (DataIntegrityViolationException e) {
+            // La comprobacion de arriba no cubre dos peticiones a la vez: las dos
+            // pueden ver que no hay nada y las dos intentar insertar. Para eso
+            // esta la restriccion unica, y el resultado debe leerse igual que si
+            // lo hubiera detectado la comprobacion, no como un error del servidor.
+            throw new IllegalArgumentException("Ya existe una solicitud entre estos usuarios.");
+        }
+
         SolicitudDTO dto = mapearADTO(guardada);
 
         // Esto es lo que de verdad se perdía sin tiempo real: una solicitud sin
