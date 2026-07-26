@@ -404,13 +404,18 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     /** Mapeo comun de entidad a DTO, para no repetir el constructor de 12 argumentos. */
     private UsuarioResponseDTO aDTO(Usuario u) {
-        return new UsuarioResponseDTO(
+        UsuarioResponseDTO dto = new UsuarioResponseDTO(
                 u.getId(), u.getNombre(), u.getEmail(),
                 u.getEdad(), u.getGenero(), u.getPeso(),
                 u.getNivel(), u.getObjetivos(),
                 u.getGimnasio() != null ? u.getGimnasio().getId() : null,
                 u.getAvatar(), u.getBiografia(),
                 u.getGimnasio() != null ? u.getGimnasio().getNombre() : "Gimnasio Habitual");
+
+        // Fuera del constructor porque ese ya tiene doce parametros posicionales
+        // y añadir el trece es pedir que alguien los cruce al llamarlo.
+        dto.setFotoUrl(u.getFotoUrl());
+        return dto;
     }
 
     /**

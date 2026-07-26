@@ -19,6 +19,16 @@ public class UsuarioResponseDTO {
     // 🔥 NUEVO CAMPO: Para enviar el emoji al frontend
     private String avatar;
 
+    /**
+     * Foto de perfil, si la tiene.
+     *
+     * Va aparte del avatar y no en su lugar: el avatar es el color de reserva
+     * para cuando no hay foto, y quien pinta decide cual usar. Faltaba aqui, que
+     * es el cuarto sitio donde ha pasado lo mismo: sin este campo las fotos
+     * existian en la base y no se veian en ninguna lista.
+     */
+    private String fotoUrl;
+
     private Boolean yaConectado = false;
     private Boolean solicitudPendiente = false;
 
@@ -102,6 +112,8 @@ public class UsuarioResponseDTO {
     
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
     
     public Boolean getYaConectado() { return yaConectado; }
     public void setYaConectado(Boolean yaConectado) { this.yaConectado = yaConectado; }

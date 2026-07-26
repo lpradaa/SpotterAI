@@ -7,6 +7,7 @@ import { RejillaSemana, Franja } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
 import { Carga } from '../carga/carga';
+import { PerfilesService } from '../../services/perfiles.service';
 
 @Component({
   selector: 'app-explore',
@@ -19,6 +20,7 @@ export class Explore implements OnInit {
   private usuarioService = inject(UsuarioService);
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
+  private perfiles = inject(PerfilesService);
 
   /** A quién se está mirando, o null. */
   perfilAbierto = signal<number | null>(null);
@@ -33,6 +35,11 @@ export class Explore implements OnInit {
 
   irAlChat(usuarioId: number): void {
     this.router.navigate(['/conexiones'], { queryParams: { con: usuarioId } });
+  }
+
+  /** El backend devuelve rutas relativas; el avatar necesita una usable en src. */
+  urlMedio(ruta: string | null): string | null {
+    return this.perfiles.urlDeMedio(ruta);
   }
 
   usuarios = signal<Match[]>([]);

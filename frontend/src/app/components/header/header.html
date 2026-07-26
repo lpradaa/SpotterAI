@@ -8,14 +8,18 @@
       </svg>
     </button>
     
-    <a routerLink="/dashboard" class="header__logo-container" aria-label="SpotterAI, ir al inicio">
+    <a routerLink="/dashboard" class="header__logo-container" aria-label="Spotter, ir al inicio">
       <!--
-        Marca de SpotterAI. El isotipo es una barra con discos y, debajo, el arco
-        de la mano que asiste: eso es literalmente un spotter. El texto va en dos
-        nodos porque "Spotter" y "AI" llevan grosores distintos.
+        El isotipo es una barra con discos y, debajo, el arco de la mano que
+        asiste: eso es literalmente un spotter.
+
+        El texto era "Spotter" + "AI" en dos nodos con grosores distintos. Se
+        queda solo "Spotter": la IA está aparcada en docs/ia-aparcada, y una
+        marca que anuncia algo que la aplicación no hace se lee como promesa
+        incumplida en cuanto alguien la usa.
       -->
-      <svg viewBox="0 0 232 50" class="logo-svg" xmlns="http://www.w3.org/2000/svg" role="img"
-           aria-label="SpotterAI">
+      <svg viewBox="0 0 200 50" class="logo-svg" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="Spotter">
         <defs>
           <linearGradient id="saAscua" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#f59e0b" />
@@ -38,8 +42,7 @@
              enlace heredaba el azul de link por defecto del navegador. -->
         <text x="66" y="27" font-family="'Space Grotesk', system-ui, sans-serif" font-size="26"
               font-weight="700" fill="currentColor" dominant-baseline="middle"
-              letter-spacing="-0.5">Spotter<tspan font-weight="500"
-              fill="var(--sa-acento)">AI</tspan></text>
+              letter-spacing="-0.5">Spotter</text>
       </svg>
     </a>
   </div>

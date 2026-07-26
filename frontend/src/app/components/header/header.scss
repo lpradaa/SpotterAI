@@ -36,8 +36,10 @@
       // sale en azul
       color: var(--sa-texto);
       .logo-svg {
-        height: 40px; 
-        width: 200px; 
+        height: 40px;
+        // Acompaña al viewBox, que se estrechó al quitar el "AI" del final: si
+        // se deja en 200 sobre un viewBox de 200x50, el trazo se ensancha.
+        width: 172px;
         display: block;
       }
     }

@@ -23,6 +23,8 @@ export interface Match {
   nivel: string | null;
   objetivos: string | null;
   avatar: string | null;
+  /** Foto de perfil. Si no la hay, el avatar cae a iniciales sobre color. */
+  fotoUrl: string | null;
   biografia: string | null;
   gimnasioId: number | null;
   gimnasioNombre: string | null;
