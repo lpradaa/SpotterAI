@@ -45,7 +45,10 @@
     <!-- ================= Cómo encajáis ================= -->
     <section class="ficha__bloque">
       <div class="ficha__encaje">
-        <span class="ficha__nota">{{ p.compatibilidad }}<small>%</small></span>
+        <span class="ficha__marcador">
+          <span class="ficha__nota">{{ p.compatibilidad }}<small>%</small></span>
+          <app-carga [puntuacion]="p.compatibilidad" />
+        </span>
         <div>
           <h3 class="ficha__subtitulo">{{ p.etiquetaCompatibilidad }}</h3>
           <p class="ficha__motivo">{{ p.resumenCompatibilidad }}</p>

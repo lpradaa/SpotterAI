@@ -4,6 +4,7 @@ import { PerfilesService, PerfilPublico } from '../../services/perfiles.service'
 import { UsuarioService } from '../../services/usuario.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
+import { Carga } from '../carga/carga';
 
 /**
  * La ficha de una persona.
@@ -19,7 +20,7 @@ import { Avatar } from '../avatar/avatar';
 @Component({
   selector: 'app-perfil-publico',
   standalone: true,
-  imports: [CommonModule, RejillaSemana, Avatar],
+  imports: [CommonModule, RejillaSemana, Avatar, Carga],
   templateUrl: './perfil-publico.html',
   styleUrl: './perfil-publico.scss'
 })

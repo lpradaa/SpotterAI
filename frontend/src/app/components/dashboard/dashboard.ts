@@ -11,11 +11,12 @@ import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
 import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
 import { PerfilesService, Hito } from '../../services/perfiles.service';
+import { Carga } from '../carga/carga';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent, Carga],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })

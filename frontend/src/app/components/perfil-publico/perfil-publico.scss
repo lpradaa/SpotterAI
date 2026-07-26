@@ -139,6 +139,14 @@
   gap: $space-sm;
 }
 
+.ficha__marcador {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 /* El número sigue estando, pero de apoyo: es una prueba de por qué encajáis, no
    el titular de la persona. */
 .ficha__nota {

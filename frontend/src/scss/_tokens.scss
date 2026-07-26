@@ -33,6 +33,14 @@
   --sa-acento-texto: #ffb28c;
   --sa-sobre-acento: #1a0c05;
 
+  /* --- Acero: el contrapunto frio del ascua ---
+     El ascua es el esfuerzo; el acero es el material. Con un solo acento
+     calido todo lo secundario caia en grises muertos y la pantalla se leia
+     igual que un panel de control. */
+  --sa-acero: #7f9bab;
+  --sa-acero-suave: #161e23;
+  --sa-acero-linea: #2f3d45;
+
   /* --- Estados --- */
   --sa-exito: #4ade80;
   --sa-exito-suave: #12261a;
@@ -43,6 +51,14 @@
   --sa-comp-baja: #6f6660;
   --sa-comp-media: #fbbf24;
   --sa-comp-alta: #ff7a45;
+
+  /* --- Carga: los discos de la barra ---
+     Un disco cargado y un disco vacio. Es el indicador que sustituye a la
+     barra de progreso lisa: se lee como peso puesto en la barra, no como el
+     relleno de un formulario. */
+  --sa-disco: #ff7a45;
+  --sa-disco-vacio: #241f1d;
+  --sa-disco-borde: #4a3128;
 
   /* --- Rejilla semanal --- */
   --sa-rejilla-fondo: #131110;
@@ -93,6 +109,10 @@
   --sa-acento-texto: #7c2d12;
   --sa-sobre-acento: #ffffff;
 
+  --sa-acero: #4a6575;
+  --sa-acero-suave: #eef2f4;
+  --sa-acero-linea: #cfd9df;
+
   --sa-exito: #15803d;
   --sa-exito-suave: #eaf6ee;
   --sa-aviso: #b45309;
@@ -101,6 +121,10 @@
   --sa-comp-baja: #a8a29a;
   --sa-comp-media: #d97706;
   --sa-comp-alta: #c2410c;
+
+  --sa-disco: #c2410c;
+  --sa-disco-vacio: #e7e2dc;
+  --sa-disco-borde: #d9cec6;
 
   --sa-rejilla-fondo: #faf8f6;
   --sa-rejilla-linea: #ece7e1;

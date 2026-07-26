@@ -6,11 +6,12 @@ import { UsuarioService, Match } from '../../services/usuario.service';
 import { RejillaSemana, Franja } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
+import { Carga } from '../carga/carga';
 
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent, Carga],
   templateUrl: './explore.html',
   styleUrl: './explore.scss'
 })

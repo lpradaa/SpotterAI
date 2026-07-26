@@ -1,0 +1,45 @@
+@import '../../../scss/index';
+
+:host {
+  display: block;
+}
+
+.carga {
+  display: flex;
+  align-items: center;
+  // Separacion generosa: pegados se leen como una linea continua, que es
+  // justo lo que se queria evitar
+  gap: 4px;
+}
+
+.carga__disco {
+  // Anchura fija y no flexible: a lo ancho de la tarjeta parecia un separador
+  width: 11px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--sa-disco-vacio);
+  border: 1px solid var(--sa-borde);
+  transition: background-color var(--sa-transicion);
+
+  &--puesto {
+    background: var(--sa-disco);
+    border-color: var(--sa-disco-borde);
+  }
+}
+
+/*
+ * El tramo lo marca un ancestro (la tarjeta), que queda fuera de este
+ * componente: por eso :host-context y no un selector descendente, que la
+ * encapsulacion de Angular no dejaria pasar.
+ *
+ * Los tramos bajos no llevan el acento: un 20 % en naranja se lee como logro.
+ */
+:host-context([data-tramo='baja']) .carga__disco--puesto {
+  background: var(--sa-comp-baja);
+  border-color: transparent;
+}
+
+:host-context([data-tramo='media']) .carga__disco--puesto {
+  background: var(--sa-comp-media);
+  border-color: transparent;
+}

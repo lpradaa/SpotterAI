@@ -54,7 +54,10 @@
               <span class="ficha__nombre">{{ usuario.nombre }}</span>
               <span class="ficha__gimnasio">{{ usuario.gimnasioNombre || 'Sin gimnasio' }}</span>
             </span>
-            <span class="ficha__nota">{{ usuario.compatibilidad }}<small>%</small></span>
+            <span class="ficha__marcador">
+              <span class="ficha__nota">{{ usuario.compatibilidad }}<small>%</small></span>
+              <app-carga [puntuacion]="usuario.compatibilidad" />
+            </span>
           </button>
 
           <p class="ficha__motivo">{{ usuario.resumenCompatibilidad }}</p>

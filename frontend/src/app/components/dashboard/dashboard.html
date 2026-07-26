@@ -99,7 +99,10 @@
                     </span>
                   </span>
 
-                  <span class="match__nota">{{ usuario.compatibilidad }}<small>%</small></span>
+                  <span class="match__marcador">
+                    <span class="match__nota">{{ usuario.compatibilidad }}<small>%</small></span>
+                    <app-carga [puntuacion]="usuario.compatibilidad" />
+                  </span>
                 </button>
 
                 <p class="match__motivo">{{ usuario.resumenCompatibilidad }}</p>

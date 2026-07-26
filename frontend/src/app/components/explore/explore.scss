@@ -86,10 +86,27 @@
   flex-direction: column;
   gap: $space-xs;
   padding: $space-sm;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   background: var(--sa-superficie);
   border: 1px solid var(--sa-borde);
   transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
+  position: relative;
+  overflow: hidden;
+
+  /* Banda de color en el canto, como la del disco que marca su peso: deja leer
+     el tramo de un vistazo al recorrer la rejilla de tarjetas. */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--sa-comp-baja);
+  }
+
+  &[data-tramo='media']::before { background: var(--sa-comp-media); }
+  &[data-tramo='alta']::before { background: var(--sa-acento); }
 
   &:hover {
     border-color: var(--sa-borde-fuerte);
@@ -121,6 +138,15 @@
     outline-offset: 4px;
     border-radius: $radius-sm;
   }
+}
+
+/* Cifra y discos juntos, alineados a la derecha: leen como un marcador. */
+.ficha__marcador {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
 }
 
 /* El número, de apoyo: conserva el acento porque es lo que hace útil al

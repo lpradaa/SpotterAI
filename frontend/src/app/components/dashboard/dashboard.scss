@@ -115,10 +115,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: $space-sm $space-md;
-  padding: $space-sm $space-md;
-  border-radius: $radius-md;
+  padding: $space-md;
+  border-radius: $radius-lg;
   background: var(--sa-superficie);
   border: 1px solid var(--sa-borde);
+  // Grano de metal cepillado. Es la superficie mas grande y vacia de la
+  // pantalla: sin nada encima se leia como un rectangulo de color.
+  @include cepillado;
 }
 
 .barra__identidad {
@@ -263,6 +266,24 @@
   border-radius: $radius-lg;
   background: var(--sa-superficie);
   transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
+  position: relative;
+  overflow: hidden;
+
+  /* Banda de color en el canto, como la del disco que marca su peso. Es lo que
+     deja leer el tramo de compatibilidad de un vistazo al recorrer la lista,
+     sin tener que fijarse en cada numero. */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--sa-comp-baja);
+  }
+
+  &[data-tramo='media']::before { background: var(--sa-comp-media); }
+  &[data-tramo='alta']::before { background: var(--sa-acento); }
 
   &:hover {
     border-color: var(--sa-borde-fuerte);
@@ -332,6 +353,16 @@
 /* El número, de apoyo. Sigue siendo lo que hace útil al producto, así que
    conserva el acento y la tipografía de titulares, pero deja de ser lo primero
    que ves de una persona. */
+/* Cifra y discos juntos, alineados a la derecha: leen como un marcador, no
+   como una barra de progreso a lo ancho de la tarjeta. */
+.match__marcador {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
 .match__nota {
   font-family: $font-display;
   font-size: $text-xl;
