@@ -86,9 +86,9 @@ export class UsuarioService {
     return this.http.put(`${this.solicitudes}/responder/${solicitudId}?estado=${estado}`, {});
   }
 
-  obtenerMisConexiones(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.solicitudes}/aceptadas`);
-  }
+  // obtenerMisConexiones se ha ido: la lista de compañeros la sirve ahora
+  // MensajesService.conversaciones(), que ademas trae el ultimo mensaje y lo
+  // pendiente. Era el unico consumidor de /solicitudes/aceptadas desde el front.
 
   actualizarPerfil(perfilData: unknown): Observable<any> {
     return this.http.put<any>(`${this.usuarios}/perfil`, perfilData);

@@ -1,11 +1,13 @@
-import { Component, OnInit, inject, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, DestroyRef } from '@angular/core';
+import {
+  Component, OnInit, inject, ChangeDetectorRef, ViewChild, ElementRef,
+  AfterViewChecked, DestroyRef, signal, computed
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
-import { UsuarioService } from '../../services/usuario.service';
 import { EventosService } from '../../services/eventos.service';
+import { MensajesService, Conversacion, Mensaje } from '../../services/mensajes.service';
 import { Avatar } from '../avatar/avatar';
 
 @Component({
@@ -16,75 +18,41 @@ import { Avatar } from '../avatar/avatar';
   styleUrl: './mis-conexiones.scss'
 })
 export class MisConexionesComponent implements OnInit, AfterViewChecked {
-  private usuarioService = inject(UsuarioService);
-  private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
   private eventos = inject(EventosService);
+  private mensajes = inject(MensajesService);
   private destroyRef = inject(DestroyRef);
 
   @ViewChild('scrollMe') private myScrollContainer!: ElementRef;
 
   // --- ESTADO DE LA LISTA ---
-  conexiones: any[] = [];
+  conversaciones = signal<Conversacion[]>([]);
   miId!: number;
-  busqueda: string = ''; 
+  busqueda = signal('');
 
   // --- ESTADO DEL CHAT ---
-  chatActivo: { id: number, nombre: string, avatar: string } | null = null;
-  historial: any[] = [];
-  nuevoMensaje: string = '';
-  private apiUrl = 'http://localhost:8080/api/mensajes';
+  chatActivo = signal<Conversacion | null>(null);
+  historial = signal<Mensaje[]>([]);
+  nuevoMensaje = '';
+  enviando = signal(false);
 
-  /** Identificadores de compañeros con mensajes sin abrir. */
-  noLeidos = new Set<number>();
-
-  /** Para avisar en la cabecera cuando el canal se ha caído. */
   estadoCanal = this.eventos.estado;
+
+  /** Suma de lo pendiente, para el contador de la cabecera de la lista. */
+  totalSinLeer = computed(() =>
+    this.conversaciones().reduce((suma, c) => suma + c.sinLeer, 0));
+
+  conversacionesFiltradas = computed(() => {
+    const texto = this.busqueda().trim().toLowerCase();
+    if (!texto) return this.conversaciones();
+    return this.conversaciones().filter(c => c.nombre.toLowerCase().includes(texto));
+  });
 
   ngOnInit(): void {
     this.miId = Number(localStorage.getItem('userId') || localStorage.getItem('id'));
-    this.cargarConexiones();
+    this.cargarConversaciones();
     this.escucharEventos();
-  }
-
-  /**
-   * Los mensajes que llegan por el canal se pintan sin pedir nada al servidor:
-   * el evento trae el mensaje entero. Si la conversación no está abierta, se
-   * marca el contacto y ya está.
-   */
-  private escucharEventos(): void {
-    this.eventos.mensajes
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(msg => {
-        if (this.chatActivo && msg.emisorId === this.chatActivo.id) {
-          this.historial = [...this.historial, msg];
-          this.cdr.detectChanges();
-          this.scrollToBottom();
-        } else {
-          this.noLeidos.add(Number(msg.emisorId));
-          this.cdr.detectChanges();
-        }
-      });
-
-    // Una solicitud aceptada estrena compañero, y por tanto conversación.
-    this.eventos.respuestas
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(solicitud => {
-        if (solicitud.estado === 'ACEPTADA') this.cargarConexiones();
-      });
-  }
-
-  /**
-   * Si se ha llegado desde el tablero con ?con=ID, se abre esa conversación en
-   * cuanto están cargadas las conexiones.
-   */
-  private abrirDesdeLaUrl(): void {
-    const id = Number(this.route.snapshot.queryParamMap.get('con'));
-    if (!id) return;
-
-    const conexion = this.conexiones.find(c => this.nombreODeId(c).id === id);
-    if (conexion) this.abrirChat(conexion);
   }
 
   ngAfterViewChecked() {
@@ -96,93 +64,147 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
       if (this.myScrollContainer) {
         this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
       }
-    } catch(err) { }
+    } catch { }
   }
 
-  cargarConexiones(): void {
-    this.usuarioService.obtenerMisConexiones().subscribe({
-      next: (data) => {
-        this.conexiones = data;
+  cargarConversaciones(): void {
+    this.mensajes.conversaciones().subscribe({
+      next: lista => {
+        this.conversaciones.set(lista);
         this.abrirDesdeLaUrl();
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error al cargar conexiones:', err)
+      error: err => console.error('Error al cargar las conversaciones:', err)
     });
   }
 
-  // Buscador rápido en memoria
-  get conexionesFiltradas() {
-    if (!this.busqueda.trim()) return this.conexiones;
-    return this.conexiones.filter(c =>
-      this.nombreODeId(c).nombre.toLowerCase().includes(this.busqueda.toLowerCase()));
+  /** Si se ha llegado desde el tablero con ?con=ID, se abre esa conversación. */
+  private abrirDesdeLaUrl(): void {
+    const id = Number(this.route.snapshot.queryParamMap.get('con'));
+    if (!id || this.chatActivo()) return;
+
+    const conversacion = this.conversaciones().find(c => c.usuarioId === id);
+    if (conversacion) this.abrirChat(conversacion);
+  }
+
+  private escucharEventos(): void {
+    this.eventos.mensajes
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(msg => this.alLlegarMensaje(msg));
+
+    // Una solicitud aceptada estrena compañero, y por tanto conversación.
+    this.eventos.respuestas
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(solicitud => {
+        if (solicitud.estado === 'ACEPTADA') this.cargarConversaciones();
+      });
+  }
+
+  private alLlegarMensaje(msg: Mensaje): void {
+    const abierto = this.chatActivo();
+    const esDelChatAbierto = abierto && msg.emisorId === abierto.usuarioId;
+
+    if (esDelChatAbierto) {
+      this.historial.update(lista => [...lista, msg]);
+      // Lo estás viendo, así que ya está leído; el servidor no puede saberlo.
+      this.mensajes.marcarLeida(abierto.usuarioId).subscribe({ error: () => {} });
+    }
+
+    this.refrescarFila(msg.emisorId, msg, !esDelChatAbierto);
+    this.cdr.detectChanges();
+    if (esDelChatAbierto) this.scrollToBottom();
   }
 
   /**
-   * Quién es "el otro" en una solicitud.
+   * Actualiza en el sitio la fila de una conversación y la sube arriba.
    *
-   * La plantilla repetía este ternario cinco veces para sacar nombre, inicial e
-   * identificador; ahora se resuelve en un sitio.
+   * Se hace en local en vez de volver a pedir la lista: el evento ya trae todo
+   * lo que cambia, y una petición por mensaje recibido sobra.
    */
-  nombreODeId(solicitud: any): { id: number, nombre: string, inicial: string } {
-    const soyElEmisor = solicitud.emisorId === this.miId;
-    const nombre = soyElEmisor ? solicitud.receptorNombre : solicitud.emisorNombre;
-    return {
-      id: Number(soyElEmisor ? solicitud.receptorId : solicitud.emisorId),
-      nombre: nombre ?? 'Compañero',
-      inicial: (nombre ?? '?').charAt(0).toUpperCase()
-    };
+  private refrescarFila(otroId: number, msg: Mensaje, sumaSinLeer: boolean): void {
+    this.conversaciones.update(lista => {
+      const actualizada = lista.map(c => c.usuarioId !== otroId ? c : {
+        ...c,
+        ultimoMensaje: msg.contenido,
+        ultimaFecha: msg.fechaEnvio,
+        mioElUltimo: msg.emisorId === this.miId,
+        sinLeer: sumaSinLeer ? c.sinLeer + 1 : 0
+      });
+
+      return actualizada.sort((a, b) => {
+        if (!a.ultimaFecha) return 1;
+        if (!b.ultimaFecha) return -1;
+        return b.ultimaFecha.localeCompare(a.ultimaFecha);
+      });
+    });
   }
 
   /** Vuelve a la lista. En móvil las dos vistas no caben a la vez. */
   cerrarChat(): void {
-    this.chatActivo = null;
-    this.historial = [];
+    this.chatActivo.set(null);
+    this.historial.set([]);
     this.cdr.detectChanges();
   }
 
-  // --- LÓGICA DEL CHAT FUSIONADA ---
-  abrirChat(solicitud: any): void {
-    const otro = this.nombreODeId(solicitud);
-    this.chatActivo = { id: otro.id, nombre: otro.nombre, avatar: otro.inicial };
-    this.noLeidos.delete(otro.id);
-    this.cargarHistorial();
-  }
+  abrirChat(conversacion: Conversacion): void {
+    this.chatActivo.set(conversacion);
 
-  cargarHistorial(): void {
-    if (!this.chatActivo) return;
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    // El backend las marca leídas al servir el historial, así que el contador
+    // local se pone a cero sin esperar a la respuesta.
+    this.conversaciones.update(lista =>
+      lista.map(c => c.usuarioId === conversacion.usuarioId ? { ...c, sinLeer: 0 } : c));
 
-    this.http.get<any[]>(`${this.apiUrl}/historial/${this.chatActivo.id}`, { headers }).subscribe({
-      next: (data) => {
-        this.historial = data;
-        this.cdr.detectChanges(); 
-        this.scrollToBottom(); 
+    this.mensajes.historial(conversacion.usuarioId).subscribe({
+      next: data => {
+        this.historial.set(data);
+        this.cdr.detectChanges();
+        this.scrollToBottom();
       },
-      error: (err) => console.error('Error al cargar el historial:', err)
+      error: err => console.error('Error al cargar el historial:', err)
     });
   }
 
   enviar(): void {
-    if (!this.nuevoMensaje.trim() || !this.chatActivo) return;
+    const texto = this.nuevoMensaje.trim();
+    const destino = this.chatActivo();
+    if (!texto || !destino || this.enviando()) return;
 
-    const token = localStorage.getItem('token');
-    const headers = new HttpHeaders({ 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
+    this.enviando.set(true);
 
-    // La respuesta ya trae el mensaje guardado, así que se añade directamente.
-    // Antes se recargaba el historial entero por cada mensaje enviado.
-    this.http.post<any>(`${this.apiUrl}/enviar/${this.chatActivo.id}`, this.nuevoMensaje, { headers }).subscribe({
-      next: (mensaje) => {
+    this.mensajes.enviar(destino.usuarioId, texto).subscribe({
+      next: mensaje => {
         this.nuevoMensaje = '';
-        this.historial = [...this.historial, mensaje];
+        this.enviando.set(false);
+        this.historial.update(lista => [...lista, mensaje]);
+        this.refrescarFila(destino.usuarioId, mensaje, false);
         this.cdr.detectChanges();
         this.scrollToBottom();
       },
-      error: (err) => console.error('Error al enviar el mensaje:', err)
+      error: err => {
+        this.enviando.set(false);
+        console.error('Error al enviar el mensaje:', err);
+      }
     });
   }
 
+  /**
+   * Fecha corta al estilo de cualquier app de mensajería: la hora si es de hoy,
+   * el día de la semana esta semana, y la fecha si es más viejo.
+   */
+  cuando(fecha: string | null): string {
+    if (!fecha) return '';
+    const d = new Date(fecha);
+    const ahora = new Date();
+
+    const mismoDia = d.toDateString() === ahora.toDateString();
+    if (mismoDia) {
+      return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    const diasDeDiferencia = Math.floor((ahora.getTime() - d.getTime()) / 86_400_000);
+    if (diasDeDiferencia < 7) {
+      return d.toLocaleDateString('es-ES', { weekday: 'short' });
+    }
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+  }
 }

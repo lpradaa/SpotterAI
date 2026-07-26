@@ -1,11 +1,18 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { jwtInterceptor } from './interceptors/jwt.interceptor'; // 👈 Cambiamos 'services' por 'interceptors'
 
+// Sin esto, Angular usa en-US para todo lo que pasa por DatePipe y las horas del
+// chat salian como "12:20AM" en una aplicacion escrita entera en español.
+registerLocaleData(localeEs, 'es-ES');
+
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: LOCALE_ID, useValue: 'es-ES' },
     provideRouter(routes),
     provideHttpClient(
       withInterceptors([jwtInterceptor])

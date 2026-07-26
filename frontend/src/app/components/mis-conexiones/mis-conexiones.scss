@@ -65,6 +65,14 @@
   background: var(--sa-superficie-alt);
   border-radius: $radius-full;
   padding: 2px 9px;
+  white-space: nowrap;
+
+  /* Cuando hay algo pendiente, el contador deja de ser decoración y pasa a ser
+     el dato: cambia a acento en vez de añadir otro elemento a la cabecera. */
+  &--avisa {
+    background: var(--sa-acento);
+    color: var(--sa-sobre-acento);
+  }
 }
 
 .buscador {
@@ -106,7 +114,7 @@
 .contacto {
   display: flex;
   align-items: center;
-  gap: $space-xs;
+  gap: 10px;
   width: 100%;
   padding: 8px;
   border: none;
@@ -125,18 +133,25 @@
   }
 }
 
-.contacto__avatar {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  font-family: $font-display;
-  font-size: $text-sm;
-  font-weight: $font-bold;
-  border-radius: 50%;
-  background: var(--sa-superficie-alt);
-  border: 1px solid var(--sa-borde);
-  flex-shrink: 0;
+/*
+ * La fila pasa de una línea a dos: nombre y hora arriba, vistazo del último
+ * mensaje y pendientes abajo. Es la diferencia entre una agenda y una bandeja.
+ */
+.contacto__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  // Sin esto el texto largo estira la fila en vez de recortarse: un hijo flex
+  // no baja de su contenido a menos que se le diga.
+  min-width: 0;
+  flex: 1;
+}
+
+.contacto__linea {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
 .contacto__nombre {
@@ -145,17 +160,59 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
 }
 
-/* Punto de mensajes sin leer. Va al final de la fila con margen automático para
-   que quede pegado al borde sea cual sea el largo del nombre. */
-.contacto__aviso {
-  width: 8px;
-  height: 8px;
-  margin-left: auto;
-  border-radius: 50%;
-  background: var(--sa-acento);
+.contacto__hora {
+  font-size: 11px;
+  color: var(--sa-texto-tenue);
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.contacto__vistazo {
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+
+  em {
+    font-style: normal;
+    color: var(--sa-texto-tenue);
+  }
+
+  &--nuevo {
+    font-style: italic;
+    color: var(--sa-texto-tenue);
+  }
+}
+
+/* Número de mensajes sin abrir. Un número y no un punto: saber que hay uno o
+   catorce cambia si contestas ahora o luego. */
+.contacto__pendientes {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: $radius-full;
+  background: var(--sa-acento);
+  color: var(--sa-sobre-acento);
+  font-family: $font-display;
+  font-size: 11px;
+  font-weight: $font-bold;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lo no leído se destaca por peso, no por color de fondo: la fila activa ya usa
+   el fondo y las dos señales se pelearían. */
+.contacto--sin-leer {
+  .contacto__nombre { font-weight: $font-bold; }
+  .contacto__vistazo { color: var(--sa-texto); }
+  .contacto__hora { color: var(--sa-acento); }
 }
 
 .canal-caido {

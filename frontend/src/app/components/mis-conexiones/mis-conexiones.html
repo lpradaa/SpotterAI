@@ -1,11 +1,24 @@
 <div class="conexiones">
 
   <!-- ================= Lista de compañeros ================= -->
-  <aside class="lista" [class.lista--oculta]="chatActivo">
+  <aside class="lista" [class.lista--oculta]="chatActivo()">
     <header class="lista__cabecera">
       <h1 class="lista__titulo">Compañeros</h1>
-      <span class="lista__contador">{{ conexiones.length }}</span>
+      @if (totalSinLeer() > 0) {
+        <span class="lista__contador lista__contador--avisa">{{ totalSinLeer() }} sin leer</span>
+      } @else {
+        <span class="lista__contador">{{ conversaciones().length }}</span>
+      }
     </header>
+
+    <label class="buscador">
+      <span class="visually-hidden">Buscar compañero</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+      </svg>
+      <input type="text" placeholder="Buscar" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)">
+    </label>
 
     <!-- Solo cuando algo va mal. Si el canal está bien, no hay nada que decir:
          el tiempo real que se nota es el que no se anuncia. -->
@@ -15,34 +28,51 @@
       </p>
     }
 
-    <label class="buscador">
-      <span class="visually-hidden">Buscar compañero</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
-      </svg>
-      <input type="text" placeholder="Buscar" [(ngModel)]="busqueda">
-    </label>
-
-    @if (conexiones.length === 0) {
+    @if (conversaciones().length === 0) {
       <div class="vacio-grande">
         <h2>Todavía nadie</h2>
         <p>Cuando alguien acepte tu solicitud aparecerá aquí y podréis hablar.</p>
       </div>
+    } @else if (conversacionesFiltradas().length === 0) {
+      <div class="vacio">
+        <p>Ningún compañero se llama así.</p>
+      </div>
     } @else {
       <ul class="contactos">
-        @for (solicitud of conexionesFiltradas; track solicitud.id) {
+        @for (conversacion of conversacionesFiltradas(); track conversacion.usuarioId) {
           <li>
             <button class="contacto"
-                    [class.contacto--activo]="chatActivo?.id === nombreODeId(solicitud).id"
-                    (click)="abrirChat(solicitud)">
-              <app-avatar [nombre]="nombreODeId(solicitud).nombre" [tamano]="34" />
-              <span class="contacto__nombre">{{ nombreODeId(solicitud).nombre }}</span>
-              @if (noLeidos.has(nombreODeId(solicitud).id)) {
-                <span class="contacto__aviso" title="Mensajes sin leer">
-                  <span class="visually-hidden">Mensajes sin leer</span>
+                    [class.contacto--activo]="chatActivo()?.usuarioId === conversacion.usuarioId"
+                    [class.contacto--sin-leer]="conversacion.sinLeer > 0"
+                    (click)="abrirChat(conversacion)">
+              <app-avatar [nombre]="conversacion.nombre" [valor]="conversacion.avatar ?? ''" [tamano]="40" />
+
+              <span class="contacto__texto">
+                <span class="contacto__linea">
+                  <span class="contacto__nombre">{{ conversacion.nombre }}</span>
+                  <time class="contacto__hora">{{ cuando(conversacion.ultimaFecha) }}</time>
                 </span>
-              }
+
+                <span class="contacto__linea">
+                  @if (conversacion.ultimoMensaje) {
+                    <span class="contacto__vistazo">
+                      @if (conversacion.mioElUltimo) { <em>Tú:</em> }
+                      {{ conversacion.ultimoMensaje }}
+                    </span>
+                  } @else {
+                    <span class="contacto__vistazo contacto__vistazo--nuevo">
+                      Aún no habéis hablado
+                    </span>
+                  }
+
+                  @if (conversacion.sinLeer > 0) {
+                    <span class="contacto__pendientes"
+                          [attr.aria-label]="conversacion.sinLeer + ' mensajes sin leer'">
+                      {{ conversacion.sinLeer }}
+                    </span>
+                  }
+                </span>
+              </span>
             </button>
           </li>
         }
@@ -51,8 +81,8 @@
   </aside>
 
   <!-- ================= Conversación ================= -->
-  <main class="conversacion" [class.conversacion--activa]="chatActivo">
-    @if (!chatActivo) {
+  <main class="conversacion" [class.conversacion--activa]="chatActivo()">
+    @if (!chatActivo(); as sinChat) {
       <div class="conversacion__inicio">
         <h2>Elige un compañero</h2>
         <p>Aquí podréis cuadrar el próximo entrenamiento.</p>
@@ -60,18 +90,18 @@
     } @else {
       <header class="conversacion__cabecera">
         <button class="volver" (click)="cerrarChat()" aria-label="Volver a la lista">←</button>
-        <app-avatar [nombre]="chatActivo.nombre" [valor]="chatActivo.avatar" [tamano]="34" />
+        <app-avatar [nombre]="chatActivo()!.nombre" [valor]="chatActivo()!.avatar ?? ''" [tamano]="34" />
         <div>
-          <h2 class="conversacion__nombre">{{ chatActivo.nombre }}</h2>
+          <h2 class="conversacion__nombre">{{ chatActivo()!.nombre }}</h2>
           <span class="conversacion__estado">Compañero de entrenamiento</span>
         </div>
       </header>
 
       <div class="mensajes" #scrollMe>
-        @for (msg of historial; track msg.id) {
+        @for (msg of historial(); track msg.id) {
           <div class="mensaje"
-               [class.mensaje--mio]="msg.emisorId !== chatActivo.id"
-               [class.mensaje--suyo]="msg.emisorId === chatActivo.id">
+               [class.mensaje--mio]="msg.emisorId !== chatActivo()!.usuarioId"
+               [class.mensaje--suyo]="msg.emisorId === chatActivo()!.usuarioId">
             <p class="mensaje__texto">{{ msg.contenido }}</p>
             <time class="mensaje__hora">{{ msg.fechaEnvio | date:'shortTime' }}</time>
           </div>
@@ -90,7 +120,7 @@
                (keyup.enter)="enviar()" placeholder="Escribe un mensaje" aria-label="Mensaje">
 
         <button class="redactor__enviar" (click)="enviar()"
-                [disabled]="!nuevoMensaje.trim()" aria-label="Enviar mensaje">
+                [disabled]="!nuevoMensaje.trim() || enviando()" aria-label="Enviar mensaje">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
             <path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"></path>
           </svg>

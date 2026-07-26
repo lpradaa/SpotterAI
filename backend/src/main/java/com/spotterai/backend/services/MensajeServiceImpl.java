@@ -1,6 +1,8 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.dtos.ConversacionDTO;
 import com.spotterai.backend.dtos.MensajeDTO;
+import com.spotterai.backend.dtos.SinLeerPorEmisor;
 import com.spotterai.backend.eventos.CanalEventos;
 import com.spotterai.backend.eventos.TipoEvento;
 import com.spotterai.backend.models.Mensaje;
@@ -10,8 +12,14 @@ import com.spotterai.backend.repositories.MensajeRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,13 +77,86 @@ public class MensajeServiceImpl implements MensajeService {
     }
 
     @Override
+    @Transactional
     public List<MensajeDTO> obtenerHistorial(String emailUsuario, Long otroUsuarioId) {
         Usuario usuarioLogueado = usuarioRepository.findByEmail(emailUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
         List<Mensaje> historial = mensajeRepository.obtenerHistorialChat(usuarioLogueado.getId(), otroUsuarioId);
-        
+
+        // Abrir la conversacion es leerla. Se hace aqui y no en un endpoint
+        // aparte para que no dependa de que el cliente se acuerde de avisar.
+        mensajeRepository.marcarConversacionLeida(usuarioLogueado.getId(), otroUsuarioId);
+
         return historial.stream().map(this::mapearADTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ConversacionDTO> listarConversaciones(String emailUsuario) {
+        Usuario yo = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        Map<Long, Mensaje> ultimoPorCompanero = new HashMap<>();
+        for (Mensaje m : mensajeRepository.ultimoMensajePorConversacion(yo.getId())) {
+            ultimoPorCompanero.put(idDelOtro(m, yo.getId()), m);
+        }
+
+        Map<Long, Long> sinLeerPorCompanero = mensajeRepository.contarSinLeerPorEmisor(yo.getId()).stream()
+                .collect(Collectors.toMap(SinLeerPorEmisor::emisorId, SinLeerPorEmisor::cuantos));
+
+        // Se parte de los compañeros y no de los mensajes: alguien con quien
+        // acabas de conectar y no has hablado tiene que salir igual, que es
+        // justo cuando mas falta hace verlo.
+        List<ConversacionDTO> conversaciones = new ArrayList<>();
+        for (Usuario companero : companerosDe(yo.getId())) {
+            Mensaje ultimo = ultimoPorCompanero.get(companero.getId());
+
+            conversaciones.add(new ConversacionDTO(
+                    companero.getId(),
+                    companero.getNombre(),
+                    companero.getAvatar(),
+                    ultimo == null ? null : ultimo.getContenido(),
+                    ultimo == null ? null : ultimo.getFechaEnvio(),
+                    ultimo != null && ultimo.getEmisor().getId().equals(yo.getId()),
+                    sinLeerPorCompanero.getOrDefault(companero.getId(), 0L)));
+        }
+
+        // Lo vivo arriba; los que aun no han dicho nada, al final por nombre en
+        // vez de en el orden arbitrario en que los devuelva la base.
+        conversaciones.sort(
+                Comparator.comparing(ConversacionDTO::ultimaFecha,
+                                Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(ConversacionDTO::nombre, String.CASE_INSENSITIVE_ORDER));
+
+        return conversaciones;
+    }
+
+    @Override
+    @Transactional
+    public void marcarConversacionLeida(String emailUsuario, Long otroUsuarioId) {
+        usuarioRepository.findByEmail(emailUsuario).ifPresent(
+                yo -> mensajeRepository.marcarConversacionLeida(yo.getId(), otroUsuarioId));
+    }
+
+    @Override
+    public long contarSinLeer(String emailUsuario) {
+        return usuarioRepository.findByEmail(emailUsuario)
+                .map(u -> mensajeRepository.countByReceptorIdAndLeidoFalse(u.getId()))
+                .orElse(0L);
+    }
+
+    /** Los usuarios con los que hay una solicitud aceptada, sin repetir. */
+    private List<Usuario> companerosDe(Long miId) {
+        Map<Long, Usuario> porId = new LinkedHashMap<>();
+        for (Solicitud s : solicitudRepository.findAceptadasPorUsuario(miId)) {
+            Usuario otro = s.getEmisor().getId().equals(miId) ? s.getReceptor() : s.getEmisor();
+            porId.putIfAbsent(otro.getId(), otro);
+        }
+        return new ArrayList<>(porId.values());
+    }
+
+    private Long idDelOtro(Mensaje m, Long miId) {
+        return m.getEmisor().getId().equals(miId) ? m.getReceptor().getId() : m.getEmisor().getId();
     }
 
     // Método privado para limpiar los datos antes de enviarlos a Angular/Thunder Client

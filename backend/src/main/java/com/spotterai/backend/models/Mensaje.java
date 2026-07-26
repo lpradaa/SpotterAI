@@ -24,6 +24,21 @@ public class Mensaje {
     @JoinColumn(name = "receptor_id", nullable = false)
     private Usuario receptor;
 
+    /**
+     * Si el receptor ya ha abierto la conversacion despues de recibirlo.
+     *
+     * Antes el "sin leer" solo existia en memoria del navegador, asi que
+     * desaparecia al recargar: entrabas y no habia forma de saber que te habian
+     * escrito. Con columna, sobrevive.
+     *
+     * Al añadir la columna, MySQL rellena las filas existentes con 0, o sea que
+     * todo el historial anterior aparecia como sin leer de golpe. Se marco una
+     * vez a mano. Con migraciones esto seria parte del cambio en lugar de un
+     * paso suelto que hay que acordarse de repetir en cada entorno.
+     */
+    @Column(nullable = false)
+    private boolean leido = false;
+
 
     public Mensaje() {
         this.fechaEnvio = LocalDateTime.now();
@@ -39,4 +54,6 @@ public class Mensaje {
     public void setEmisor(Usuario emisor) { this.emisor = emisor; }
     public Usuario getReceptor() { return receptor; }
     public void setReceptor(Usuario receptor) { this.receptor = receptor; }
+    public boolean isLeido() { return leido; }
+    public void setLeido(boolean leido) { this.leido = leido; }
 }
