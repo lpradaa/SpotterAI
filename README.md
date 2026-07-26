@@ -124,7 +124,7 @@ El frontend llama al backend con rutas relativas (`/api/…`) y quien las reenv�
 
 Cada push a `main` y cada pull request ejecuta [este workflow](.github/workflows/ci.yml):
 
-- **Backend** — `./mvnw verify`, los 84 tests sobre H2 en memoria. Si algo falla, sube los informes de surefire como artefacto.
+- **Backend** — `./mvnw verify`, la suite entera sobre H2 en memoria. Si algo falla, sube los informes de surefire como artefacto.
 - **Frontend** — `npm ci` y compilación de producción. `ci` y no `install`: falla si `package.json` y el lock se han desincronizado, que es justo lo que interesa saber.
 - **Imágenes** — construye las dos imágenes Docker (sin publicarlas). Comprueba que los `Dockerfile` siguen siendo válidos, que es lo que se rompe sin que nadie lo note hasta que alguien intenta levantar el proyecto.
 
