@@ -1,0 +1,115 @@
+<div class="velo" (click)="cerrar.emit()"></div>
+
+<aside class="ficha" role="dialog" aria-label="Perfil">
+  <button class="cerrar ficha__cerrar" (click)="cerrar.emit()" aria-label="Cerrar perfil">✕</button>
+
+  @if (cargando()) {
+    <p class="ficha__cargando">Cargando…</p>
+  } @else if (error()) {
+    <p class="aviso aviso--error" role="alert">{{ error() }}</p>
+  } @else if (perfil(); as p) {
+
+    <!-- ================= Quién es =================
+         La persona ocupa el espacio. El porcentaje queda al lado, de apoyo:
+         antes iba primero y en 48 px, y eso convierte a alguien en una fila de
+         un informe. -->
+    <header class="ficha__cabecera">
+      <app-avatar [nombre]="p.nombre" [valor]="p.avatar ?? ''"
+                  [foto]="url(p.fotoUrl)" [tamano]="96" />
+
+      <div class="ficha__quien">
+        <h2 class="ficha__nombre">{{ p.nombre }}</h2>
+
+        <p class="ficha__rasgos">
+          @if (p.nivel) { <span>{{ p.nivel }}</span> }
+          @if (p.objetivos) { <span>{{ p.objetivos }}</span> }
+          @if (p.edad) { <span>{{ p.edad }} años</span> }
+        </p>
+
+        @if (p.gimnasioNombre) {
+          <p class="ficha__gimnasio">{{ p.gimnasioNombre }}</p>
+        }
+
+        @if (actividad(); as texto) {
+          <p class="ficha__actividad">
+            <span class="ficha__punto" aria-hidden="true"></span>{{ texto }}
+          </p>
+        }
+      </div>
+    </header>
+
+    @if (p.biografia) {
+      <p class="ficha__bio">{{ p.biografia }}</p>
+    }
+
+    <!-- ================= Cómo encajáis ================= -->
+    <section class="ficha__bloque">
+      <div class="ficha__encaje">
+        <span class="ficha__nota">{{ p.compatibilidad }}<small>%</small></span>
+        <div>
+          <h3 class="ficha__subtitulo">{{ p.etiquetaCompatibilidad }}</h3>
+          <p class="ficha__motivo">{{ p.resumenCompatibilidad }}</p>
+        </div>
+      </div>
+
+      @if (p.franjasEnComun.length > 0) {
+        <app-rejilla-semana [misFranjas]="misFranjas()" [solape]="p.franjasEnComun" />
+      }
+    </section>
+
+    <!-- ================= Lo que ha conseguido =================
+         Lo único de esta ficha que ha escrito una persona. Todo lo demás lo
+         calcula el motor, y eso es lo que hacía que la aplicación se leyera
+         como una herramienta. -->
+    @if (p.hitos.length > 0) {
+      <section class="ficha__bloque">
+        <h3 class="ficha__subtitulo">Sus marcas</h3>
+
+        <ul class="hitos">
+          @for (hito of p.hitos; track hito.id) {
+            <li class="hito">
+              @if (hito.medioUrl) {
+                <div class="hito__medio">
+                  @if (hito.medioTipo === 'video') {
+                    <video [src]="url(hito.medioUrl)" controls preload="metadata"
+                           [attr.aria-label]="hito.titulo"></video>
+                  } @else {
+                    <img [src]="url(hito.medioUrl)" [alt]="hito.titulo" loading="lazy">
+                  }
+                </div>
+              }
+
+              <div class="hito__texto">
+                <h4 class="hito__titulo">{{ hito.titulo }}</h4>
+                @if (hito.descripcion) {
+                  <p class="hito__descripcion">{{ hito.descripcion }}</p>
+                }
+                <time class="hito__cuando">{{ cuando(hito.fecha) }}</time>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <!-- ================= Qué puedes hacer ================= -->
+    <footer class="ficha__acciones">
+      @if (p.yaConectado) {
+        <button class="btn btn--primario btn--ancho" (click)="escribir.emit(p.id)">
+          Escribir a {{ p.nombre.split(' ')[0] }}
+        </button>
+        <button class="btn btn--fantasma" [disabled]="enviando()" (click)="retirar()">
+          Dejar de ser compañeros
+        </button>
+      } @else if (p.solicitudPendiente) {
+        <button class="btn btn--fantasma btn--ancho" [disabled]="enviando()" (click)="retirar()">
+          Retirar solicitud
+        </button>
+      } @else {
+        <button class="btn btn--primario btn--ancho" [disabled]="enviando()" (click)="conectar()">
+          Conectar con {{ p.nombre.split(' ')[0] }}
+        </button>
+      }
+    </footer>
+  }
+</aside>

@@ -4,36 +4,34 @@
        Sustituye a la cabecera con degradado y saludo: ocupaba el espacio más
        valioso de la pantalla para decir "Hola, Luis". Ahora ese espacio lo usa
        lo único que importa al entrar: con quién puedes entrenar y cuándo. -->
+  <!--
+    Cabecera de persona, no fila de indicadores. Antes eran tres cifras con
+    rótulos en mayúsculas —COMPATIBLES 37, SIN CONECTAR 30— que es exactamente
+    como se presenta un panel de control. Los números siguen ahí porque sirven,
+    pero dichos como se los dirías a alguien.
+  -->
   <header class="barra">
     <div class="barra__identidad">
-      <app-avatar [nombre]="userName()" [valor]="perfilForm.avatar" [tamano]="40" />
-      <div>
+      <app-avatar [nombre]="userName()" [valor]="perfilForm.avatar"
+                  [foto]="urlFoto()" [tamano]="64" />
+      <div class="barra__quien">
         <h1 class="barra__nombre">{{ userName() }}</h1>
-        <span class="barra__meta">
-          {{ perfilForm.nivel || 'Sin nivel' }}
-          @if (perfilForm.objetivos) { · {{ perfilForm.objetivos }} }
-        </span>
+        <p class="barra__rasgos">
+          @if (perfilForm.nivel) { <span>{{ perfilForm.nivel }}</span> }
+          @if (perfilForm.objetivos) { <span>{{ perfilForm.objetivos }}</span> }
+          @if (!perfilForm.nivel && !perfilForm.objetivos) { <span>Perfil sin completar</span> }
+        </p>
+        <p class="barra__resumen">
+          <strong>{{ sugerencias().length }}</strong>
+          {{ sugerencias().length === 1 ? 'persona compatible' : 'personas compatibles' }}
+          sin conectar · <strong>{{ completedDays() }}</strong> de {{ totalDays() }} esta semana
+        </p>
       </div>
     </div>
 
-    <dl class="barra__cifras">
-      <div class="dato">
-        <dt>Compatibles</dt>
-        <dd class="cifra">{{ matches().length }}</dd>
-      </div>
-      <div class="dato">
-        <dt>Sin conectar</dt>
-        <dd class="cifra">{{ sugerencias().length }}</dd>
-      </div>
-      <div class="dato">
-        <dt>Esta semana</dt>
-        <dd class="cifra">{{ completedDays() }}<span class="dato__de">/{{ totalDays() }}</span></dd>
-      </div>
-    </dl>
-
     <div class="barra__acciones">
       <button class="btn btn--primario" (click)="abrirSugerencias()">Ver sugerencias</button>
-      <button class="btn btn--fantasma" (click)="abrirModal()">Perfil</button>
+      <button class="btn btn--fantasma" (click)="abrirModal()">Mi perfil</button>
     </div>
   </header>
 
@@ -79,42 +77,32 @@
             @for (usuario of matches(); track usuario.id) {
               <li class="match" [attr.data-tramo]="tramo(usuario.compatibilidad)">
 
-                <!-- Puntuación: para un producto cuya salida es un número, ese
-                     número tiene que ser el elemento mejor tratado de la fila. -->
-                <div class="marcador">
-                  <span class="marcador__cifra cifra">{{ usuario.compatibilidad }}</span>
-                  <span class="marcador__unidad">%</span>
-                </div>
+                <!--
+                  La persona primero y grande. Antes esta fila empezaba con el
+                  porcentaje en 48 px y ponía a la persona detrás con un avatar
+                  de 24: eso convierte a alguien en el renglón de un informe. El
+                  número sigue estando, porque es lo que hace útil al producto,
+                  pero como apoyo y no como titular.
+                -->
+                <button class="match__persona" (click)="verPerfil(usuario.id)"
+                        [attr.aria-label]="'Ver el perfil de ' + usuario.nombre">
+                  <app-avatar [nombre]="usuario.nombre" [valor]="usuario.avatar" [tamano]="52" />
 
-                <div class="match__info">
-                  <div class="match__linea1">
-                    <app-avatar [nombre]="usuario.nombre" [valor]="usuario.avatar" [tamano]="24" />
-                    <h3 class="match__nombre">{{ usuario.nombre }}</h3>
-                    <span class="chip chip--nivel">{{ usuario.nivel || 'Sin nivel' }}</span>
-                    @if (usuario.diasFijosEnComun > 0) {
-                      <span class="chip chip--fija" title="Los dos vais siempre a esa hora">
-                        {{ usuario.diasFijosEnComun }} {{ usuario.diasFijosEnComun === 1 ? 'día fijo' : 'días fijos' }}
-                      </span>
-                    }
-                    @if (usuario.compatibilidadIncompleta) {
-                      <span class="chip chip--parcial" title="Faltan datos en alguno de los dos perfiles">
-                        Datos incompletos
-                      </span>
-                    }
-                  </div>
+                  <span class="match__quien">
+                    <span class="match__nombre">{{ usuario.nombre }}</span>
+                    <span class="match__rasgos">
+                      @if (usuario.nivel) { <span>{{ usuario.nivel }}</span> }
+                      @if (usuario.objetivos) { <span>{{ usuario.objetivos }}</span> }
+                      <!-- El TFG leía aquí usuario.gimnasio?.nombre, campo que el
+                           backend nunca envió: siempre salía el texto de reserva. -->
+                      @if (usuario.gimnasioNombre) { <span>{{ usuario.gimnasioNombre }}</span> }
+                    </span>
+                  </span>
 
-                  <p class="match__motivo">{{ usuario.resumenCompatibilidad }}</p>
+                  <span class="match__nota">{{ usuario.compatibilidad }}<small>%</small></span>
+                </button>
 
-                  <div class="match__meta">
-                    <!-- El TFG leía aquí usuario.gimnasio?.nombre, campo que el
-                         backend nunca envió: siempre salía el texto de reserva. -->
-                    <span>{{ usuario.gimnasioNombre || 'Sin gimnasio' }}</span>
-                    @if (usuario.minutosEnComun) {
-                      <span class="match__separador" aria-hidden="true">·</span>
-                      <span>{{ formatearSolape(usuario.minutosEnComun) }} en común</span>
-                    }
-                  </div>
-                </div>
+                <p class="match__motivo">{{ usuario.resumenCompatibilidad }}</p>
 
                 <!-- La semana, dibujada. Aquí es donde se ve de un vistazo si
                      coincidís de verdad, en vez de leer una lista de días. -->
@@ -123,6 +111,24 @@
                     modo="compacta"
                     [misFranjas]="perfilForm.horarios"
                     [solape]="usuario.franjasEnComun || []" />
+                </div>
+
+                <div class="match__pie">
+                  <span class="match__etiquetas">
+                    @if (usuario.diasFijosEnComun > 0) {
+                      <span class="chip chip--fija" title="Los dos vais siempre a esa hora">
+                        {{ usuario.diasFijosEnComun }} {{ usuario.diasFijosEnComun === 1 ? 'día fijo' : 'días fijos' }}
+                      </span>
+                    }
+                    @if (usuario.minutosEnComun) {
+                      <span class="chip">{{ formatearSolape(usuario.minutosEnComun) }} en común</span>
+                    }
+                    @if (usuario.compatibilidadIncompleta) {
+                      <span class="chip chip--parcial" title="Faltan datos en alguno de los dos perfiles">
+                        Datos incompletos
+                      </span>
+                    }
+                  </span>
                 </div>
 
                 <div class="match__accion">
@@ -359,6 +365,59 @@
           </label>
         </fieldset>
 
+        <!-- ================= Mis marcas =================
+             Lo único del perfil que escribe la persona. Todo lo demás son
+             desplegables, y con desplegables dos perfiles se leen igual. -->
+        <fieldset class="bloque">
+          <div class="bloque__cabecera">
+            <legend class="bloque__titulo">Mis marcas</legend>
+            <span class="bloque__pista">{{ misHitos().length }} de 12</span>
+          </div>
+
+          @if (misHitos().length > 0) {
+            <ul class="marcas">
+              @for (hito of misHitos(); track hito.id) {
+                <li class="marca">
+                  @if (hito.medioUrl) {
+                    <img class="marca__miniatura" [src]="urlMedio(hito.medioUrl)" [alt]="hito.titulo">
+                  }
+                  <div class="marca__texto">
+                    <strong>{{ hito.titulo }}</strong>
+                    @if (hito.descripcion) { <span>{{ hito.descripcion }}</span> }
+                  </div>
+                  <button type="button" class="btn-icono" (click)="borrarHito(hito.id)"
+                          [attr.aria-label]="'Borrar ' + hito.titulo" title="Borrar">✕</button>
+                </li>
+              }
+            </ul>
+          }
+
+          @if (misHitos().length < 12) {
+            <div class="marca-nueva">
+              <input type="text" [(ngModel)]="nuevoHito.titulo" name="hitoTitulo"
+                     placeholder="Sentadilla 140 kg × 3" maxlength="120" aria-label="Título de la marca">
+              <input type="text" [(ngModel)]="nuevoHito.descripcion" name="hitoDesc"
+                     placeholder="Cómo fue (opcional)" maxlength="500" aria-label="Descripción">
+
+              <div class="marca-nueva__pie">
+                <input type="date" [(ngModel)]="nuevoHito.fecha" name="hitoFecha" aria-label="Fecha">
+
+                <label class="btn btn--fantasma btn--pequeno marca-nueva__adjuntar">
+                  @if (subiendo()) { Subiendo… }
+                  @else if (nuevoHito.medioUrl) { Archivo listo }
+                  @else { Foto o vídeo }
+                  <input type="file" accept="image/*,video/*" (change)="alElegirMedio($event)" hidden>
+                </label>
+
+                <button type="button" class="btn btn--primario btn--pequeno"
+                        [disabled]="!nuevoHito.titulo.trim() || subiendo()" (click)="anadirHito()">
+                  Añadir
+                </button>
+              </div>
+            </div>
+          }
+        </fieldset>
+
         <fieldset class="bloque">
           <div class="bloque__cabecera">
             <legend class="bloque__titulo">Meta semanal</legend>
@@ -482,6 +541,16 @@
       </footer>
     </div>
   </div>
+}
+
+<!-- ================= Ficha de una persona ================= -->
+@if (perfilAbierto(); as id) {
+  <app-perfil-publico
+    [usuarioId]="id"
+    [misFranjas]="perfilForm.horarios"
+    (cerrar)="cerrarPerfil()"
+    (cambioDeRelacion)="alCambiarRelacionDesdeElPerfil()"
+    (escribir)="irAlChat($event)" />
 }
 
 <!-- ================= Aviso ================= -->

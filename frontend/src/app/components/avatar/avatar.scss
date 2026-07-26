@@ -29,6 +29,14 @@
   border: 1.5px solid color-mix(in srgb, var(--tono) 45%, transparent);
   background: color-mix(in srgb, var(--tono) 12%, transparent);
 
+  /* Con foto no hay inicial ni tinte: la imagen llena el círculo y el borde se
+     queda solo como separación del fondo. */
+  &--foto {
+    object-fit: cover;
+    background: var(--sa-superficie-alt);
+    border-color: var(--sa-borde);
+  }
+
   &[data-color='ascua'] { --tono: var(--sa-av-ascua); }
   &[data-color='ambar'] { --tono: var(--sa-av-ambar); }
   &[data-color='oliva'] { --tono: var(--sa-av-oliva); }

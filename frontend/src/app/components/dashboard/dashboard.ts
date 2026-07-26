@@ -9,11 +9,13 @@ import { PerfilEstadoService } from '../../services/perfil-estado.service';
 import { AvisosService } from '../../services/avisos.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
+import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
+import { PerfilesService, Hito } from '../../services/perfiles.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana, Avatar],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -24,6 +26,7 @@ export class DashboardComponent implements OnInit {
   private eventos = inject(EventosService);
   private perfilEstado = inject(PerfilEstadoService);
   private avisos = inject(AvisosService);
+  private perfiles = inject(PerfilesService);
   private destroyRef = inject(DestroyRef);
 
   userName = signal(localStorage.getItem('usuario_nombre') || 'Usuario');
@@ -156,7 +159,9 @@ export class DashboardComponent implements OnInit {
           biografia: data.biografia || '',
           horarios: data.horarios || [], metaSemanal: data.metaSemanal || 4
         };
+        this.perfilForm.fotoUrl = data.fotoUrl ?? null;
         this.rendimiento.set(data.rendimiento ?? null);
+        this.cargarMisHitos();
         this.calcularProgresoSemanal();
         this.cdr.detectChanges();
       },
@@ -316,6 +321,93 @@ export class DashboardComponent implements OnInit {
       next: (data) => { this.solicitudesPendientes = data || []; this.cdr.detectChanges(); },
       error: (err) => console.error('Error al cargar la bandeja de solicitudes:', err)
     });
+  }
+
+  // --- Mi foto y mis marcas ---
+  misHitos = signal<Hito[]>([]);
+  subiendo = signal(false);
+  nuevoHito = { titulo: '', descripcion: '', fecha: '', medioUrl: null as string | null, medioTipo: null as string | null };
+
+  urlFoto = computed(() => this.perfiles.urlDeMedio(this.perfilForm.fotoUrl));
+
+  urlMedio(ruta: string | null): string | null {
+    return this.perfiles.urlDeMedio(ruta);
+  }
+
+  private cargarMisHitos(): void {
+    this.perfiles.misHitos().subscribe({
+      next: lista => { this.misHitos.set(lista); this.cdr.detectChanges(); },
+      error: () => {}
+    });
+  }
+
+  /** Foto del hito que se está redactando. */
+  alElegirMedio(evento: Event): void {
+    const archivo = (evento.target as HTMLInputElement).files?.[0];
+    if (!archivo) return;
+
+    this.subiendo.set(true);
+    this.perfiles.subirMedio(archivo).subscribe({
+      next: r => {
+        this.nuevoHito.medioUrl = r.url;
+        this.nuevoHito.medioTipo = r.tipo;
+        this.subiendo.set(false);
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        this.subiendo.set(false);
+        // El servidor explica el motivo (tipo no admitido, pasa de 15 MB…) y
+        // ese texto es más útil que uno genérico nuestro.
+        this.mostrarToast(typeof err?.error === 'string' ? err.error : 'No se ha podido subir el archivo.', 'error');
+      }
+    });
+  }
+
+  anadirHito(): void {
+    if (!this.nuevoHito.titulo.trim()) return;
+
+    this.perfiles.crearHito({
+      titulo: this.nuevoHito.titulo,
+      descripcion: this.nuevoHito.descripcion,
+      fecha: this.nuevoHito.fecha || undefined,
+      medioUrl: this.nuevoHito.medioUrl,
+      medioTipo: this.nuevoHito.medioTipo
+    }).subscribe({
+      next: hito => {
+        this.misHitos.update(lista => [hito, ...lista]);
+        this.nuevoHito = { titulo: '', descripcion: '', fecha: '', medioUrl: null, medioTipo: null };
+        this.cdr.detectChanges();
+      },
+      error: err => this.mostrarToast(
+        typeof err?.error === 'string' ? err.error : 'No se ha podido guardar la marca.', 'error')
+    });
+  }
+
+  borrarHito(hitoId: number): void {
+    this.perfiles.borrarHito(hitoId).subscribe({
+      next: () => {
+        this.misHitos.update(lista => lista.filter(h => h.id !== hitoId));
+        this.cdr.detectChanges();
+      },
+      error: () => this.mostrarToast('No se ha podido borrar.', 'error')
+    });
+  }
+
+  /** A quién se está mirando, o null. */
+  perfilAbierto = signal<number | null>(null);
+
+  verPerfil(usuarioId: number): void {
+    this.perfilAbierto.set(usuarioId);
+  }
+
+  cerrarPerfil(): void {
+    this.perfilAbierto.set(null);
+  }
+
+  /** Desde el perfil se puede conectar o deshacer: la lista tiene que enterarse. */
+  alCambiarRelacionDesdeElPerfil(): void {
+    this.cargarMatches();
+    this.avisos.refrescar();
   }
 
   /**

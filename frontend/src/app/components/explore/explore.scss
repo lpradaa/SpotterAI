@@ -97,10 +97,47 @@
   }
 }
 
+/* Toda la cabecera lleva al perfil: en una lista de gente, tocar a alguien
+   tiene que llevar a esa persona y no solo a un botón de "Conectar". */
 .ficha__cabecera {
   display: flex;
   align-items: center;
-  gap: $space-xs;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover .ficha__nombre {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sa-acento);
+    outline-offset: 4px;
+    border-radius: $radius-sm;
+  }
+}
+
+/* El número, de apoyo: conserva el acento porque es lo que hace útil al
+   producto, pero deja de ser lo primero que se ve de una persona. */
+.ficha__nota {
+  font-family: $font-display;
+  font-size: $text-xl;
+  font-weight: $font-bold;
+  color: var(--sa-acento);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  flex-shrink: 0;
+
+  small {
+    font-size: 0.55em;
+    margin-left: 1px;
+  }
 }
 
 .ficha__avatar {
@@ -116,6 +153,9 @@
 }
 
 .ficha__quien {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   min-width: 0;
   margin-right: auto;
 }

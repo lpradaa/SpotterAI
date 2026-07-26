@@ -1,19 +1,38 @@
 import { Component, signal, computed, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { UsuarioService, Match } from '../../services/usuario.service';
 import { RejillaSemana, Franja } from '../rejilla-semana/rejilla-semana';
+import { Avatar } from '../avatar/avatar';
+import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
 
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent],
   templateUrl: './explore.html',
   styleUrl: './explore.scss'
 })
 export class Explore implements OnInit {
   private usuarioService = inject(UsuarioService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
+
+  /** A quién se está mirando, o null. */
+  perfilAbierto = signal<number | null>(null);
+
+  verPerfil(usuarioId: number): void {
+    this.perfilAbierto.set(usuarioId);
+  }
+
+  cerrarPerfil(): void {
+    this.perfilAbierto.set(null);
+  }
+
+  irAlChat(usuarioId: number): void {
+    this.router.navigate(['/conexiones'], { queryParams: { con: usuarioId } });
+  }
 
   usuarios = signal<Match[]>([]);
   isFiltrosOpen = signal(false);
@@ -67,7 +86,7 @@ export class Explore implements OnInit {
     this.cargarMisHorarios();
   }
 
-  private cargarComunidad(): void {
+  cargarComunidad(): void {
     this.usuarioService.getExplorarUsuarios().subscribe({
       next: (data) => { this.usuarios.set(data || []); this.cdr.detectChanges(); },
       error: (err) => console.error('Error cargando la comunidad:', err)

@@ -124,32 +124,51 @@
 .barra__identidad {
   display: flex;
   align-items: center;
-  gap: $space-xs;
+  gap: 14px;
   min-width: 0;
   margin-right: auto;
 }
 
-.barra__avatar {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  font-size: 20px;
-  border-radius: 50%;
-  background: var(--sa-superficie-alt);
-  border: 1px solid var(--sa-borde);
-  flex-shrink: 0;
+.barra__quien {
+  min-width: 0;
 }
 
 .barra__nombre {
-  font-size: $text-lg;
-  font-weight: $font-semibold;
-  line-height: 1.2;
+  margin: 0;
+  font-family: $font-display;
+  font-size: $text-xl;
+  font-weight: $font-bold;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
-.barra__meta {
+/* Separadores en CSS: en el HTML serían ruido y un lector de pantalla leería
+   los puntos uno a uno. */
+.barra__rasgos {
+  margin: 2px 0 0;
   font-size: $text-xs;
   color: var(--sa-texto-suave);
+
+  span + span::before {
+    content: '·';
+    margin: 0 5px;
+    color: var(--sa-texto-tenue);
+  }
+}
+
+/* Las cifras siguen, dichas en una frase. Como fila de indicadores con rótulos
+   en mayúsculas la pantalla se leía como un cuadro de mandos. */
+.barra__resumen {
+  margin: 6px 0 0;
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+
+  strong {
+    font-family: $font-display;
+    font-weight: $font-bold;
+    color: var(--sa-texto);
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 .barra__cifras {
@@ -194,13 +213,21 @@
 /* ===================== Rejilla de columnas ===================== */
 .tablero__columnas {
   display: grid;
-  grid-template-columns: 1fr;
+  // minmax(0, 1fr) y no 1fr: un track "1fr" es en realidad minmax(auto, 1fr), y
+  // ese auto es el ancho minimo del contenido. Basta con una linea que no parta
+  // —un nombre largo, la fila de rasgos— para que la columna crezca por encima
+  // de la pantalla y saque scroll horizontal. En escritorio ya estaba bien.
+  grid-template-columns: minmax(0, 1fr);
   gap: $space-md;
 
   @include desktop {
     grid-template-columns: minmax(0, 1fr) 300px;
     align-items: start;
   }
+}
+
+.columna-principal {
+  min-width: 0;
 }
 
 .columna-lateral {
@@ -219,102 +246,142 @@
   gap: $space-xs;
 }
 
+/*
+ * Tarjeta de persona, no fila de tabla.
+ *
+ * Antes era una rejilla de cuatro columnas que empezaba por el porcentaje, con
+ * la persona en el segundo hueco y un avatar de 24 px. Se leía como el renglón
+ * de un informe porque estaba construida como tal. Ahora es una tarjeta que se
+ * apila: quién, por qué, cuándo, y qué puedes hacer.
+ */
 .match {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas:
-    'marcador info'
-    'semana   semana'
-    'accion   accion';
-  gap: $space-xs $space-sm;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding: $space-sm;
   border: 1px solid var(--sa-borde);
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   background: var(--sa-superficie);
   transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
 
   &:hover {
     border-color: var(--sa-borde-fuerte);
-    background: var(--sa-superficie-alt);
-  }
-
-  @include desktop {
-    grid-template-columns: auto minmax(0, 1fr) 232px auto;
-    grid-template-areas: 'marcador info semana accion';
-    gap: $space-md;
   }
 }
 
-.marcador {
-  grid-area: marcador;
-  min-width: 64px;
-}
-
-.match__info {
-  grid-area: info;
-  min-width: 0;
-}
-
-.match__linea1 {
+/* Toda la cabecera es el enlace al perfil: en una lista de gente, tocar a
+   alguien tiene que llevar a esa persona. */
+.match__persona {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+
+  &:hover .match__nombre {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sa-acento);
+    outline-offset: 4px;
+    border-radius: $radius-sm;
+  }
 }
 
-.match__avatar {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  border-radius: 50%;
-  background: var(--sa-superficie-alt);
-  border: 1px solid var(--sa-borde);
-  flex-shrink: 0;
+.match__quien {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .match__nombre {
-  font-size: $text-base;
+  font-family: $font-display;
+  font-size: $text-lg;
   font-weight: $font-semibold;
   color: var(--sa-texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Separadores generados en CSS: en el HTML serían ruido, y un lector de
+   pantalla leería los puntos uno a uno. */
+.match__rasgos {
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  span + span::before {
+    content: '·';
+    margin: 0 5px;
+    color: var(--sa-texto-tenue);
+  }
+}
+
+/* El número, de apoyo. Sigue siendo lo que hace útil al producto, así que
+   conserva el acento y la tipografía de titulares, pero deja de ser lo primero
+   que ves de una persona. */
+.match__nota {
+  font-family: $font-display;
+  font-size: $text-xl;
+  font-weight: $font-bold;
+  color: var(--sa-acento);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  flex-shrink: 0;
+
+  small {
+    font-size: 0.55em;
+    margin-left: 1px;
+  }
 }
 
 .match__motivo {
-  margin: 3px 0 2px;
+  margin: 0;
   font-size: $text-sm;
   color: var(--sa-texto-suave);
   line-height: $leading-snug;
 }
 
-.match__meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-size: $text-xs;
-  color: var(--sa-texto-tenue);
-}
-
-.match__separador {
-  color: var(--sa-borde-fuerte);
-}
-
 .match__semana {
-  grid-area: semana;
   min-width: 0;
 }
 
+.match__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-xs;
+}
+
+.match__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .match__accion {
-  grid-area: accion;
+  .btn { width: 100%; }
+}
 
-  .btn {
-    width: 100%;
+/* A partir de tablet caben las acciones al lado de las etiquetas, en vez de en
+   una fila propia a lo ancho. */
+@include tablet {
+  .match__accion .btn { width: auto; }
 
-    @include desktop {
-      width: auto;
-    }
+  .match__pie {
+    flex-wrap: wrap;
   }
 }
 
@@ -504,6 +571,104 @@
   gap: $space-xs;
 }
 
+/* Un fieldset no encoge por debajo de su contenido si no se le dice, y basta
+   con que uno se pase para que el modal entero saque scroll horizontal. */
+.bloque {
+  min-width: 0;
+}
+
+.bloque__pista {
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===================== Mis marcas ===================== */
+.marcas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--sa-borde);
+  border-radius: $radius-sm;
+  background: var(--sa-superficie-alt);
+}
+
+.marca__miniatura {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+}
+
+.marca__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  // Sin esto un título largo empuja el botón de borrar fuera de la fila
+  min-width: 0;
+  flex: 1;
+
+  strong {
+    font-size: $text-sm;
+    font-weight: $font-semibold;
+    color: var(--sa-texto);
+  }
+
+  span {
+    font-size: $text-xs;
+    color: var(--sa-texto-suave);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.marca-nueva {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px dashed var(--sa-borde-fuerte);
+  border-radius: $radius-sm;
+
+  input[type='text'],
+  input[type='date'] {
+    padding: 9px 11px;
+    border: 1px solid var(--sa-borde);
+    border-radius: $radius-sm;
+    background: var(--sa-superficie);
+    color: var(--sa-texto);
+    font-family: inherit;
+    font-size: $text-sm;
+  }
+}
+
+.marca-nueva__pie {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  input[type='date'] { flex: 1; min-width: 130px; }
+}
+
+/* El input de archivo real va oculto: su control nativo no se puede estilar y
+   desentona con todo lo demás. La etiqueta hace de botón. */
+.marca-nueva__adjuntar {
+  cursor: pointer;
+}
+
 .bloque__cabecera {
   display: flex;
   align-items: center;
@@ -583,6 +748,11 @@
 
 .meta__slider {
   width: 100%;
+  // width:100% no basta: el pulgar sobresale de la pista y el elemento acaba
+  // midiendo unos pixeles mas que su caja, lo justo para sacar una barra de
+  // desplazamiento horizontal en el modal entero.
+  box-sizing: border-box;
+  min-width: 0;
   height: 6px;
   appearance: none;
   border-radius: $radius-full;
