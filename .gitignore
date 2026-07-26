@@ -10,6 +10,11 @@ target/
 .env.local
 *.local.properties
 
+# Medios subidos por la gente. Son datos de usuario, no código: no van al
+# repositorio ni deben acabar dentro del artefacto que se despliega.
+backend/medios/
+medios/
+
 # Sistema
 .DS_Store
 Thumbs.db

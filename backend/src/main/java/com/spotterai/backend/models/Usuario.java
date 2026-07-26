@@ -57,6 +57,15 @@ public class Usuario {
     @Column(name = "meta_semanal")
     private Integer metaSemanal = 4;
 
+    /**
+     * Ruta de la foto de perfil, o null.
+     *
+     * Sin ella se usan las iniciales sobre color, que identifican igual de bien
+     * y no obligan a nadie a subir nada para empezar a usar la aplicacion.
+     */
+    @Column(name = "foto_url")
+    private String fotoUrl;
+
     
     @ManyToOne
     @JoinColumn(name = "gimnasio_id")
@@ -108,6 +117,9 @@ public class Usuario {
 
     public Integer getMetaSemanal() { return metaSemanal; }
     public void setMetaSemanal(Integer metaSemanal) { this.metaSemanal = metaSemanal; }
+
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
 
     public List<Disponibilidad> getDisponibilidades() { return disponibilidades; }
     public void setDisponibilidades(List<Disponibilidad> disponibilidades) { this.disponibilidades = disponibilidades; }

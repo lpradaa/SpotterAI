@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.dtos.PerfilPublicoDTO;
 import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.dtos.UsuarioRegistroDTO;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
@@ -23,4 +24,12 @@ public interface UsuarioService {
 
     List<UsuarioResponseDTO> explorarComunidad(String email);
     Map<String, Object> obtenerMiPerfilCompleto(String email);
+
+    /**
+     * La ficha de otra persona: quien es, que ha conseguido y como encajais.
+     *
+     * No hacia falta hasta ahora porque no se podia mirar a nadie, solo pulsar
+     * "Conectar" sobre una fila.
+     */
+    PerfilPublicoDTO verPerfilDe(String email, Long otroUsuarioId);
 }

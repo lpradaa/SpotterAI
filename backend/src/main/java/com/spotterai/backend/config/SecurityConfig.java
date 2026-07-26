@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,6 +49,14 @@ public class SecurityConfig {
                 // no permite mandar cabeceras. Se autentica con un ticket de un solo
                 // uso que se pide antes con el token (ver TicketsSse).
                 .requestMatchers("/api/eventos/suscribir").permitAll()
+
+                // La entrega de fotos y videos es publica; la subida no.
+                // Un <img> o un <video> no pueden mandar la cabecera Authorization
+                // —la misma limitacion del navegador que obligo a los tickets del
+                // canal de eventos—, asi que exigir token aqui haria imposible
+                // usar la URL directamente. Lo que protege el contenido es que la
+                // ruta lleva un UUID y no se adivina.
+                .requestMatchers(HttpMethod.GET, "/api/medios/**").permitAll()
                 
                 // 🔥 MODIFICADO: Añadimos explícitamente /api/gimnasios a las rutas que requieren estar logueado
                 .requestMatchers("/api/usuarios/**", "/api/gimnasios/**").authenticated() 

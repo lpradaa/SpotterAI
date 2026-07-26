@@ -3,8 +3,19 @@ package com.spotterai.backend.models;
 import jakarta.persistence.*;
 import java.time.LocalTime;
 
+/**
+ * Una franja horaria en la que alguien puede entrenar.
+ *
+ * <p>La restriccion unica no es cosmetica: {@code CalculadoraSolape} suma los
+ * minutos de cada par de franjas que se cruzan, asi que una franja guardada dos
+ * veces inflaba directamente las horas en comun que anuncia la aplicacion.
+ */
 @Entity
-@Table(name = "Disponibilidad")
+@Table(
+        name = "Disponibilidad",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_disponibilidad_franja",
+                columnNames = {"usuario_id", "dia_semana", "hora_inicio", "hora_fin"}))
 public class Disponibilidad {
 
     @Id

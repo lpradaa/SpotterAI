@@ -14,7 +14,14 @@ import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
+import java.time.LocalDate;
+
+import com.spotterai.backend.dtos.HitoDTO;
+import com.spotterai.backend.dtos.PerfilPublicoDTO;
+import com.spotterai.backend.models.Hito;
 import com.spotterai.backend.repositories.DisponibilidadRepository;
+import com.spotterai.backend.repositories.EntrenamientoRepository;
+import com.spotterai.backend.repositories.HitoRepository;
 import com.spotterai.backend.repositories.GimnasioRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
@@ -52,17 +59,23 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private final DisponibilidadRepository disponibilidadRepository;
     private final ExplicadorCompatibilidad explicador;
+    private final HitoRepository hitoRepository;
+    private final EntrenamientoRepository entrenamientoRepository;
 
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
                               GimnasioRepository gimnasioRepository, SolicitudRepository solicitudRepository,
                               DisponibilidadRepository disponibilidadRepository,
-                              ExplicadorCompatibilidad explicador) {
+                              ExplicadorCompatibilidad explicador,
+                              HitoRepository hitoRepository,
+                              EntrenamientoRepository entrenamientoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.gimnasioRepository = gimnasioRepository;
         this.solicitudRepository = solicitudRepository;
         this.disponibilidadRepository = disponibilidadRepository;
         this.explicador = explicador;
+        this.hitoRepository = hitoRepository;
+        this.entrenamientoRepository = entrenamientoRepository;
     }
 
     @Override
@@ -248,6 +261,63 @@ public class UsuarioServiceImpl implements UsuarioService {
                 })
                 .sorted(Comparator.comparingInt(UsuarioResponseDTO::getCompatibilidad).reversed())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PerfilPublicoDTO verPerfilDe(String email, Long otroUsuarioId) {
+        Usuario yo = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        Usuario otro = usuarioRepository.findById(otroUsuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Esa persona no existe."));
+
+        if (yo.getId().equals(otro.getId())) {
+            throw new IllegalArgumentException("Tu propio perfil se edita, no se visita.");
+        }
+
+        PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
+                yo, disponibilidadRepository.findByUsuarioId(yo.getId()),
+                otro, disponibilidadRepository.findByUsuarioId(otro.getId()));
+
+        String estado = indexarSolicitudes(yo.getId()).get(otro.getId());
+
+        List<HitoDTO> hitos = hitoRepository.findByUsuarioIdOrderByFechaDescIdDesc(otro.getId())
+                .stream().map(UsuarioServiceImpl::aHitoDTO).toList();
+
+        // Ventana de siete dias hacia atras y no "esta semana": el lunes por la
+        // mañana todo el mundo apareceria inactivo aunque hubiera entrenado el
+        // domingo.
+        long entrenos = entrenamientoRepository.countByUsuarioIdAndFechaGreaterThanEqual(
+                otro.getId(), LocalDate.now().minusDays(7));
+
+        return new PerfilPublicoDTO(
+                otro.getId(),
+                otro.getNombre(),
+                otro.getAvatar(),
+                otro.getFotoUrl(),
+                otro.getBiografia(),
+                otro.getNivel(),
+                otro.getObjetivos(),
+                otro.getEdad(),
+                otro.getGimnasio() != null ? otro.getGimnasio().getNombre() : null,
+                puntuacion.total(),
+                puntuacion.etiqueta(),
+                resumenDe(puntuacion),
+                puntuacion.solape().franjas(),
+                hitos,
+                entrenos,
+                "ACEPTADA".equals(estado),
+                "PENDIENTE".equals(estado));
+    }
+
+    /** La razon principal por la que encajais, en una frase. */
+    private static String resumenDe(PuntuacionCompatibilidad puntuacion) {
+        FactorCompatibilidad dominante = puntuacion.factorDominante();
+        return dominante != null ? dominante.detalle() : "Perfil sin datos suficientes";
+    }
+
+    static HitoDTO aHitoDTO(Hito h) {
+        return new HitoDTO(h.getId(), h.getTitulo(), h.getDescripcion(),
+                h.getFecha(), h.getMedioUrl(), h.getMedioTipo());
     }
 
     @Override
