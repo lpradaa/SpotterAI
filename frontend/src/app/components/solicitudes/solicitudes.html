@@ -1,46 +1,56 @@
-<div class="dashboard">
-  <div class="header-section">
-    <h2 class="header-section__title">Bandeja de Solicitudes</h2>
-    <p class="header-section__subtitle">Gestiona las personas que quieren entrenar contigo.</p>
-  </div>
-
-  @if (solicitudesPendientes.length === 0) {
-    
-    <div class="empty-state">
-      <h3>No tienes solicitudes nuevas</h3>
-      <p>Sigue usando la plataforma, pronto alguien querrá conectar contigo.</p>
+<div class="solicitudes">
+  <header class="solicitudes__cabecera">
+    <div>
+      <h1 class="solicitudes__titulo">Solicitudes</h1>
+      <p class="solicitudes__subtitulo">Gente que quiere entrenar contigo.</p>
     </div>
+    @if (solicitudesPendientes().length > 0) {
+      <span class="marcador">{{ solicitudesPendientes().length }}</span>
+    }
+  </header>
 
+  @if (aviso(); as a) {
+    <p class="aviso" [class.aviso--error]="a.tipo === 'error'" role="status">
+      {{ a.texto }}
+      @if (a.tipo === 'exito') {
+        <button class="aviso__enlace" (click)="irAConversacion()">Ir a Compañeros</button>
+      }
+    </p>
+  }
+
+  @if (solicitudesPendientes().length === 0) {
+    <div class="vacio-grande">
+      <h2>No hay nada pendiente</h2>
+      <p>
+        Cuando alguien quiera entrenar contigo, la solicitud aparecerá aquí
+        sin que tengas que recargar.
+      </p>
+    </div>
   } @else {
+    <ul class="peticiones">
+      @for (solicitud of solicitudesPendientes(); track solicitud.id) {
+        <li class="peticion">
+          <app-avatar [nombre]="solicitud.emisorNombre" [tamano]="44" />
 
-    <div class="matches-grid">
-      @for (solicitud of solicitudesPendientes; track solicitud.id) {
-        
-        <div class="match-card">
-          <div class="match-card__avatar">
-            <span>{{ solicitud.emisorNombre ? solicitud.emisorNombre.charAt(0).toUpperCase() : 'U' }}</span>
+          <div class="peticion__texto">
+            <h2 class="peticion__nombre">{{ solicitud.emisorNombre }}</h2>
+            <p class="peticion__detalle">Quiere conectar contigo para entrenar.</p>
           </div>
 
-          <div class="match-card__body">
-            <div class="match-card__header">
-              <h4>{{ solicitud.emisorNombre }}</h4>
-              <span class="badge badge--pendiente">NUEVA</span>
-            </div>
-            <p class="match-card__gym">Quiere conectar contigo para entrenar.</p>
-          </div>
-
-          <div class="match-card__actions action-buttons">
-            <button class="btn btn--reject" (click)="responder(solicitud.id, 'RECHAZADA')">
+          <div class="peticion__acciones">
+            <button class="btn btn--fantasma btn--pequeno"
+                    [disabled]="enCurso(solicitud.id)"
+                    (click)="responder(solicitud.id, 'RECHAZADA')">
               Rechazar
             </button>
-            <button class="btn btn--accept" (click)="responder(solicitud.id, 'ACEPTADA')">
+            <button class="btn btn--primario btn--pequeno"
+                    [disabled]="enCurso(solicitud.id)"
+                    (click)="responder(solicitud.id, 'ACEPTADA')">
               Aceptar
             </button>
           </div>
-        </div>
-
+        </li>
       }
-    </div>
-
+    </ul>
   }
 </div>

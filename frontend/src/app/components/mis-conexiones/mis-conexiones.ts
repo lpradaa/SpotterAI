@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { EventosService } from '../../services/eventos.service';
 import { MensajesService, Conversacion, Mensaje } from '../../services/mensajes.service';
+import { AvisosService } from '../../services/avisos.service';
 import { Avatar } from '../avatar/avatar';
 
 @Component({
@@ -22,6 +23,7 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
   private route = inject(ActivatedRoute);
   private eventos = inject(EventosService);
   private mensajes = inject(MensajesService);
+  private avisos = inject(AvisosService);
   private destroyRef = inject(DestroyRef);
 
   @ViewChild('scrollMe') private myScrollContainer!: ElementRef;
@@ -153,6 +155,9 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
     // local se pone a cero sin esperar a la respuesta.
     this.conversaciones.update(lista =>
       lista.map(c => c.usuarioId === conversacion.usuarioId ? { ...c, sinLeer: 0 } : c));
+
+    // El indicador de la cabecera cuenta lo mismo, así que hay que bajarlo.
+    this.avisos.refrescar();
 
     this.mensajes.historial(conversacion.usuarioId).subscribe({
       next: data => {

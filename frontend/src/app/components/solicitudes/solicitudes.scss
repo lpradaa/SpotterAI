@@ -5,114 +5,112 @@
   display: block;
 }
 
-.dashboard {
-  padding: $space-md $space-sm $space-xl;
-  max-width: 1000px;
+.solicitudes {
+  max-width: 720px;
   margin: 0 auto;
+  padding: $space-md $space-sm $space-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
 
   @include tablet {
     padding: $space-lg $space-md $space-xl;
   }
 }
 
-.header-section {
-  margin-bottom: $space-md;
-
-  &__title {
-    font-size: $text-2xl;
-    font-weight: $font-bold;
-    margin: 0 0 4px 0;
-    color: var(--sa-texto);
-  }
-
-  &__subtitle {
-    color: var(--sa-texto-suave);
-    font-size: $text-sm;
-    margin: 0;
-  }
-}
-
-/* --- Estado vacío --- */
-.empty-state {
-  text-align: center;
-  padding: $space-xl $space-md;
-  background: var(--sa-superficie);
-  border-radius: $radius-lg;
-  border: 1px dashed var(--sa-borde);
-
-  &__icon { display: none; } // Se sustituye por texto: los emoticonos fuera
-
-  h3 { color: var(--sa-texto); margin-bottom: $space-xs; }
-  p { color: var(--sa-texto-suave); font-size: $text-sm; }
-}
-
-/* --- Tarjetas de solicitudes --- */
-.matches-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+.solicitudes__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: $space-sm;
 }
 
-.match-card {
-  background: var(--sa-superficie);
-  border-radius: $radius-md;
-  padding: $space-sm;
+.solicitudes__titulo {
+  font-family: $font-display;
+  font-size: $text-2xl;
+  font-weight: $font-bold;
+  color: var(--sa-texto);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.solicitudes__subtitulo {
+  margin: 2px 0 0;
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+}
+
+.peticiones {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: $space-sm;
-  border: 1px solid var(--sa-borde);
-  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
-
-  &:hover {
-    border-color: var(--sa-borde-fuerte);
-    background: var(--sa-superficie-alt);
-  }
-
-  &__avatar {
-    width: 44px;
-    height: 44px;
-    background: var(--sa-superficie-alt);
-    border: 1px solid var(--sa-borde);
-    color: var(--sa-texto);
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font-family: $font-display;
-    font-weight: $font-bold;
-    font-size: $text-base;
-  }
-
-  &__header h4 {
-    margin: 0;
-    font-size: $text-base;
-    font-weight: $font-semibold;
-    color: var(--sa-texto);
-  }
-
-  &__gym {
-    margin: 0;
-    font-size: $text-xs;
-    color: var(--sa-texto-tenue);
-  }
-}
-
-.badge {
-  padding: 3px 10px;
-  border-radius: $radius-full;
-  font-size: $text-xs;
-  font-weight: $font-semibold;
-
-  &--pendiente {
-    background: var(--sa-acento-suave);
-    color: var(--sa-acento-texto);
-  }
-}
-
-/* --- Botones dobles --- */
-.action-buttons {
-  display: flex;
   gap: $space-xs;
-  margin-top: auto;
+}
 
-  .btn { flex: 1; }
+.peticion {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm;
+  border: 1px solid var(--sa-borde);
+  border-radius: $radius-lg;
+  background: var(--sa-superficie);
+}
+
+.peticion__texto {
+  // Sin esto, un nombre largo empuja los botones fuera de la tarjeta en lugar
+  // de recortarse: un hijo flex no baja de su contenido si no se le dice.
+  min-width: 0;
+  flex: 1;
+}
+
+.peticion__nombre {
+  margin: 0;
+  font-family: $font-display;
+  font-size: $text-base;
+  font-weight: $font-semibold;
+  color: var(--sa-texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.peticion__detalle {
+  margin: 2px 0 0;
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+}
+
+.peticion__acciones {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.aviso__enlace {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: $font-semibold;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* En móvil los botones no caben al lado del nombre: pasan debajo y a lo ancho,
+   que además los hace más fáciles de acertar con el dedo. */
+@media (max-width: 520px) {
+  .peticion {
+    flex-wrap: wrap;
+  }
+
+  .peticion__acciones {
+    width: 100%;
+
+    .btn { flex: 1; }
+  }
 }

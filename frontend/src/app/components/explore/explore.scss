@@ -153,6 +153,23 @@
   overflow: hidden;
 }
 
+/*
+ * Biografía. Se limita a tres líneas para que una persona muy habladora no
+ * descuadre la rejilla de tarjetas: en una lista, la comparación importa más
+ * que leerlo todo de una.
+ */
+.ficha__bio {
+  margin: 0;
+  font-size: $text-xs;
+  line-height: 1.5;
+  color: var(--sa-texto-suave);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .ficha__etiquetas {
   display: flex;
   flex-wrap: wrap;

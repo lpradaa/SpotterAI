@@ -314,6 +314,18 @@
             <label class="campo"><span>Peso (kg)</span><input type="number" [(ngModel)]="perfilForm.peso"></label>
             <label class="campo"><span>Género</span><input type="text" [(ngModel)]="perfilForm.genero"></label>
           </div>
+
+          <!-- El único campo libre del perfil. Con el mismo nivel y el mismo
+               objetivo, dos personas se leen igual: esto es lo que las separa. -->
+          <label class="campo campo--ancho">
+            <span>Sobre ti</span>
+            <textarea [(ngModel)]="perfilForm.biografia" rows="3" [maxlength]="maxBiografia"
+                      placeholder="Qué entrenas, cómo te gusta entrenar, si buscas a alguien constante…"></textarea>
+            <small class="campo__pista"
+                   [class.campo__pista--al-limite]="restanteBiografia() < 30">
+              {{ restanteBiografia() }} caracteres
+            </small>
+          </label>
         </fieldset>
 
         <fieldset class="bloque">

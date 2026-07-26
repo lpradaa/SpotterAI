@@ -63,6 +63,12 @@
             [misFranjas]="misHorarios()"
             [solape]="usuario.franjasEnComun || []" />
 
+          <!-- Lo único que escribe la persona. Sin esto, dos perfiles con el
+               mismo nivel y el mismo objetivo se leen exactamente igual. -->
+          @if (usuario.biografia) {
+            <p class="ficha__bio">{{ usuario.biografia }}</p>
+          }
+
           <div class="ficha__etiquetas">
             <span class="chip chip--nivel">{{ usuario.nivel || 'Sin nivel' }}</span>
             @if (usuario.objetivos) { <span class="chip chip--objetivo">{{ usuario.objetivos }}</span> }

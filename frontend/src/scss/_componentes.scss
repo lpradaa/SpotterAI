@@ -190,16 +190,41 @@
   }
 
   input,
-  select {
+  select,
+  textarea {
     padding: 10px 12px;
     border: 1px solid var(--sa-borde);
     border-radius: $radius-sm;
     background: var(--sa-superficie-alt);
     color: var(--sa-texto);
     transition: border-color var(--sa-transicion);
+    font-family: inherit;
+    font-size: inherit;
 
     &:hover { border-color: var(--sa-borde-fuerte); }
   }
+
+  textarea {
+    // Solo en vertical: a lo ancho se sale de la rejilla del formulario.
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.5;
+  }
+
+  /** Ocupa la fila entera de la rejilla de campos. */
+  &--ancho {
+    grid-column: 1 / -1;
+    margin-top: $space-sm;
+  }
+}
+
+.campo__pista {
+  align-self: flex-end;
+  font-size: 11px;
+  color: var(--sa-texto-tenue);
+  font-variant-numeric: tabular-nums;
+
+  &--al-limite { color: var(--sa-acento); }
 }
 
 .rango {

@@ -45,6 +45,21 @@
   </div>
   
   <div class="header__right">
+    <!-- Antes solo te enterabas de una solicitud si estabas en el tablero. El
+         canal ya la empujaba; lo que faltaba era un sitio donde se viera desde
+         cualquier pantalla. -->
+    <a routerLink="/solicitudes" class="header__button header__avisos"
+       [attr.aria-label]="etiquetaAvisos()" [title]="etiquetaAvisos()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
+      </svg>
+      @if (solicitudesPendientes() > 0) {
+        <span class="header__globo">{{ solicitudesPendientes() > 9 ? '9+' : solicitudesPendientes() }}</span>
+      }
+    </a>
+
     <button class="header__button" (click)="alternarTema()"
             [attr.aria-label]="'Cambiar a tema ' + (temaActual() === 'oscuro' ? 'claro' : 'oscuro')"
             [title]="'Cambiar a tema ' + (temaActual() === 'oscuro' ? 'claro' : 'oscuro')">
@@ -107,6 +122,9 @@
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
       </svg>
       Compañeros
+      @if (mensajesSinLeer() > 0) {
+        <span class="sidebar__nav-globo">{{ mensajesSinLeer() }}</span>
+      }
     </a>
 
     <a routerLink="/explorar" class="sidebar__nav-item" routerLinkActive="sidebar__nav-item--active" (click)="toggleSidebar()">
@@ -115,6 +133,20 @@
         <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
       </svg>
       Explorar
+    </a>
+
+    <!-- La ruta existía desde siempre, pero no había forma de llegar a ella
+         salvo escribiendo /solicitudes en la barra del navegador. -->
+    <a routerLink="/solicitudes" class="sidebar__nav-item" routerLinkActive="sidebar__nav-item--active" (click)="toggleSidebar()">
+      <svg class="sidebar__nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path>
+      </svg>
+      Solicitudes
+      @if (solicitudesPendientes() > 0) {
+        <span class="sidebar__nav-globo">{{ solicitudesPendientes() }}</span>
+      }
     </a>
   </nav>
 

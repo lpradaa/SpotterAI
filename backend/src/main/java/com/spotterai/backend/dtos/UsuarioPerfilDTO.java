@@ -10,7 +10,23 @@ public class UsuarioPerfilDTO {
     private String nivel; // Ej: Principiante, Intermedio, Avanzado
     private String objetivos; // Ej: Hipertrofia, Resistencia, Pérdida de peso
     private Long gimnasioId; // El ID del gimnasio que ha elegido del desplegable
-    
+
+    /**
+     * Existia en la entidad y se enviaba en las tarjetas, pero no habia forma de
+     * escribirla: faltaba justo aqui. Era el unico campo libre del perfil, o sea
+     * lo unico que distingue a dos personas con el mismo nivel y el mismo
+     * objetivo, y estaba muerto.
+     */
+    private String biografia;
+
+    /**
+     * Entrenamientos que se propone hacer a la semana.
+     *
+     * Vivia en localStorage con la clave meta_semanal_<nombre>: se perdia al
+     * cambiar de navegador y dos usuarios con el mismo nombre compartian valor.
+     */
+    private Integer metaSemanal;
+
     private List<HorarioDTO> horarios; // 👈 NUEVO: Lista de horarios que llegarán desde Angular
 
     // Getters y Setters
@@ -28,6 +44,10 @@ public class UsuarioPerfilDTO {
     public void setObjetivos(String objetivos) { this.objetivos = objetivos; }
     public Long getGimnasioId() { return gimnasioId; }
     public void setGimnasioId(Long gimnasioId) { this.gimnasioId = gimnasioId; }
+    public String getBiografia() { return biografia; }
+    public void setBiografia(String biografia) { this.biografia = biografia; }
+    public Integer getMetaSemanal() { return metaSemanal; }
+    public void setMetaSemanal(Integer metaSemanal) { this.metaSemanal = metaSemanal; }
     public List<HorarioDTO> getHorarios() { return horarios; }
     public void setHorarios(List<HorarioDTO> horarios) { this.horarios = horarios; }
 

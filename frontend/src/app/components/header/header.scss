@@ -71,6 +71,33 @@
     }
   }
 
+  /* Campana de avisos: el botón necesita posición para colgarle el globo. */
+  &__avisos {
+    position: relative;
+    text-decoration: none;
+  }
+
+  &__globo {
+    position: absolute;
+    top: 4px;
+    right: 2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    border-radius: $radius-full;
+    background: var(--sa-acento);
+    color: var(--sa-sobre-acento);
+    font-family: $font-display;
+    font-size: 10px;
+    font-weight: $font-bold;
+    line-height: 1;
+    // Separa el globo del icono cuando el fondo de la cabecera cambia al pasar
+    // el ratón por encima.
+    border: 2px solid var(--sa-superficie);
+  }
+
   &__logo {
     font-size: $text-2xl;
     font-weight: $font-extrabold;
@@ -218,6 +245,24 @@
   &__nav-icon {
     margin-right: $space-sm;
     font-size: $text-lg;
+    flex-shrink: 0;
+  }
+
+  /* Contador junto al enlace de Solicitudes. Al final de la fila, para que no
+     se mueva con el largo del texto. */
+  &__nav-globo {
+    margin-left: auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    display: grid;
+    place-items: center;
+    border-radius: $radius-full;
+    background: var(--sa-acento);
+    color: var(--sa-sobre-acento);
+    font-family: $font-display;
+    font-size: 11px;
+    font-weight: $font-bold;
   }
 
   &__footer {

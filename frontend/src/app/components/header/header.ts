@@ -1,9 +1,10 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { TemaService } from '../../services/tema.service';
 import { EventosService } from '../../services/eventos.service';
 import { PerfilEstadoService } from '../../services/perfil-estado.service';
+import { AvisosService } from '../../services/avisos.service';
 
 @Component({
   selector: 'app-header',
@@ -21,6 +22,22 @@ export class Header implements OnInit {
   private tema = inject(TemaService);
   private eventos = inject(EventosService);
   private perfilEstado = inject(PerfilEstadoService);
+  private avisos = inject(AvisosService);
+
+  solicitudesPendientes = this.avisos.solicitudesPendientes;
+  mensajesSinLeer = this.avisos.mensajesSinLeer;
+
+  /*
+   * Cada indicador cuenta solo lo que hay donde lleva. Al principio la campana
+   * sumaba solicitudes y mensajes, y quedaba un "1" que te mandaba a Solicitudes
+   * cuando lo pendiente era un mensaje. Los mensajes se avisan en Compañeros,
+   * que es donde se contestan.
+   */
+  etiquetaAvisos = computed(() => {
+    const pendientes = this.avisos.solicitudesPendientes();
+    if (pendientes === 0) return 'Solicitudes: no hay nada pendiente';
+    return `Solicitudes: ${pendientes} ${pendientes === 1 ? 'pendiente' : 'pendientes'}`;
+  });
 
   temaActual = this.tema.tema;
 
@@ -56,6 +73,7 @@ export class Header implements OnInit {
     // 0. Cerramos el canal de eventos antes de borrar el token: si no, seguiría
     //    reintentando conectar en bucle contra un backend que ya nos rechaza.
     this.eventos.desconectar();
+    this.avisos.limpiar();
 
     // Sin esto, el siguiente que entrase en este navegador heredaria el "ya tiene
     // horario" del anterior y se saltaria la bienvenida.

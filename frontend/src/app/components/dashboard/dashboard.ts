@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { UsuarioService, Match, ExplicacionMatch } from '../../services/usuario.service';
 import { EventosService } from '../../services/eventos.service';
 import { PerfilEstadoService } from '../../services/perfil-estado.service';
+import { AvisosService } from '../../services/avisos.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
 
@@ -22,6 +23,7 @@ export class DashboardComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private eventos = inject(EventosService);
   private perfilEstado = inject(PerfilEstadoService);
+  private avisos = inject(AvisosService);
   private destroyRef = inject(DestroyRef);
 
   userName = signal(localStorage.getItem('usuario_nombre') || 'Usuario');
@@ -60,8 +62,16 @@ export class DashboardComponent implements OnInit {
 
   perfilForm: any = {
     avatar: '', edad: null, genero: '', peso: null, nivel: 'Intermedio',
-    objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', horarios: [], metaSemanal: 4
+    objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', biografia: '',
+    horarios: [], metaSemanal: 4
   };
+
+  /** Coincide con el limite de la columna y con el recorte del servidor. */
+  readonly maxBiografia = 280;
+
+  restanteBiografia(): number {
+    return this.maxBiografia - (this.perfilForm.biografia?.length ?? 0);
+  }
 
   // --- Modal de entrenamiento ---
   isEntrenamientoModalOpen = false;
@@ -124,13 +134,11 @@ export class DashboardComponent implements OnInit {
         if (!data) return;
         if (data.nombre) this.userName.set(data.nombre);
 
-        const metaGuardada = localStorage.getItem('meta_semanal_' + this.userName());
-        const meta = metaGuardada ? parseInt(metaGuardada, 10) : 4;
-
         this.perfilForm = {
           avatar: data.avatar || '', edad: data.edad, genero: data.genero, peso: data.peso,
           nivel: data.nivel || 'Intermedio', objetivos: data.objetivos, gimnasioId: data.gimnasioId,
-          horarios: data.horarios || [], metaSemanal: meta
+          biografia: data.biografia || '',
+          horarios: data.horarios || [], metaSemanal: data.metaSemanal || 4
         };
         this.calcularProgresoSemanal();
         this.cdr.detectChanges();
@@ -236,9 +244,10 @@ export class DashboardComponent implements OnInit {
 
   // --- Progreso semanal ---
   calcularProgresoSemanal(): void {
-    const metaGuardada = localStorage.getItem('meta_semanal_' + this.userName());
-    const meta = metaGuardada ? parseInt(metaGuardada, 10) : (this.perfilForm.metaSemanal || 4);
-    this.perfilForm.metaSemanal = meta;
+    // La meta viene del perfil, que viene de la base. Antes se leia de
+    // localStorage con la clave meta_semanal_<nombre>, asi que cambiabas de
+    // navegador y desaparecia, y dos usuarios homonimos compartian valor.
+    const meta = this.perfilForm.metaSemanal || 4;
     this.totalDays.set(meta);
 
     const hoy = new Date();
@@ -257,7 +266,8 @@ export class DashboardComponent implements OnInit {
   actualizarMetaDesdeSlider(event: Event): void {
     const nuevoValor = parseInt((event.target as HTMLInputElement).value, 10);
     this.perfilForm.metaSemanal = nuevoValor;
-    localStorage.setItem('meta_semanal_' + this.userName(), nuevoValor.toString());
+    // No se guarda al arrastrar: el control vive dentro del formulario de perfil
+    // y se persiste al darle a guardar, como todo lo demas.
     this.calcularProgresoSemanal();
   }
 
@@ -299,6 +309,7 @@ export class DashboardComponent implements OnInit {
           : 'Solicitud rechazada.');
         this.cargarSolicitudesPendientes();
         this.cargarMatches();
+        this.avisos.refrescar();
       },
       error: () => this.mostrarToast('Hubo un error al procesar la solicitud.', 'error')
     });
@@ -374,8 +385,6 @@ export class DashboardComponent implements OnInit {
   }
 
   guardarPerfil(): void {
-    localStorage.setItem('meta_semanal_' + this.userName(), this.perfilForm.metaSemanal.toString());
-
     if (this.mostrarInputGimnasio) {
       this.perfilForm.nuevoGimnasioNombre = this.nuevoGimnasioNombre;
       this.perfilForm.gimnasioId = null;

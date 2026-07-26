@@ -46,6 +46,9 @@ public class UsuarioServiceImpl implements UsuarioService {
      */
     static final int MAX_FRANJAS_HABITUALES = 3;
 
+    /** Coincide con la columna. Se corta en el servidor y no solo en el formulario. */
+    static final int MAX_BIOGRAFIA = 280;
+
     private final DisponibilidadRepository disponibilidadRepository;
     private final ExplicadorCompatibilidad explicador;
 
@@ -102,6 +105,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setNivel(dto.getNivel());
         usuario.setObjetivos(dto.getObjetivos());
         usuario.setAvatar(dto.getAvatar());
+        usuario.setBiografia(recortar(dto.getBiografia(), MAX_BIOGRAFIA));
+
+        // Solo si llega: una pantalla que edite el perfil sin tocar la meta no
+        // deberia borrarla por omision.
+        if (dto.getMetaSemanal() != null) {
+            usuario.setMetaSemanal(Math.clamp(dto.getMetaSemanal(), 1, 14));
+        }
 
         if (dto.getGimnasioId() != null) {
             Gimnasio gimnasio = gimnasioRepository.findById(dto.getGimnasioId())
@@ -149,6 +159,20 @@ public class UsuarioServiceImpl implements UsuarioService {
         );
     }
 
+    /**
+     * Recorta un texto libre al maximo de su columna.
+     *
+     * El formulario ya limita, pero el formulario no es la unica via de entrada:
+     * sin esto, una peticion directa con 5000 caracteres reventaria al guardar.
+     * En blanco se guarda como null para que "sin biografia" sea un solo caso.
+     */
+    private static String recortar(String texto, int maximo) {
+        if (texto == null) return null;
+        String limpio = texto.trim();
+        if (limpio.isEmpty()) return null;
+        return limpio.length() <= maximo ? limpio : limpio.substring(0, maximo);
+    }
+
     @Override
     public Map<String, Object> obtenerMiPerfilCompleto(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
@@ -165,6 +189,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         perfil.put("objetivos", usuario.getObjetivos());
         perfil.put("gimnasioId", usuario.getGimnasio() != null ? usuario.getGimnasio().getId() : null);
         perfil.put("avatar", usuario.getAvatar());
+        perfil.put("biografia", usuario.getBiografia());
+        perfil.put("metaSemanal", usuario.getMetaSemanal() != null ? usuario.getMetaSemanal() : 4);
 
         List<UsuarioPerfilDTO.HorarioDTO> horarios = disponibilidadRepository.findByUsuarioId(usuario.getId())
                 .stream().map(d -> {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EventosService } from '../../services/eventos.service';
+import { AvisosService } from '../../services/avisos.service';
 
 @Component({
   selector: 'app-login',
@@ -16,6 +17,7 @@ export class LoginComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private eventos = inject(EventosService);
+  private avisos = inject(AvisosService);
   private route = inject(ActivatedRoute);
 
   ngOnInit(): void {
@@ -72,6 +74,7 @@ export class LoginComponent implements OnInit {
         // Ahora sí hay token: el canal de eventos ya puede abrirse. En el
         // arranque de la app no pudo, porque aún no habíamos entrado.
         this.eventos.conectar();
+        this.avisos.iniciar();
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {

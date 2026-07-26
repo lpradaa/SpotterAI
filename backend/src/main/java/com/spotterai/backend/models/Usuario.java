@@ -43,7 +43,19 @@ public class Usuario {
     private Integer edad;
     private String genero;
     private Float peso;
+
+    @Column(length = 280)
     private String biografia;
+
+    /**
+     * Entrenamientos que se propone hacer a la semana.
+     *
+     * Estaba en localStorage con la clave meta_semanal_<nombre>, asi que se
+     * perdia al cambiar de navegador y dos personas con el mismo nombre
+     * compartian el valor.
+     */
+    @Column(name = "meta_semanal")
+    private Integer metaSemanal = 4;
 
     
     @ManyToOne
@@ -93,6 +105,9 @@ public class Usuario {
     
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+
+    public Integer getMetaSemanal() { return metaSemanal; }
+    public void setMetaSemanal(Integer metaSemanal) { this.metaSemanal = metaSemanal; }
 
     public List<Disponibilidad> getDisponibilidades() { return disponibilidades; }
     public void setDisponibilidades(List<Disponibilidad> disponibilidades) { this.disponibilidades = disponibilidades; }
