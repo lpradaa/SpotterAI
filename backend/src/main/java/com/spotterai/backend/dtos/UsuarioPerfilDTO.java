@@ -37,6 +37,26 @@ public class UsuarioPerfilDTO {
      */
     private String fotoUrl;
 
+    /**
+     * Hasta tres marcas principales. Null significa "no las toques"; una lista
+     * vacia, "borralas todas".
+     */
+    private List<LevantamientoEntradaDTO> levantamientos;
+
+    /** Lo que llega del formulario: el ejercicio como clave del enum. */
+    public static class LevantamientoEntradaDTO {
+        private String ejercicio;
+        private Double peso;
+        private Integer repeticiones;
+
+        public String getEjercicio() { return ejercicio; }
+        public void setEjercicio(String ejercicio) { this.ejercicio = ejercicio; }
+        public Double getPeso() { return peso; }
+        public void setPeso(Double peso) { this.peso = peso; }
+        public Integer getRepeticiones() { return repeticiones; }
+        public void setRepeticiones(Integer repeticiones) { this.repeticiones = repeticiones; }
+    }
+
     private List<HorarioDTO> horarios; // 👈 NUEVO: Lista de horarios que llegarán desde Angular
 
     // Getters y Setters
@@ -60,6 +80,10 @@ public class UsuarioPerfilDTO {
     public void setMetaSemanal(Integer metaSemanal) { this.metaSemanal = metaSemanal; }
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+    public List<LevantamientoEntradaDTO> getLevantamientos() { return levantamientos; }
+    public void setLevantamientos(List<LevantamientoEntradaDTO> levantamientos) {
+        this.levantamientos = levantamientos;
+    }
     public List<HorarioDTO> getHorarios() { return horarios; }
     public void setHorarios(List<HorarioDTO> horarios) { this.horarios = horarios; }
 

@@ -30,9 +30,20 @@ public record RendimientoDelPerfil(int puntosEnJuego, List<HuecoDelPerfil> hueco
         return huecos.isEmpty() ? null : huecos.get(0);
     }
 
+    /** Sin levantamientos, para quien llame sin ese dato. */
     public static RendimientoDelPerfil de(Usuario usuario, boolean tieneHorarios) {
+        return de(usuario, tieneHorarios, false);
+    }
+
+    public static RendimientoDelPerfil de(Usuario usuario, boolean tieneHorarios,
+                                          boolean tieneLevantamientos) {
         List<HuecoDelPerfil> huecos = new ArrayList<>();
 
+        if (!tieneLevantamientos) {
+            huecos.add(new HuecoDelPerfil("levantamientos", "Levantamientos",
+                    (int) CalculadoraCompatibilidad.PESO_FUERZA,
+                    "Sin saber cuánto mueves, nadie puede saber si podríais cubriros con la barra."));
+        }
         if (!tieneHorarios) {
             huecos.add(new HuecoDelPerfil("horarios", "Horario",
                     (int) CalculadoraCompatibilidad.PESO_HORARIO,

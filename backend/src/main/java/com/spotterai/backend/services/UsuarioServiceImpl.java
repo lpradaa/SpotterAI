@@ -4,6 +4,8 @@ import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.dtos.UsuarioRegistroDTO;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
 import com.spotterai.backend.matching.CalculadoraCompatibilidad;
+import com.spotterai.backend.matching.CalculadoraFuerza;
+import com.spotterai.backend.matching.Ejercicio;
 import com.spotterai.backend.matching.DiasSemana;
 import com.spotterai.backend.matching.ExplicacionMatch;
 import com.spotterai.backend.matching.FactorCompatibilidad;
@@ -17,11 +19,14 @@ import com.spotterai.backend.models.Usuario;
 import java.time.LocalDate;
 
 import com.spotterai.backend.dtos.HitoDTO;
+import com.spotterai.backend.dtos.LevantamientoDTO;
 import com.spotterai.backend.dtos.PerfilPublicoDTO;
 import com.spotterai.backend.models.Hito;
+import com.spotterai.backend.models.Levantamiento;
 import com.spotterai.backend.repositories.DisponibilidadRepository;
 import com.spotterai.backend.repositories.EntrenamientoRepository;
 import com.spotterai.backend.repositories.HitoRepository;
+import com.spotterai.backend.repositories.LevantamientoRepository;
 import com.spotterai.backend.repositories.GimnasioRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
@@ -31,8 +36,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,13 +69,25 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final ExplicadorCompatibilidad explicador;
     private final HitoRepository hitoRepository;
     private final EntrenamientoRepository entrenamientoRepository;
+    private final LevantamientoRepository levantamientoRepository;
+
+    /**
+     * Tope de marcas por persona.
+     *
+     * Tres bastan para saber si podeis cubriros: los basicos. Sin tope, el
+     * perfil se convierte en una hoja de calculo y la comparacion se diluye
+     * entre ejercicios accesorios que no dicen nada de la pareja.
+     */
+    static final int MAX_LEVANTAMIENTOS = 3;
 
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
                               GimnasioRepository gimnasioRepository, SolicitudRepository solicitudRepository,
                               DisponibilidadRepository disponibilidadRepository,
                               ExplicadorCompatibilidad explicador,
                               HitoRepository hitoRepository,
-                              EntrenamientoRepository entrenamientoRepository) {
+                              EntrenamientoRepository entrenamientoRepository,
+                              LevantamientoRepository levantamientoRepository) {
+        this.levantamientoRepository = levantamientoRepository;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.gimnasioRepository = gimnasioRepository;
@@ -144,6 +164,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         Usuario guardado = usuarioRepository.save(usuario);
 
+        // Null significa "no los toques": una pantalla que edite otra parte del
+        // perfil no debe borrar las marcas por no mandarlas.
+        if (dto.getLevantamientos() != null) {
+            guardarLevantamientos(guardado, dto.getLevantamientos());
+        }
+
         if (dto.getHorarios() != null) {
             disponibilidadRepository.deleteByUsuarioId(guardado.getId());
 
@@ -217,13 +243,22 @@ public class UsuarioServiceImpl implements UsuarioService {
         // este mapa se construye a mano y añadir una columna no obliga a nada.
         perfil.put("fotoUrl", usuario.getFotoUrl());
         perfil.put("biografia", usuario.getBiografia());
+
+        List<Levantamiento> misLevantamientos = levantamientoRepository.findByUsuarioId(usuario.getId());
+        perfil.put("levantamientos", misLevantamientos.stream()
+                .map(UsuarioServiceImpl::aLevantamientoDTO).toList());
+        // El catalogo viaja con el perfil para que el desplegable no tenga que
+        // llevar una copia de la lista, que es como acaban divergiendo.
+        perfil.put("ejerciciosDisponibles", Arrays.stream(Ejercicio.values())
+                .map(e -> Map.of("clave", e.name(), "nombre", e.getNombre())).toList());
         perfil.put("metaSemanal", usuario.getMetaSemanal() != null ? usuario.getMetaSemanal() : 4);
 
         // Viaja con el perfil y no en un endpoint aparte: se calcula de los
         // mismos datos que ya estamos leyendo, y quien pinta el perfil es quien
         // necesita saber que le falta.
         List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(usuario.getId());
-        perfil.put("rendimiento", RendimientoDelPerfil.de(usuario, !misHorarios.isEmpty()));
+        perfil.put("rendimiento", RendimientoDelPerfil.de(
+                usuario, !misHorarios.isEmpty(), !misLevantamientos.isEmpty()));
 
         List<UsuarioPerfilDTO.HorarioDTO> horarios = disponibilidadRepository.findByUsuarioId(usuario.getId())
                 .stream().map(d -> {
@@ -262,13 +297,16 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(miUsuario.getId());
         Map<Long, List<Disponibilidad>> horariosAjenos = cargarHorariosDe(candidatos);
+        Map<Long, List<Levantamiento>> levantamientosAjenos = cargarLevantamientosDe(candidatos);
+        List<Levantamiento> misLevantamientos = levantamientoRepository.findByUsuarioId(miUsuario.getId());
         Map<Long, String> estadoPorCompanero = indexarSolicitudes(miUsuario.getId());
 
         return candidatos.stream()
                 .map(candidato -> {
                     PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
-                            miUsuario, misHorarios,
-                            candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of()));
+                            miUsuario, misHorarios, misLevantamientos,
+                            candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of()),
+                            levantamientosAjenos.getOrDefault(candidato.getId(), List.of()));
                     return construirDtoDeMatch(candidato, puntuacion,
                             estadoPorCompanero.get(candidato.getId()));
                 })
@@ -289,7 +327,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
                 yo, disponibilidadRepository.findByUsuarioId(yo.getId()),
-                otro, disponibilidadRepository.findByUsuarioId(otro.getId()));
+                levantamientoRepository.findByUsuarioId(yo.getId()),
+                otro, disponibilidadRepository.findByUsuarioId(otro.getId()),
+                levantamientoRepository.findByUsuarioId(otro.getId()));
 
         String estado = indexarSolicitudes(yo.getId()).get(otro.getId());
 
@@ -317,9 +357,61 @@ public class UsuarioServiceImpl implements UsuarioService {
                 resumenDe(puntuacion),
                 puntuacion.solape().franjas(),
                 hitos,
+                levantamientoRepository.findByUsuarioId(otro.getId()).stream()
+                        .map(UsuarioServiceImpl::aLevantamientoDTO).toList(),
                 entrenos,
                 "ACEPTADA".equals(estado),
                 "PENDIENTE".equals(estado));
+    }
+
+    /**
+     * Reemplaza las marcas de alguien por las que llegan del formulario.
+     *
+     * Se borra y se reinserta, como con los horarios: intentar casar cada fila
+     * con la que le corresponde complica el codigo para ahorrar tres inserts.
+     */
+    private void guardarLevantamientos(Usuario usuario, List<UsuarioPerfilDTO.LevantamientoEntradaDTO> entradas) {
+        levantamientoRepository.deleteByUsuarioId(usuario.getId());
+
+        // El flush no es decorativo: dentro de una transaccion, Hibernate agrupa
+        // las operaciones por tipo y manda todos los INSERT antes que los DELETE.
+        // Sin forzarlo aqui, guardar un peso nuevo para un ejercicio que ya tenias
+        // choca con la restriccion unica (usuario, ejercicio) y devuelve un 500.
+        //
+        // Los horarios usan este mismo patron de borrar y reinsertar sin flush, y
+        // ahi no se nota justamente porque no tienen restriccion unica.
+        levantamientoRepository.flush();
+
+        Set<Ejercicio> yaPuestos = new HashSet<>();
+
+        for (UsuarioPerfilDTO.LevantamientoEntradaDTO entrada : entradas) {
+            if (yaPuestos.size() >= MAX_LEVANTAMIENTOS) break;
+
+            Optional<Ejercicio> ejercicio = Ejercicio.desde(entrada.getEjercicio());
+            // Un ejercicio desconocido, sin peso o sin repeticiones se ignora en
+            // vez de reventar: es un formulario a medio rellenar, no un ataque.
+            if (ejercicio.isEmpty() || entrada.getPeso() == null || entrada.getRepeticiones() == null) continue;
+            if (entrada.getPeso() <= 0 || entrada.getRepeticiones() <= 0) continue;
+
+            // La restriccion unica no admite el mismo ejercicio dos veces, y
+            // llegar hasta la base para enterarse seria un 500 evitable.
+            if (!yaPuestos.add(ejercicio.get())) continue;
+
+            Levantamiento l = new Levantamiento();
+            l.setUsuario(usuario);
+            l.setEjercicio(ejercicio.get());
+            // Topes de cordura: el record del mundo en peso muerto no llega a 505 kg
+            l.setPeso(Math.min(entrada.getPeso(), 600));
+            l.setRepeticiones(Math.min(entrada.getRepeticiones(), CalculadoraFuerza.MAX_REPETICIONES));
+
+            levantamientoRepository.save(l);
+        }
+    }
+
+    private static LevantamientoDTO aLevantamientoDTO(Levantamiento l) {
+        return new LevantamientoDTO(
+                l.getEjercicio().name(), l.getEjercicio().getNombre(),
+                l.getPeso(), l.getRepeticiones());
     }
 
     /** La razon principal por la que encajais, en una frase. */
@@ -346,7 +438,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
                 miUsuario, disponibilidadRepository.findByUsuarioId(miUsuario.getId()),
-                otro, disponibilidadRepository.findByUsuarioId(otro.getId()));
+                levantamientoRepository.findByUsuarioId(miUsuario.getId()),
+                otro, disponibilidadRepository.findByUsuarioId(otro.getId()),
+                levantamientoRepository.findByUsuarioId(otro.getId()));
 
         return explicador.explicar(otro.getNombre(), puntuacion);
     }
@@ -357,6 +451,16 @@ public class UsuarioServiceImpl implements UsuarioService {
         return disponibilidadRepository.findByUsuarioIdIn(ids).stream()
                 .filter(d -> d.getUsuario() != null)
                 .collect(Collectors.groupingBy(d -> d.getUsuario().getId()));
+    }
+
+    /** En una consulta para todo el grupo, igual que los horarios. */
+    private Map<Long, List<Levantamiento>> cargarLevantamientosDe(List<Usuario> candidatos) {
+        List<Long> ids = candidatos.stream().map(Usuario::getId).toList();
+        if (ids.isEmpty()) return Map.of();
+
+        return levantamientoRepository.findByUsuarioIdIn(ids).stream()
+                .filter(l -> l.getUsuario() != null)
+                .collect(Collectors.groupingBy(l -> l.getUsuario().getId()));
     }
 
     /**

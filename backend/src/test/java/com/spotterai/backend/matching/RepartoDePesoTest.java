@@ -2,6 +2,7 @@ package com.spotterai.backend.matching;
 
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
+import com.spotterai.backend.models.Levantamiento;
 import com.spotterai.backend.models.Usuario;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * horarios sacaba 0 de 40 contra todo el mundo y parecia incompatible con todos.
  */
 class RepartoDePesoTest {
+
+    private static Levantamiento levantamiento(Ejercicio ejercicio, double peso, int reps) {
+        Levantamiento l = new Levantamiento();
+        l.setEjercicio(ejercicio);
+        l.setPeso(peso);
+        l.setRepeticiones(reps);
+        return l;
+    }
 
     private static Gimnasio gimnasio(long id) {
         Gimnasio g = new Gimnasio();
@@ -58,7 +67,8 @@ class RepartoDePesoTest {
         // factor que mas pesa y eso tiene que notarse.
         assertTrue(p.total() < 100, "Sin horarios no deberia dar 100, dio %d".formatted(p.total()));
         assertFalse(p.esCompleta());
-        assertEquals(List.of("horario"), p.factoresSinDatos());
+        assertTrue(p.factoresSinDatos().contains("horario"),
+                "Sin horarios, el factor horario tiene que quedar fuera del calculo");
     }
 
     @Test
@@ -108,9 +118,13 @@ class RepartoDePesoTest {
         Gimnasio g = gimnasio(1L);
         List<Disponibilidad> h = List.of(franja("Lunes", "18:00", "20:00"));
 
+        // "Completo" incluye ahora los levantamientos: sin ellos el factor de
+        // fuerza se queda sin datos y el perfil no llega a estarlo.
+        List<Levantamiento> pesos = List.of(levantamiento(Ejercicio.PRESS_BANCA, 90, 5));
+
         PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
-                usuario("Intermedio", "Hipertrofia", 30, g), h,
-                usuario("Intermedio", "Hipertrofia", 30, g), h);
+                usuario("Intermedio", "Hipertrofia", 30, g), h, pesos,
+                usuario("Intermedio", "Hipertrofia", 30, g), h, pesos);
 
         assertTrue(p.esCompleta());
         assertTrue(p.factoresSinDatos().isEmpty());
@@ -126,7 +140,8 @@ class RepartoDePesoTest {
                 usuario("Intermedio", "Hipertrofia", 30, g),
                 List.of());
 
-        assertEquals(List.of("horario"), p.factoresSinDatos());
+        assertTrue(p.factoresSinDatos().contains("horario"),
+                "Sin horarios, el factor horario tiene que quedar fuera del calculo");
     }
 
     @Test
@@ -163,7 +178,7 @@ class RepartoDePesoTest {
 
         assertEquals(0, p.total());
         assertFalse(p.esCompleta());
-        assertEquals(5, p.factoresSinDatos().size());
+        assertEquals(6, p.factoresSinDatos().size());
     }
 
     @Test
@@ -178,6 +193,7 @@ class RepartoDePesoTest {
 
         assertTrue(p.total() < 30,
                 "Datos completos pero incompatibles deben puntuar bajo, saco %d".formatted(p.total()));
-        assertEquals(List.of("horario"), p.factoresSinDatos());
+        assertTrue(p.factoresSinDatos().contains("horario"),
+                "Sin horarios, el factor horario tiene que quedar fuera del calculo");
     }
 }

@@ -389,6 +389,57 @@
           </label>
         </fieldset>
 
+        <!-- ================= Mis levantamientos =================
+             La ficha técnica, no la historia: esto es lo que el motor cruza
+             para saber si dos personas pueden cubrirse con la barra cargada.
+             Un spotter que no puede con tu peso no te sirve de nada. -->
+        <fieldset class="bloque">
+          <div class="bloque__cabecera">
+            <legend class="bloque__titulo">Mis levantamientos</legend>
+            <span class="bloque__pista">{{ levantamientosPuestos() }} de 3</span>
+          </div>
+
+          <p class="bloque__nota">
+            Cuenta <strong>10 de los 100 puntos</strong> de compatibilidad. Pon el peso
+            de la barra completa y a cuántas repeticiones lo mueves.
+          </p>
+
+          <div class="levantamientos">
+            @for (fila of perfilForm.levantamientos; track $index; let i = $index) {
+              <div class="levantamiento">
+                <select [(ngModel)]="fila.ejercicio" [name]="'ej' + i" aria-label="Ejercicio">
+                  <option value="">Elige un ejercicio</option>
+                  @for (e of ejerciciosDisponibles(); track e.clave) {
+                    <option [value]="e.clave">{{ e.nombre }}</option>
+                  }
+                </select>
+
+                <label class="levantamiento__dato">
+                  <input type="number" [(ngModel)]="fila.peso" [name]="'peso' + i"
+                         min="1" max="600" placeholder="100" aria-label="Peso en kilos">
+                  <span>kg</span>
+                </label>
+
+                <label class="levantamiento__dato">
+                  <input type="number" [(ngModel)]="fila.repeticiones" [name]="'reps' + i"
+                         min="1" max="12" placeholder="5" aria-label="Repeticiones">
+                  <span>reps</span>
+                </label>
+
+                <button type="button" class="btn-icono" (click)="quitarLevantamiento(i)"
+                        aria-label="Quitar este levantamiento" title="Quitar">✕</button>
+              </div>
+            }
+          </div>
+
+          @if (perfilForm.levantamientos.length < 3) {
+            <button type="button" class="btn btn--fantasma btn--pequeno"
+                    (click)="anadirLevantamiento()">
+              Añadir levantamiento
+            </button>
+          }
+        </fieldset>
+
         <!-- ================= Mis marcas =================
              Lo único del perfil que escribe la persona. Todo lo demás son
              desplegables, y con desplegables dos perfiles se leen igual. -->

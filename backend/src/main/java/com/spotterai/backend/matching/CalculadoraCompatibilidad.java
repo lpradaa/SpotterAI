@@ -1,6 +1,7 @@
 package com.spotterai.backend.matching;
 
 import com.spotterai.backend.models.Disponibilidad;
+import com.spotterai.backend.models.Levantamiento;
 import com.spotterai.backend.models.Usuario;
 
 import java.util.ArrayList;
@@ -20,11 +21,16 @@ import java.util.Set;
  * <p>Reparto de pesos de referencia:
  * <pre>
  *   Horario    40  decisivo: sin solape no hay entrenamiento posible
- *   Nivel      20  marca el ritmo y las cargas
  *   Objetivo   20  determina el tipo de sesion
  *   Gimnasio   15  condicion practica
+ *   Nivel      10  el ritmo, tal y como lo declara cada uno
+ *   Fuerza     10  si podeis cubriros con la barra cargada
  *   Edad        5  afinidad menor
  * </pre>
+ *
+ * <p>Nivel y fuerza miden lo mismo por dos caminos: uno es una etiqueta elegida
+ * y el otro un numero comprobable. De ahi que se repartan los 20 que antes se
+ * llevaba el nivel solo.
  *
  * <p>Son pesos <em>de referencia</em>, no fijos: un factor sin datos en alguno de
  * los dos perfiles sale del calculo y reparte su peso proporcionalmente entre los
@@ -37,7 +43,16 @@ public final class CalculadoraCompatibilidad {
     // mismos numeros que el calculo. Duplicarlos en el frontend seria garantizar
     // que un dia digan cosas distintas.
     static final double PESO_HORARIO = 40;
-    static final double PESO_NIVEL = 20;
+    /*
+     * Nivel baja de 20 a 10 y esos 10 pasan a fuerza.
+     *
+     * Los dos miden lo mismo, pero uno es una etiqueta que se elige y el otro un
+     * hecho: "Intermedio" significa cosas distintas para cada persona, y 100 kg
+     * en banca no. Se le deja la mitad porque sigue sirviendo para quien no ha
+     * registrado ningun levantamiento, que sera la mayoria al principio.
+     */
+    static final double PESO_NIVEL = 10;
+    static final double PESO_FUERZA = 10;
     static final double PESO_OBJETIVO = 20;
     static final double PESO_GIMNASIO = 15;
     static final double PESO_EDAD = 5;
@@ -94,15 +109,23 @@ public final class CalculadoraCompatibilidad {
 
     private CalculadoraCompatibilidad() {}
 
+    /** Sin levantamientos, para quien llame sin ese dato. */
     public static PuntuacionCompatibilidad calcular(
             Usuario yo, List<Disponibilidad> misHorarios,
             Usuario otro, List<Disponibilidad> susHorarios) {
+        return calcular(yo, misHorarios, List.of(), otro, susHorarios, List.of());
+    }
+
+    public static PuntuacionCompatibilidad calcular(
+            Usuario yo, List<Disponibilidad> misHorarios, List<Levantamiento> misLevantamientos,
+            Usuario otro, List<Disponibilidad> susHorarios, List<Levantamiento> susLevantamientos) {
 
         SolapeHorario solape = CalculadoraSolape.calcular(misHorarios, susHorarios);
 
         List<FactorCompatibilidad> brutos = List.of(
                 factorHorario(solape, misHorarios, susHorarios),
                 factorNivel(yo.getNivel(), otro.getNivel()),
+                factorFuerza(misLevantamientos, susLevantamientos),
                 factorObjetivo(yo.getObjetivos(), otro.getObjetivos()),
                 factorGimnasio(yo, otro),
                 factorEdad(yo.getEdad(), otro.getEdad()));
@@ -125,7 +148,8 @@ public final class CalculadoraCompatibilidad {
      * seis horas de solape.
      */
     private static double confianzaPorEvidencia(List<FactorCompatibilidad> brutos) {
-        double pesoTotal = PESO_HORARIO + PESO_NIVEL + PESO_OBJETIVO + PESO_GIMNASIO + PESO_EDAD;
+        double pesoTotal = PESO_HORARIO + PESO_NIVEL + PESO_FUERZA
+                + PESO_OBJETIVO + PESO_GIMNASIO + PESO_EDAD;
         double pesoEvaluado = brutos.stream()
                 .filter(FactorCompatibilidad::aplicable)
                 .mapToDouble(FactorCompatibilidad::puntosMax)
@@ -211,6 +235,28 @@ public final class CalculadoraCompatibilidad {
         }
         return "Coincidís %s a la semana en %s".formatted(
                 formatearDuracion(solape.minutosSemanales()), enumerar(solape.dias()));
+    }
+
+    /**
+     * Si podeis cubriros el uno al otro con la barra cargada.
+     *
+     * El detalle de por que se compara asi esta en {@link CalculadoraFuerza}.
+     */
+    private static FactorCompatibilidad factorFuerza(
+            List<Levantamiento> mios, List<Levantamiento> suyos) {
+
+        CalculadoraFuerza.Comparacion comparacion = CalculadoraFuerza.comparar(mios, suyos);
+
+        if (!comparacion.hayDatos()) {
+            // Sin ejercicios en comun no es que seais incompatibles: es que no
+            // hay nada que comparar, y eso no debe restar.
+            return FactorCompatibilidad.sinDatos("fuerza",
+                    "No hay levantamientos en común que comparar");
+        }
+
+        return FactorCompatibilidad.evaluado("fuerza",
+                comparacion.ratio() * PESO_FUERZA, PESO_FUERZA,
+                CalculadoraFuerza.describir(comparacion));
     }
 
     private static FactorCompatibilidad factorNivel(String miNivel, String suNivel) {

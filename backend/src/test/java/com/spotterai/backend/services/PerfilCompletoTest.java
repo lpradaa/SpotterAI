@@ -44,7 +44,8 @@ class PerfilCompletoTest {
                 disponibilidadRepository,
                 new ExplicadorCompatibilidad(),
                 Mockito.mock(HitoRepository.class),
-                Mockito.mock(EntrenamientoRepository.class));
+                Mockito.mock(EntrenamientoRepository.class),
+                Mockito.mock(LevantamientoRepository.class));
 
         Mockito.when(disponibilidadRepository.findByUsuarioId(Mockito.any())).thenReturn(List.of());
     }

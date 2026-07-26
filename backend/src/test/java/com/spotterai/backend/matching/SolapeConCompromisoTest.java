@@ -42,10 +42,27 @@ class SolapeConCompromisoTest {
     }
 
     private static double puntosHorario(List<Disponibilidad> mios, List<Disponibilidad> suyos) {
+        return factorHorario(mios, suyos).puntos();
+    }
+
+    /**
+     * Que fraccion de su propio maximo saca el factor horario.
+     *
+     * Sirve para las aserciones sobre techos: los puntos absolutos suben cuando
+     * otro factor se queda sin datos y reparte su peso, asi que compararlos
+     * contra una constante rompe el test sin que nada se haya roto de verdad.
+     */
+    private static double fraccionHorario(List<Disponibilidad> mios, List<Disponibilidad> suyos) {
+        var f = factorHorario(mios, suyos);
+        return f.puntos() / f.puntosMax();
+    }
+
+    private static FactorCompatibilidad factorHorario(
+            List<Disponibilidad> mios, List<Disponibilidad> suyos) {
         return CalculadoraCompatibilidad.calcular(usuarioTipo(), mios, usuarioTipo(), suyos)
                 .factores().stream()
                 .filter(f -> f.nombre().equals("horario"))
-                .findFirst().orElseThrow().puntos();
+                .findFirst().orElseThrow();
     }
 
     @Test
@@ -105,8 +122,15 @@ class SolapeConCompromisoTest {
         // ...pero el techo es la fiabilidad del propio solape. Sin compromiso no se
         // pasa de ese 45 %, por muchas horas que se declaren: si no, decir "puedo a
         // cualquier hora" seria la mejor jugada posible.
-        assertTrue(conExagerado <= 40 * 0.46,
-                "Sin compromiso no deberia pasar del techo, pero saco %.1f".formatted(conExagerado));
+        //
+        // Se mide la fraccion del factor y no sus puntos absolutos: al repartirse
+        // el peso de los factores ausentes, el horario recibe una parte extra y el
+        // numero absoluto sube sin que la regla se haya roto. Esto lo aprendimos
+        // al añadir el factor de fuerza, que puso en rojo esta asercion sin que el
+        // comportamiento que vigila hubiera cambiado.
+        assertTrue(fraccionHorario(exagerado, exagerado) <= 0.46,
+                "Sin compromiso no deberia pasar del techo, pero saco %.2f"
+                        .formatted(fraccionHorario(exagerado, exagerado)));
     }
 
     @Test

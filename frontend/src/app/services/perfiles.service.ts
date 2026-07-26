@@ -12,6 +12,15 @@ export interface Hito {
   medioTipo: 'imagen' | 'video' | null;
 }
 
+/** Una marca principal: lo que el motor puede cruzar entre dos personas. */
+export interface Levantamiento {
+  /** Clave del enum del backend, para marcar el desplegable. */
+  ejercicio: string;
+  nombre: string;
+  peso: number | null;
+  repeticiones: number | null;
+}
+
 export interface PerfilPublico {
   id: number;
   nombre: string;
@@ -27,6 +36,7 @@ export interface PerfilPublico {
   resumenCompatibilidad: string;
   franjasEnComun: any[];
   hitos: Hito[];
+  levantamientos: Levantamiento[];
   entrenosUltimaSemana: number;
   yaConectado: boolean;
   solicitudPendiente: boolean;

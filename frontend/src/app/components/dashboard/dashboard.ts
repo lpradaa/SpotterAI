@@ -67,11 +67,29 @@ export class DashboardComponent implements OnInit {
   perfilForm: any = {
     avatar: '', edad: null, genero: '', peso: null, nivel: '',
     objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', biografia: '',
-    horarios: [], metaSemanal: 4
+    horarios: [], levantamientos: [], metaSemanal: 4
   };
 
   /** Coincide con el limite de la columna y con el recorte del servidor. */
   readonly maxBiografia = 280;
+
+  // --- Levantamientos ---
+  /** El catálogo lo manda el backend: duplicarlo aquí es garantizar que diverjan. */
+  ejerciciosDisponibles = signal<{ clave: string, nombre: string }[]>([]);
+
+  /** Cuántos están completos, que es lo que de verdad cuenta para el motor. */
+  levantamientosPuestos = computed(() =>
+    (this.perfilForm.levantamientos ?? [])
+      .filter((l: any) => l.ejercicio && l.peso > 0 && l.repeticiones > 0).length);
+
+  anadirLevantamiento(): void {
+    if (this.perfilForm.levantamientos.length >= 3) return;
+    this.perfilForm.levantamientos.push({ ejercicio: '', peso: null, repeticiones: null });
+  }
+
+  quitarLevantamiento(indice: number): void {
+    this.perfilForm.levantamientos.splice(indice, 1);
+  }
 
   /**
    * Lo que le falta al perfil, en puntos de compatibilidad perdidos.
@@ -158,8 +176,11 @@ export class DashboardComponent implements OnInit {
           // decía que faltaba justo eso.
           nivel: data.nivel || '', objetivos: data.objetivos || '', gimnasioId: data.gimnasioId,
           biografia: data.biografia || '',
-          horarios: data.horarios || [], metaSemanal: data.metaSemanal || 4
+          horarios: data.horarios || [],
+          levantamientos: data.levantamientos || [],
+          metaSemanal: data.metaSemanal || 4
         };
+        this.ejerciciosDisponibles.set(data.ejerciciosDisponibles || []);
         this.perfilForm.fotoUrl = data.fotoUrl ?? null;
         this.fotoActual.set(data.fotoUrl ?? null);
         this.rendimiento.set(data.rendimiento ?? null);

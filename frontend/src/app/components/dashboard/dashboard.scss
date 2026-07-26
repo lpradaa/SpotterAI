@@ -607,6 +607,75 @@
   min-width: 0;
 }
 
+.bloque__nota {
+  margin: 0 0 4px;
+  font-size: $text-xs;
+  line-height: 1.5;
+  color: var(--sa-texto-suave);
+
+  strong { color: var(--sa-texto); }
+}
+
+/* ===================== Levantamientos ===================== */
+.levantamientos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.levantamiento {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  select {
+    // Se lleva el espacio sobrante: los dos números tienen ancho fijo
+    flex: 1;
+    min-width: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--sa-borde);
+    border-radius: $radius-sm;
+    background: var(--sa-superficie-alt);
+    color: var(--sa-texto);
+    font-family: inherit;
+    font-size: $text-sm;
+  }
+}
+
+/* El número con su unidad pegada: "100 kg" se lee de una, "100" solo no. */
+.levantamiento__dato {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+
+  input {
+    width: 62px;
+    padding: 9px 8px;
+    border: 1px solid var(--sa-borde);
+    border-radius: $radius-sm;
+    background: var(--sa-superficie-alt);
+    color: var(--sa-texto);
+    font-family: inherit;
+    font-size: $text-sm;
+    font-variant-numeric: tabular-nums;
+  }
+
+  span {
+    font-size: $text-xs;
+    color: var(--sa-texto-tenue);
+  }
+}
+
+@media (max-width: 520px) {
+  // A este ancho los cuatro controles en fila dejan cajas de treinta píxeles
+  .levantamiento {
+    flex-wrap: wrap;
+
+    select { flex-basis: 100%; }
+  }
+}
+
 .bloque__pista {
   font-size: $text-xs;
   color: var(--sa-texto-tenue);

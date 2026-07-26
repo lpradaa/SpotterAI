@@ -31,7 +31,7 @@ class RendimientoDelPerfilTest {
     @Test
     @DisplayName("Un perfil completo no tiene nada en juego")
     void perfilCompletoNoAvisa() {
-        RendimientoDelPerfil r = RendimientoDelPerfil.de(perfilCompleto(), true);
+        RendimientoDelPerfil r = RendimientoDelPerfil.de(perfilCompleto(), true, true);
 
         assertTrue(r.estaCompleto());
         assertEquals(0, r.puntosEnJuego());
@@ -41,7 +41,7 @@ class RendimientoDelPerfilTest {
     @Test
     @DisplayName("Sin horario se pierden los 40 puntos del horario")
     void faltaElHorario() {
-        RendimientoDelPerfil r = RendimientoDelPerfil.de(perfilCompleto(), false);
+        RendimientoDelPerfil r = RendimientoDelPerfil.de(perfilCompleto(), false, true);
 
         assertEquals(40, r.puntosEnJuego());
         assertEquals("horarios", r.masCaro().campo());
@@ -52,7 +52,7 @@ class RendimientoDelPerfilTest {
     void ordenPorCoste() {
         Usuario vacio = new Usuario();
 
-        RendimientoDelPerfil r = RendimientoDelPerfil.de(vacio, false);
+        RendimientoDelPerfil r = RendimientoDelPerfil.de(vacio, false, false);
 
         assertEquals("horarios", r.huecos().get(0).campo());
         assertEquals(40, r.huecos().get(0).puntos());
@@ -63,21 +63,22 @@ class RendimientoDelPerfilTest {
     @Test
     @DisplayName("Un perfil vacio pone en juego los 100 puntos")
     void perfilVacio() {
-        RendimientoDelPerfil r = RendimientoDelPerfil.de(new Usuario(), false);
+        RendimientoDelPerfil r = RendimientoDelPerfil.de(new Usuario(), false, false);
 
         // Si esto deja de sumar 100 es que los pesos de la calculadora han
         // cambiado sin que el aviso se entere, o que falta un factor.
         assertEquals(100, r.puntosEnJuego());
-        assertEquals(5, r.huecos().size());
+        assertEquals(6, r.huecos().size());
     }
 
     @Test
     @DisplayName("Los puntos anunciados son los mismos que usa la calculadora")
     void lospuntosSalenDeLaCalculadora() {
-        RendimientoDelPerfil r = RendimientoDelPerfil.de(new Usuario(), false);
+        RendimientoDelPerfil r = RendimientoDelPerfil.de(new Usuario(), false, false);
 
         assertEquals((int) CalculadoraCompatibilidad.PESO_HORARIO, puntosDe(r, "horarios"));
         assertEquals((int) CalculadoraCompatibilidad.PESO_NIVEL, puntosDe(r, "nivel"));
+        assertEquals((int) CalculadoraCompatibilidad.PESO_FUERZA, puntosDe(r, "levantamientos"));
         assertEquals((int) CalculadoraCompatibilidad.PESO_OBJETIVO, puntosDe(r, "objetivos"));
         assertEquals((int) CalculadoraCompatibilidad.PESO_GIMNASIO, puntosDe(r, "gimnasioId"));
         assertEquals((int) CalculadoraCompatibilidad.PESO_EDAD, puntosDe(r, "edad"));
@@ -89,7 +90,7 @@ class RendimientoDelPerfilTest {
         Usuario u = perfilCompleto();
         u.setObjetivos("   ");
 
-        RendimientoDelPerfil r = RendimientoDelPerfil.de(u, true);
+        RendimientoDelPerfil r = RendimientoDelPerfil.de(u, true, true);
 
         assertEquals(20, r.puntosEnJuego());
         assertEquals("objetivos", r.masCaro().campo());

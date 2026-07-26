@@ -170,6 +170,47 @@
   color: var(--sa-texto-suave);
 }
 
+/* ===================== Lo que mueve ===================== */
+.levantamientos-vista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.levantamiento-vista {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-sm;
+  padding: 7px 0;
+
+  // Separador entre filas, salvo la última: un borde en todas deja una línea
+  // suelta colgando al final del bloque.
+  & + & { border-top: 1px solid var(--sa-borde); }
+}
+
+.levantamiento-vista__ejercicio {
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+}
+
+.levantamiento-vista__marca {
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  strong {
+    font-family: $font-display;
+    font-size: $text-base;
+    font-weight: $font-bold;
+    color: var(--sa-texto);
+  }
+}
+
 /* ===================== Hitos ===================== */
 .hitos {
   list-style: none;

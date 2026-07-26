@@ -35,6 +35,8 @@ public record PerfilPublicoDTO(
         String resumenCompatibilidad,
         List<FranjaComun> franjasEnComun,
         List<HitoDTO> hitos,
+        /** Sus marcas principales, para poder ver de donde sale la nota de fuerza. */
+        List<LevantamientoDTO> levantamientos,
         long entrenosUltimaSemana,
         boolean yaConectado,
         boolean solicitudPendiente

@@ -60,6 +60,26 @@
       }
     </section>
 
+    <!-- ================= Lo que mueve =================
+         La ficha técnica. Es lo que decide si podéis cubriros con la barra
+         cargada, que es literalmente para lo que sirve un spotter. -->
+    @if (p.levantamientos.length > 0) {
+      <section class="ficha__bloque">
+        <h3 class="ficha__subtitulo">Lo que mueve</h3>
+
+        <ul class="levantamientos-vista">
+          @for (l of p.levantamientos; track l.ejercicio) {
+            <li class="levantamiento-vista">
+              <span class="levantamiento-vista__ejercicio">{{ l.nombre }}</span>
+              <span class="levantamiento-vista__marca">
+                <strong>{{ l.peso }}</strong> kg × {{ l.repeticiones }}
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     <!-- ================= Lo que ha conseguido =================
          Lo único de esta ficha que ha escrito una persona. Todo lo demás lo
          calcula el motor, y eso es lo que hacía que la aplicación se leyera

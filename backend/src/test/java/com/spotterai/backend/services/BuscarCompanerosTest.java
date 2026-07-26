@@ -57,7 +57,8 @@ class BuscarCompanerosTest {
                 disponibilidadRepository,
                 new ExplicadorCompatibilidad(),
                 Mockito.mock(com.spotterai.backend.repositories.HitoRepository.class),
-                Mockito.mock(com.spotterai.backend.repositories.EntrenamientoRepository.class));
+                Mockito.mock(com.spotterai.backend.repositories.EntrenamientoRepository.class),
+                Mockito.mock(com.spotterai.backend.repositories.LevantamientoRepository.class));
 
         gimnasio = new Gimnasio();
         gimnasio.setId(1L);
