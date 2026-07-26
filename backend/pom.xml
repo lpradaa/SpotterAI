@@ -43,6 +43,24 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
+		<!--
+			Flyway sustituye a ddl-auto=update. Con update, el esquema lo iba
+			cambiando Hibernate a su criterio y los datos que hacia falta migrar
+			(marcar el historial como leido, por ejemplo) quedaban como pasos
+			sueltos que habia que acordarse de repetir en cada entorno.
+			Hace falta el starter y no solo flyway-core: en Spring Boot 4 las
+			autoconfiguraciones estan repartidas en modulos, asi que con la
+			libreria suelta el arranque no la enciende y no migra nada, en
+			silencio. flyway-mysql es el dialecto de MySQL y MariaDB.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>

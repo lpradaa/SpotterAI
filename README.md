@@ -52,11 +52,13 @@ El emparejamiento tiene dos capas, deliberadamente separadas:
 
 **Requisitos:** JDK 21, Node 20+, MySQL en marcha.
 
-Crea la base de datos:
+Crea la base de datos, vacía:
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE spotterai_db CHARACTER SET utf8mb4;"
 ```
+
+Las tablas las crea **Flyway** al arrancar, desde `backend/src/main/resources/db/migration`. Hibernate va en `validate`: comprueba que las entidades cuadran con el esquema y se niega a arrancar si no, en lugar de cambiar la base por su cuenta. Para tocar el esquema se añade un `V2__…sql`, nunca se edita una migración ya aplicada.
 
 Variables de entorno del backend:
 
