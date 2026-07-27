@@ -188,4 +188,34 @@ class SolapeConCompromisoTest {
         assertEquals(0, solape.diasAncla());
         assertTrue(puntosHorario(sinMarcar, sinMarcar) > 0);
     }
+
+    @Test
+    @DisplayName("La frase enumera los dias fijos, no todos los que solapan")
+    void elNumeroYLaListaHablanDeLoMismo() {
+        // Lunes y miercoles fijos por los dos; el viernes solapa pero sin
+        // compromiso. La frase decia "vais siempre 2 dias" y a continuacion
+        // enumeraba los tres, contradiciendose sola.
+        List<Disponibilidad> mios = List.of(
+                voySiempre("Lunes", "18:00", "20:00"),
+                voySiempre("Miércoles", "18:00", "20:00"),
+                puedo("Viernes", "18:00", "20:00"));
+        List<Disponibilidad> suyos = List.of(
+                voySiempre("Lunes", "18:00", "20:00"),
+                voySiempre("Miércoles", "18:00", "20:00"),
+                voySiempre("Viernes", "18:00", "20:00"));
+
+        SolapeHorario solape = CalculadoraSolape.calcular(mios, suyos);
+
+        assertEquals(2, solape.diasAncla());
+        assertEquals(List.of("Lunes", "Miércoles"), solape.diasDeAncla());
+        assertEquals(3, solape.dias().size(), "El viernes sigue contando como solape");
+
+        String frase = CalculadoraCompatibilidad.calcular(
+                usuarioTipo(), mios, usuarioTipo(), suyos).factores().stream()
+                .filter(f -> f.nombre().equals("horario"))
+                .findFirst().orElseThrow().detalle();
+
+        assertTrue(frase.contains("2 días"), frase);
+        assertFalse(frase.contains("Viernes"), "No se va siempre el viernes: " + frase);
+    }
 }

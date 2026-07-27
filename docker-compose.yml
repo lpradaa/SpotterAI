@@ -2,9 +2,10 @@
 #
 #   docker compose up
 #
-# La aplicación queda en http://localhost:4200. El backend no publica puerto a
-# propósito: todo el tráfico pasa por nginx, que es lo que hace que el frontend
-# no necesite saber dónde vive la API.
+# La aplicación queda en http://localhost:4200, ya con gente dentro: se entra
+# con demo@spotterai.test / Demo1234. El backend no publica puerto a propósito:
+# todo el tráfico pasa por nginx, que es lo que hace que el frontend no necesite
+# saber dónde vive la API.
 
 services:
   base:
@@ -47,6 +48,11 @@ services:
       # ya no cruzan orígenes. Se mantiene por si alguien ataca la API directa.
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:4200}
       MEDIOS_DIR: /app/medios
+      # Siembra gente, horarios que solapan y un par de planes en marcha. Sin
+      # esto, quien levanta el proyecto ve una aplicación vacía y no llega a ver
+      # el motor de compatibilidad, que es lo único que merece la pena enseñar.
+      # Para una base con datos de verdad, quítalo.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES:-demo}
     volumes:
       # Fuera de la imagen: si no, cada despliegue borra las fotos subidas.
       - medios:/app/medios

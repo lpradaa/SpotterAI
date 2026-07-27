@@ -241,8 +241,11 @@ public final class CalculadoraCompatibilidad {
     private static String describirSolape(SolapeHorario solape) {
         if (solape.hayAncla()) {
             String dias = solape.diasAncla() == 1 ? "un día" : solape.diasAncla() + " días";
+            // Los dias de ancla, no todos: enumerar aqui solape.dias() hacia que
+            // la frase se contradijera sola ("vais siempre 2 dias" y detras tres
+            // dias entre parentesis).
             return "Los dos vais siempre %s a la misma hora (%s)".formatted(
-                    dias, enumerar(solape.dias()));
+                    dias, enumerar(solape.diasDeAncla()));
         }
         return "Coincidís %s a la semana en %s".formatted(
                 formatearDuracion(solape.minutosSemanales()), enumerar(solape.dias()));

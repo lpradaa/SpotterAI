@@ -47,4 +47,22 @@ public record SolapeHorario(
     public boolean hayAncla() {
         return diasAncla > 0;
     }
+
+    /**
+     * Cuales son esos dias, no cuantos.
+     *
+     * <p>Hacia falta porque la explicacion se contradecia a si misma: decia "los
+     * dos vais siempre 2 dias" —que son las anclas— y a continuacion enumeraba
+     * los tres dias con algun solape. El numero y la lista hablaban de cosas
+     * distintas.
+     *
+     * <p>Sale de {@code franjas} y no de una columna aparte para que no puedan
+     * discrepar, y respeta el orden natural de {@code dias}.
+     */
+    public List<String> diasDeAncla() {
+        return dias.stream()
+                .filter(dia -> franjas.stream()
+                        .anyMatch(f -> f.ambosFijos() && f.dia().equals(dia)))
+                .toList();
+    }
 }

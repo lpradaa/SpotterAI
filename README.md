@@ -73,7 +73,26 @@ Tres decisiones del motor que no son obvias:
 docker compose up
 ```
 
-La aplicación queda en **http://localhost:4200**. Levanta MariaDB, backend y frontend; Flyway crea el esquema en la primera arranque. El backend no publica puerto: todo pasa por nginx, que reenvía `/api` al contenedor del backend. Eso es lo que permite que el frontend compilado no lleve dentro ninguna dirección concreta, y de paso elimina el CORS.
+La aplicación queda en **http://localhost:4200**, y no vacía:
+
+| | |
+|---|---|
+| **Usuario** | `demo@spotterai.test` |
+| **Contraseña** | `Demo1234` |
+
+Levanta MariaDB, backend y frontend; Flyway crea el esquema en el primer arranque. El backend no publica puerto: todo pasa por nginx, que reenvía `/api` al contenedor del backend. Eso es lo que permite que el frontend compilado no lleve dentro ninguna dirección concreta, y de paso elimina el CORS.
+
+### Los datos de demostración
+
+Una aplicación de emparejar gente no se puede enseñar vacía: sin nadie con quien cruzarte no hay compatibilidad que calcular, y el motor —que es lo único que merece la pena mirar— queda invisible. Por eso el arranque con Docker trae catorce personas, tres gimnasios, horarios que solapan de verdad, marcas de fuerza, un par de conversaciones y planes en marcha: una propuesta esperando tu respuesta, una sesión aceptada por delante y otra ya pasada sin apuntar.
+
+Vive en `demo/SembradorDemo`, detrás del perfil `demo`, y **no** en una migración: los datos de mentira dentro de una migración acaban en cualquier instalación de verdad y ya no hay quien los separe de los reales. Las fechas son relativas al día en que arrancas, para que la demostración no se pudra sola. Nadie tiene foto porque las fotos son datos de usuario y no van al repositorio; se ven las iniciales sobre color, que es exactamente lo que hace la aplicación cuando no hay foto.
+
+Para arrancar con la base limpia:
+
+```bash
+SPRING_PROFILES=default docker compose up
+```
 
 Para un despliegue de verdad, pon tu propio secreto en un `.env`:
 
@@ -102,6 +121,7 @@ Variables de entorno del backend:
 | `JWT_SECRET` | Sí | Firma de tokens. Mínimo 32 caracteres — la app no arranca sin ella. |
 | `DB_USER`, `DB_PASSWORD`, `DB_NAME` | No | Por defecto `root` / vacía / `spotterai_db`. |
 | `FRONTEND_ORIGIN` | No | Por defecto `http://localhost:4200`. |
+| `SPRING_PROFILES_ACTIVE` | No | `demo` siembra los datos de ejemplo. Sin valor, la base se queda como esté. |
 
 Genera el secreto JWT:
 

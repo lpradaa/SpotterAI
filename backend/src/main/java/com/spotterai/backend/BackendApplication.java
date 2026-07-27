@@ -2,40 +2,23 @@ package com.spotterai.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * Punto de entrada.
+ *
+ * <p>Aquí había un {@code CommandLineRunner} heredado del TFG que creaba en cada
+ * arranque, y en cualquier entorno, un usuario fijo con la contraseña "123456".
+ * Con el repositorio público eso es una cuenta conocida y trivial en toda
+ * instalación que alguien levante, sin que nada lo anuncie. Los datos de prueba
+ * viven ahora en {@code demo.SembradorDemo}, que solo actúa con el perfil
+ * {@code demo} puesto a mano.
+ */
 @SpringBootApplication
-@org.springframework.scheduling.annotation.EnableScheduling // latido del canal de eventos
+@EnableScheduling // latido del canal de eventos
 public class BackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);
 	}
-
-	@org.springframework.context.annotation.Bean
-    public org.springframework.boot.CommandLineRunner initData(
-            com.spotterai.backend.services.UsuarioService usuarioService) {
-        return args -> {
-            // Buscamos si ya existe el usuario de prueba para no duplicarlo
-            if (usuarioService.buscarPorEmail("luis-tfg@test.com").isEmpty()) {
-                
-                com.spotterai.backend.dtos.UsuarioRegistroDTO nuevoUser = 
-                        new com.spotterai.backend.dtos.UsuarioRegistroDTO();
-                
-                // Mapeamos los datos mínimos que pida vuestro DTO
-                nuevoUser.setEmail("luis-tfg@test.com");
-                nuevoUser.setPassword("123456"); 
-                nuevoUser.setNombre("Luis Admin");
-                
-                // Si vuestro DTO tiene más campos obligatorios (edad, genero...),
-                // rellénalos aquí abajo siguiendo el mismo ejemplo:
-                // nuevoUser.setEdad(25);
-                // nuevoUser.setGenero("Masculino");
-                
-                // Llamamos al método legítimo de tu compañero que encripta de verdad
-                usuarioService.registrarUsuario(nuevoUser);
-                System.out.println("🔥 LOG DE LUIS: ¡Usuario 'luis-tfg@test.com' creado con éxito desde Java! 🔥");
-            }
-        };
-    }
-
 }
