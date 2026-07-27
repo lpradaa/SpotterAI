@@ -40,6 +40,17 @@ class CalculadoraCompatibilidadTest {
         return u;
     }
 
+/**
+     * El mismo usuario, ya con rutina.
+     *
+     * Aparte y no dentro de {@code usuario(...)} porque hay pruebas que necesitan
+     * justo lo contrario: un perfil sin nada, ni siquiera rutina.
+     */
+    private static Usuario conRutina(Usuario u, Rutina rutina) {
+        u.setRutina(rutina.name());
+        return u;
+    }
+
     /** Franja sin compromiso: "puedo ir". */
     private static Disponibilidad franja(String dia, String inicio, String fin) {
         return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null, false);
@@ -60,8 +71,8 @@ class CalculadoraCompatibilidadTest {
     @DisplayName("La compatibilidad maxima exige compromiso, no solo disponibilidad")
     void compatibilidadPerfecta() {
         Gimnasio g = gimnasio(1L, "McFit Centro");
-        Usuario a = usuario("Intermedio", "Hipertrofia", 28, g);
-        Usuario b = usuario("Intermedio", "Hipertrofia", 29, g);
+        Usuario a = conRutina(usuario("Intermedio", "Hipertrofia", 28, g), Rutina.TORSO_PIERNA);
+        Usuario b = conRutina(usuario("Intermedio", "Hipertrofia", 29, g), Rutina.TORSO_PIERNA);
 
         // Las tres franjas con compromiso mutuo: el maximo del tope permitido
         List<Disponibilidad> conCompromiso = List.of(
@@ -184,8 +195,8 @@ class CalculadoraCompatibilidadTest {
         List<Levantamiento> pesos = List.of(levantamiento(Ejercicio.SENTADILLA, 100, 5));
 
         PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
-                usuario("Avanzado", "Resistencia", 41, g), h, pesos,
-                usuario("Intermedio", "Perdida de peso", 25, g), h, pesos);
+                conRutina(usuario("Avanzado", "Resistencia", 41, g), Rutina.WEIDER), h, pesos,
+                conRutina(usuario("Intermedio", "Perdida de peso", 25, g), Rutina.FULL_BODY), h, pesos);
 
         double suma = p.factores().stream().mapToDouble(FactorCompatibilidad::puntos).sum();
         assertEquals(p.total(), Math.round(suma));
@@ -202,7 +213,7 @@ class CalculadoraCompatibilidadTest {
         assertEquals("Poca compatibilidad", p.etiqueta());
         // Un factor por cada dimension que evalua el motor. Se comprueba que
         // ninguna se pierda por el camino, no un numero concreto de memoria.
-        assertEquals(6, p.factores().size());
+        assertEquals(7, p.factores().size());
     }
 
     @Test

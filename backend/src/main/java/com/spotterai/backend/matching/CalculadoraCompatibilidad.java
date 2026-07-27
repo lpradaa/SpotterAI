@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -21,10 +22,11 @@ import java.util.Set;
  * <p>Reparto de pesos de referencia:
  * <pre>
  *   Horario    40  decisivo: sin solape no hay entrenamiento posible
- *   Objetivo   20  determina el tipo de sesion
+ *   Objetivo   15  que busca cada uno
  *   Gimnasio   15  condicion practica
  *   Nivel      10  el ritmo, tal y como lo declara cada uno
  *   Fuerza     10  si podeis cubriros con la barra cargada
+ *   Rutina      5  si hareis lo mismo el mismo dia
  *   Edad        5  afinidad menor
  * </pre>
  *
@@ -53,7 +55,15 @@ public final class CalculadoraCompatibilidad {
      */
     static final double PESO_NIVEL = 10;
     static final double PESO_FUERZA = 10;
-    static final double PESO_OBJETIVO = 20;
+    /*
+     * Objetivo baja de 20 a 15 y esos 5 pasan a la rutina.
+     *
+     * Se solapan: quien busca fuerza y quien busca hipertrofia suelen repartir la
+     * semana de forma parecida. Pero el objetivo dice que quieres y la rutina
+     * dice que haces el martes, que es lo que decide si podeis compartir sesion.
+     */
+    static final double PESO_OBJETIVO = 15;
+    static final double PESO_RUTINA = 5;
     static final double PESO_GIMNASIO = 15;
     static final double PESO_EDAD = 5;
 
@@ -127,6 +137,7 @@ public final class CalculadoraCompatibilidad {
                 factorNivel(yo.getNivel(), otro.getNivel()),
                 factorFuerza(misLevantamientos, susLevantamientos),
                 factorObjetivo(yo.getObjetivos(), otro.getObjetivos()),
+                factorRutina(yo.getRutina(), otro.getRutina()),
                 factorGimnasio(yo, otro),
                 factorEdad(yo.getEdad(), otro.getEdad()));
 
@@ -149,7 +160,7 @@ public final class CalculadoraCompatibilidad {
      */
     private static double confianzaPorEvidencia(List<FactorCompatibilidad> brutos) {
         double pesoTotal = PESO_HORARIO + PESO_NIVEL + PESO_FUERZA
-                + PESO_OBJETIVO + PESO_GIMNASIO + PESO_EDAD;
+                + PESO_OBJETIVO + PESO_RUTINA + PESO_GIMNASIO + PESO_EDAD;
         double pesoEvaluado = brutos.stream()
                 .filter(FactorCompatibilidad::aplicable)
                 .mapToDouble(FactorCompatibilidad::puntosMax)
@@ -257,6 +268,28 @@ public final class CalculadoraCompatibilidad {
         return FactorCompatibilidad.evaluado("fuerza",
                 comparacion.ratio() * PESO_FUERZA, PESO_FUERZA,
                 CalculadoraFuerza.describir(comparacion));
+    }
+
+    /**
+     * Si vais a estar haciendo lo mismo el mismo dia.
+     *
+     * El objetivo dice que buscas; la rutina dice que tocas el martes. Coincidir
+     * en horario con alguien que ese dia hace pierna cuando tu haces pecho es
+     * coincidir en el gimnasio, no entrenar juntos.
+     */
+    private static FactorCompatibilidad factorRutina(String miRutina, String suRutina) {
+        Optional<Rutina> mia = Rutina.desde(miRutina);
+        Optional<Rutina> suya = Rutina.desde(suRutina);
+
+        if (mia.isEmpty() || suya.isEmpty()) {
+            return FactorCompatibilidad.sinDatos("rutina",
+                    "Falta la rutina de alguno de los dos perfiles");
+        }
+
+        double afinidad = Rutina.afinidad(mia.get(), suya.get());
+        return FactorCompatibilidad.evaluado("rutina",
+                afinidad * PESO_RUTINA, PESO_RUTINA,
+                Rutina.describir(mia.get(), suya.get()));
     }
 
     private static FactorCompatibilidad factorNivel(String miNivel, String suNivel) {

@@ -12,6 +12,7 @@ import com.spotterai.backend.matching.FactorCompatibilidad;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.matching.PuntuacionCompatibilidad;
 import com.spotterai.backend.matching.RendimientoDelPerfil;
+import com.spotterai.backend.matching.Rutina;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Solicitud;
@@ -141,6 +142,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setAvatar(dto.getAvatar());
         usuario.setBiografia(recortar(dto.getBiografia(), MAX_BIOGRAFIA));
 
+        // Se valida contra el enum antes de guardar: la columna es texto libre y
+        // sin esto cualquier cadena entraria en la base para leerse luego como
+        // "sin rutina", que es un dato perdido sin que nadie se entere.
+        usuario.setRutina(Rutina.desde(dto.getRutina()).map(Enum::name).orElse(null));
+
         // Solo se acepta una ruta servida por nosotros. Sin esta comprobacion, el
         // campo seria un hueco para meter la URL de cualquier sitio y hacer que
         // todos los navegadores que vieran el perfil la pidieran.
@@ -197,15 +203,10 @@ public class UsuarioServiceImpl implements UsuarioService {
             }
         }
 
-        // 🔥 EXTRAE EL NOMBRE DEL GIMNASIO AQUÍ
-        return new UsuarioResponseDTO(
-                guardado.getId(), guardado.getNombre(), guardado.getEmail(),
-                guardado.getEdad(), guardado.getGenero(), guardado.getPeso(),
-                guardado.getNivel(), guardado.getObjetivos(),
-                guardado.getGimnasio() != null ? guardado.getGimnasio().getId() : null,
-                guardado.getAvatar(), guardado.getBiografia(),
-                guardado.getGimnasio() != null ? guardado.getGimnasio().getNombre() : "Gimnasio Habitual"
-        );
+        // Por el mapeador comun y no a mano: esta copia repetida del constructor
+        // es justo la razon de que la foto y la rutina se guardaran bien pero no
+        // volvieran en la respuesta del guardado.
+        return aDTO(guardado);
     }
 
     /**
@@ -243,6 +244,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         // este mapa se construye a mano y añadir una columna no obliga a nada.
         perfil.put("fotoUrl", usuario.getFotoUrl());
         perfil.put("biografia", usuario.getBiografia());
+        perfil.put("rutina", Rutina.desde(usuario.getRutina()).map(Enum::name).orElse(null));
+        perfil.put("rutinasDisponibles", Arrays.stream(Rutina.values())
+                .map(r -> Map.of("clave", r.name(), "nombre", r.getNombre())).toList());
 
         List<Levantamiento> misLevantamientos = levantamientoRepository.findByUsuarioId(usuario.getId());
         perfil.put("levantamientos", misLevantamientos.stream()
@@ -350,6 +354,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 otro.getBiografia(),
                 otro.getNivel(),
                 otro.getObjetivos(),
+                Rutina.desde(otro.getRutina()).map(Rutina::getNombre).orElse(null),
                 otro.getEdad(),
                 otro.getGimnasio() != null ? otro.getGimnasio().getNombre() : null,
                 puntuacion.total(),
@@ -519,6 +524,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Fuera del constructor porque ese ya tiene doce parametros posicionales
         // y añadir el trece es pedir que alguien los cruce al llamarlo.
         dto.setFotoUrl(u.getFotoUrl());
+        dto.setRutina(Rutina.desde(u.getRutina()).map(Rutina::getNombre).orElse(null));
         return dto;
     }
 

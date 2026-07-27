@@ -47,6 +47,17 @@ class RepartoDePesoTest {
         return u;
     }
 
+/**
+     * El mismo usuario, ya con rutina.
+     *
+     * Aparte y no dentro de {@code usuario(...)} porque hay pruebas que necesitan
+     * justo lo contrario: un perfil sin nada, ni siquiera rutina.
+     */
+    private static Usuario conRutina(Usuario u, Rutina rutina) {
+        u.setRutina(rutina.name());
+        return u;
+    }
+
     private static Disponibilidad franja(String dia, String inicio, String fin) {
         return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null, true);
     }
@@ -118,13 +129,14 @@ class RepartoDePesoTest {
         Gimnasio g = gimnasio(1L);
         List<Disponibilidad> h = List.of(franja("Lunes", "18:00", "20:00"));
 
-        // "Completo" incluye ahora los levantamientos: sin ellos el factor de
-        // fuerza se queda sin datos y el perfil no llega a estarlo.
+        // "Completo" incluye ahora los levantamientos y la rutina: sin ellos el
+        // factor de fuerza o el de rutina se quedan sin datos y el perfil no llega
+        // a estarlo.
         List<Levantamiento> pesos = List.of(levantamiento(Ejercicio.PRESS_BANCA, 90, 5));
 
         PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
-                usuario("Intermedio", "Hipertrofia", 30, g), h, pesos,
-                usuario("Intermedio", "Hipertrofia", 30, g), h, pesos);
+                conRutina(usuario("Intermedio", "Hipertrofia", 30, g), Rutina.TORSO_PIERNA), h, pesos,
+                conRutina(usuario("Intermedio", "Hipertrofia", 30, g), Rutina.TORSO_PIERNA), h, pesos);
 
         assertTrue(p.esCompleta());
         assertTrue(p.factoresSinDatos().isEmpty());
@@ -178,7 +190,7 @@ class RepartoDePesoTest {
 
         assertEquals(0, p.total());
         assertFalse(p.esCompleta());
-        assertEquals(6, p.factoresSinDatos().size());
+        assertEquals(7, p.factoresSinDatos().size());
     }
 
     @Test

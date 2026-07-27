@@ -25,6 +25,7 @@ class RendimientoDelPerfilTest {
         g.setId(1L);
         g.setNombre("McFit");
         u.setGimnasio(g);
+        u.setRutina("TORSO_PIERNA");
         return u;
     }
 
@@ -43,7 +44,7 @@ class RendimientoDelPerfilTest {
     void faltaElHorario() {
         RendimientoDelPerfil r = RendimientoDelPerfil.de(perfilCompleto(), false, true);
 
-        assertEquals(40, r.puntosEnJuego());
+        assertEquals((int) CalculadoraCompatibilidad.PESO_HORARIO, r.puntosEnJuego());
         assertEquals("horarios", r.masCaro().campo());
     }
 
@@ -55,7 +56,7 @@ class RendimientoDelPerfilTest {
         RendimientoDelPerfil r = RendimientoDelPerfil.de(vacio, false, false);
 
         assertEquals("horarios", r.huecos().get(0).campo());
-        assertEquals(40, r.huecos().get(0).puntos());
+        assertEquals((int) CalculadoraCompatibilidad.PESO_HORARIO, r.huecos().get(0).puntos());
         // Edad pesa 5: la ultima, aunque se comprueba antes que otras cosas.
         assertEquals("edad", r.huecos().get(r.huecos().size() - 1).campo());
     }
@@ -68,7 +69,7 @@ class RendimientoDelPerfilTest {
         // Si esto deja de sumar 100 es que los pesos de la calculadora han
         // cambiado sin que el aviso se entere, o que falta un factor.
         assertEquals(100, r.puntosEnJuego());
-        assertEquals(6, r.huecos().size());
+        assertEquals(7, r.huecos().size());
     }
 
     @Test
@@ -81,6 +82,7 @@ class RendimientoDelPerfilTest {
         assertEquals((int) CalculadoraCompatibilidad.PESO_FUERZA, puntosDe(r, "levantamientos"));
         assertEquals((int) CalculadoraCompatibilidad.PESO_OBJETIVO, puntosDe(r, "objetivos"));
         assertEquals((int) CalculadoraCompatibilidad.PESO_GIMNASIO, puntosDe(r, "gimnasioId"));
+        assertEquals((int) CalculadoraCompatibilidad.PESO_RUTINA, puntosDe(r, "rutina"));
         assertEquals((int) CalculadoraCompatibilidad.PESO_EDAD, puntosDe(r, "edad"));
     }
 
@@ -92,7 +94,7 @@ class RendimientoDelPerfilTest {
 
         RendimientoDelPerfil r = RendimientoDelPerfil.de(u, true, true);
 
-        assertEquals(20, r.puntosEnJuego());
+        assertEquals((int) CalculadoraCompatibilidad.PESO_OBJETIVO, r.puntosEnJuego());
         assertEquals("objetivos", r.masCaro().campo());
     }
 

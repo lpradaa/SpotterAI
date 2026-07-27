@@ -36,17 +36,21 @@ El nombre viene de *spotter*: quien te asiste en el banco, el compañero que te 
 
 El emparejamiento tiene dos capas, deliberadamente separadas:
 
-**1. Motor determinista** (`matching/CalculadoraCompatibilidad`) — puntúa de 0 a 100 cruzando horarios reales, nivel, objetivo, gimnasio y edad. Mismo input, mismo resultado. Sin coste, sin red, testeado.
+**1. Motor determinista** (`matching/CalculadoraCompatibilidad`) — puntúa de 0 a 100 cruzando horarios reales, fuerza, nivel, objetivo, rutina, gimnasio y edad. Mismo input, mismo resultado. Sin coste, sin red, testeado.
 
 | Factor | Peso |
 |---|---:|
 | Solape horario | 40 |
-| Nivel | 20 |
-| Objetivo | 20 |
+| Objetivo | 15 |
 | Gimnasio | 15 |
+| Nivel | 10 |
+| Fuerza | 10 |
 | Edad | 5 |
+| Rutina | 5 |
 
-Dos decisiones del motor que no son obvias:
+Tres decisiones del motor que no son obvias:
+
+**La fuerza y la rutina son las que justifican el nombre.** Un spotter que no puede con tu peso es un testigo, no un spotter: por eso se comparan las marcas principales (1RM estimado con Epley) y no los ejercicios que le gustan a cada uno. Y la rutina decide si compartís sesión de verdad: coincidir un martes con quien ese día hace pierna mientras tú haces pecho es coincidir en el gimnasio, no entrenar juntos.
 
 **Disponibilidad no es compromiso.** Una franja puede estar marcada como *voy siempre* (máximo 3) o solo como *podría ir*. Coincidir en una hora que los dos tenéis fija vale mucho más que coincidir en una que los dos "quizá". Es también lo que evita que un horario pintado con desgana para pasar la pantalla de bienvenida pese como uno real.
 

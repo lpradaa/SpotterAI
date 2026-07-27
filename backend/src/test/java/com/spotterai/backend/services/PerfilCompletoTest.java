@@ -66,6 +66,7 @@ class PerfilCompletoTest {
         u.setBiografia("Busco alguien constante");
         u.setMetaSemanal(5);
         u.setFotoUrl("/api/medios/abc.png");
+        u.setRutina("TORSO_PIERNA");
         return u;
     }
 
@@ -80,7 +81,7 @@ class PerfilCompletoTest {
         // desaparece al recargar. Esta lista tiene que crecer con el formulario.
         for (String campo : List.of("nombre", "email", "edad", "genero", "peso",
                 "nivel", "objetivos", "gimnasioId", "avatar", "fotoUrl",
-                "biografia", "metaSemanal", "horarios")) {
+                "biografia", "metaSemanal", "rutina", "horarios")) {
             assertTrue(perfil.containsKey(campo), "Falta '" + campo + "' en el perfil propio");
         }
     }

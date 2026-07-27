@@ -29,6 +29,8 @@ export interface PerfilPublico {
   biografia: string | null;
   nivel: string | null;
   objetivos: string | null;
+  /** Ya legible ("Torso / Pierna"), no la clave del enum. */
+  rutina: string | null;
   edad: number | null;
   gimnasioNombre: string | null;
   compatibilidad: number;

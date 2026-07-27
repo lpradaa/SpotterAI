@@ -64,6 +64,11 @@ public record RendimientoDelPerfil(int puntosEnJuego, List<HuecoDelPerfil> hueco
                     (int) CalculadoraCompatibilidad.PESO_GIMNASIO,
                     "Coincidir en horario no sirve de nada en dos gimnasios distintos."));
         }
+        if (Rutina.desde(usuario.getRutina()).isEmpty()) {
+            huecos.add(new HuecoDelPerfil("rutina", "Rutina",
+                    (int) CalculadoraCompatibilidad.PESO_RUTINA,
+                    "Sin saber cómo repartes la semana, no se puede saber si haríais lo mismo el mismo día."));
+        }
         if (usuario.getEdad() == null) {
             huecos.add(new HuecoDelPerfil("edad", "Edad",
                     (int) CalculadoraCompatibilidad.PESO_EDAD,

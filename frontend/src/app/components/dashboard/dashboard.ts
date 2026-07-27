@@ -67,7 +67,7 @@ export class DashboardComponent implements OnInit {
   perfilForm: any = {
     avatar: '', edad: null, genero: '', peso: null, nivel: '',
     objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', biografia: '',
-    horarios: [], levantamientos: [], metaSemanal: 4
+    horarios: [], levantamientos: [], metaSemanal: 4, rutina: ''
   };
 
   /** Coincide con el limite de la columna y con el recorte del servidor. */
@@ -76,6 +76,9 @@ export class DashboardComponent implements OnInit {
   // --- Levantamientos ---
   /** El catálogo lo manda el backend: duplicarlo aquí es garantizar que diverjan. */
   ejerciciosDisponibles = signal<{ clave: string, nombre: string }[]>([]);
+
+  /** Igual que el de ejercicios: el catálogo de rutinas lo manda el backend. */
+  rutinasDisponibles = signal<{ clave: string, nombre: string }[]>([]);
 
   /** Cuántos están completos, que es lo que de verdad cuenta para el motor. */
   levantamientosPuestos = computed(() =>
@@ -178,9 +181,11 @@ export class DashboardComponent implements OnInit {
           biografia: data.biografia || '',
           horarios: data.horarios || [],
           levantamientos: data.levantamientos || [],
-          metaSemanal: data.metaSemanal || 4
+          metaSemanal: data.metaSemanal || 4,
+          rutina: data.rutina || ''
         };
         this.ejerciciosDisponibles.set(data.ejerciciosDisponibles || []);
+        this.rutinasDisponibles.set(data.rutinasDisponibles || []);
         this.perfilForm.fotoUrl = data.fotoUrl ?? null;
         this.fotoActual.set(data.fotoUrl ?? null);
         this.rendimiento.set(data.rendimiento ?? null);

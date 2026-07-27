@@ -371,6 +371,18 @@
                 <option value="Resistencia">Resistencia</option>
               </select>
             </label>
+            <!-- El objetivo dice qué busca alguien; la rutina, qué le toca el
+                 martes. Coincidir en horario con quien ese día hace pierna
+                 mientras tú haces pecho es coincidir, no entrenar juntos. -->
+            <label class="campo">
+              <span>Rutina</span>
+              <select [(ngModel)]="perfilForm.rutina">
+                <option value="" disabled>Cómo repartes la semana</option>
+                @for (r of rutinasDisponibles(); track r.clave) {
+                  <option [value]="r.clave">{{ r.nombre }}</option>
+                }
+              </select>
+            </label>
             <label class="campo"><span>Edad</span><input type="number" [(ngModel)]="perfilForm.edad"></label>
             <label class="campo"><span>Peso (kg)</span><input type="number" [(ngModel)]="perfilForm.peso"></label>
             <label class="campo"><span>Género</span><input type="text" [(ngModel)]="perfilForm.genero"></label>

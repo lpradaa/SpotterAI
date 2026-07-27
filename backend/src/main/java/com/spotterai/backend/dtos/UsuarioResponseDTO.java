@@ -29,6 +29,14 @@ public class UsuarioResponseDTO {
      */
     private String fotoUrl;
 
+    /**
+     * Nombre legible de su rutina, o null si no la ha dicho.
+     *
+     * Ya legible y no la clave del enum: quien pinta la tarjeta no deberia tener
+     * que llevar una copia de la traduccion, que es como acaban divergiendo.
+     */
+    private String rutina;
+
     private Boolean yaConectado = false;
     private Boolean solicitudPendiente = false;
 
@@ -114,6 +122,9 @@ public class UsuarioResponseDTO {
     public void setAvatar(String avatar) { this.avatar = avatar; }
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+
+    public String getRutina() { return rutina; }
+    public void setRutina(String rutina) { this.rutina = rutina; }
     
     public Boolean getYaConectado() { return yaConectado; }
     public void setYaConectado(Boolean yaConectado) { this.yaConectado = yaConectado; }

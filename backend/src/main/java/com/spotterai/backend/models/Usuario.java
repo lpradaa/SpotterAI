@@ -66,6 +66,16 @@ public class Usuario {
     @Column(name = "foto_url")
     private String fotoUrl;
 
+    /**
+     * Clave del enum {@code Rutina}, o null si todavia no lo ha dicho.
+     *
+     * Se guarda como texto y no como enum de JPA a proposito: asi una fila con un
+     * valor viejo o desconocido se lee como "sin rutina" en vez de reventar al
+     * cargar el usuario entero.
+     */
+    @Column(length = 30)
+    private String rutina;
+
     
     @ManyToOne
     @JoinColumn(name = "gimnasio_id")
@@ -120,6 +130,9 @@ public class Usuario {
 
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+
+    public String getRutina() { return rutina; }
+    public void setRutina(String rutina) { this.rutina = rutina; }
 
     public List<Disponibilidad> getDisponibilidades() { return disponibilidades; }
     public void setDisponibilidades(List<Disponibilidad> disponibilidades) { this.disponibilidades = disponibilidades; }

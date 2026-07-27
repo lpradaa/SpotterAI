@@ -37,6 +37,9 @@ public class UsuarioPerfilDTO {
      */
     private String fotoUrl;
 
+    /** Clave del enum Rutina: como reparte la semana. */
+    private String rutina;
+
     /**
      * Hasta tres marcas principales. Null significa "no las toques"; una lista
      * vacia, "borralas todas".
@@ -80,6 +83,8 @@ public class UsuarioPerfilDTO {
     public void setMetaSemanal(Integer metaSemanal) { this.metaSemanal = metaSemanal; }
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+    public String getRutina() { return rutina; }
+    public void setRutina(String rutina) { this.rutina = rutina; }
     public List<LevantamientoEntradaDTO> getLevantamientos() { return levantamientos; }
     public void setLevantamientos(List<LevantamientoEntradaDTO> levantamientos) {
         this.levantamientos = levantamientos;

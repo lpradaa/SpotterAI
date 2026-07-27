@@ -28,6 +28,8 @@ public record PerfilPublicoDTO(
         String biografia,
         String nivel,
         String objetivos,
+        /** Nombre legible de su rutina, o null si no la ha dicho. */
+        String rutina,
         Integer edad,
         String gimnasioNombre,
         int compatibilidad,
