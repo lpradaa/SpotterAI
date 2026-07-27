@@ -351,6 +351,29 @@ class SesionServiceTest {
         assertTrue(dto.puedoConfirmar());
     }
 
+    // --- El contador de la campana ---
+
+    @Test
+    @DisplayName("Solo cuentan las propuestas que esperan respuesta tuya")
+    void elContadorSoloMiraLoQueTeToca() {
+        servicio.pendientesParaMi(yo.getEmail());
+
+        // Como invitado, no como proponente: lo que has propuesto tu no espera
+        // nada de ti, asi que anunciarlo en la campana seria mandarte a una
+        // pantalla donde no hay nada que hacer.
+        Mockito.verify(sesionRepository).contarPendientesDe(
+                yo.getId(), AHORA.toLocalDate(), AHORA.toLocalTime());
+    }
+
+    @Test
+    @DisplayName("El contador devuelve lo que dice la base, sin retoques")
+    void elContadorNoInventa() {
+        Mockito.when(sesionRepository.contarPendientesDe(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(3L);
+
+        assertEquals(3L, servicio.pendientesParaMi(yo.getEmail()));
+    }
+
     // --- Sugerencia ---
 
     @Test

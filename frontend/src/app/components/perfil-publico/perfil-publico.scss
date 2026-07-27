@@ -279,3 +279,11 @@
     border-left: none;
   }
 }
+
+/* La señal más fuerte de la ficha: no un porcentaje, sino que ya habéis ido. */
+.ficha__juntos {
+  margin: 4px 0 0;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  color: var(--sa-exito);
+}

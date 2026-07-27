@@ -36,6 +36,13 @@
             <span class="ficha__punto" aria-hidden="true"></span>{{ texto }}
           </p>
         }
+
+        <!-- Lo que de verdad separa a un compañero de un candidato. Alguien con
+             quien ya has ido tres veces no se parece en nada a alguien con el
+             90 % y ninguna sesión. -->
+        @if (juntos(); as texto) {
+          <p class="ficha__juntos">{{ texto }}</p>
+        }
       </div>
     </header>
 
@@ -116,10 +123,26 @@
       </section>
     }
 
+    <!-- Aquí es donde se decide: has mirado su semana, sus marcas y su rutina.
+         Antes había que salir al chat para poder quedar. -->
+    @if (proponiendo()) {
+      <section class="ficha__bloque">
+        <app-proponer-sesion
+          [paraId]="p.id"
+          (cerrar)="proponiendo.set(false)"
+          (propuesta)="alProponer()" />
+      </section>
+    }
+
     <!-- ================= Qué puedes hacer ================= -->
     <footer class="ficha__acciones">
       @if (p.yaConectado) {
-        <button class="btn btn--primario btn--ancho" (click)="escribir.emit(p.id)">
+        @if (!proponiendo()) {
+          <button class="btn btn--primario btn--ancho" (click)="proponiendo.set(true)">
+            Proponer sesión
+          </button>
+        }
+        <button class="btn btn--fantasma btn--ancho" (click)="escribir.emit(p.id)">
           Escribir a {{ p.nombre.split(' ')[0] }}
         </button>
         <button class="btn btn--fantasma" [disabled]="enviando()" (click)="retirar()">

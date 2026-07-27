@@ -40,6 +40,13 @@ public record PerfilPublicoDTO(
         /** Sus marcas principales, para poder ver de donde sale la nota de fuerza. */
         List<LevantamientoDTO> levantamientos,
         long entrenosUltimaSemana,
+        /**
+         * Veces que habeis quedado y el dia ya ha pasado.
+         *
+         * No dice "habeis entrenado juntos", que seria inventar: consta que lo
+         * acordasteis y consta que el dia llego, y eso es todo lo que sabemos.
+         */
+        long sesionesJuntos,
         boolean yaConectado,
         boolean solicitudPendiente
 ) {}

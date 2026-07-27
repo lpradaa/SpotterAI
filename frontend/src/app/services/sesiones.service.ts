@@ -51,6 +51,17 @@ export class SesionesService {
   }
 
   /**
+   * Cuántas propuestas esperan tu respuesta.
+   *
+   * Un contador y no la lista: la cabecera solo necesita el número, y pedir
+   * trece campos por sesión para pintar un punto naranja sobra.
+   */
+  pendientes(): Observable<number> {
+    return this.http.get<{ total: number }>(`${this.url}/pendientes`)
+      .pipe(map(r => r?.total ?? 0));
+  }
+
+  /**
    * La sesión viva con una persona.
    *
    * El servidor responde 204 cuando no hay ninguna, que no es un error: es lo

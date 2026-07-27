@@ -40,6 +40,8 @@ export interface PerfilPublico {
   hitos: Hito[];
   levantamientos: Levantamiento[];
   entrenosUltimaSemana: number;
+  /** Veces que ya habéis quedado y el día ha pasado. */
+  sesionesJuntos: number;
   yaConectado: boolean;
   solicitudPendiente: boolean;
 }

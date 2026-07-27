@@ -29,6 +29,7 @@ import com.spotterai.backend.repositories.EntrenamientoRepository;
 import com.spotterai.backend.repositories.HitoRepository;
 import com.spotterai.backend.repositories.LevantamientoRepository;
 import com.spotterai.backend.repositories.GimnasioRepository;
+import com.spotterai.backend.repositories.SesionRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 
@@ -36,6 +37,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -73,6 +75,18 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final LevantamientoRepository levantamientoRepository;
 
     /**
+     * Para poder decir cuantas veces habeis quedado ya.
+     *
+     * Es la señal que de verdad separa a un compañero de un candidato: uno con
+     * el que ya has ido tres veces no se parece en nada a uno con el 90 % de
+     * compatibilidad y ninguna sesion.
+     */
+    private final SesionRepository sesionRepository;
+
+    /** Inyectado para que las pruebas puedan decidir que dia es hoy. */
+    private final Clock reloj;
+
+    /**
      * Tope de marcas por persona.
      *
      * Tres bastan para saber si podeis cubriros: los basicos. Sin tope, el
@@ -87,8 +101,12 @@ public class UsuarioServiceImpl implements UsuarioService {
                               ExplicadorCompatibilidad explicador,
                               HitoRepository hitoRepository,
                               EntrenamientoRepository entrenamientoRepository,
-                              LevantamientoRepository levantamientoRepository) {
+                              LevantamientoRepository levantamientoRepository,
+                              SesionRepository sesionRepository,
+                              Clock reloj) {
         this.levantamientoRepository = levantamientoRepository;
+        this.sesionRepository = sesionRepository;
+        this.reloj = reloj;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.gimnasioRepository = gimnasioRepository;
@@ -365,6 +383,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 levantamientoRepository.findByUsuarioId(otro.getId()).stream()
                         .map(UsuarioServiceImpl::aLevantamientoDTO).toList(),
                 entrenos,
+                sesionRepository.contarQuedadasEntre(yo.getId(), otro.getId(),
+                        LocalDate.now(reloj), LocalTime.now(reloj)),
                 "ACEPTADA".equals(estado),
                 "PENDIENTE".equals(estado));
     }

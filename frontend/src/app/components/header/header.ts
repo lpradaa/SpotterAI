@@ -33,10 +33,20 @@ export class Header implements OnInit {
    * cuando lo pendiente era un mensaje. Los mensajes se avisan en Compañeros,
    * que es donde se contestan.
    */
+  /**
+   * Todo lo que espera tu respuesta: solicitudes y propuestas de sesión.
+   *
+   * Las dos cosas juntas porque son la misma clase de cosa, y las dos viven en
+   * /solicitudes, que es a donde lleva la campana. Contar aquí algo que allí no
+   * estuviera sería mandar a alguien a una pantalla donde no hay nada que hacer.
+   */
+  porResponder = computed(() =>
+    this.avisos.solicitudesPendientes() + this.avisos.sesionesPendientes());
+
   etiquetaAvisos = computed(() => {
-    const pendientes = this.avisos.solicitudesPendientes();
-    if (pendientes === 0) return 'Solicitudes: no hay nada pendiente';
-    return `Solicitudes: ${pendientes} ${pendientes === 1 ? 'pendiente' : 'pendientes'}`;
+    const pendientes = this.porResponder();
+    if (pendientes === 0) return 'No hay nada pendiente';
+    return `${pendientes} ${pendientes === 1 ? 'cosa pendiente' : 'cosas pendientes'} por responder`;
   });
 
   temaActual = this.tema.tema;

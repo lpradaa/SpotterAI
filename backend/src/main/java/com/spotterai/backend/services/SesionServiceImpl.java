@@ -260,6 +260,14 @@ public class SesionServiceImpl implements SesionService {
     }
 
     @Override
+    public long pendientesParaMi(String email) {
+        Usuario yo = porEmail(email);
+        LocalDateTime ahora = ahora();
+        return sesionRepository.contarPendientesDe(
+                yo.getId(), ahora.toLocalDate(), ahora.toLocalTime());
+    }
+
+    @Override
     public Optional<SesionDTO> conMigo(String email, Long otroUsuarioId) {
         Usuario yo = porEmail(email);
 

@@ -58,8 +58,8 @@
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
         <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
       </svg>
-      @if (solicitudesPendientes() > 0) {
-        <span class="header__globo">{{ solicitudesPendientes() > 9 ? '9+' : solicitudesPendientes() }}</span>
+      @if (porResponder() > 0) {
+        <span class="header__globo">{{ porResponder() > 9 ? '9+' : porResponder() }}</span>
       }
     </a>
 
@@ -147,8 +147,8 @@
         <circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path>
       </svg>
       Solicitudes
-      @if (solicitudesPendientes() > 0) {
-        <span class="sidebar__nav-globo">{{ solicitudesPendientes() }}</span>
+      @if (porResponder() > 0) {
+        <span class="sidebar__nav-globo">{{ porResponder() }}</span>
       }
     </a>
   </nav>

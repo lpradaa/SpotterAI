@@ -40,6 +40,17 @@ public class SesionController {
     }
 
     /**
+     * GET /api/sesiones/pendientes — cuántas esperan tu respuesta.
+     *
+     * Mismo formato que /api/mensajes/sin-leer: la cabecera suma las tres cosas
+     * que esperan algo de ti y no necesita saber nada más de cada una.
+     */
+    @GetMapping("/pendientes")
+    public ResponseEntity<Map<String, Long>> pendientes() {
+        return ResponseEntity.ok(Map.of("total", sesionService.pendientesParaMi(emailAutenticado())));
+    }
+
+    /**
      * GET /api/sesiones/sugerencia/{otroUsuarioId}
      *
      * Lo que el formulario trae ya puesto, sacado del solape real.

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +46,9 @@ class PerfilCompletoTest {
                 new ExplicadorCompatibilidad(),
                 Mockito.mock(HitoRepository.class),
                 Mockito.mock(EntrenamientoRepository.class),
-                Mockito.mock(LevantamientoRepository.class));
+                Mockito.mock(LevantamientoRepository.class),
+                Mockito.mock(SesionRepository.class),
+                Clock.systemDefaultZone());
 
         Mockito.when(disponibilidadRepository.findByUsuarioId(Mockito.any())).thenReturn(List.of());
     }

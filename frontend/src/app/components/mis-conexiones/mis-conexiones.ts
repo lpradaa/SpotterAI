@@ -10,13 +10,14 @@ import { EventosService } from '../../services/eventos.service';
 import { MensajesService, Conversacion, Mensaje } from '../../services/mensajes.service';
 import { AvisosService } from '../../services/avisos.service';
 import { UsuarioService } from '../../services/usuario.service';
-import { SesionesService, Sesion, SugerenciaSesion } from '../../services/sesiones.service';
+import { SesionesService, Sesion } from '../../services/sesiones.service';
+import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
 import { Avatar } from '../avatar/avatar';
 
 @Component({
   selector: 'app-mis-conexiones',
   standalone: true,
-  imports: [CommonModule, FormsModule, Avatar],
+  imports: [CommonModule, FormsModule, Avatar, ProponerSesionComponent],
   templateUrl: './mis-conexiones.html',
   styleUrl: './mis-conexiones.scss'
 })
@@ -60,13 +61,8 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
 
   /** Formulario de propuesta abierto. */
   proponiendo = signal(false);
-  sugerencia = signal<SugerenciaSesion | null>(null);
   errorSesion = signal<string | null>(null);
-  enviandoSesion = signal(false);
 
-  formSesion = { fecha: '', horaInicio: '', horaFin: '', nota: '' };
-
-  /** Suma de lo pendiente, para el contador de la cabecera de la lista. */
   totalSinLeer = computed(() =>
     this.conversaciones().reduce((suma, c) => suma + c.sinLeer, 0));
 
@@ -285,83 +281,27 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
   // ================= Quedar =================
 
   /**
-   * Abre el formulario ya relleno con el próximo hueco que compartís.
+   * Abre el formulario.
    *
-   * El dato lo tiene el servidor calculado desde antes —es el mismo solape con
-   * el que puntúa la compatibilidad—, así que abrir esto es leer una frase en
-   * vez de ponerse a cuadrar horarios, que es lo que la aplicación existe para
-   * evitar.
+   * Ya no carga la sugerencia aquí: eso lo hace <app-proponer-sesion> al
+   * montarse, que es quien la necesita. El chat solo decide si se ve.
    */
   abrirPropuesta(): void {
-    const destino = this.chatActivo();
-    if (!destino) return;
-
     this.proponiendo.set(true);
     this.errorSesion.set(null);
     this.confirmandoBorrado.set(false);
-
-    this.sesiones.sugerencia(destino.usuarioId).subscribe({
-      next: s => {
-        this.sugerencia.set(s);
-        if (s.hayFranjas) {
-          this.formSesion = {
-            fecha: s.fecha!,
-            horaInicio: (s.horaInicio ?? '').slice(0, 5),
-            horaFin: (s.horaFin ?? '').slice(0, 5),
-            nota: ''
-          };
-        } else {
-          // Sin nada en común no se inventa una hora: se deja el formulario
-          // vacío y la interfaz dice por qué.
-          this.formSesion = { fecha: '', horaInicio: '', horaFin: '', nota: '' };
-        }
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.sugerencia.set(null);
-        this.cdr.detectChanges();
-      }
-    });
   }
 
   cerrarPropuesta(): void {
     this.proponiendo.set(false);
-    this.sugerencia.set(null);
     this.errorSesion.set(null);
-    this.enviandoSesion.set(false);
-    this.formSesion = { fecha: '', horaInicio: '', horaFin: '', nota: '' };
   }
 
-  get propuestaCompleta(): boolean {
-    return !!(this.formSesion.fecha && this.formSesion.horaInicio && this.formSesion.horaFin);
-  }
-
-  enviarPropuesta(): void {
-    const destino = this.chatActivo();
-    if (!destino || !this.propuestaCompleta || this.enviandoSesion()) return;
-
-    this.enviandoSesion.set(true);
-    this.errorSesion.set(null);
-
-    this.sesiones.proponer(destino.usuarioId, {
-      fecha: this.formSesion.fecha,
-      horaInicio: this.formSesion.horaInicio,
-      horaFin: this.formSesion.horaFin,
-      nota: this.formSesion.nota || null
-    }).subscribe({
-      next: sesion => {
-        this.sesionActiva.set(sesion);
-        this.cerrarPropuesta();
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        this.enviandoSesion.set(false);
-        // El servidor explica en castellano por qué no vale; repetirlo aquí
-        // sería mantener dos versiones de las mismas reglas.
-        this.errorSesion.set(err?.error?.error ?? 'No se ha podido proponer la sesión.');
-        this.cdr.detectChanges();
-      }
-    });
+  /** La propuesta ya está creada: pasa a ser el plan que se ve arriba. */
+  alProponer(sesion: Sesion): void {
+    this.sesionActiva.set(sesion);
+    this.cerrarPropuesta();
+    this.cdr.detectChanges();
   }
 
   responderSesion(acepta: boolean): void {

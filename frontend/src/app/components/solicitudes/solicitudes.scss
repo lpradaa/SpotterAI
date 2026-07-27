@@ -113,3 +113,16 @@
     .btn { flex: 1; }
   }
 }
+
+/* Una propuesta de sesion trae fecha y a veces recado, asi que necesita mas
+   aire que una solicitud, que es una linea. */
+.peticion--sesion {
+  align-items: flex-start;
+}
+
+.peticion__nota {
+  margin: 4px 0 0;
+  font-size: $text-xs;
+  font-style: italic;
+  color: var(--sa-texto-suave);
+}

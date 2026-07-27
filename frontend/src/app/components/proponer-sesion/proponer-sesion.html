@@ -1,0 +1,57 @@
+<!-- El formulario de proponer, en un sitio y usado en dos: el chat y la ficha
+     de alguien. Antes vivía dentro del chat, y por eso desde la ficha de una
+     persona —que es donde de verdad decides que encajáis— había que irse al
+     chat para poder quedar. -->
+<section class="propuesta">
+  <div class="propuesta__cabecera">
+    <h3 class="propuesta__titulo">Proponer una sesión</h3>
+    <button class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">✕</button>
+  </div>
+
+  @if (sugerencia(); as s) {
+    @if (s.hayFranjas) {
+      <p class="propuesta__pista">
+        Es el próximo hueco que compartís
+        @if (s.ambosFijos) { <strong>y los dos vais siempre</strong> }.
+        Puedes cambiarlo.
+      </p>
+    } @else {
+      <p class="propuesta__pista propuesta__pista--aviso">
+        No tenéis ninguna franja en común, así que hay que elegir día y hora a mano.
+      </p>
+    }
+  }
+
+  <div class="propuesta__campos">
+    <label class="campo">
+      <span>Día</span>
+      <input type="date" [(ngModel)]="formulario.fecha">
+    </label>
+    <label class="campo">
+      <span>Desde</span>
+      <input type="time" [(ngModel)]="formulario.horaInicio">
+    </label>
+    <label class="campo">
+      <span>Hasta</span>
+      <input type="time" [(ngModel)]="formulario.horaFin">
+    </label>
+  </div>
+
+  <label class="campo campo--ancho">
+    <span>Nota (opcional)</span>
+    <input type="text" [(ngModel)]="formulario.nota" maxlength="140"
+           placeholder="Empiezo por pierna, llevo las bandas…">
+  </label>
+
+  @if (error(); as texto) {
+    <p class="aviso aviso--error" role="alert">{{ texto }}</p>
+  }
+
+  <div class="propuesta__acciones">
+    <button class="btn btn--fantasma btn--pequeno" (click)="cerrar.emit()">Cancelar</button>
+    <button class="btn btn--primario btn--pequeno" (click)="enviar()"
+            [disabled]="!completo || enviando()">
+      Proponer
+    </button>
+  </div>
+</section>

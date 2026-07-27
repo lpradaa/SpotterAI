@@ -36,6 +36,15 @@ public interface SesionService {
     /** Lo que sigue contando: por responder, por delante y por apuntar. */
     List<SesionDTO> mias(String email);
 
+    /**
+     * Cuántas propuestas esperan tu respuesta, para el aviso de la cabecera.
+     *
+     * <p>Una sesión sin contestar es la misma clase de cosa que una solicitud o
+     * un mensaje sin leer: algo que espera algo de ti. Faltaba en el contador, y
+     * eso significaba que al salir del tablero dejabas de saber que la tenías.
+     */
+    long pendientesParaMi(String email);
+
     /** La sesion viva con otra persona, para poder enseñarla dentro del chat. */
     Optional<SesionDTO> conMigo(String email, Long otroUsuarioId);
 }

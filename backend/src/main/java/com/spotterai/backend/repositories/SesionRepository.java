@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,4 +50,42 @@ public interface SesionRepository extends JpaRepository<Sesion, Long> {
              ORDER BY s.fecha ASC, s.horaInicio ASC
             """)
     List<Sesion> vivasDe(@Param("usuarioId") Long usuarioId);
+
+    /**
+     * Propuestas que esperan tu respuesta.
+     *
+     * <p>Solo como invitado: las que has hecho tú no esperan nada de ti. Y solo
+     * las que todavia se pueden aceptar, porque anunciar en la campana algo que
+     * ya no se puede contestar es mandar a alguien a una pantalla donde no hay
+     * nada que hacer.
+     */
+    @Query("""
+            SELECT COUNT(s) FROM Sesion s
+             WHERE s.invitado.id = :usuarioId
+               AND s.estado = 'PROPUESTA'
+               AND (s.fecha > :hoy OR (s.fecha = :hoy AND s.horaInicio > :ahora))
+            """)
+    long contarPendientesDe(@Param("usuarioId") Long usuarioId,
+                            @Param("hoy") LocalDate hoy,
+                            @Param("ahora") LocalTime ahora);
+
+    /**
+     * Cuantas veces han quedado dos personas y esa fecha ya ha pasado.
+     *
+     * <p>Es lo mas cerca que se puede estar de "cuantas veces habeis entrenado
+     * juntos" sin inventar nada: consta que lo acordasteis y consta que el dia
+     * llego. Que ademas fuerais es cosa vuestra, y por eso la frase que lo
+     * acompaña dice "habeis quedado" y no "habeis entrenado".
+     */
+    @Query("""
+            SELECT COUNT(s) FROM Sesion s
+             WHERE s.estado = 'ACEPTADA'
+               AND (s.fecha < :hoy OR (s.fecha = :hoy AND s.horaInicio <= :ahora))
+               AND ((s.proponente.id = :unoId AND s.invitado.id = :otroId)
+                 OR (s.proponente.id = :otroId AND s.invitado.id = :unoId))
+            """)
+    long contarQuedadasEntre(@Param("unoId") Long unoId,
+                             @Param("otroId") Long otroId,
+                             @Param("hoy") LocalDate hoy,
+                             @Param("ahora") LocalTime ahora);
 }

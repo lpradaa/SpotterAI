@@ -1,10 +1,11 @@
-import { Component, OnInit, DestroyRef, inject, signal } from '@angular/core';
+import { Component, OnInit, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UsuarioService } from '../../services/usuario.service';
 import { EventosService } from '../../services/eventos.service';
 import { AvisosService } from '../../services/avisos.service';
+import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { Avatar } from '../avatar/avatar';
 
 @Component({
@@ -18,10 +19,25 @@ export class SolicitudesComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
   private eventos = inject(EventosService);
   private avisos = inject(AvisosService);
+  private sesiones = inject(SesionesService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
   solicitudesPendientes = signal<any[]>([]);
+
+  /**
+   * Propuestas de sesión sin contestar.
+   *
+   * Viven aquí además de en el tablero porque esta pantalla es exactamente eso:
+   * lo que espera tu respuesta. Y porque la campana de la cabecera lleva aquí:
+   * contar en ella algo que luego no estuviera sería mandar a alguien a una
+   * pantalla donde no hay nada que hacer.
+   */
+  sesionesPropuestas = signal<Sesion[]>([]);
+
+  /** Todo lo que espera respuesta, que es lo que cuenta la campana. */
+  pendientes = computed(() =>
+    this.solicitudesPendientes().length + this.sesionesPropuestas().length);
 
   /** Identificadores en curso, para no permitir dos clics sobre lo mismo. */
   private respondiendo = signal<Set<number>>(new Set());
@@ -31,6 +47,11 @@ export class SolicitudesComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarSolicitudes();
+    this.cargarSesiones();
+
+    this.eventos.sesiones
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.cargarSesiones());
 
     // Esta es la pantalla donde más raro quedaba no enterarse: puedes estar
     // mirándola cuando llega una y no verla hasta recargar.
@@ -39,6 +60,42 @@ export class SolicitudesComponent implements OnInit {
       .subscribe(solicitud => {
         this.solicitudesPendientes.update(lista => [solicitud, ...lista]);
       });
+  }
+
+  cargarSesiones(): void {
+    this.sesiones.mias().subscribe({
+      next: lista => this.sesionesPropuestas.set(lista.filter(s => s.puedoResponder)),
+      error: () => {}
+    });
+  }
+
+  /** Aceptar o rechazar una propuesta. La lista y la campana se rehacen. */
+  responderSesion(sesion: Sesion, acepta: boolean): void {
+    const peticion = acepta
+      ? this.sesiones.aceptar(sesion.id)
+      : this.sesiones.rechazar(sesion.id);
+
+    peticion.subscribe({
+      next: () => {
+        this.mostrarAviso(acepta
+          ? `Hecho. Entrenas con ${sesion.conNombre}.`
+          : 'Propuesta rechazada.', acepta ? 'exito' : 'error');
+        this.cargarSesiones();
+        this.avisos.refrescar();
+      },
+      error: err => this.mostrarAviso(
+        err?.error?.error ?? 'No se ha podido responder.', 'error')
+    });
+  }
+
+  /** "Viernes 3 de julio", que es como se dice una fecha cuando se queda. */
+  diaLargo(fecha: string): string {
+    const d = new Date(`${fecha}T00:00:00`);
+    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  hhmm(hora: string | null): string {
+    return (hora ?? '').slice(0, 5);
   }
 
   cargarSolicitudes(): void {

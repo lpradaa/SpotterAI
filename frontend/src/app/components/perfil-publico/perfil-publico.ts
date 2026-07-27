@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
 import { CommonModule } from '@angular/common';
 import { PerfilesService, PerfilPublico } from '../../services/perfiles.service';
 import { UsuarioService } from '../../services/usuario.service';
@@ -20,7 +21,7 @@ import { Carga } from '../carga/carga';
 @Component({
   selector: 'app-perfil-publico',
   standalone: true,
-  imports: [CommonModule, RejillaSemana, Avatar, Carga],
+  imports: [CommonModule, RejillaSemana, Avatar, Carga, ProponerSesionComponent],
   templateUrl: './perfil-publico.html',
   styleUrl: './perfil-publico.scss'
 })
@@ -133,4 +134,26 @@ export class PerfilPublicoComponent {
     if (n === 0) return null;
     return `${n} ${n === 1 ? 'entrenamiento' : 'entrenamientos'} esta semana`;
   });
+
+  /** Formulario de propuesta abierto dentro de la ficha. */
+  proponiendo = signal(false);
+
+  /**
+   * Las veces que ya habéis quedado.
+   *
+   * Dice "habéis quedado" y no "habéis entrenado" a propósito: lo que consta es
+   * que lo acordasteis y que el día llegó. Que además fuerais es cosa vuestra,
+   * y afirmarlo sería inventar.
+   */
+  juntos = computed(() => {
+    const n = this.perfil()?.sesionesJuntos ?? 0;
+    if (n === 0) return null;
+    return n === 1 ? 'Ya habéis quedado una vez' : `Ya habéis quedado ${n} veces`;
+  });
+
+  /** Propuesta hecha: se cierra el formulario y la ficha lo refleja. */
+  alProponer(): void {
+    this.proponiendo.set(false);
+    this.cargar(this.usuarioId());
+  }
 }

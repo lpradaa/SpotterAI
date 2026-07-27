@@ -8,6 +8,7 @@ import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.DisponibilidadRepository;
 import com.spotterai.backend.repositories.GimnasioRepository;
+import com.spotterai.backend.repositories.SesionRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import org.mockito.Mockito;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalTime;
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +60,9 @@ class BuscarCompanerosTest {
                 new ExplicadorCompatibilidad(),
                 Mockito.mock(com.spotterai.backend.repositories.HitoRepository.class),
                 Mockito.mock(com.spotterai.backend.repositories.EntrenamientoRepository.class),
-                Mockito.mock(com.spotterai.backend.repositories.LevantamientoRepository.class));
+                Mockito.mock(com.spotterai.backend.repositories.LevantamientoRepository.class),
+                Mockito.mock(com.spotterai.backend.repositories.SesionRepository.class),
+                java.time.Clock.systemDefaultZone());
 
         gimnasio = new Gimnasio();
         gimnasio.setId(1L);
