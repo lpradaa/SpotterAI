@@ -35,18 +35,61 @@
     </div>
   </header>
 
+  <!-- ================= Lo que tienes con alguien =================
+       Va por delante de todo lo demás, incluido el aviso del perfil: una
+       propuesta sin responder o un entrenamiento sin apuntar son cosas que
+       esperan algo de ti, y buscar compañeros nuevos puede esperar. -->
+  @for (sesion of sesiones(); track sesion.id) {
+    <aside class="banda"
+           [class.banda--hecha]="sesion.estado === 'ACEPTADA' && !sesion.puedoConfirmar"
+           [class.banda--pasada]="sesion.puedoConfirmar">
+      <div class="banda__texto">
+        <p class="banda__titular">
+          @if (sesion.puedoConfirmar) {
+            ¿Entrenaste con <strong>{{ sesion.conNombre }}</strong>?
+          } @else if (sesion.estado === 'ACEPTADA') {
+            Entrenas con <strong>{{ sesion.conNombre }}</strong>
+          } @else if (sesion.mia) {
+            Has propuesto entrenar con <strong>{{ sesion.conNombre }}</strong>
+          } @else {
+            <strong>{{ sesion.conNombre }}</strong> propone entrenar contigo
+          }
+        </p>
+        <p class="banda__motivo">
+          {{ diaLargo(sesion.fecha) }} · {{ hhmm(sesion.horaInicio) }}–{{ hhmm(sesion.horaFin) }}
+          @if (sesion.gimnasioNombre) { · {{ sesion.gimnasioNombre }} }
+          @if (sesion.estado === 'PROPUESTA' && sesion.mia) { · esperando respuesta }
+        </p>
+      </div>
+
+      <div class="banda__acciones">
+        @if (sesion.puedoConfirmar) {
+          <button class="btn btn--primario btn--pequeno"
+                  (click)="confirmarSesion(sesion)">Sí, entrenamos</button>
+        } @else if (sesion.puedoResponder) {
+          <button class="btn btn--fantasma btn--pequeno"
+                  (click)="responderSesion(sesion, false)">Rechazar</button>
+          <button class="btn btn--primario btn--pequeno"
+                  (click)="responderSesion(sesion, true)">Aceptar</button>
+        } @else {
+          <button class="btn btn--pequeno" (click)="irAlChat(sesion.conId)">Abrir chat</button>
+        }
+      </div>
+    </aside>
+  }
+
   <!-- ================= Lo que te está costando puntos =================
        No es "perfil completo al 60 %". Ese número no se puede decidir; los
        puntos que no puedes ganar con nadie, sí. Solo aparece si falta algo. -->
   @if (huecoPrincipal(); as hueco) {
-    <aside class="rendimiento">
-      <div class="rendimiento__texto">
-        <p class="rendimiento__titular">
+    <aside class="banda">
+      <div class="banda__texto">
+        <p class="banda__titular">
           Te falta <strong>{{ hueco.nombre | lowercase }}</strong>:
-          <span class="rendimiento__puntos">−{{ hueco.puntos }} puntos</span>
+          <span class="banda__puntos">−{{ hueco.puntos }} puntos</span>
           de compatibilidad con cualquiera.
         </p>
-        <p class="rendimiento__motivo">
+        <p class="banda__motivo">
           {{ hueco.motivo }}
           @if (puntosEnJuego() > hueco.puntos) {
             Contando todo lo que falta, quedan {{ puntosEnJuego() }} de 100 fuera de juego.

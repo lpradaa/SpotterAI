@@ -1,6 +1,7 @@
 package com.spotterai.backend.matching;
 
 import java.text.Normalizer;
+import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -68,5 +69,20 @@ public final class DiasSemana {
     static int posicion(String clave) {
         int i = ORDEN.indexOf(clave);
         return i < 0 ? Integer.MAX_VALUE : i;
+    }
+
+    /**
+     * El dia como lo entiende el calendario, para poder pasar de "los martes" a
+     * una fecha concreta.
+     *
+     * <p>Vive aqui y no en quien lo necesite porque este es el unico sitio que
+     * sabe como se escriben los dias en esta aplicacion. {@code ORDEN} empieza en
+     * lunes igual que {@link DayOfWeek}, asi que la posicion mas uno basta.
+     *
+     * @return el dia, o {@code null} si el valor no es un dia reconocible
+     */
+    public static DayOfWeek diaDelCalendario(String dia) {
+        String clave = clave(dia);
+        return clave == null ? null : DayOfWeek.of(ORDEN.indexOf(clave) + 1);
     }
 }

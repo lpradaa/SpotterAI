@@ -103,6 +103,14 @@
             <button class="btn btn--primario btn--pequeno" (click)="eliminarCompanero()">Sí</button>
           </div>
         } @else {
+          <!-- El botón que cierra el bucle: de "encajáis al 90 %" a "el lunes
+               a las seis". Solo aparece si no hay ya un plan en marcha. -->
+          @if (!sesionActiva() && !proponiendo()) {
+            <button class="btn btn--primario btn--pequeno" (click)="abrirPropuesta()">
+              Proponer sesión
+            </button>
+          }
+
           <button class="btn-icono" (click)="confirmandoBorrado.set(true)"
                   aria-label="Dejar de ser compañeros" title="Dejar de ser compañeros">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -113,6 +121,111 @@
           </button>
         }
       </header>
+
+      <!-- ================= El plan =================
+           Va aquí arriba y no como un mensaje más: un plan no es una frase que
+           se pierde hacia arriba en el historial, es un estado. Si estáis
+           quedando el martes, tiene que verse sin buscar. -->
+      @if (sesionActiva(); as sesion) {
+        <section class="plan"
+                 [class.plan--aceptada]="sesion.estado === 'ACEPTADA'"
+                 [class.plan--pasada]="sesion.puedoConfirmar">
+          <div class="plan__texto">
+            <p class="plan__cuando">
+              {{ diaLargo(sesion.fecha) }}
+              · {{ hhmm(sesion.horaInicio) }}–{{ hhmm(sesion.horaFin) }}
+              @if (sesion.gimnasioNombre) { <span class="plan__donde">en {{ sesion.gimnasioNombre }}</span> }
+            </p>
+
+            <p class="plan__estado">
+              @if (sesion.puedoConfirmar) {
+                ¿Entrenasteis?
+              } @else if (sesion.estado === 'ACEPTADA') {
+                Confirmado
+              } @else if (sesion.mia) {
+                Propuesto por ti · esperando respuesta
+              } @else {
+                {{ sesion.conNombre }} propone quedar
+              }
+            </p>
+
+            @if (sesion.nota) {
+              <p class="plan__nota">«{{ sesion.nota }}»</p>
+            }
+          </div>
+
+          <div class="plan__acciones">
+            @if (sesion.puedoConfirmar) {
+              <!-- Cada uno apunta lo suyo: que el otro diga que entrenasteis no
+                   prueba que tú fueras. -->
+              <button class="btn btn--fantasma btn--pequeno" (click)="sesionActiva.set(null)">No</button>
+              <button class="btn btn--primario btn--pequeno" (click)="confirmarSesion()">Sí, entrenamos</button>
+            } @else if (sesion.puedoResponder) {
+              <button class="btn btn--fantasma btn--pequeno" (click)="responderSesion(false)">Rechazar</button>
+              <button class="btn btn--primario btn--pequeno" (click)="responderSesion(true)">Aceptar</button>
+            } @else if (sesion.puedoCancelar) {
+              <button class="btn btn--fantasma btn--pequeno" (click)="cancelarSesion()">Cancelar</button>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- ================= Proponer ================= -->
+      @if (proponiendo()) {
+        <section class="propuesta">
+          <div class="propuesta__cabecera">
+            <h3 class="propuesta__titulo">Proponer una sesión</h3>
+            <button class="cerrar" (click)="cerrarPropuesta()" aria-label="Cerrar">✕</button>
+          </div>
+
+          @if (sugerencia(); as s) {
+            @if (s.hayFranjas) {
+              <p class="propuesta__pista">
+                Es el próximo hueco que compartís
+                @if (s.ambosFijos) { <strong>y los dos vais siempre</strong> }.
+                Puedes cambiarlo.
+              </p>
+            } @else {
+              <p class="propuesta__pista propuesta__pista--aviso">
+                No tenéis ninguna franja en común, así que hay que elegir día y hora a mano.
+              </p>
+            }
+          }
+
+          <div class="propuesta__campos">
+            <label class="campo">
+              <span>Día</span>
+              <input type="date" [(ngModel)]="formSesion.fecha">
+            </label>
+            <label class="campo">
+              <span>Desde</span>
+              <input type="time" [(ngModel)]="formSesion.horaInicio">
+            </label>
+            <label class="campo">
+              <span>Hasta</span>
+              <input type="time" [(ngModel)]="formSesion.horaFin">
+            </label>
+          </div>
+
+          <label class="campo campo--ancho">
+            <span>Nota (opcional)</span>
+            <input type="text" [(ngModel)]="formSesion.nota" maxlength="140"
+                   placeholder="Empiezo por pierna, llevo las bandas…">
+          </label>
+
+          @if (errorSesion(); as error) {
+            <p class="aviso aviso--error" role="alert">{{ error }}</p>
+          }
+
+          <div class="propuesta__acciones">
+            <button class="btn btn--fantasma btn--pequeno" (click)="cerrarPropuesta()">Cancelar</button>
+            <button class="btn btn--primario btn--pequeno" (click)="enviarPropuesta()"
+                    [disabled]="!propuestaCompleta || enviandoSesion()">
+              Proponer
+            </button>
+          </div>
+        </section>
+      }
 
       <div class="mensajes" #scrollMe>
         @for (msg of historial(); track msg.id) {

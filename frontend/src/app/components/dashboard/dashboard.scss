@@ -70,7 +70,9 @@
    Usa el acento en el número y no en el fondo entero: es información, no una
    alarma, y un bloque naranja competiría con las puntuaciones de los matches,
    que son lo que de verdad hay que mirar en esta pantalla. */
-.rendimiento {
+/* Banda de aviso: una linea que pide algo, con su boton al final. La usan el
+   hueco del perfil y las sesiones, que son dos casos del mismo patron. */
+.banda {
   display: flex;
   align-items: center;
   gap: $space-sm;
@@ -82,12 +84,12 @@
   background: var(--sa-superficie);
 }
 
-.rendimiento__texto {
+.banda__texto {
   flex: 1;
   min-width: 0;
 }
 
-.rendimiento__titular {
+.banda__titular {
   margin: 0;
   font-size: $text-sm;
   color: var(--sa-texto);
@@ -95,14 +97,26 @@
   strong { font-weight: $font-semibold; }
 }
 
-.rendimiento__puntos {
+/* Aceptada: deja de pedir atencion y pasa a ser un dato. */
+.banda--hecha { border-left-color: var(--sa-exito); }
+
+/* Ya paso y falta decir si fuisteis: vuelve a pedir una respuesta. */
+.banda--pasada { border-left-color: var(--sa-acero); }
+
+.banda__acciones {
+  display: flex;
+  gap: $space-xs;
+  flex-shrink: 0;
+}
+
+.banda__puntos {
   font-family: $font-display;
   font-weight: $font-bold;
   color: var(--sa-acento);
   font-variant-numeric: tabular-nums;
 }
 
-.rendimiento__motivo {
+.banda__motivo {
   margin: 2px 0 0;
   font-size: $text-xs;
   line-height: 1.5;

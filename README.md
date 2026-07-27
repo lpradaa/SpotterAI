@@ -10,8 +10,9 @@ Encuentra a la persona con la que entrenar. No a cualquiera: a la que coincide c
 
 1. **Horario primero** — antes de entrar, pintas tu semana en una rejilla. Es obligatorio: sin saber cuándo entrenas no hay forma de cruzarte con nadie, y el horario pesa el 40 % de la compatibilidad.
 2. **Match** — SpotterAI puntúa de 0 a 100 y te enseña **en qué franjas concretas** coincidís, distinguiendo las que los dos tenéis fijas.
-3. **Conexión** — solicitud, aceptación y chat cuando hay match mutuo. Todo en tiempo real por SSE: mensajes y solicitudes llegan sin recargar.
-4. **Diario** — registro de entrenamientos con meta semanal y progreso.
+3. **Conexión** — solicitud, aceptación y chat cuando hay match mutuo. Todo en tiempo real por SSE: mensajes, solicitudes y sesiones llegan sin recargar.
+4. **Sesión** — el paso que convierte un porcentaje en un plan: propones un día y una hora concretos, y el formulario ya viene relleno con el próximo hueco que compartís, sacado del mismo solape con el que se calcula la compatibilidad. El otro acepta o rechaza.
+5. **Diario** — registro de entrenamientos con meta semanal y progreso. Una sesión que ya ha pasado se apunta con un clic, y cada uno apunta la suya: que el otro diga que entrenasteis no prueba que tú fueras.
 
 Si al perfil le falta algo, la aplicación no dice "completo al 60 %": dice cuántos de los 100 puntos de compatibilidad quedan fuera de juego y por qué. Eso se puede decidir; un porcentaje de relleno, no.
 

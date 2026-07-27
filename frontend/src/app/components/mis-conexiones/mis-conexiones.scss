@@ -476,3 +476,120 @@
     &:hover { background: var(--sa-superficie-alt); }
   }
 }
+
+/* ===========================================================================
+   El plan
+   ---------------------------------------------------------------------------
+   Va fijo bajo la cabecera, no dentro del historial. Un plan no es una frase
+   que se pierde hacia arriba: mientras siga en pie tiene que verse sin buscar.
+   =========================================================================== */
+
+.plan {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  flex-wrap: wrap;
+  padding: $space-xs $space-sm;
+  border-bottom: 1px solid var(--sa-borde);
+  background: var(--sa-acento-suave);
+  border-left: 3px solid var(--sa-acento);
+}
+
+/* Aceptada: deja de pedir atención y pasa a ser un dato. */
+.plan--aceptada {
+  background: var(--sa-exito-suave);
+  border-left-color: var(--sa-exito);
+}
+
+/* Ya pasó y falta decir si fuisteis: vuelve a pedir una respuesta. */
+.plan--pasada {
+  background: var(--sa-acero-suave);
+  border-left-color: var(--sa-acero);
+}
+
+.plan__texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.plan__cuando {
+  margin: 0;
+  font-weight: 600;
+  color: var(--sa-texto);
+
+  /* La fecha viene del locale en minúscula ("viernes 3 de julio") y aquí
+     encabeza una frase. */
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.plan__donde {
+  font-weight: 400;
+  color: var(--sa-texto-suave);
+}
+
+.plan__estado {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--sa-texto-suave);
+}
+
+.plan__nota {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--sa-texto-suave);
+}
+
+.plan__acciones {
+  display: flex;
+  gap: $space-xs;
+  flex-shrink: 0;
+}
+
+/* ===========================================================================
+   Formulario de propuesta
+   =========================================================================== */
+
+.propuesta {
+  padding: $space-sm;
+  border-bottom: 1px solid var(--sa-borde);
+  background: var(--sa-superficie-alt);
+}
+
+.propuesta__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-xs;
+}
+
+.propuesta__titulo {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.propuesta__pista {
+  margin: 0 0 $space-xs;
+  font-size: 0.85rem;
+  color: var(--sa-texto-suave);
+}
+
+.propuesta__pista--aviso {
+  color: var(--sa-aviso);
+}
+
+.propuesta__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: $space-xs;
+  margin-bottom: $space-xs;
+}
+
+.propuesta__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-xs;
+  margin-top: $space-xs;
+}

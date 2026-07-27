@@ -10,8 +10,9 @@ export type EstadoCanal = 'desconectado' | 'conectando' | 'conectado';
 /**
  * Canal de eventos en tiempo real (SSE).
  *
- * Sustituye a no enterarse de nada hasta recargar. Publica tres cosas: mensajes
- * de chat, solicitudes que te llegan y respuestas a las que enviaste tú.
+ * Sustituye a no enterarse de nada hasta recargar. Publica lo que llega sin que
+ * lo hayas pedido: mensajes de chat, solicitudes, respuestas a las tuyas y
+ * sesiones propuestas o respondidas.
  *
  * Sobre la reconexión: EventSource trae reintento automático, pero aquí no sirve
  * porque reabriría la misma URL con un ticket ya gastado y se llevaría un 401 en
@@ -41,6 +42,8 @@ export class EventosService {
   private readonly _solicitudes = new Subject<any>();
   private readonly _respuestas = new Subject<any>();
   private readonly _relacionesDeshechas = new Subject<any>();
+  private readonly _sesiones = new Subject<any>();
+  private readonly _sesionesRespondidas = new Subject<any>();
 
   /** Mensaje de chat recibido, con su contenido completo. */
   readonly mensajes = this._mensajes.asObservable();
@@ -50,6 +53,10 @@ export class EventosService {
   readonly respuestas = this._respuestas.asObservable();
   /** Alguien ha retirado su solicitud o ha dejado de ser compañero tuyo. */
   readonly relacionesDeshechas = this._relacionesDeshechas.asObservable();
+  /** Un compañero propone quedar. Viaja la sesión entera. */
+  readonly sesiones = this._sesiones.asObservable();
+  /** Han aceptado, rechazado o cancelado una sesión tuya. */
+  readonly sesionesRespondidas = this._sesionesRespondidas.asObservable();
 
   async conectar(): Promise<void> {
     if (this.fuente || !localStorage.getItem('token')) return;
@@ -84,6 +91,8 @@ export class EventosService {
     fuente.addEventListener('solicitud', e => this.emitir(this._solicitudes, e));
     fuente.addEventListener('solicitud-respondida', e => this.emitir(this._respuestas, e));
     fuente.addEventListener('relacion-deshecha', e => this.emitir(this._relacionesDeshechas, e));
+    fuente.addEventListener('sesion', e => this.emitir(this._sesiones, e));
+    fuente.addEventListener('sesion-respondida', e => this.emitir(this._sesionesRespondidas, e));
 
     fuente.onerror = () => {
       // Se llega aquí tanto por un corte real como por el vencimiento normal de

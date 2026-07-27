@@ -18,6 +18,17 @@ public enum TipoEvento {
     /** Han aceptado o rechazado una solicitud que enviaste tú. */
     SOLICITUD_RESPONDIDA("solicitud-respondida"),
 
+    /** Un compañero propone quedar un día y una hora. Viaja el SesionDTO. */
+    SESION("sesion"),
+
+    /**
+     * Han aceptado, rechazado o cancelado una sesión en la que participas.
+     *
+     * Uno solo para los tres casos: el DTO ya trae el estado, y quien lo recibe
+     * hace lo mismo con los tres —volver a pintar la sesión tal y como esté—.
+     */
+    SESION_RESPONDIDA("sesion-respondida"),
+
     /**
      * Alguien ha retirado su solicitud o ha dejado de ser compañero tuyo.
      *

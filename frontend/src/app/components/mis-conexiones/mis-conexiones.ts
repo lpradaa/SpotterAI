@@ -10,6 +10,7 @@ import { EventosService } from '../../services/eventos.service';
 import { MensajesService, Conversacion, Mensaje } from '../../services/mensajes.service';
 import { AvisosService } from '../../services/avisos.service';
 import { UsuarioService } from '../../services/usuario.service';
+import { SesionesService, Sesion, SugerenciaSesion } from '../../services/sesiones.service';
 import { Avatar } from '../avatar/avatar';
 
 @Component({
@@ -26,6 +27,7 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
   private mensajes = inject(MensajesService);
   private avisos = inject(AvisosService);
   private usuarios = inject(UsuarioService);
+  private sesiones = inject(SesionesService);
   private destroyRef = inject(DestroyRef);
 
   @ViewChild('scrollMe') private myScrollContainer!: ElementRef;
@@ -45,6 +47,24 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
 
   /** Confirmación en línea, sin diálogo del navegador. */
   confirmandoBorrado = signal(false);
+
+  // --- SESIÓN ---
+  /**
+   * La sesión que hay en marcha con quien tienes abierto, si la hay.
+   *
+   * Vive arriba del chat y no como un mensaje más: un plan no es una frase que
+   * pasa y se pierde hacia arriba en el historial, es un estado. Si estáis
+   * quedando el martes, eso tiene que verse sin buscar.
+   */
+  sesionActiva = signal<Sesion | null>(null);
+
+  /** Formulario de propuesta abierto. */
+  proponiendo = signal(false);
+  sugerencia = signal<SugerenciaSesion | null>(null);
+  errorSesion = signal<string | null>(null);
+  enviandoSesion = signal(false);
+
+  formSesion = { fecha: '', horaInicio: '', horaFin: '', nota: '' };
 
   /** Suma de lo pendiente, para el contador de la cabecera de la lista. */
   totalSinLeer = computed(() =>
@@ -109,6 +129,27 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
     this.eventos.relacionesDeshechas
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(datos => this.alDeshacerseLaRelacion(datos));
+
+    // Una propuesta que llega o se responde mientras miras el chat: se pinta
+    // sola. Sin esto habría que recargar para enterarse de que te han dicho que
+    // sí, que es justo lo que el canal de eventos vino a resolver.
+    this.eventos.sesiones
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(sesion => this.alCambiarLaSesion(sesion));
+
+    this.eventos.sesionesRespondidas
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(sesion => this.alCambiarLaSesion(sesion));
+  }
+
+  private alCambiarLaSesion(sesion: Sesion): void {
+    if (this.chatActivo()?.usuarioId !== sesion.conId) return;
+
+    // Una rechazada o cancelada deja de ocupar sitio: no hay nada que hacer con
+    // ella y el hueco es para la siguiente propuesta.
+    const sigueViva = sesion.estado === 'PROPUESTA' || sesion.estado === 'ACEPTADA';
+    this.sesionActiva.set(sigueViva ? sesion : null);
+    this.cdr.detectChanges();
   }
 
   private alLlegarMensaje(msg: Mensaje): void {
@@ -155,6 +196,8 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
     this.chatActivo.set(null);
     this.historial.set([]);
     this.confirmandoBorrado.set(false);
+    this.sesionActiva.set(null);
+    this.cerrarPropuesta();
     this.cdr.detectChanges();
   }
 
@@ -191,6 +234,12 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
   abrirChat(conversacion: Conversacion): void {
     this.chatActivo.set(conversacion);
     this.confirmandoBorrado.set(false);
+    this.cerrarPropuesta();
+
+    this.sesiones.conMigo(conversacion.usuarioId).subscribe(sesion => {
+      this.sesionActiva.set(sesion);
+      this.cdr.detectChanges();
+    });
 
     // El backend las marca leídas al servir el historial, así que el contador
     // local se pone a cero sin esperar a la respuesta.
@@ -231,6 +280,150 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
         console.error('Error al enviar el mensaje:', err);
       }
     });
+  }
+
+  // ================= Quedar =================
+
+  /**
+   * Abre el formulario ya relleno con el próximo hueco que compartís.
+   *
+   * El dato lo tiene el servidor calculado desde antes —es el mismo solape con
+   * el que puntúa la compatibilidad—, así que abrir esto es leer una frase en
+   * vez de ponerse a cuadrar horarios, que es lo que la aplicación existe para
+   * evitar.
+   */
+  abrirPropuesta(): void {
+    const destino = this.chatActivo();
+    if (!destino) return;
+
+    this.proponiendo.set(true);
+    this.errorSesion.set(null);
+    this.confirmandoBorrado.set(false);
+
+    this.sesiones.sugerencia(destino.usuarioId).subscribe({
+      next: s => {
+        this.sugerencia.set(s);
+        if (s.hayFranjas) {
+          this.formSesion = {
+            fecha: s.fecha!,
+            horaInicio: (s.horaInicio ?? '').slice(0, 5),
+            horaFin: (s.horaFin ?? '').slice(0, 5),
+            nota: ''
+          };
+        } else {
+          // Sin nada en común no se inventa una hora: se deja el formulario
+          // vacío y la interfaz dice por qué.
+          this.formSesion = { fecha: '', horaInicio: '', horaFin: '', nota: '' };
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.sugerencia.set(null);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cerrarPropuesta(): void {
+    this.proponiendo.set(false);
+    this.sugerencia.set(null);
+    this.errorSesion.set(null);
+    this.enviandoSesion.set(false);
+    this.formSesion = { fecha: '', horaInicio: '', horaFin: '', nota: '' };
+  }
+
+  get propuestaCompleta(): boolean {
+    return !!(this.formSesion.fecha && this.formSesion.horaInicio && this.formSesion.horaFin);
+  }
+
+  enviarPropuesta(): void {
+    const destino = this.chatActivo();
+    if (!destino || !this.propuestaCompleta || this.enviandoSesion()) return;
+
+    this.enviandoSesion.set(true);
+    this.errorSesion.set(null);
+
+    this.sesiones.proponer(destino.usuarioId, {
+      fecha: this.formSesion.fecha,
+      horaInicio: this.formSesion.horaInicio,
+      horaFin: this.formSesion.horaFin,
+      nota: this.formSesion.nota || null
+    }).subscribe({
+      next: sesion => {
+        this.sesionActiva.set(sesion);
+        this.cerrarPropuesta();
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        this.enviandoSesion.set(false);
+        // El servidor explica en castellano por qué no vale; repetirlo aquí
+        // sería mantener dos versiones de las mismas reglas.
+        this.errorSesion.set(err?.error?.error ?? 'No se ha podido proponer la sesión.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  responderSesion(acepta: boolean): void {
+    const sesion = this.sesionActiva();
+    if (!sesion) return;
+
+    const peticion = acepta ? this.sesiones.aceptar(sesion.id) : this.sesiones.rechazar(sesion.id);
+
+    peticion.subscribe({
+      next: actualizada => {
+        this.sesionActiva.set(acepta ? actualizada : null);
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        this.errorSesion.set(err?.error?.error ?? 'No se ha podido responder.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cancelarSesion(): void {
+    const sesion = this.sesionActiva();
+    if (!sesion) return;
+
+    this.sesiones.cancelar(sesion.id).subscribe({
+      next: () => {
+        this.sesionActiva.set(null);
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        this.errorSesion.set(err?.error?.error ?? 'No se ha podido cancelar.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /** "Sí, entrenamos": aquí es donde el match acaba en el historial. */
+  confirmarSesion(): void {
+    const sesion = this.sesionActiva();
+    if (!sesion) return;
+
+    this.sesiones.confirmar(sesion.id).subscribe({
+      next: () => {
+        this.sesionActiva.set(null);
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        this.errorSesion.set(err?.error?.error ?? 'No se ha podido apuntar.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /** "Viernes 3 de julio", que es como se dice una fecha cuando se queda. */
+  diaLargo(fecha: string): string {
+    const d = new Date(`${fecha}T00:00:00`);
+    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  /** Las horas llegan como "18:00:00" y en un plan sobran los segundos. */
+  hhmm(hora: string | null): string {
+    return (hora ?? '').slice(0, 5);
   }
 
   /**

@@ -11,6 +11,7 @@ import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
 import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
 import { PerfilesService, Hito } from '../../services/perfiles.service';
+import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { Carga } from '../carga/carga';
 
 @Component({
@@ -28,9 +29,19 @@ export class DashboardComponent implements OnInit {
   private perfilEstado = inject(PerfilEstadoService);
   private avisos = inject(AvisosService);
   private perfiles = inject(PerfilesService);
+  private sesionesService = inject(SesionesService);
   private destroyRef = inject(DestroyRef);
 
   userName = signal(localStorage.getItem('usuario_nombre') || 'Usuario');
+
+  /**
+   * Lo que tienes pendiente con alguien: propuestas por responder, sesiones por
+   * delante y las que ya pasaron sin apuntar.
+   *
+   * Va por delante del resto del tablero. Buscar compañeros nuevos puede
+   * esperar; contestarle a uno que ya tienes, no.
+   */
+  sesiones = signal<Sesion[]>([]);
 
   // --- Progreso semanal ---
   completedDays = signal(0);
@@ -135,6 +146,7 @@ export class DashboardComponent implements OnInit {
     this.cargarSolicitudesPendientes();
     this.cargarGimnasios();
     this.cargarMiPerfil();
+    this.cargarSesiones();
     this.escucharEventos();
   }
 
@@ -149,6 +161,25 @@ export class DashboardComponent implements OnInit {
         this.solicitudesPendientes = [solicitud, ...this.solicitudesPendientes];
         this.mostrarToast(`${solicitud.emisorNombre} quiere entrenar contigo.`, 'success');
         this.cdr.detectChanges();
+      });
+
+    // Una propuesta que llega mientras miras el tablero. Se avisa y se recarga
+    // la lista entera en vez de insertarla a mano: son pocas y el orden lo
+    // decide el servidor por fecha.
+    this.eventos.sesiones
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((sesion: Sesion) => {
+        this.mostrarToast(`${sesion.conNombre} propone entrenar contigo.`, 'success');
+        this.cargarSesiones();
+      });
+
+    this.eventos.sesionesRespondidas
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((sesion: Sesion) => {
+        if (sesion.estado === 'ACEPTADA') {
+          this.mostrarToast(`${sesion.conNombre} ha aceptado entrenar contigo.`, 'success');
+        }
+        this.cargarSesiones();
       });
 
     this.eventos.respuestas
@@ -502,6 +533,63 @@ export class DashboardComponent implements OnInit {
       },
       error: () => this.mostrarToast('Hubo un error al procesar la solicitud.', 'error')
     });
+  }
+
+  // ================= Sesiones =================
+
+  private cargarSesiones(): void {
+    this.sesionesService.mias().subscribe({
+      next: lista => {
+        this.sesiones.set(lista);
+        this.cdr.detectChanges();
+      },
+      error: err => console.error('Error al cargar las sesiones:', err)
+    });
+  }
+
+  responderSesion(sesion: Sesion, acepta: boolean): void {
+    const peticion = acepta
+      ? this.sesionesService.aceptar(sesion.id)
+      : this.sesionesService.rechazar(sesion.id);
+
+    peticion.subscribe({
+      next: () => {
+        this.mostrarToast(acepta
+          ? `Hecho. Entrenas con ${sesion.conNombre}.`
+          : 'Propuesta rechazada.', acepta ? 'success' : 'error');
+        this.cargarSesiones();
+      },
+      error: err => this.mostrarToast(
+        err?.error?.error ?? 'No se ha podido responder.', 'error')
+    });
+  }
+
+  /**
+   * "Sí, entrenamos": el momento en el que un match acaba siendo una fila del
+   * historial. Por eso se recarga también el progreso semanal, que es donde se
+   * nota.
+   */
+  confirmarSesion(sesion: Sesion): void {
+    this.sesionesService.confirmar(sesion.id).subscribe({
+      next: () => {
+        this.mostrarToast('Apuntado en tu historial.', 'success');
+        this.cargarSesiones();
+        this.cargarHistorialEntrenamientos();
+      },
+      error: err => this.mostrarToast(
+        err?.error?.error ?? 'No se ha podido apuntar.', 'error')
+    });
+  }
+
+  /** "Viernes 3 de julio", que es como se dice una fecha cuando se queda. */
+  diaLargo(fecha: string): string {
+    const d = new Date(`${fecha}T00:00:00`);
+    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  /** Las horas llegan como "18:00:00" y en un plan sobran los segundos. */
+  hhmm(hora: string | null): string {
+    return (hora ?? '').slice(0, 5);
   }
 
   /**
