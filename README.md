@@ -181,10 +181,30 @@ Dos piezas que conviene mirar si vienes de fuera: `matching/CalculadoraCompatibi
 
 ---
 
+## Seguridad
+
+Lo que hay, y por qué:
+
+- **Contraseñas con BCrypt**, nunca en claro ni reversibles.
+- **JWT** firmado con `JWT_SECRET`, que no tiene valor por defecto: la aplicación se niega a arrancar sin él y exige 32 caracteres mínimo.
+- **Freno a la fuerza bruta** en el login (`seguridad/ControlDeIntentos`). Cinco intentos fallidos por correo y treinta por dirección, en ventana de quince minutos, y responde `429` con `Retry-After`.
+
+  Tres decisiones que no son obvias. El tope por dirección es seis veces más alto porque detrás de una IP puede haber un gimnasio entero compartiendo salida. Los correos que **no existen** también gastan cupo: si solo contaran los fallos de cuentas reales, ver cuál se bloquea diría quién está registrado y el freno acabaría siendo un listador de usuarios. Y estando bloqueado ni se llega a comprobar la contraseña, porque el coste de BCrypt es justo lo que un ataque quiere consumir.
+
+  Vive en memoria. Con varias instancias haría falta algo compartido, porque cada una contaría por su lado.
+
+- **Una sola relación por pareja**, en la base y no solo en Java. Dos peticiones simultáneas pueden leer las dos que no hay nada y las dos insertar; una comprobación en el servicio no para eso. `uk_solicitud_pareja` va sobre dos columnas generadas con `LEAST`/`GREATEST`, de modo que "A y B" y "B y A" producen la misma clave.
+
+- **Los medios subidos se sirven desde rutas propias.** El perfil solo acepta `fotoUrl` que empiece por `/api/medios/`: sin eso, el campo sería un hueco para que cualquier navegador que abriera un perfil pidiera la URL que le pusieran.
+
+Lo que no hay, dicho claro: el token vive en `localStorage`, así que un XSS lo lee. Para esto —proyecto local, sin datos sensibles— es una decisión asumida; en un despliegue de verdad tocaría cookie `HttpOnly` con protección CSRF.
+
+---
+
 ## Lo que falta
 
 - **Chat sin indicador de escritura ni presencia.** Los mensajes llegan al instante, pero no se ve si el otro está escribiendo.
 - **Sin paginación.** Con decenas de usuarios sobra; con miles no.
 - **`DisponibilidadController` expone un CRUD que nadie llama** — los horarios se gestionan dentro de `PUT /perfil`.
-- **El par invertido de solicitudes** (A pide a B y B pide a A) se comprueba en Java, no en la base: necesitaría columnas generadas con `LEAST`/`GREATEST`.
-- **Sin CI ni Docker.**
+- **La rutina no se pinta en las listas** aunque el servidor la manda, y Explorar no deja filtrar ni por rutina ni por fuerza, que son 15 de los 100 puntos.
+- **Accesibilidad sin repasar.** La rejilla semanal transmite su información solo en color, y los modales no atrapan el foco ni cierran con `Escape`.

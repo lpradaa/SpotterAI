@@ -11,10 +11,17 @@ import java.time.LocalDateTime;
  * {@code HashSet} que en el servicio se llama "la solucion al misterio de los
  * clones". Eso no evitaba el duplicado, solo lo escondia al leerlo.
  *
- * <p>Cubre el mismo par en el mismo sentido. El caso inverso —A pide a B y B
- * pide a A— sigue comprobandose en {@code SolicitudServiceImpl}, porque
- * expresarlo en la base necesita columnas generadas con LEAST/GREATEST y eso
- * pide una migracion de verdad, no {@code ddl-auto=update}.
+ * <p>Esa restriccion cubre el mismo par en el mismo sentido. El caso inverso
+ * —A pide a B y B pide a A— lo cubre {@code uk_solicitud_pareja}, que vive en
+ * {@code V7__solicitud_par_unico.sql} sobre dos columnas generadas con
+ * LEAST/GREATEST. No se declara aqui porque esas columnas no son campos de la
+ * entidad: las calcula la base y Hibernate no tiene por que saber de ellas.
+ *
+ * <p>Estuvo un tiempo comprobandose solo en {@code SolicitudServiceImpl}, con la
+ * excusa de que expresarlo en la base pedia "una migracion de verdad, no
+ * {@code ddl-auto=update}". Con Flyway en su sitio, la excusa se acabo. La
+ * comprobacion en Java sigue ahi porque da un mensaje claro en el caso normal;
+ * la que para dos peticiones simultaneas es esta.
  */
 @Entity
 @Table(

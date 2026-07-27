@@ -80,6 +80,17 @@ export class LoginComponent implements OnInit {
       error: (err) => {
         console.error('Error en el login:', err);
         this.isLoading.set(false);
+
+        // El 429 es del freno a la fuerza bruta. Sin distinguirlo, quien se ha
+        // equivocado cinco veces seguiría leyendo "contraseña incorrecta" y
+        // probando la buena una y otra vez sin entender por qué no entra.
+        if (err?.status === 429) {
+          this.errorMessage.set(typeof err.error === 'string'
+            ? err.error
+            : 'Demasiados intentos. Espera un rato antes de volver a probar.');
+          return;
+        }
+
         this.errorMessage.set('Email o contraseña incorrectos. Inténtalo de nuevo.');
       }
     });
