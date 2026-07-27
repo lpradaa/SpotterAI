@@ -3,21 +3,24 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { UsuarioService, Match, ExplicacionMatch } from '../../services/usuario.service';
+import { UsuarioService, Match } from '../../services/usuario.service';
 import { EventosService } from '../../services/eventos.service';
 import { PerfilEstadoService } from '../../services/perfil-estado.service';
 import { AvisosService } from '../../services/avisos.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
-import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
+import { Avatar } from '../avatar/avatar';
 import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
-import { PerfilesService, Hito } from '../../services/perfiles.service';
+import { PerfilesService } from '../../services/perfiles.service';
+import { ModalPerfilComponent, AvisoPerfil } from '../modal-perfil/modal-perfil';
+import { FichaSugerenciaComponent } from '../ficha-sugerencia/ficha-sugerencia';
 import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { Carga } from '../carga/carga';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent, Carga],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent,
+            Carga, ModalPerfilComponent, FichaSugerenciaComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -62,50 +65,26 @@ export class DashboardComponent implements OnInit {
 
   // --- Gimnasios ---
   gimnasios: any[] = [];
-  nuevoGimnasioNombre: string = '';
-  mostrarInputGimnasio: boolean = false;
 
   // --- Modal de perfil ---
   isModalOpen = false;
+
   /**
-   * Colores de identidad. Antes esto era una rejilla de emoticonos, que además
-   * de no parecer un producto serio no identificaba a nadie: dos personas con
-   * el mismo emoji eran indistinguibles en una lista.
+   * El perfil tal y como lo devuelve el servidor.
+   *
+   * El tablero solo lo lee —para la barra de arriba y para pintar la semana en
+   * las tarjetas—; quien lo edita es <app-modal-perfil>, que se lo lleva entero
+   * y avisa cuando ha guardado.
    */
-  coloresAvatar = COLORES_AVATAR;
-  diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  perfilCargado = signal<any>(null);
 
-  perfilForm: any = {
-    avatar: '', edad: null, genero: '', peso: null, nivel: '',
-    objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', biografia: '',
-    horarios: [], levantamientos: [], metaSemanal: 4, rutina: ''
-  };
+  /** Mi semana, para dibujar el solape en cada tarjeta. */
+  misFranjas = computed<any[]>(() => this.perfilCargado()?.horarios ?? []);
 
-  /** Coincide con el limite de la columna y con el recorte del servidor. */
-  readonly maxBiografia = 280;
-
-  // --- Levantamientos ---
-  /** El catálogo lo manda el backend: duplicarlo aquí es garantizar que diverjan. */
-  ejerciciosDisponibles = signal<{ clave: string, nombre: string }[]>([]);
-
-  /** Igual que el de ejercicios: el catálogo de rutinas lo manda el backend. */
-  rutinasDisponibles = signal<{ clave: string, nombre: string }[]>([]);
-
-  /** Cuántos están completos, que es lo que de verdad cuenta para el motor. */
-  levantamientosPuestos = computed(() =>
-    (this.perfilForm.levantamientos ?? [])
-      .filter((l: any) => l.ejercicio && l.peso > 0 && l.repeticiones > 0).length);
-
-  anadirLevantamiento(): void {
-    if (this.perfilForm.levantamientos.length >= 3) return;
-    this.perfilForm.levantamientos.push({ ejercicio: '', peso: null, repeticiones: null });
-  }
-
-  quitarLevantamiento(indice: number): void {
-    this.perfilForm.levantamientos.splice(indice, 1);
-  }
+  urlFoto = computed(() => this.perfiles.urlDeMedio(this.perfilCargado()?.fotoUrl ?? null));
 
   /**
+   * Lo que le falta al perfil, en puntos de compatibilidad perdidos.  /**
    * Lo que le falta al perfil, en puntos de compatibilidad perdidos.
    *
    * Los números los da el backend, que es donde viven los pesos del cálculo.
@@ -118,10 +97,6 @@ export class DashboardComponent implements OnInit {
   /** Solo el más caro: una lista de cinco cosas no la lee nadie. */
   huecoPrincipal = computed(() => this.rendimiento()?.huecos?.[0] ?? null);
 
-  restanteBiografia(): number {
-    return this.maxBiografia - (this.perfilForm.biografia?.length ?? 0);
-  }
-
   // --- Modal de entrenamiento ---
   isEntrenamientoModalOpen = false;
   historialEntrenamientos: any[] = [];
@@ -129,12 +104,6 @@ export class DashboardComponent implements OnInit {
 
   // --- Modal de sugerencias ---
   isSugerenciasOpen = signal(false);
-  indiceActual = signal(0);
-  explicacion = signal<ExplicacionMatch | null>(null);
-  cargandoExplicacion = signal(false);
-
-  /** El candidato que se está mostrando ahora mismo en el modal. */
-  sugerenciaActual = computed(() => this.sugerencias()[this.indiceActual()] ?? null);
 
   // --- Avisos ---
   toast: { show: boolean, message: string, type: 'success' | 'error' } = { show: false, message: '', type: 'success' };
@@ -203,24 +172,8 @@ export class DashboardComponent implements OnInit {
         if (!data) return;
         if (data.nombre) this.userName.set(data.nombre);
 
-        this.perfilForm = {
-          avatar: data.avatar || '', edad: data.edad, genero: data.genero, peso: data.peso,
-          // Sin defecto inventado: rellenar 'Intermedio' hacía que la barra
-          // mostrara un nivel que nadie había elegido, al lado de un aviso que
-          // decía que faltaba justo eso.
-          nivel: data.nivel || '', objetivos: data.objetivos || '', gimnasioId: data.gimnasioId,
-          biografia: data.biografia || '',
-          horarios: data.horarios || [],
-          levantamientos: data.levantamientos || [],
-          metaSemanal: data.metaSemanal || 4,
-          rutina: data.rutina || ''
-        };
-        this.ejerciciosDisponibles.set(data.ejerciciosDisponibles || []);
-        this.rutinasDisponibles.set(data.rutinasDisponibles || []);
-        this.perfilForm.fotoUrl = data.fotoUrl ?? null;
-        this.fotoActual.set(data.fotoUrl ?? null);
+        this.perfilCargado.set(data);
         this.rendimiento.set(data.rendimiento ?? null);
-        this.cargarMisHitos();
         this.calcularProgresoSemanal();
         this.cdr.detectChanges();
       },
@@ -234,13 +187,6 @@ export class DashboardComponent implements OnInit {
       next: (data) => { this.gimnasios = data; this.cdr.detectChanges(); },
       error: (err) => console.error('Error al cargar gimnasios:', err)
     });
-  }
-
-  toggleNuevoGimnasio(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.mostrarInputGimnasio = (select.value === 'NUEVO');
-    if (!this.mostrarInputGimnasio) this.nuevoGimnasioNombre = '';
-    this.cdr.detectChanges();
   }
 
   mostrarToast(mensaje: string, tipo: 'success' | 'error' = 'success'): void {
@@ -267,59 +213,16 @@ export class DashboardComponent implements OnInit {
       this.mostrarToast('No hay sugerencias nuevas por ahora.', 'error');
       return;
     }
-    this.indiceActual.set(0);
     this.isSugerenciasOpen.set(true);
-    this.cargarExplicacion();
   }
 
   cerrarSugerencias(): void {
     this.isSugerenciasOpen.set(false);
-    this.explicacion.set(null);
   }
 
-  siguienteSugerencia(): void {
-    if (this.indiceActual() < this.sugerencias().length - 1) {
-      this.indiceActual.update(i => i + 1);
-      this.cargarExplicacion();
-    }
-  }
-
-  anteriorSugerencia(): void {
-    if (this.indiceActual() > 0) {
-      this.indiceActual.update(i => i - 1);
-      this.cargarExplicacion();
-    }
-  }
-
-  private cargarExplicacion(): void {
-    const candidato = this.sugerenciaActual();
-    if (!candidato) return;
-
-    this.explicacion.set(null);
-    this.cargandoExplicacion.set(true);
-
-    this.usuarioService.getExplicacionMatch(candidato.id).subscribe({
-      next: (texto) => {
-        // La respuesta puede llegar tarde: si el usuario ya ha pasado a otra
-        // ficha, se descarta en vez de pintar la explicación de otra persona.
-        if (this.sugerenciaActual()?.id !== candidato.id) return;
-        this.explicacion.set(texto);
-        this.cargandoExplicacion.set(false);
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('No se pudo cargar la explicación del match:', err);
-        if (this.sugerenciaActual()?.id !== candidato.id) return;
-        this.cargandoExplicacion.set(false);
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  conectarConSugerenciaActual(): void {
-    const candidato = this.sugerenciaActual();
-    if (!candidato) return;
-    this.conectarConUsuario(candidato.id);
+  /** Conectar desde la ficha la cierra: ya no hay nada que decidir ahí. */
+  conectarDesdeLaFicha(usuarioId: number): void {
+    this.conectarConUsuario(usuarioId);
     this.cerrarSugerencias();
   }
 
@@ -328,7 +231,7 @@ export class DashboardComponent implements OnInit {
     // La meta viene del perfil, que viene de la base. Antes se leia de
     // localStorage con la clave meta_semanal_<nombre>, asi que cambiabas de
     // navegador y desaparecia, y dos usuarios homonimos compartian valor.
-    const meta = this.perfilForm.metaSemanal || 4;
+    const meta = this.perfilCargado()?.metaSemanal || 4;
     this.totalDays.set(meta);
 
     const hoy = new Date();
@@ -342,14 +245,6 @@ export class DashboardComponent implements OnInit {
 
     this.completedDays.set(totalEntrenos);
     this.progressPercentage.set(Math.min(100, (totalEntrenos / meta) * 100));
-  }
-
-  actualizarMetaDesdeSlider(event: Event): void {
-    const nuevoValor = parseInt((event.target as HTMLInputElement).value, 10);
-    this.perfilForm.metaSemanal = nuevoValor;
-    // No se guarda al arrastrar: el control vive dentro del formulario de perfil
-    // y se persiste al darle a guardar, como todo lo demas.
-    this.calcularProgresoSemanal();
   }
 
   // --- Matches y solicitudes ---
@@ -382,112 +277,22 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // --- Mi foto y mis marcas ---
-  misHitos = signal<Hito[]>([]);
-  subiendo = signal(false);
-  nuevoHito = { titulo: '', descripcion: '', fecha: '', medioUrl: null as string | null, medioTipo: null as string | null };
-
-  /**
-   * Señal aparte y no un computed sobre perfilForm: perfilForm es un objeto
-   * plano, así que cambiarle un campo no notifica a nadie y la foto no se
-   * refrescaría al subirla.
-   */
-  fotoActual = signal<string | null>(null);
-  subiendoFoto = signal(false);
-
-  urlFoto = computed(() => this.perfiles.urlDeMedio(this.fotoActual()));
-
-  alElegirFoto(evento: Event): void {
-    const entrada = evento.target as HTMLInputElement;
-    const archivo = entrada.files?.[0];
-    if (!archivo) return;
-
-    this.subiendoFoto.set(true);
-    this.perfiles.subirMedio(archivo).subscribe({
-      next: r => {
-        this.perfilForm.fotoUrl = r.url;
-        this.fotoActual.set(r.url);
-        this.subiendoFoto.set(false);
-        // Sin esto, elegir el mismo archivo dos veces seguidas no dispara change
-        entrada.value = '';
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        this.subiendoFoto.set(false);
-        entrada.value = '';
-        this.mostrarToast(
-          typeof err?.error === 'string' ? err.error : 'No se ha podido subir la foto.', 'error');
-      }
-    });
-  }
-
-  quitarFoto(): void {
-    this.perfilForm.fotoUrl = null;
-    this.fotoActual.set(null);
-    this.cdr.detectChanges();
-  }
-
   urlMedio(ruta: string | null): string | null {
     return this.perfiles.urlDeMedio(ruta);
   }
 
-  private cargarMisHitos(): void {
-    this.perfiles.misHitos().subscribe({
-      next: lista => { this.misHitos.set(lista); this.cdr.detectChanges(); },
-      error: () => {}
-    });
-  }
-
-  /** Foto del hito que se está redactando. */
-  alElegirMedio(evento: Event): void {
-    const archivo = (evento.target as HTMLInputElement).files?.[0];
-    if (!archivo) return;
-
-    this.subiendo.set(true);
-    this.perfiles.subirMedio(archivo).subscribe({
-      next: r => {
-        this.nuevoHito.medioUrl = r.url;
-        this.nuevoHito.medioTipo = r.tipo;
-        this.subiendo.set(false);
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        this.subiendo.set(false);
-        // El servidor explica el motivo (tipo no admitido, pasa de 15 MB…) y
-        // ese texto es más útil que uno genérico nuestro.
-        this.mostrarToast(typeof err?.error === 'string' ? err.error : 'No se ha podido subir el archivo.', 'error');
-      }
-    });
-  }
-
-  anadirHito(): void {
-    if (!this.nuevoHito.titulo.trim()) return;
-
-    this.perfiles.crearHito({
-      titulo: this.nuevoHito.titulo,
-      descripcion: this.nuevoHito.descripcion,
-      fecha: this.nuevoHito.fecha || undefined,
-      medioUrl: this.nuevoHito.medioUrl,
-      medioTipo: this.nuevoHito.medioTipo
-    }).subscribe({
-      next: hito => {
-        this.misHitos.update(lista => [hito, ...lista]);
-        this.nuevoHito = { titulo: '', descripcion: '', fecha: '', medioUrl: null, medioTipo: null };
-        this.cdr.detectChanges();
-      },
-      error: err => this.mostrarToast(
-        typeof err?.error === 'string' ? err.error : 'No se ha podido guardar la marca.', 'error')
-    });
-  }
-
-  borrarHito(hitoId: number): void {
-    this.perfiles.borrarHito(hitoId).subscribe({
-      next: () => {
-        this.misHitos.update(lista => lista.filter(h => h.id !== hitoId));
-        this.cdr.detectChanges();
-      },
-      error: () => this.mostrarToast('No se ha podido borrar.', 'error')
-    });
+  /**
+   * El modal ha guardado.
+   *
+   * Se recargan perfil y matches: cambiar horarios altera la compatibilidad con
+   * todo el mundo. Y el guardián no puede seguir creyendo lo que sabía, porque
+   * ahí dentro se pueden borrar todas las franjas.
+   */
+  alGuardarElPerfil(): void {
+    this.cerrarModal();
+    this.perfilEstado.olvidar();
+    this.cargarMiPerfil();
+    this.cargarMatches();
   }
 
   /** A quién se está mirando, o null. */
@@ -625,71 +430,6 @@ export class DashboardComponent implements OnInit {
   // --- Modales de perfil y entrenamiento ---
   abrirModal(): void { this.isModalOpen = true; this.cdr.detectChanges(); }
   cerrarModal(): void { this.isModalOpen = false; this.cdr.detectChanges(); }
-  /**
-   * Elegir un color implica querer las iniciales: con foto puesta, el color no
-   * se ve por ningún lado y el selector parecería estropeado.
-   */
-  seleccionarAvatar(color: string): void {
-    this.perfilForm.avatar = color;
-    this.quitarFoto();
-  }
-  agregarHorario(): void {
-    this.perfilForm.horarios.push({
-      diaSemana: 'Lunes', horaInicio: '10:00', horaFin: '12:00', habitual: false
-    });
-  }
-  eliminarHorario(index: number): void { this.perfilForm.horarios.splice(index, 1); }
-
-  /**
-   * Tope de franjas marcadas como "Voy siempre".
-   *
-   * Sin tope todo el mundo las marcaría todas y el campo dejaría de distinguir
-   * nada, igual que unos deslizadores que todos ponen al máximo. El backend
-   * aplica el mismo límite: esto solo evita que la interfaz prometa algo que
-   * luego se recorta al guardar.
-   */
-  readonly maxHabituales = 3;
-
-  habitualesMarcadas(): number {
-    return this.perfilForm.horarios.filter((h: any) => h.habitual).length;
-  }
-
-  /** Si esta franja puede pasar a habitual, o ya se ha agotado el cupo. */
-  puedeMarcarHabitual(horario: any): boolean {
-    return horario.habitual || this.habitualesMarcadas() < this.maxHabituales;
-  }
-
-  alternarHabitual(horario: any): void {
-    if (!this.puedeMarcarHabitual(horario)) {
-      this.mostrarToast(`Puedes marcar ${this.maxHabituales} franjas como fijas.`, 'error');
-      return;
-    }
-    horario.habitual = !horario.habitual;
-    this.cdr.detectChanges();
-  }
-
-  guardarPerfil(): void {
-    if (this.mostrarInputGimnasio) {
-      this.perfilForm.nuevoGimnasioNombre = this.nuevoGimnasioNombre;
-      this.perfilForm.gimnasioId = null;
-    }
-
-    this.usuarioService.actualizarPerfil(this.perfilForm).subscribe({
-      next: () => {
-        this.mostrarToast('Perfil actualizado.');
-        this.cerrarModal();
-        // Aqui se pueden borrar todos los horarios, asi que el guardian no puede
-        // seguir creyendo lo que sabia antes.
-        this.perfilEstado.olvidar();
-        // Cambiar horarios altera la compatibilidad con todo el mundo, así que se
-        // recargan perfil y matches. Antes se llamaba a ngOnInit() a mano.
-        this.cargarMiPerfil();
-        this.cargarMatches();
-      },
-      error: () => this.mostrarToast('Hubo un error al guardar tu perfil.', 'error')
-    });
-  }
-
   cargarHistorialEntrenamientos(): void {
     this.usuarioService.getMisEntrenamientos().subscribe({
       next: (data) => {

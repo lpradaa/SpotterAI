@@ -1,0 +1,74 @@
+<!-- Los candidatos de uno en uno, con su explicacion redactada.
+     Salio de dashboard.html con sus 208 lineas de estilos: es una pantalla
+     entera metida dentro de otra, y lo unico que necesita de fuera es la lista
+     y tu semana. -->
+<div class="velo" (click)="cerrar.emit()">
+  <div class="modal modal--sugerencia" (click)="$event.stopPropagation()"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-sugerencia">
+    <button class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">✕</button>
+
+    @if (actual(); as candidato) {
+      <div class="sugerencia">
+        <app-avatar [nombre]="candidato.nombre" [valor]="candidato.avatar" [tamano]="84" />
+
+        <h2 class="sugerencia__nombre" id="titulo-sugerencia">{{ candidato.nombre }}</h2>
+
+        <div class="sugerencia__puntuacion" [attr.data-tramo]="tramo(candidato.compatibilidad)">
+          <span class="sugerencia__cifra cifra">{{ candidato.compatibilidad }}%</span>
+          <span class="sugerencia__etiqueta">{{ candidato.etiquetaCompatibilidad }}</span>
+        </div>
+
+        <!-- Explicación redactada, pedida al abrir cada ficha -->
+        <div class="explicacion" aria-live="polite">
+          @if (cargandoExplicacion()) {
+            <div class="explicacion__cargando">
+              <span class="puntos" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span>Analizando vuestra compatibilidad…</span>
+            </div>
+          } @else if (explicacion(); as texto) {
+            <p class="explicacion__titular">{{ texto.titular }}</p>
+            <p class="explicacion__motivo">{{ texto.motivo }}</p>
+          } @else {
+            <p class="explicacion__motivo">{{ candidato.resumenCompatibilidad }}</p>
+          }
+        </div>
+
+        <dl class="sugerencia__datos">
+          <div><dt>Nivel</dt><dd>{{ candidato.nivel || '—' }}</dd></div>
+          <div><dt>Objetivo</dt><dd>{{ candidato.objetivos || '—' }}</dd></div>
+          <div><dt>Gimnasio</dt><dd>{{ candidato.gimnasioNombre || '—' }}</dd></div>
+        </dl>
+
+        <!-- La semana completa: se ve exactamente cuándo entrenaríais juntos -->
+        <div class="sugerencia__semana">
+          <div class="sugerencia__semana-cabecera">
+            <span class="sugerencia__horario-titulo">Vuestra semana</span>
+            @if (candidato.minutosEnComun) {
+              <span class="sugerencia__horario-total cifra">
+                {{ formatearSolape(candidato.minutosEnComun) }} en común
+              </span>
+            }
+          </div>
+          <app-rejilla-semana
+            [misFranjas]="misFranjas()"
+            [solape]="candidato.franjasEnComun || []" />
+        </div>
+
+        <button class="btn btn--primario btn--ancho" (click)="conectarConActual()">
+          Conectar con {{ candidato.nombre.split(' ')[0] }}
+        </button>
+
+        <div class="paginador">
+          <button class="paginador__btn" (click)="anterior()"
+                  [disabled]="indiceActual() === 0" aria-label="Sugerencia anterior">←</button>
+          <span class="paginador__posicion cifra">
+            {{ indiceActual() + 1 }} de {{ candidatos().length }}
+          </span>
+          <button class="paginador__btn" (click)="siguiente()"
+                  [disabled]="indiceActual() === candidatos().length - 1"
+                  aria-label="Sugerencia siguiente">→</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

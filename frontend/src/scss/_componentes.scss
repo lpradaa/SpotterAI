@@ -250,7 +250,11 @@
   span { color: var(--sa-texto-tenue); }
 }
 
-/* ===================== Velo y cierre ===================== */
+/* ===================== Velo, modal y cierre =====================
+   La carcasa del modal vivia dentro de dashboard.scss, que era el unico sitio
+   que la usaba cuando solo habia un modal. Con cuatro, dejarla ahi obligaba a
+   copiarla en cada componente que se extrajera, que es justo lo contrario de
+   partir el dashboard. Es mobiliario compartido, como .btn o .campo. */
 .velo {
   position: fixed;
   inset: 0;
@@ -258,6 +262,70 @@
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(3px);
   animation: sa-aparecer 160ms ease-out;
+
+  // Centra lo que lleve dentro. Los velos vacios —el panel lateral del perfil,
+  // el cajon de filtros— no se enteran.
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-sm;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--sa-superficie-elevada);
+  border: 1px solid var(--sa-borde);
+  border-radius: $radius-lg;
+  box-shadow: var(--sa-sombra-lg);
+  animation: sa-subir 200ms cubic-bezier(0.2, 0, 0.2, 1);
+
+  &--estrecho { max-width: 420px; }
+  // La rejilla necesita ancho para que las siete columnas se lean
+  &--sugerencia { max-width: 560px; }
+}
+
+.modal__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  border-bottom: 1px solid var(--sa-borde);
+
+  h2 { font-size: $text-xl; }
+}
+
+.modal__cuerpo {
+  padding: $space-md;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.modal__pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-xs;
+  padding: $space-sm $space-md;
+  border-top: 1px solid var(--sa-borde);
+}
+
+.modal > .cerrar {
+  position: absolute;
+  top: $space-sm;
+  right: $space-sm;
+  z-index: 1;
+}
+
+@keyframes sa-subir {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
 }
 
 .cerrar {

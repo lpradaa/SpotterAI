@@ -29,7 +29,7 @@ El nombre viene de *spotter*: quien te asiste en el banco, el compañero que te 
 | Tiempo real | SSE (`SseEmitter`), con tickets de un solo uso |
 | Seguridad | Spring Security · JWT · BCrypt |
 | Frontend | Angular 21 (standalone + signals) · SCSS |
-| Pruebas | JUnit 5 · Mockito · H2 |
+| Pruebas | JUnit 5 · Mockito · H2 · Vitest |
 
 ---
 

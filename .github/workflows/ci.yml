@@ -37,7 +37,7 @@ jobs:
           path: backend/target/surefire-reports/
 
   frontend:
-    name: Frontend · compilación
+    name: Frontend · tests y compilación
     runs-on: ubuntu-latest
 
     steps:
@@ -55,6 +55,13 @@ jobs:
         # ci y no install: instala exactamente lo del lock y falla si se han
         # desincronizado, que es justo lo que queremos saber aquí.
         run: npm ci
+
+      # Antes esto no se ejecutaba, y por eso nadie se enteró de que las specs
+      # llevaban tiempo sin compilar siquiera: apuntaban a nombres de clase que
+      # ya no existían. Una suite que no corre no es una red, es un adorno.
+      - name: Pasar los tests
+        working-directory: frontend
+        run: npm test -- --no-watch
 
       - name: Compilar para producción
         working-directory: frontend

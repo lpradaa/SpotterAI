@@ -1,0 +1,375 @@
+@import '../../../scss/index';
+
+/* ===========================================================================
+   Formulario de perfil
+   ---------------------------------------------------------------------------
+   Estaba dentro de dashboard.scss, que con esto se acercaba al tope duro de
+   20 kB del presupuesto de estilos: la build de produccion falla al pasarlo, y
+   el CI la ejecuta. Aqui cada bloque pesa lo suyo y nadie arrastra al resto.
+   =========================================================================== */
+
+/* ===================== Formularios ===================== */
+.bloque {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+/* Un fieldset no encoge por debajo de su contenido si no se le dice, y basta
+   con que uno se pase para que el modal entero saque scroll horizontal. */
+.bloque {
+  min-width: 0;
+}
+
+.bloque__nota {
+  margin: 0 0 4px;
+  font-size: $text-xs;
+  line-height: 1.5;
+  color: var(--sa-texto-suave);
+
+  strong { color: var(--sa-texto); }
+}
+
+/* ===================== Levantamientos ===================== */
+.levantamientos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.levantamiento {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  select {
+    // Se lleva el espacio sobrante: los dos números tienen ancho fijo
+    flex: 1;
+    min-width: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--sa-borde);
+    border-radius: $radius-sm;
+    background: var(--sa-superficie-alt);
+    color: var(--sa-texto);
+    font-family: inherit;
+    font-size: $text-sm;
+  }
+}
+
+/* El número con su unidad pegada: "100 kg" se lee de una, "100" solo no. */
+.levantamiento__dato {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+
+  input {
+    width: 62px;
+    padding: 9px 8px;
+    border: 1px solid var(--sa-borde);
+    border-radius: $radius-sm;
+    background: var(--sa-superficie-alt);
+    color: var(--sa-texto);
+    font-family: inherit;
+    font-size: $text-sm;
+    font-variant-numeric: tabular-nums;
+  }
+
+  span {
+    font-size: $text-xs;
+    color: var(--sa-texto-tenue);
+  }
+}
+
+@media (max-width: 520px) {
+  // A este ancho los cuatro controles en fila dejan cajas de treinta píxeles
+  .levantamiento {
+    flex-wrap: wrap;
+
+    select { flex-basis: 100%; }
+  }
+}
+
+.bloque__pista {
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===================== Mis marcas ===================== */
+.marcas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--sa-borde);
+  border-radius: $radius-sm;
+  background: var(--sa-superficie-alt);
+}
+
+.marca__miniatura {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+}
+
+.marca__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  // Sin esto un título largo empuja el botón de borrar fuera de la fila
+  min-width: 0;
+  flex: 1;
+
+  strong {
+    font-size: $text-sm;
+    font-weight: $font-semibold;
+    color: var(--sa-texto);
+  }
+
+  span {
+    font-size: $text-xs;
+    color: var(--sa-texto-suave);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.marca-nueva {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px dashed var(--sa-borde-fuerte);
+  border-radius: $radius-sm;
+
+  input[type='text'],
+  input[type='date'] {
+    padding: 9px 11px;
+    border: 1px solid var(--sa-borde);
+    border-radius: $radius-sm;
+    background: var(--sa-superficie);
+    color: var(--sa-texto);
+    font-family: inherit;
+    font-size: $text-sm;
+  }
+}
+
+.marca-nueva__pie {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  input[type='date'] { flex: 1; min-width: 130px; }
+}
+
+/* El input de archivo real va oculto: su control nativo no se puede estilar y
+   desentona con todo lo demás. La etiqueta hace de botón. */
+.marca-nueva__adjuntar {
+  cursor: pointer;
+}
+
+.bloque__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-xs;
+}
+
+.bloque__titulo {
+  font-family: $font-display;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  letter-spacing: $tracking-wide;
+  text-transform: uppercase;
+  color: var(--sa-texto-tenue);
+  padding: 0;
+}
+
+.bloque__ayuda {
+  margin: 0;
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+  line-height: $leading-snug;
+
+  strong { color: var(--sa-texto); }
+}
+
+.rejilla-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: $space-xs;
+}
+
+/* --- Selector de color de identidad --- */
+.colores {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.foto-acciones {
+  display: flex;
+  gap: 6px;
+  margin-top: $space-xs;
+
+  // El input de archivo real va oculto: su control nativo no se puede estilar
+  label { cursor: pointer; }
+}
+
+.colores__opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--tono);
+  cursor: pointer;
+  transition: transform var(--sa-transicion), box-shadow var(--sa-transicion);
+
+  &[data-color='ascua'] { --tono: var(--sa-av-ascua); }
+  &[data-color='ambar'] { --tono: var(--sa-av-ambar); }
+  &[data-color='oliva'] { --tono: var(--sa-av-oliva); }
+  &[data-color='acero'] { --tono: var(--sa-av-acero); }
+  &[data-color='ciruela'] { --tono: var(--sa-av-ciruela); }
+  &[data-color='pizarra'] { --tono: var(--sa-av-pizarra); }
+
+  &:hover { transform: scale(1.12); }
+
+  // El seleccionado se marca con un anillo separado, que se ve sobre cualquier tono
+  &--activo {
+    box-shadow: 0 0 0 2px var(--sa-superficie-elevada), 0 0 0 4px var(--tono);
+  }
+}
+
+/* --- Meta semanal (dentro del perfil) --- */
+.meta__valor {
+  font-family: $font-display;
+  font-weight: $font-bold;
+  color: var(--sa-acento-texto);
+}
+
+.meta__slider {
+  width: 100%;
+  // width:100% no basta: el pulgar sobresale de la pista y el elemento acaba
+  // midiendo unos pixeles mas que su caja, lo justo para sacar una barra de
+  // desplazamiento horizontal en el modal entero.
+  box-sizing: border-box;
+  min-width: 0;
+  height: 6px;
+  appearance: none;
+  border-radius: $radius-full;
+  background: var(--sa-superficie-alt);
+  outline: none;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sa-acento);
+    border: 3px solid var(--sa-superficie);
+    cursor: pointer;
+  }
+
+  &::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sa-acento);
+    border: 3px solid var(--sa-superficie);
+    cursor: pointer;
+  }
+}
+
+.meta__escala {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+}
+
+/* --- Filas de horario --- */
+.fila-horario {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border-left: 3px solid transparent;
+  border-radius: $radius-sm;
+  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
+
+  // Las franjas fijas se distinguen de un vistazo entre las demas
+  &--fija {
+    border-left-color: var(--sa-exito);
+    background: var(--sa-exito-suave);
+  }
+
+  select,
+  input {
+    padding: 8px 10px;
+    border: 1px solid var(--sa-borde);
+    border-radius: $radius-sm;
+    background: var(--sa-superficie-alt);
+    color: var(--sa-texto);
+  }
+
+  select { flex: 1 1 120px; }
+}
+
+/* --- Conmutador "Voy siempre" / "Puedo ir" --- */
+.conmutador {
+  font-family: $font-display;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  padding: 7px 12px;
+  border-radius: $radius-full;
+  border: 1px solid var(--sa-borde);
+  background: var(--sa-superficie);
+  color: var(--sa-texto-suave);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--sa-transicion);
+
+  &:hover:not(:disabled) {
+    border-color: var(--sa-acento);
+    color: var(--sa-acento-texto);
+  }
+
+  &--activo {
+    background: var(--sa-exito-suave);
+    border-color: var(--sa-exito);
+    color: var(--sa-exito);
+  }
+
+  // Cupo agotado: se ve que no esta disponible, no que este roto
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

@@ -1,0 +1,214 @@
+@import '../../../scss/index';
+
+/* ===========================================================================
+   Ficha de sugerencia
+   ---------------------------------------------------------------------------
+   La ficha de una en una, con su explicacion redactada y su paginador.
+   =========================================================================== */
+
+/* ===================== Ficha de sugerencia ===================== */
+.sugerencia {
+  padding: $space-lg $space-md $space-md;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-xs;
+  overflow-y: auto;
+
+  // Los hijos de un contenedor flex se comprimen por debajo de su contenido si
+  // no cabe todo. En pantallas estrechas eso hacia que el texto de la
+  // explicacion se saliera de su caja y se solapara con lo de arriba y lo de
+  // abajo. Que no encoja ninguno y que la ficha entera desplace.
+  > * {
+    flex-shrink: 0;
+    max-width: 100%;
+  }
+}
+
+.sugerencia__avatar {
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  border-radius: 50%;
+  background: var(--sa-superficie-alt);
+  border: 3px solid var(--sa-acento);
+}
+
+.sugerencia__nombre {
+  font-size: $text-2xl;
+  font-weight: $font-bold;
+  text-align: center;
+}
+
+.sugerencia__puntuacion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sugerencia__cifra {
+  font-family: $font-display;
+  font-size: $text-4xl;
+  font-weight: $font-bold;
+  line-height: 1;
+  color: var(--sa-comp-baja);
+
+  .sugerencia__puntuacion[data-tramo='media'] & { color: var(--sa-comp-media); }
+  .sugerencia__puntuacion[data-tramo='alta'] & { color: var(--sa-comp-alta); }
+}
+
+.sugerencia__etiqueta {
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+}
+
+/* --- Explicacion redactada --- */
+.explicacion {
+  width: 100%;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  // Sin esto, el texto largo no rompe y ensancha el modal en movil
+  overflow-wrap: anywhere;
+  padding: $space-sm;
+  border-radius: $radius-md;
+  background: var(--sa-acento-suave);
+  border: 1px solid var(--sa-borde);
+  text-align: center;
+}
+
+.explicacion__titular {
+  margin: 0;
+  font-family: $font-display;
+  font-size: $text-base;
+  font-weight: $font-semibold;
+  color: var(--sa-acento-texto);
+}
+
+.explicacion__motivo {
+  margin: 0;
+  font-size: $text-sm;
+  line-height: $leading-normal;
+  color: var(--sa-texto-suave);
+}
+
+.explicacion__cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-xs;
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+}
+
+.puntos {
+  display: inline-flex;
+  gap: 4px;
+
+  i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sa-acento);
+    animation: latir 1.2s infinite ease-in-out;
+
+    &:nth-child(2) { animation-delay: 0.15s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+  }
+}
+
+.sugerencia__datos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-xs;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+
+  dt {
+    font-size: $text-xs;
+    color: var(--sa-texto-tenue);
+    text-transform: uppercase;
+    letter-spacing: $tracking-wide;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    font-size: $text-sm;
+    font-weight: $font-medium;
+    color: var(--sa-texto);
+  }
+}
+
+.sugerencia__semana {
+  width: 100%;
+  padding: $space-xs 0;
+}
+
+.sugerencia__semana-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-xs;
+  margin-bottom: 6px;
+}
+
+.sugerencia__horario-titulo {
+  font-size: $text-xs;
+  text-transform: uppercase;
+  letter-spacing: $tracking-wide;
+  color: var(--sa-texto-tenue);
+}
+
+.sugerencia__horario-total {
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  color: var(--sa-texto);
+}
+
+.paginador {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+  width: 100%;
+  padding-top: $space-xs;
+}
+
+.paginador__btn {
+  width: 36px;
+  height: 36px;
+  font-size: $text-lg;
+  border-radius: 50%;
+  border: 1px solid var(--sa-borde);
+  background: var(--sa-superficie);
+  color: var(--sa-texto-suave);
+  cursor: pointer;
+  transition: all var(--sa-transicion);
+
+  &:hover:not(:disabled) {
+    border-color: var(--sa-acento);
+    color: var(--sa-acento-texto);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.paginador__posicion {
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+}
+
+/* ===================== Animaciones ===================== */
+@keyframes latir {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}

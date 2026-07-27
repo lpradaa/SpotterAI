@@ -1,0 +1,292 @@
+<!-- Editar perfil.
+     Salio de dashboard.html, donde eran 290 de sus 690 lineas de plantilla y
+     la mitad larga de su hoja de estilos. Aqui dentro esta todo lo que se
+     puede tocar del perfil propio y nada mas. -->
+<div class="velo" (click)="cerrar.emit()">
+  <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    <header class="modal__cabecera">
+      <h2>Editar perfil</h2>
+      <button class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">✕</button>
+    </header>
+
+    <div class="modal__cuerpo">
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Tu color</legend>
+        <p class="bloque__ayuda">
+          Tu inicial te identifica en las listas; el color es para distinguirte de un vistazo.
+        </p>
+        <div class="colores">
+          <app-avatar [nombre]="nombre()" [valor]="perfilForm.avatar"
+                      [foto]="urlFoto()" [tamano]="56" />
+
+          <div class="colores__opciones">
+            @for (color of coloresAvatar; track color) {
+              <button type="button"
+                      class="color"
+                      [class.color--activo]="perfilForm.avatar === color && !perfilForm.fotoUrl"
+                      [attr.data-color]="color"
+                      [attr.aria-label]="'Color ' + color"
+                      [attr.aria-pressed]="perfilForm.avatar === color && !perfilForm.fotoUrl"
+                      (click)="seleccionarAvatar(color)"></button>
+            }
+          </div>
+        </div>
+
+        <!-- La foto es opcional a propósito: obligar a subir una para empezar
+             a usar la aplicación es una barrera, y las iniciales identifican
+             igual de bien mientras tanto. -->
+        <div class="foto-acciones">
+          <label class="btn btn--fantasma btn--pequeno">
+            @if (subiendoFoto()) { Subiendo… }
+            @else if (perfilForm.fotoUrl) { Cambiar foto }
+            @else { Subir una foto }
+            <input type="file" accept="image/*" (change)="alElegirFoto($event)" hidden>
+          </label>
+
+          @if (perfilForm.fotoUrl) {
+            <button type="button" class="btn btn--fantasma btn--pequeno" (click)="quitarFoto()">
+              Quitar
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Datos y objetivos</legend>
+        <div class="rejilla-campos">
+          <label class="campo">
+            <span>Nivel</span>
+            <select [(ngModel)]="perfilForm.nivel">
+              <option value="" disabled>Elige tu nivel</option>
+              <option value="Principiante">Principiante</option>
+              <option value="Intermedio">Intermedio</option>
+              <option value="Avanzado">Avanzado</option>
+            </select>
+          </label>
+          <label class="campo">
+            <span>Objetivo</span>
+            <select [(ngModel)]="perfilForm.objetivos">
+              <option value="" disabled>Elige tu objetivo</option>
+              <option value="Hipertrofia">Hipertrofia</option>
+              <option value="Fuerza">Fuerza</option>
+              <option value="Pérdida de peso">Pérdida de peso</option>
+              <option value="Resistencia">Resistencia</option>
+            </select>
+          </label>
+          <!-- El objetivo dice qué busca alguien; la rutina, qué le toca el
+               martes. Coincidir en horario con quien ese día hace pierna
+               mientras tú haces pecho es coincidir, no entrenar juntos. -->
+          <label class="campo">
+            <span>Rutina</span>
+            <select [(ngModel)]="perfilForm.rutina">
+              <option value="" disabled>Cómo repartes la semana</option>
+              @for (r of rutinasDisponibles(); track r.clave) {
+                <option [value]="r.clave">{{ r.nombre }}</option>
+              }
+            </select>
+          </label>
+          <label class="campo"><span>Edad</span><input type="number" [(ngModel)]="perfilForm.edad"></label>
+          <label class="campo"><span>Peso (kg)</span><input type="number" [(ngModel)]="perfilForm.peso"></label>
+          <label class="campo"><span>Género</span><input type="text" [(ngModel)]="perfilForm.genero"></label>
+        </div>
+
+        <!-- El único campo libre del perfil. Con el mismo nivel y el mismo
+             objetivo, dos personas se leen igual: esto es lo que las separa. -->
+        <label class="campo campo--ancho">
+          <span>Sobre ti</span>
+          <textarea [(ngModel)]="perfilForm.biografia" rows="3" [maxlength]="maxBiografia"
+                    placeholder="Qué entrenas, cómo te gusta entrenar, si buscas a alguien constante…"></textarea>
+          <small class="campo__pista"
+                 [class.campo__pista--al-limite]="restanteBiografia() < 30">
+            {{ restanteBiografia() }} caracteres
+          </small>
+        </label>
+      </fieldset>
+
+      <!-- ================= Mis levantamientos =================
+           La ficha técnica, no la historia: esto es lo que el motor cruza
+           para saber si dos personas pueden cubrirse con la barra cargada.
+           Un spotter que no puede con tu peso no te sirve de nada. -->
+      <fieldset class="bloque">
+        <div class="bloque__cabecera">
+          <legend class="bloque__titulo">Mis levantamientos</legend>
+          <span class="bloque__pista">{{ levantamientosPuestos() }} de 3</span>
+        </div>
+
+        <p class="bloque__nota">
+          Cuenta <strong>10 de los 100 puntos</strong> de compatibilidad. Pon el peso
+          de la barra completa y a cuántas repeticiones lo mueves.
+        </p>
+
+        <div class="levantamientos">
+          @for (fila of perfilForm.levantamientos; track $index; let i = $index) {
+            <div class="levantamiento">
+              <select [(ngModel)]="fila.ejercicio" [name]="'ej' + i" aria-label="Ejercicio">
+                <option value="">Elige un ejercicio</option>
+                @for (e of ejerciciosDisponibles(); track e.clave) {
+                  <option [value]="e.clave">{{ e.nombre }}</option>
+                }
+              </select>
+
+              <label class="levantamiento__dato">
+                <input type="number" [(ngModel)]="fila.peso" [name]="'peso' + i"
+                       min="1" max="600" placeholder="100" aria-label="Peso en kilos">
+                <span>kg</span>
+              </label>
+
+              <label class="levantamiento__dato">
+                <input type="number" [(ngModel)]="fila.repeticiones" [name]="'reps' + i"
+                       min="1" max="12" placeholder="5" aria-label="Repeticiones">
+                <span>reps</span>
+              </label>
+
+              <button type="button" class="btn-icono" (click)="quitarLevantamiento(i)"
+                      aria-label="Quitar este levantamiento" title="Quitar">✕</button>
+            </div>
+          }
+        </div>
+
+        @if (perfilForm.levantamientos.length < 3) {
+          <button type="button" class="btn btn--fantasma btn--pequeno"
+                  (click)="anadirLevantamiento()">
+            Añadir levantamiento
+          </button>
+        }
+      </fieldset>
+
+      <!-- ================= Mis marcas =================
+           Lo único del perfil que escribe la persona. Todo lo demás son
+           desplegables, y con desplegables dos perfiles se leen igual. -->
+      <fieldset class="bloque">
+        <div class="bloque__cabecera">
+          <legend class="bloque__titulo">Mis marcas</legend>
+          <span class="bloque__pista">{{ misHitos().length }} de 12</span>
+        </div>
+
+        @if (misHitos().length > 0) {
+          <ul class="marcas">
+            @for (hito of misHitos(); track hito.id) {
+              <li class="marca">
+                @if (hito.medioUrl) {
+                  <img class="marca__miniatura" [src]="urlMedio(hito.medioUrl)" [alt]="hito.titulo">
+                }
+                <div class="marca__texto">
+                  <strong>{{ hito.titulo }}</strong>
+                  @if (hito.descripcion) { <span>{{ hito.descripcion }}</span> }
+                </div>
+                <button type="button" class="btn-icono" (click)="borrarHito(hito.id)"
+                        [attr.aria-label]="'Borrar ' + hito.titulo" title="Borrar">✕</button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (misHitos().length < 12) {
+          <div class="marca-nueva">
+            <input type="text" [(ngModel)]="nuevoHito.titulo" name="hitoTitulo"
+                   placeholder="Sentadilla 140 kg × 3" maxlength="120" aria-label="Título de la marca">
+            <input type="text" [(ngModel)]="nuevoHito.descripcion" name="hitoDesc"
+                   placeholder="Cómo fue (opcional)" maxlength="500" aria-label="Descripción">
+
+            <div class="marca-nueva__pie">
+              <input type="date" [(ngModel)]="nuevoHito.fecha" name="hitoFecha" aria-label="Fecha">
+
+              <label class="btn btn--fantasma btn--pequeno marca-nueva__adjuntar">
+                @if (subiendo()) { Subiendo… }
+                @else if (nuevoHito.medioUrl) { Archivo listo }
+                @else { Foto o vídeo }
+                <input type="file" accept="image/*,video/*" (change)="alElegirMedio($event)" hidden>
+              </label>
+
+              <button type="button" class="btn btn--primario btn--pequeno"
+                      [disabled]="!nuevoHito.titulo.trim() || subiendo()" (click)="anadirHito()">
+                Añadir
+              </button>
+            </div>
+          </div>
+        }
+      </fieldset>
+
+      <fieldset class="bloque">
+        <div class="bloque__cabecera">
+          <legend class="bloque__titulo">Meta semanal</legend>
+          <span class="meta__valor cifra">{{ metaSemanal() }} {{ metaSemanal() === 1 ? 'día' : 'días' }}</span>
+        </div>
+        <input type="range" min="1" max="7" class="meta__slider"
+               [value]="metaSemanal()" (input)="actualizarMetaDesdeSlider($event)"
+               aria-label="Días de entrenamiento por semana" />
+        <div class="meta__escala" aria-hidden="true">
+          @for (n of [1,2,3,4,5,6,7]; track n) { <span>{{ n }}</span> }
+        </div>
+      </fieldset>
+
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Gimnasio habitual</legend>
+        <label class="campo">
+          <span>¿Dónde entrenas?</span>
+          <select [(ngModel)]="perfilForm.gimnasioId" (change)="toggleNuevoGimnasio($event)">
+            <option [value]="null">Selecciona tu gimnasio</option>
+            @for (g of gimnasios(); track g.id) {
+              <option [value]="g.id">{{ g.nombre }}</option>
+            }
+            <option value="NUEVO">+ Añadir uno nuevo</option>
+          </select>
+        </label>
+        @if (mostrarInputGimnasio) {
+          <label class="campo">
+            <span>Nombre del gimnasio</span>
+            <input type="text" [(ngModel)]="nuevoGimnasioNombre" placeholder="Ej: McFit Centro">
+          </label>
+        }
+      </fieldset>
+
+      <fieldset class="bloque">
+        <div class="bloque__cabecera">
+          <legend class="bloque__titulo">Horarios de entrenamiento</legend>
+          <button class="btn btn--pequeno" (click)="agregarHorario()">Añadir día</button>
+        </div>
+        <p class="bloque__ayuda">
+          Es el dato que más pesa en el emparejamiento. Marca <strong>Voy siempre</strong>
+          en las franjas a las que acudes de forma fija: coincidir una hora a la que
+          los dos vais seguro cuenta más que muchas horas de disponibilidad suelta.
+          Puedes marcar hasta {{ maxHabituales }}.
+        </p>
+
+        @for (h of perfilForm.horarios; track $index; let i = $index) {
+          <div class="fila-horario" [class.fila-horario--fija]="h.habitual">
+            <select [(ngModel)]="h.diaSemana" aria-label="Día de la semana">
+              @for (dia of diasSemana; track dia) { <option [value]="dia">{{ dia }}</option> }
+            </select>
+            <input type="time" [(ngModel)]="h.horaInicio" aria-label="Hora de inicio">
+            <span aria-hidden="true">–</span>
+            <input type="time" [(ngModel)]="h.horaFin" aria-label="Hora de fin">
+
+            <button type="button"
+                    class="conmutador"
+                    [class.conmutador--activo]="h.habitual"
+                    [disabled]="!puedeMarcarHabitual(h)"
+                    [attr.aria-pressed]="!!h.habitual"
+                    (click)="alternarHabitual(h)">
+              {{ h.habitual ? 'Voy siempre' : 'Puedo ir' }}
+            </button>
+
+            <button class="btn-icono btn-icono--no" (click)="eliminarHorario(i)">Quitar</button>
+          </div>
+        }
+
+        @if (perfilForm.horarios.length === 0) {
+          <p class="vacio">No tienes horarios añadidos.</p>
+        } @else {
+          <p class="bloque__ayuda">
+            Franjas fijas: {{ habitualesMarcadas() }} de {{ maxHabituales }}
+          </p>
+        }
+      </fieldset>
+    </div>
+
+    <footer class="modal__pie">
+      <button class="btn btn--fantasma" (click)="cerrar.emit()">Cancelar</button>
+      <button class="btn btn--primario" (click)="guardarPerfil()">Guardar cambios</button>
+    </footer>
+  </div>
+</div>
