@@ -69,8 +69,13 @@
   background: var(--sa-superficie);
 }
 
+/* Base de 220 px y no 0: con `flex: 1` el texto se quedaba con lo que
+   sobrara despues de unos botones que no encogen, y a 375 px eso era media
+   banda —«Marta Ibanez / propone entrenar / contigo» en tres lineas—. Con una
+   base, cuando no caben los dos al lado son los botones los que bajan de
+   linea, que es lo que se puede leer de un vistazo. */
 .banda__texto {
-  flex: 1;
+  flex: 1 1 220px;
   min-width: 0;
 }
 
@@ -90,8 +95,10 @@
 
 .banda__acciones {
   display: flex;
+  flex-wrap: wrap;
   gap: $space-xs;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .banda__puntos {
