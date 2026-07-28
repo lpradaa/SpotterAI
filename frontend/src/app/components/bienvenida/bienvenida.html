@@ -1,48 +1,140 @@
 <div class="bienvenida">
-  <header class="bienvenida__cabecera">
-    <h1 class="bienvenida__titulo">
-      @if (nombre()) { {{ nombre() }}, ¿cuándo entrenas? } @else { ¿Cuándo entrenas? }
-    </h1>
-    <p class="bienvenida__texto">
-      Es lo único que necesitamos para empezar. Buscamos gente que coincida contigo
-      en el gimnasio, así que sin saber tus horas no hay nada que cruzar: pesa el
-      <strong>40&nbsp;%</strong> de la compatibilidad, más que el nivel y el objetivo juntos.
-    </p>
-  </header>
 
-  <div class="bienvenida__panel">
-    <div class="bienvenida__instruccion">
-      <span>Marca las horas a las que <strong>podrías</strong> ir</span>
-      @if (horasTotales() > 0) {
-        <span class="bienvenida__cuenta">
-          {{ horasTotales() }} {{ horasTotales() === 1 ? 'hora' : 'horas' }} a la semana
-        </span>
-      }
+  <!-- Dos pasos y no un formulario largo.
+       Lo que se pide aquí es lo mínimo que el motor necesita declarado, y son
+       seis cosas. Pedirlas todas de golpe en una pantalla es la forma más rápida
+       de que alguien las rellene a lo que sea con tal de pasar, y un dato
+       inventado es peor que uno ausente porque el motor lo trata como un hecho.
+       Primero la semana, que es lo que más pesa y lo único visual. -->
+  @if (paso() === 'horario') {
+
+    <header class="bienvenida__cabecera">
+      <h1 class="bienvenida__titulo">
+        @if (nombre()) { {{ nombre() }}, ¿cuándo entrenas? } @else { ¿Cuándo entrenas? }
+      </h1>
+      <p class="bienvenida__texto">
+        Buscamos gente que coincida contigo en el gimnasio, así que sin saber tus
+        horas no hay nada que cruzar: pesa el <strong>40&nbsp;%</strong> de la
+        compatibilidad, más que el nivel y el objetivo juntos.
+      </p>
+    </header>
+
+    <div class="bienvenida__panel">
+      <div class="bienvenida__instruccion">
+        <span>Marca las horas a las que <strong>podrías</strong> ir</span>
+        @if (horasTotales() > 0) {
+          <span class="bienvenida__cuenta">
+            {{ horasTotales() }} {{ horasTotales() === 1 ? 'hora' : 'horas' }} a la semana
+          </span>
+        }
+      </div>
+
+      <app-rejilla-editable
+        [franjasIniciales]="franjasIniciales()"
+        (cambio)="alCambiar($event)" />
+
+      <p class="bienvenida__nota">
+        Pinta con holgura: esto es cuándo <em>puedes</em>, no un compromiso. Cuando
+        sepas a qué vas siempre, podrás marcarlo en tu perfil y contará mucho más.
+      </p>
     </div>
 
-    <app-rejilla-editable
-      [franjasIniciales]="franjasIniciales()"
-      (cambio)="alCambiar($event)" />
+    @if (error()) { <p class="aviso" role="alert">{{ error() }}</p> }
 
-    <p class="bienvenida__nota">
-      Pinta con holgura: esto es cuándo <em>puedes</em>, no un compromiso. Cuando
-      sepas a qué vas siempre, podrás marcarlo en tu perfil y contará mucho más.
-    </p>
-  </div>
+    <footer class="bienvenida__pie">
+      <button class="btn btn--primario"
+              [disabled]="!hayHorario() || guardando()"
+              (click)="siguiente()">
+        @if (guardando()) { Guardando… } @else { Continuar }
+      </button>
 
-  @if (error()) {
-    <p class="aviso" role="alert">{{ error() }}</p>
+      @if (!hayHorario()) {
+        <span class="bienvenida__pista">Marca al menos una hora para continuar</span>
+      }
+    </footer>
+
+  } @else {
+
+    <header class="bienvenida__cabecera">
+      <h1 class="bienvenida__titulo">Cinco cosas más y ya está</h1>
+      <p class="bienvenida__texto">
+        Son las que usa el motor para puntuar. Sin ellas tu compatibilidad se
+        calcula con la mitad de los datos y no se puede comparar con la de nadie:
+        ni tú sabrías qué significa tu número ni los demás el suyo.
+      </p>
+    </header>
+
+    <div class="bienvenida__panel">
+      <div class="bienvenida__campos">
+        <label class="campo">
+          <span>¿Dónde entrenas?</span>
+          <select [(ngModel)]="datos.gimnasioId">
+            <option [ngValue]="null" disabled>Elige tu gimnasio</option>
+            @for (g of gimnasios(); track g.id) {
+              <option [ngValue]="g.id">{{ g.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="campo">
+          <span>Tu nivel</span>
+          <select [(ngModel)]="datos.nivel">
+            <option value="" disabled>Elige tu nivel</option>
+            <option value="Principiante">Principiante</option>
+            <option value="Intermedio">Intermedio</option>
+            <option value="Avanzado">Avanzado</option>
+          </select>
+        </label>
+
+        <label class="campo">
+          <span>Qué buscas</span>
+          <select [(ngModel)]="datos.objetivos">
+            <option value="" disabled>Elige tu objetivo</option>
+            <option value="Hipertrofia">Hipertrofia</option>
+            <option value="Fuerza">Fuerza</option>
+            <option value="Pérdida de peso">Pérdida de peso</option>
+            <option value="Resistencia">Resistencia</option>
+          </select>
+        </label>
+
+        <label class="campo">
+          <span>Cómo repartes la semana</span>
+          <select [(ngModel)]="datos.rutina">
+            <option value="" disabled>Elige tu rutina</option>
+            @for (r of rutinas(); track r.clave) {
+              <option [value]="r.clave">{{ r.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="campo">
+          <span>Edad</span>
+          <input type="number" min="14" max="99" [(ngModel)]="datos.edad" placeholder="28">
+        </label>
+      </div>
+
+      <!-- La salida honesta importa tanto como el campo obligatorio. Sin "sin
+           rutina fija", quien no siga ninguna marcará la primera de la lista
+           para poder pasar, y el motor tratará esa elección como un hecho. -->
+      <p class="bienvenida__nota">
+        Si no sigues ninguna rutina fija, elígelo: <strong>es una respuesta</strong>,
+        no un hueco, y cuenta como tal.
+      </p>
+    </div>
+
+    @if (error()) { <p class="aviso" role="alert">{{ error() }}</p> }
+
+    <footer class="bienvenida__pie">
+      <button class="btn btn--fantasma" (click)="paso.set('horario')">Atrás</button>
+      <button class="btn btn--primario"
+              [disabled]="!datosCompletos() || guardando()"
+              (click)="guardar()">
+        @if (guardando()) { Guardando… } @else { Empezar }
+      </button>
+
+      @if (!datosCompletos()) {
+        <span class="bienvenida__pista">Faltan campos por elegir</span>
+      }
+    </footer>
   }
-
-  <footer class="bienvenida__pie">
-    <button class="btn btn--primario"
-            [disabled]="!puedeContinuar() || guardando()"
-            (click)="guardar()">
-      @if (guardando()) { Guardando… } @else { Continuar }
-    </button>
-
-    @if (!puedeContinuar()) {
-      <span class="bienvenida__pista">Marca al menos una hora para continuar</span>
-    }
-  </footer>
 </div>

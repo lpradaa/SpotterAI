@@ -78,3 +78,12 @@
   font-size: $text-xs;
   color: var(--sa-texto-suave);
 }
+
+/* Los cinco desplegables del segundo paso. Dos columnas en cuanto hay sitio:
+   en una sola, la pantalla parece un formulario de alta de los largos. */
+.bienvenida__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $space-sm;
+  margin-bottom: $space-sm;
+}

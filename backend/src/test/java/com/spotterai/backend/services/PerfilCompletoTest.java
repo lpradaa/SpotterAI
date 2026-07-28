@@ -1,6 +1,7 @@
 package com.spotterai.backend.services;
 
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
+import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -121,5 +122,58 @@ class PerfilCompletoTest {
         conUsuario(sinMeta);
 
         assertEquals(4, servicio.obtenerMiPerfilCompleto("yo@test.com").get("metaSemanal"));
+    }
+
+    @Test
+    @DisplayName("Guardar solo una parte no borra el resto")
+    void guardarUnaParteNoBorraLoDemas() {
+        Usuario u = usuarioCompleto();
+        conUsuario(u);
+        Mockito.when(usuarioRepository.save(Mockito.any())).thenAnswer(i -> i.getArgument(0));
+
+        // Lo que manda la pantalla de bienvenida: solo el horario.
+        UsuarioPerfilDTO soloHorario = new UsuarioPerfilDTO();
+        soloHorario.setHorarios(java.util.List.of());
+
+        servicio.actualizarPerfil("yo@test.com", soloHorario);
+
+        // Antes esto era un reemplazo y dejaba a null todo lo que no viniera. Con
+        // el perfil minimo obligatorio deja de ser academico: un onboarding por
+        // pasos guardaria el primero y se llevaria por delante el segundo.
+        assertEquals("Intermedio", u.getNivel());
+        assertEquals("Hipertrofia", u.getObjetivos());
+        assertEquals(28, u.getEdad());
+        assertEquals("TORSO_PIERNA", u.getRutina());
+        assertEquals("Busco alguien constante", u.getBiografia());
+    }
+
+    @Test
+    @DisplayName("Una cadena vacía sí limpia: es una decisión del formulario")
+    void elVacioSiLimpia() {
+        Usuario u = usuarioCompleto();
+        conUsuario(u);
+        Mockito.when(usuarioRepository.save(Mockito.any())).thenAnswer(i -> i.getArgument(0));
+
+        UsuarioPerfilDTO borrarBio = new UsuarioPerfilDTO();
+        borrarBio.setBiografia("");
+
+        servicio.actualizarPerfil("yo@test.com", borrarBio);
+
+        // "" viene de alguien que ha vaciado el campo; null es que ese campo no
+        // venia en la peticion. Confundirlos deja sin forma de borrar una
+        // biografia.
+        assertNull(u.getBiografia());
+        assertEquals("Intermedio", u.getNivel());
+    }
+
+    @Test
+    @DisplayName("El perfil dice qué le falta para poder emparejarse")
+    void elPerfilDiceQueLeFalta() {
+        conUsuario(usuarioCompleto());
+
+        Map<String, Object> perfil = servicio.obtenerMiPerfilCompleto("yo@test.com");
+
+        assertTrue(perfil.containsKey("perfilMinimo"),
+                "El guardián necesita saber si se puede emparejar a esta persona");
     }
 }

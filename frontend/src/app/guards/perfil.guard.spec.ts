@@ -5,20 +5,20 @@ import { Router, UrlTree } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { firstValueFrom, isObservable, Observable } from 'rxjs';
 
-import { horarioGuard } from './horario.guard';
+import { perfilGuard } from './perfil.guard';
 import { PerfilEstadoService } from '../services/perfil-estado.service';
 import { api } from '../config/api';
 
 /**
- * Sin horario no se pasa.
+ * Sin lo mínimo no se pasa.
  *
- * El horario vale el 40 % de la compatibilidad, así que un perfil sin él no se
- * puede emparejar con nadie: solo ocupa sitio en la lista. Pero el guardián
- * tiene una decisión que no es obvia y conviene fijar: ante un error de red deja
- * pasar. Encerrar a todo el mundo en la pantalla de bienvenida porque el backend
- * ha parpadeado es peor que colar a alguien que sí tenía horario.
+ * Qué es "lo mínimo" lo decide el backend y viaja en `perfilMinimo.queFalta`;
+ * aquí solo se comprueba que el guardián lo respete. La decisión que conviene
+ * fijar es la que no es obvia: ante un error de red **deja pasar**. Encerrar a
+ * todo el mundo en la pantalla de bienvenida porque el backend ha parpadeado es
+ * peor que colar a alguien que sí tenía el perfil completo.
  */
-describe('horarioGuard', () => {
+describe('perfilGuard', () => {
 
   let http: HttpTestingController;
   let router: Router;
@@ -36,35 +36,44 @@ describe('horarioGuard', () => {
   /** Ejecuta el guardián en su contexto de inyección y resuelve su respuesta. */
   function ejecutar(): Promise<boolean | UrlTree> {
     const salida = TestBed.runInInjectionContext(
-      () => horarioGuard(null as any, null as any)) as any;
+      () => perfilGuard(null as any, null as any)) as any;
     return isObservable(salida)
       ? firstValueFrom(salida as Observable<boolean | UrlTree>)
       : Promise.resolve(salida);
   }
 
-  it('con horario, deja pasar', async () => {
+  it('con el perfil mínimo completo, deja pasar', async () => {
     const respuesta = ejecutar();
-    http.expectOne(api('/api/usuarios/perfil')).flush({
-      horarios: [{ diaSemana: 'Lunes', horaInicio: '18:00', horaFin: '20:00' }]
-    });
+    http.expectOne(api('/api/usuarios/perfil')).flush({ perfilMinimo: { queFalta: [] } });
 
     expect(await respuesta).toBe(true);
   });
 
-  it('sin horario, manda a la bienvenida', async () => {
+  it('si falta algo del mínimo, manda a la bienvenida', async () => {
     const respuesta = ejecutar();
-    http.expectOne(api('/api/usuarios/perfil')).flush({ horarios: [] });
+    http.expectOne(api('/api/usuarios/perfil'))
+        .flush({ perfilMinimo: { queFalta: ['rutina', 'edad'] } });
 
     const salida = await respuesta;
     expect(salida instanceof UrlTree).toBe(true);
     expect(router.serializeUrl(salida as UrlTree)).toBe('/bienvenida');
   });
 
-  it('si el perfil no trae horarios, cuenta como que no los tiene', async () => {
+  it('basta con que falte una cosa', async () => {
+    const respuesta = ejecutar();
+    http.expectOne(api('/api/usuarios/perfil'))
+        .flush({ perfilMinimo: { queFalta: ['horarios'] } });
+
+    expect(await respuesta instanceof UrlTree).toBe(true);
+  });
+
+  it('si el perfil no trae el mínimo, se deja pasar en vez de encerrar', async () => {
     const respuesta = ejecutar();
     http.expectOne(api('/api/usuarios/perfil')).flush({});
 
-    expect(await respuesta instanceof UrlTree).toBe(true);
+    // Un backend viejo, o una respuesta a medias, no deberían bloquear a nadie:
+    // el mismo criterio que con el error de red.
+    expect(await respuesta).toBe(true);
   });
 
   it('ante un error de red deja pasar en vez de encerrar a nadie', async () => {
@@ -77,7 +86,7 @@ describe('horarioGuard', () => {
 
   it('solo pregunta la primera vez: la respuesta se recuerda', async () => {
     const primera = ejecutar();
-    http.expectOne(api('/api/usuarios/perfil')).flush({ horarios: [{ diaSemana: 'Lunes' }] });
+    http.expectOne(api('/api/usuarios/perfil')).flush({ perfilMinimo: { queFalta: [] } });
     expect(await primera).toBe(true);
 
     // Sin memoria, cada navegación cargaría el perfil entero otra vez.
@@ -87,7 +96,7 @@ describe('horarioGuard', () => {
 
   it('tras guardar el perfil se vuelve a preguntar', async () => {
     const primera = ejecutar();
-    http.expectOne(api('/api/usuarios/perfil')).flush({ horarios: [{ diaSemana: 'Lunes' }] });
+    http.expectOne(api('/api/usuarios/perfil')).flush({ perfilMinimo: { queFalta: [] } });
     await primera;
 
     // Guardar puede haber borrado todas las franjas, así que lo que sabíamos ya
@@ -95,7 +104,8 @@ describe('horarioGuard', () => {
     TestBed.inject(PerfilEstadoService).olvidar();
 
     const segunda = ejecutar();
-    http.expectOne(api('/api/usuarios/perfil')).flush({ horarios: [] });
+    http.expectOne(api('/api/usuarios/perfil'))
+        .flush({ perfilMinimo: { queFalta: ['horarios'] } });
 
     expect(await segunda instanceof UrlTree).toBe(true);
   });

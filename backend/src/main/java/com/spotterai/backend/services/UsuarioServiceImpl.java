@@ -15,6 +15,7 @@ import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.matching.PuntuacionCompatibilidad;
 import com.spotterai.backend.matching.Constancia;
 import com.spotterai.backend.matching.PerfilDeMatch;
+import com.spotterai.backend.matching.PerfilMinimo;
 import com.spotterai.backend.matching.RendimientoDelPerfil;
 import com.spotterai.backend.matching.Rutina;
 import com.spotterai.backend.models.Disponibilidad;
@@ -157,25 +158,40 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado en la base de datos."));
 
-        usuario.setEdad(dto.getEdad());
-        usuario.setGenero(dto.getGenero());
-        usuario.setPeso(dto.getPeso());
-        usuario.setNivel(dto.getNivel());
-        usuario.setObjetivos(dto.getObjetivos());
-        usuario.setAvatar(dto.getAvatar());
-        usuario.setBiografia(recortar(dto.getBiografia(), MAX_BIOGRAFIA));
+        // Lo que no llega, no se toca.
+        //
+        // Antes esto era un reemplazo: mandar solo el horario dejaba a null el
+        // nivel, el objetivo y el gimnasio de quien ya los tuviera. La pantalla
+        // de bienvenida se defendia leyendo el perfil entero y reenviandolo, que
+        // es un apaño para una API que borra por omision. Con el perfil minimo
+        // obligatorio la pregunta ya no es academica: un onboarding por pasos
+        // guardaria el primer paso y se llevaria por delante el segundo.
+        //
+        // Un texto vacio si limpia: "" es una decision del formulario, null es
+        // que ese campo no venia en la peticion.
+        if (dto.getEdad() != null) usuario.setEdad(dto.getEdad());
+        if (dto.getGenero() != null) usuario.setGenero(dto.getGenero());
+        if (dto.getPeso() != null) usuario.setPeso(dto.getPeso());
+        if (dto.getNivel() != null) usuario.setNivel(enBlancoANull(dto.getNivel()));
+        if (dto.getObjetivos() != null) usuario.setObjetivos(enBlancoANull(dto.getObjetivos()));
+        if (dto.getAvatar() != null) usuario.setAvatar(dto.getAvatar());
+        if (dto.getBiografia() != null) {
+            usuario.setBiografia(recortar(dto.getBiografia(), MAX_BIOGRAFIA));
+        }
 
         // Se valida contra el enum antes de guardar: la columna es texto libre y
         // sin esto cualquier cadena entraria en la base para leerse luego como
         // "sin rutina", que es un dato perdido sin que nadie se entere.
-        usuario.setRutina(Rutina.desde(dto.getRutina()).map(Enum::name).orElse(null));
+        if (dto.getRutina() != null) {
+            usuario.setRutina(Rutina.desde(dto.getRutina()).map(Enum::name).orElse(null));
+        }
 
         // Solo se acepta una ruta servida por nosotros. Sin esta comprobacion, el
         // campo seria un hueco para meter la URL de cualquier sitio y hacer que
         // todos los navegadores que vieran el perfil la pidieran.
-        if (dto.getFotoUrl() == null || dto.getFotoUrl().isBlank()) {
+        if (dto.getFotoUrl() != null && dto.getFotoUrl().isBlank()) {
             usuario.setFotoUrl(null);
-        } else if (dto.getFotoUrl().startsWith("/api/medios/")) {
+        } else if (dto.getFotoUrl() != null && dto.getFotoUrl().startsWith("/api/medios/")) {
             usuario.setFotoUrl(dto.getFotoUrl());
         }
 
@@ -239,6 +255,11 @@ public class UsuarioServiceImpl implements UsuarioService {
      * sin esto, una peticion directa con 5000 caracteres reventaria al guardar.
      * En blanco se guarda como null para que "sin biografia" sea un solo caso.
      */
+    /** Un desplegable sin elegir manda "", y eso significa "no lo he dicho". */
+    private static String enBlancoANull(String valor) {
+        return valor == null || valor.isBlank() ? null : valor;
+    }
+
     private static String recortar(String texto, int maximo) {
         if (texto == null) return null;
         String limpio = texto.trim();
@@ -284,6 +305,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         // mismos datos que ya estamos leyendo, y quien pinta el perfil es quien
         // necesita saber que le falta.
         List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(usuario.getId());
+        // Lo que hay que tener para poder emparejarse, aparte de lo que suma
+        // puntos: el guardian mira esto, y el aviso del tablero lo otro.
+        perfil.put("perfilMinimo", PerfilMinimo.de(usuario, !misHorarios.isEmpty()));
+
         perfil.put("rendimiento", RendimientoDelPerfil.de(
                 usuario, !misHorarios.isEmpty(), !misLevantamientos.isEmpty(),
                 cargarConstanciaDe(List.of(usuario.getId()))

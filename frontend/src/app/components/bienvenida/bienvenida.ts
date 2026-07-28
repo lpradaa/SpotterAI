@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UsuarioService } from '../../services/usuario.service';
 import { PerfilEstadoService } from '../../services/perfil-estado.service';
@@ -17,7 +18,7 @@ import { Franja } from '../rejilla-semana/rejilla-semana';
 @Component({
   selector: 'app-bienvenida',
   standalone: true,
-  imports: [CommonModule, RejillaEditable],
+  imports: [CommonModule, RejillaEditable, FormsModule],
   templateUrl: './bienvenida.html',
   styleUrl: './bienvenida.scss'
 })
@@ -33,26 +34,84 @@ export class BienvenidaComponent implements OnInit {
   guardando = signal(false);
   error = signal<string | null>(null);
 
-  /** El perfil que ya existe, para no perder lo demás al guardar. */
-  private perfil: any = null;
+  /**
+   * En cuál de los dos pasos estamos.
+   *
+   * Se empieza por el horario aunque ya lo tengas: es lo que más pesa y lo único
+   * que se pinta, así que abrir con cinco desplegables sería empezar por lo
+   * aburrido. Quien ya lo tenga solo tiene que pulsar Continuar.
+   */
+  paso = signal<'horario' | 'datos'>('horario');
 
-  puedeContinuar = computed(() => this.franjas().length > 0);
+  /** Los catálogos los manda el backend, como en el resto de la aplicación. */
+  gimnasios = signal<any[]>([]);
+  rutinas = signal<{ clave: string, nombre: string }[]>([]);
+
+  datos: {
+    gimnasioId: number | null; nivel: string; objetivos: string; rutina: string;
+    edad: number | null;
+  } = { gimnasioId: null, nivel: '', objetivos: '', rutina: '', edad: null };
+
+  hayHorario = computed(() => this.franjas().length > 0);
+
+  datosCompletos(): boolean {
+    return !!(this.datos.gimnasioId && this.datos.nivel && this.datos.objetivos
+      && this.datos.rutina && this.datos.edad);
+  }
 
   horasTotales = computed(() =>
     this.franjas().reduce((suma, f) => suma + this.duracion(f), 0)
   );
 
   ngOnInit(): void {
-    // Alguien puede llegar aquí con parte del perfil hecho; se respeta.
+    // Alguien puede llegar aquí con parte del perfil hecho; se respeta todo lo
+    // que ya haya rellenado.
     this.usuarioService.getMiPerfil().subscribe({
       next: perfil => {
-        this.perfil = perfil ?? {};
         if (perfil?.nombre) this.nombre.set(perfil.nombre);
+
         const horarios = perfil?.horarios ?? [];
         this.franjasIniciales.set(horarios);
         this.franjas.set(horarios);
+
+        this.datos = {
+          gimnasioId: perfil?.gimnasioId ?? null,
+          nivel: perfil?.nivel ?? '',
+          objetivos: perfil?.objetivos ?? '',
+          rutina: perfil?.rutina ?? '',
+          edad: perfil?.edad ?? null
+        };
+        this.rutinas.set(perfil?.rutinasDisponibles ?? []);
       },
-      error: () => { this.perfil = {}; }
+      error: () => {}
+    });
+
+    this.usuarioService.getGimnasios().subscribe({
+      next: lista => this.gimnasios.set(lista ?? []),
+      error: () => {}
+    });
+  }
+
+  /** Del horario a los datos, guardando el horario por el camino. */
+  siguiente(): void {
+    if (!this.hayHorario() || this.guardando()) return;
+
+    this.guardando.set(true);
+    this.error.set(null);
+
+    // Solo el horario. Desde que PUT /perfil parchea en vez de reemplazar, esto
+    // ya no borra nivel, objetivo ni gimnasio de quien los tuviera: antes había
+    // que releer el perfil entero y reenviarlo para no destruirlo.
+    this.usuarioService.actualizarPerfil({ horarios: this.franjas() }).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.perfilEstado.olvidar();
+        this.paso.set('datos');
+      },
+      error: () => {
+        this.guardando.set(false);
+        this.error.set('No se ha podido guardar tu horario. Inténtalo otra vez.');
+      }
     });
   }
 
@@ -62,26 +121,22 @@ export class BienvenidaComponent implements OnInit {
   }
 
   guardar(): void {
-    if (!this.puedeContinuar() || this.guardando()) return;
+    if (!this.datosCompletos() || this.guardando()) return;
 
     this.guardando.set(true);
     this.error.set(null);
 
-    // Se envía el perfil completo porque PUT /perfil reemplaza: mandar solo los
-    // horarios borraría nivel, objetivo y gimnasio de quien ya los tuviera.
-    const cuerpo = {
-      ...(this.perfil ?? {}),
-      horarios: this.franjas()
-    };
-
-    this.usuarioService.actualizarPerfil(cuerpo).subscribe({
+    this.usuarioService.actualizarPerfil({ ...this.datos }).subscribe({
       next: () => {
-        this.perfilEstado.marcarIndicado();
+        // Se olvida en vez de darlo por hecho: quien decide si el perfil está
+        // completo es el backend, y preguntárselo evita que la interfaz y el
+        // motor tengan cada uno su versión de la respuesta.
+        this.perfilEstado.olvidar();
         this.router.navigate(['/dashboard']);
       },
       error: () => {
         this.guardando.set(false);
-        this.error.set('No se ha podido guardar tu horario. Inténtalo otra vez.');
+        this.error.set('No se han podido guardar tus datos. Inténtalo otra vez.');
       }
     });
   }

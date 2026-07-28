@@ -8,7 +8,11 @@ Encuentra a la persona con la que entrenar. No a cualquiera: a la que coincide c
 
 ## Qué hace
 
-1. **Horario primero** — antes de entrar, pintas tu semana en una rejilla. Es obligatorio: sin saber cuándo entrenas no hay forma de cruzarte con nadie, y el horario pesa el 40 % de la compatibilidad.
+1. **Lo mínimo, primero** — antes de entrar pintas tu semana y dices gimnasio, nivel, objetivo, rutina y edad. Es la regla que gobierna el perfil: **obligatorio lo que se declara, opcional lo que se mide**.
+
+   Cinco desplegables y una rejilla cuestan poco y a cambio hacen que todas las puntuaciones sean comparables, porque dejan de calcularse unas con seis factores y otras con tres. Los levantamientos, en cambio, son una medición: obligarlos no produce datos, produce números inventados por quien no los sabe, y entrarían derechos al factor del que depende el nombre del producto. Un dato ausente al menos sabe que lo está.
+
+   Cada campo exigido tiene una salida honesta que **es una respuesta**: «sin rutina fija» no es un hueco, es un dato. Sin esa salida, exigir un campo solo consigue que la gente marque la primera opción.
 2. **Match** — SpotterAI puntúa de 0 a 100 y te enseña **en qué franjas concretas** coincidís, distinguiendo las que los dos tenéis fijas.
 3. **Conexión** — solicitud, aceptación y chat cuando hay match mutuo. Todo en tiempo real por SSE: mensajes, solicitudes y sesiones llegan sin recargar.
 4. **Sesión** — el paso que convierte un porcentaje en un plan: propones un día y una hora concretos desde el chat o desde su ficha, y el formulario ya viene relleno con el próximo hueco que compartís, sacado del mismo solape con el que se calcula la compatibilidad. El otro acepta o rechaza, y la ficha de cada persona lleva la cuenta de las veces que ya habéis quedado.
