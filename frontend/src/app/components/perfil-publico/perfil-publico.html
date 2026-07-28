@@ -1,6 +1,7 @@
 <div class="velo" (click)="cerrar.emit()"></div>
 
-<aside class="ficha" role="dialog" aria-label="Perfil">
+<aside class="ficha" role="dialog" aria-label="Perfil"
+       appModalAccesible (cerrarPedido)="cerrar.emit()">
   <button class="cerrar ficha__cerrar" (click)="cerrar.emit()" aria-label="Cerrar perfil">✕</button>
 
   @if (cargando()) {

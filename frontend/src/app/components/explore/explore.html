@@ -109,7 +109,8 @@
   }
 
   <aside class="panel" [class.panel--abierto]="isFiltrosOpen()"
-         role="dialog" aria-label="Filtros de búsqueda">
+         role="dialog" aria-label="Filtros de búsqueda"
+         appModalAccesible (cerrarPedido)="toggleFiltros()">
     <header class="panel__cabecera">
       <h2>Filtros</h2>
       <button class="cerrar" (click)="toggleFiltros()" aria-label="Cerrar filtros">✕</button>

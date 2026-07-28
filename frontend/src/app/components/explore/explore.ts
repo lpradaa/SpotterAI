@@ -8,11 +8,12 @@ import { Avatar } from '../avatar/avatar';
 import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
 import { Carga } from '../carga/carga';
 import { PerfilesService } from '../../services/perfiles.service';
+import { ModalAccesible } from '../../directivas/modal-accesible';
 
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent, Carga],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent, Carga, ModalAccesible],
   templateUrl: './explore.html',
   styleUrl: './explore.scss'
 })

@@ -291,9 +291,11 @@
 <!-- ================= Modal: entrenamiento ================= -->
 @if (isEntrenamientoModalOpen) {
   <div class="velo" (click)="cerrarModalEntrenamiento()">
-    <div class="modal modal--estrecho" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    <div class="modal modal--estrecho" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+         aria-labelledby="titulo-entrenamiento"
+         appModalAccesible (cerrarPedido)="cerrarModalEntrenamiento()">
       <header class="modal__cabecera">
-        <h2>Registrar entrenamiento</h2>
+        <h2 id="titulo-entrenamiento">Registrar entrenamiento</h2>
         <button class="cerrar" (click)="cerrarModalEntrenamiento()" aria-label="Cerrar">✕</button>
       </header>
 

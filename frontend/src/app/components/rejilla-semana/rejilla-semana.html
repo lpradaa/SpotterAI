@@ -1,7 +1,22 @@
 @if (!hayDatos()) {
   <p class="rejilla-vacia">Sin horarios que cruzar todavía.</p>
 } @else {
-  <div class="rejilla" [class.rejilla--compacta]="modo() === 'compacta'">
+
+  <!-- El equivalente en texto de todo lo que hay debajo.
+       La rejilla dice cuándo podéis entrenar juntos usando solo color y
+       posición, así que sin esto era una pieza muda: la parte más importante de
+       la aplicación, invisible para quien no ve. El dibujo queda marcado como
+       decorativo porque esto ya cuenta lo mismo. -->
+  <div class="visually-hidden">
+    <p>{{ titular() }}</p>
+    @if (descripcion().length > 0) {
+      <ul>
+        @for (tramo of descripcion(); track tramo) { <li>{{ tramo }}</li> }
+      </ul>
+    }
+  </div>
+
+  <div class="rejilla" [class.rejilla--compacta]="modo() === 'compacta'" aria-hidden="true">
 
     @if (modo() === 'completa') {
       <div class="rejilla__horas" aria-hidden="true">
@@ -41,7 +56,7 @@
   </div>
 
   @if (modo() === 'completa') {
-    <ul class="leyenda">
+    <ul class="leyenda" aria-hidden="true">
       <li><span class="muestra muestra--mio"></span>Tu disponibilidad</li>
       @if (haySolape()) {
         <li><span class="muestra muestra--solape"></span>Coincidís</li>

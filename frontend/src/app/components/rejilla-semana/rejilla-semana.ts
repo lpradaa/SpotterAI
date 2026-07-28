@@ -111,6 +111,51 @@ export class RejillaSemana {
   hayDatos = computed(() => this.misFranjas().length > 0 || this.solape().length > 0);
   haySolape = computed(() => this.solape().length > 0);
 
+  /**
+   * La misma información, dicha con palabras.
+   *
+   * <p>La rejilla es el elemento más importante de la aplicación —es donde se ve
+   * cuándo podéis entrenar juntos— y transmitía todo su contenido en color y
+   * posición: las cabeceras iban con `aria-hidden` y los tramos eran `span`
+   * vacíos con estilos en línea. Para quien no ve, ahí no había nada.
+   *
+   * <p>No es un resumen sino el equivalente: cada tramo, con su día, su hora y
+   * lo que significa. Un `aria-label` con todo junto se leería como un párrafo
+   * de corrido; una lista se puede recorrer elemento a elemento.
+   */
+  descripcion = computed<string[]>(() => {
+    const solape = this.solape().map(f => this.describir(f, true));
+    // Si coincidís, lo que importa es dónde. Enumerar además tu semana entera
+    // sería enterrar la respuesta debajo del contexto.
+    if (solape.length > 0) return solape;
+    return this.misFranjas().map(f => this.describir(f, false));
+  });
+
+  /** Titular de la rejilla, para saber qué se está oyendo antes de la lista. */
+  titular = computed(() => {
+    const cuantos = this.solape().length;
+    if (cuantos === 0) {
+      return this.misFranjas().length > 0
+        ? 'Tu semana. No coincidís en ninguna franja.'
+        : 'Sin horarios que cruzar todavía.';
+    }
+    return cuantos === 1
+      ? 'Coincidís en una franja de la semana.'
+      : `Coincidís en ${cuantos} franjas de la semana.`;
+  });
+
+  private describir(f: Franja, esSolape: boolean): string {
+    const dia = f.diaSemana ?? f.dia ?? '';
+    const desde = (f.horaInicio ?? f.inicio ?? '').slice(0, 5);
+    const hasta = (f.horaFin ?? f.fin ?? '').slice(0, 5);
+    const tramo = `${dia} de ${desde} a ${hasta}`;
+
+    if (esSolape) {
+      return f.ambosFijos ? `${tramo}: coincidís y los dos vais siempre` : `${tramo}: coincidís`;
+    }
+    return f.habitual ? `${tramo}: vas siempre` : tramo;
+  }
+
   /** Posición vertical de una hora dentro de la rejilla, en porcentaje. */
   posicionHora(hora: number): number {
     const { desde, hasta } = this.ventana();

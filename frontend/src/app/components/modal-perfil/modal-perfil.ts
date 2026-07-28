@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { UsuarioService } from '../../services/usuario.service';
 import { PerfilesService, Hito } from '../../services/perfiles.service';
 import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
+import { ModalAccesible } from '../../directivas/modal-accesible';
 
 /** Lo que sale hacia el tablero para que enseñe un aviso. */
 export interface AvisoPerfil {
@@ -30,7 +31,7 @@ export interface AvisoPerfil {
 @Component({
   selector: 'app-modal-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule, Avatar],
+  imports: [CommonModule, FormsModule, Avatar, ModalAccesible],
   templateUrl: './modal-perfil.html',
   styleUrl: './modal-perfil.scss'
 })

@@ -3,9 +3,11 @@
      la mitad larga de su hoja de estilos. Aqui dentro esta todo lo que se
      puede tocar del perfil propio y nada mas. -->
 <div class="velo" (click)="cerrar.emit()">
-  <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+  <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+       aria-labelledby="titulo-editar-perfil"
+       appModalAccesible (cerrarPedido)="cerrar.emit()">
     <header class="modal__cabecera">
-      <h2>Editar perfil</h2>
+      <h2 id="titulo-editar-perfil">Editar perfil</h2>
       <button class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">✕</button>
     </header>
 

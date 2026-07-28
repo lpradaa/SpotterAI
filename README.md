@@ -197,6 +197,15 @@ Lo que hay, y por qué:
 
 - **Los medios subidos se sirven desde rutas propias.** El perfil solo acepta `fotoUrl` que empiece por `/api/medios/`: sin eso, el campo sería un hueco para que cualquier navegador que abriera un perfil pidiera la URL que le pusieran.
 
+### Accesibilidad
+
+- **La rejilla semanal tiene equivalente textual.** Es el elemento central —dónde podéis entrenar juntos— y transmitía todo en color y posición: las cabeceras iban con `aria-hidden` y los tramos eran `span` vacíos. Ahora el dibujo es decorativo y al lado va la misma información en palabras, tramo a tramo: *«Coincidís en 2 franjas. Lunes de 18:00 a 20:00: coincidís y los dos vais siempre»*.
+- **Los diálogos se comportan como diálogos** (`directivas/modal-accesible`): cierran con `Escape`, atrapan el foco —el tabulador se escapaba a los botones de detrás del velo— y lo devuelven al salir.
+- **Foco visible.** No había ninguna regla de foco en todo el proyecto; ahora hay un anillo con `:focus-visible`, que aparece al tabular y no al hacer clic.
+- **Contraste medido, no estimado.** `--sa-texto-tenue` daba 2,84:1 en oscuro y 2,21:1 en claro, contra los 4,5 que pide el nivel AA. Ahora 4,71 y 4,54 en el peor caso.
+
+---
+
 Lo que no hay, dicho claro: el token vive en `localStorage`, así que un XSS lo lee. Para esto —proyecto local, sin datos sensibles— es una decisión asumida; en un despliegue de verdad tocaría cookie `HttpOnly` con protección CSRF.
 
 ---
@@ -206,4 +215,4 @@ Lo que no hay, dicho claro: el token vive en `localStorage`, así que un XSS lo 
 - **Chat sin indicador de escritura ni presencia.** Los mensajes llegan al instante, pero no se ve si el otro está escribiendo.
 - **Sin paginación.** Con decenas de usuarios sobra; con miles no.
 - **`DisponibilidadController` expone un CRUD que nadie llama** — los horarios se gestionan dentro de `PUT /perfil`.
-- **Accesibilidad sin repasar.** La rejilla semanal transmite su información solo en color, y los modales no atrapan el foco ni cierran con `Escape`.
+- **Accesibilidad, solo lo básico.** Está el equivalente textual de la rejilla, el foco atrapado en los diálogos y el contraste medido; falta pasarle un lector de pantalla de verdad y revisar el orden de tabulación pantalla por pantalla.

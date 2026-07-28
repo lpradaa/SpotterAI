@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
+import { ModalAccesible } from '../../directivas/modal-accesible';
 import { CommonModule } from '@angular/common';
 import { PerfilesService, PerfilPublico } from '../../services/perfiles.service';
 import { UsuarioService } from '../../services/usuario.service';
@@ -21,7 +22,7 @@ import { Carga } from '../carga/carga';
 @Component({
   selector: 'app-perfil-publico',
   standalone: true,
-  imports: [CommonModule, RejillaSemana, Avatar, Carga, ProponerSesionComponent],
+  imports: [CommonModule, RejillaSemana, Avatar, Carga, ProponerSesionComponent, ModalAccesible],
   templateUrl: './perfil-publico.html',
   styleUrl: './perfil-publico.scss'
 })

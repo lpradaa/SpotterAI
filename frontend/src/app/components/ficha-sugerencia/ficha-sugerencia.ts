@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { UsuarioService, Match, ExplicacionMatch } from '../../services/usuario.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
+import { ModalAccesible } from '../../directivas/modal-accesible';
 
 /**
  * Los candidatos de uno en uno, en ficha grande.
@@ -20,7 +21,7 @@ import { Avatar } from '../avatar/avatar';
 @Component({
   selector: 'app-ficha-sugerencia',
   standalone: true,
-  imports: [CommonModule, RejillaSemana, Avatar],
+  imports: [CommonModule, RejillaSemana, Avatar, ModalAccesible],
   templateUrl: './ficha-sugerencia.html',
   styleUrl: './ficha-sugerencia.scss'
 })

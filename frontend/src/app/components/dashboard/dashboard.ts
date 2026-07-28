@@ -15,12 +15,13 @@ import { ModalPerfilComponent, AvisoPerfil } from '../modal-perfil/modal-perfil'
 import { FichaSugerenciaComponent } from '../ficha-sugerencia/ficha-sugerencia';
 import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { Carga } from '../carga/carga';
+import { ModalAccesible } from '../../directivas/modal-accesible';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent,
-            Carga, ModalPerfilComponent, FichaSugerenciaComponent],
+            Carga, ModalPerfilComponent, FichaSugerenciaComponent, ModalAccesible],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })

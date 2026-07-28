@@ -250,6 +250,26 @@
   span { color: var(--sa-texto-tenue); }
 }
 
+/* ===================== Foco visible =====================
+   No habia ninguna regla de foco en todo el proyecto: quien navega con teclado
+   dependia del contorno por defecto del navegador, que sobre superficies
+   oscuras y con bordes redondeados propios se ve mal o directamente no se ve.
+   Sin saber donde estas, el teclado deja de servir.
+
+   :focus-visible y no :focus, que es la diferencia entre ayudar y molestar: el
+   anillo aparece al tabular y no al hacer clic con el raton. */
+:focus-visible {
+  outline: 2px solid var(--sa-acento);
+  // Separado del elemento para que no se coma el borde redondeado ni el texto
+  outline-offset: 2px;
+  border-radius: $radius-sm;
+}
+
+/* El contorno por defecto se quita solo donde ya hay uno propio. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* ===================== Velo, modal y cierre =====================
    La carcasa del modal vivia dentro de dashboard.scss, que era el unico sitio
    que la usaba cuando solo habia un modal. Con cuatro, dejarla ahi obligaba a

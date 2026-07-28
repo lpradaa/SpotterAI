@@ -4,7 +4,8 @@
      y tu semana. -->
 <div class="velo" (click)="cerrar.emit()">
   <div class="modal modal--sugerencia" (click)="$event.stopPropagation()"
-       role="dialog" aria-modal="true" aria-labelledby="titulo-sugerencia">
+       role="dialog" aria-modal="true" aria-labelledby="titulo-sugerencia"
+     appModalAccesible (cerrarPedido)="cerrar.emit()">
     <button class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">✕</button>
 
     @if (actual(); as candidato) {

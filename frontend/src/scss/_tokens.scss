@@ -20,7 +20,13 @@
   /* --- Texto --- */
   --sa-texto: #f5f1ed;
   --sa-texto-suave: #a39a92;
-  --sa-texto-tenue: #6f6660;
+  /**
+   * Medido, no elegido a ojo. El valor anterior (#6f6660) daba entre 2,84 y
+   * 3,48 sobre las cuatro superficies, cuando el minimo para texto normal son
+   * 4,5. Este da 4,71 en el peor caso y sigue siendo mas apagado que
+   * --sa-texto-suave, que es para lo que existe.
+   */
+  --sa-texto-tenue: #948a82;
 
   /* --- Lineas --- */
   --sa-borde: #2a2523;
@@ -98,7 +104,8 @@
 
   --sa-texto: #191512;
   --sa-texto-suave: #6b6259;
-  --sa-texto-tenue: #a8a29a;
+  /* Mismo motivo que en oscuro: #a8a29a se quedaba en 2,21 sobre blanco. */
+  --sa-texto-tenue: #726c64;
 
   --sa-borde: #e7e2dc;
   --sa-borde-fuerte: #d6cfc6;
