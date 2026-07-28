@@ -62,10 +62,27 @@ public final class CalculadoraCompatibilidad {
      * semana de forma parecida. Pero el objetivo dice que quieres y la rutina
      * dice que haces el martes, que es lo que decide si podeis compartir sesion.
      */
-    static final double PESO_OBJETIVO = 15;
+    static final double PESO_OBJETIVO = 12;
     static final double PESO_RUTINA = 5;
-    static final double PESO_GIMNASIO = 15;
+    /*
+     * Gimnasio baja de 15 a 8.
+     *
+     * No porque importe menos —importa mas que nunca— sino porque ahora cuenta
+     * dos veces: sigue sumando lo suyo y ademas condiciona el factor horario,
+     * que es donde de verdad se nota. Dejarlo en 15 seria cobrar dos veces por
+     * el mismo dato y hundir de mas a quien entrena en otro sitio.
+     */
+    static final double PESO_GIMNASIO = 8;
     static final double PESO_EDAD = 5;
+
+    /*
+     * Constancia: 10 puntos, de los 7 que suelta el gimnasio y 3 del objetivo.
+     *
+     * Es el unico factor que no sale de lo que alguien dice de si mismo sino de
+     * lo que ha hecho, y responde a la pregunta que decide si el match sirve de
+     * algo: de todos los que encajan sobre el papel, quien va a aparecer.
+     */
+    static final double PESO_CONSTANCIA = 10;
 
     /** Minutos efectivos semanales a partir de los cuales el solape es de sobra. */
     private static final double MINUTOS_SOLAPE_IDEAL = 300; // 5 h/semana
@@ -91,6 +108,27 @@ public final class CalculadoraCompatibilidad {
      */
     private static final double SUELO_UNA_ANCLA = 0.75;
     private static final double SUELO_VARIAS_ANCLAS = 0.95;
+
+    /**
+     * Lo que vale coincidir en horario cuando entrenais en gimnasios distintos.
+     *
+     * <p>Casi nada, y por una razon que no es de matiz: <b>no coincidis</b>. Tu a
+     * las seis en McFit y ella a las seis en Basic-Fit no estais juntos, estais
+     * en dos edificios de la ciudad a la misma hora. La aplicacion llegaba a
+     * decir "los dos vais siempre un dia a la misma hora (Lunes)" de una pareja
+     * asi, que es literalmente falso en lo unico que importa.
+     *
+     * <p>Es el mismo error que ya se corrigio un nivel mas abajo con la rutina
+     * —coincidir con quien ese dia hace pierna mientras tu haces pecho es
+     * coincidir en el gimnasio, no entrenar juntos— aplicado un nivel mas
+     * arriba.
+     *
+     * <p>No se anula del todo porque la informacion sigue valiendo para algo: si
+     * los dos podeis los lunes a las seis, resuelto el gimnasio entrenariais
+     * juntos. Pero resolver el gimnasio significa que uno de los dos se cambie o
+     * pague una entrada, y la mayoria de las parejas no lo hacen.
+     */
+    static final double SOLAPE_EN_OTRO_GIMNASIO = 0.25;
 
     /**
      * Cuanto se descuenta a una puntuacion calculada con datos incompletos.
@@ -141,17 +179,32 @@ public final class CalculadoraCompatibilidad {
         return calcular(yo, misHorarios, List.of(), otro, susHorarios, List.of());
     }
 
+    /** Con marcas pero sin constancia. */
     public static PuntuacionCompatibilidad calcular(
             Usuario yo, List<Disponibilidad> misHorarios, List<Levantamiento> misLevantamientos,
             Usuario otro, List<Disponibilidad> susHorarios, List<Levantamiento> susLevantamientos) {
+        return calcular(PerfilDeMatch.de(yo, misHorarios, misLevantamientos),
+                        PerfilDeMatch.de(otro, susHorarios, susLevantamientos));
+    }
 
-        SolapeHorario solape = CalculadoraSolape.calcular(misHorarios, susHorarios);
+    /**
+     * La forma canonica: dos perfiles, y cada uno lleva lo suyo junto.
+     *
+     * <p>Las sobrecargas de arriba existen para quien no tenga todos los datos,
+     * y todas acaban aqui.
+     */
+    public static PuntuacionCompatibilidad calcular(PerfilDeMatch mio, PerfilDeMatch suyo) {
+        Usuario yo = mio.usuario();
+        Usuario otro = suyo.usuario();
+
+        SolapeHorario solape = CalculadoraSolape.calcular(mio.horarios(), suyo.horarios());
 
         List<FactorCompatibilidad> brutos = List.of(
-                factorHorario(solape, misHorarios, susHorarios),
+                factorHorario(solape, mio.horarios(), suyo.horarios(), gimnasiosDe(yo, otro)),
                 factorNivel(yo.getNivel(), otro.getNivel()),
-                factorFuerza(misLevantamientos, susLevantamientos),
+                factorFuerza(mio.levantamientos(), suyo.levantamientos()),
                 factorObjetivo(yo.getObjetivos(), otro.getObjetivos()),
+                factorConstancia(mio.constancia(), suyo.constancia()),
                 factorRutina(yo.getRutina(), otro.getRutina()),
                 factorGimnasio(yo, otro),
                 factorEdad(yo.getEdad(), otro.getEdad()));
@@ -174,8 +227,8 @@ public final class CalculadoraCompatibilidad {
      * seis horas de solape.
      */
     private static double confianzaPorEvidencia(List<FactorCompatibilidad> brutos) {
-        double pesoTotal = PESO_HORARIO + PESO_NIVEL + PESO_FUERZA
-                + PESO_OBJETIVO + PESO_RUTINA + PESO_GIMNASIO + PESO_EDAD;
+        double pesoTotal = PESO_HORARIO + PESO_NIVEL + PESO_FUERZA + PESO_OBJETIVO
+                + PESO_CONSTANCIA + PESO_RUTINA + PESO_GIMNASIO + PESO_EDAD;
         double pesoEvaluado = brutos.stream()
                 .filter(FactorCompatibilidad::aplicable)
                 .mapToDouble(FactorCompatibilidad::puntosMax)
@@ -214,8 +267,26 @@ public final class CalculadoraCompatibilidad {
         return List.copyOf(ajustados);
     }
 
+    /**
+     * En que relacion estan los dos gimnasios.
+     *
+     * <p>Hace falta en el factor horario y no solo en el suyo propio: el
+     * gimnasio no es un merito que suma aparte, es la condicion bajo la cual
+     * coincidir en horario significa algo.
+     */
+    private enum Gimnasios { MISMO, DISTINTOS, SIN_SABER }
+
+    private static Gimnasios gimnasiosDe(Usuario yo, Usuario otro) {
+        Long mio = yo.getGimnasio() != null ? yo.getGimnasio().getId() : null;
+        Long suyo = otro.getGimnasio() != null ? otro.getGimnasio().getId() : null;
+
+        if (mio == null || suyo == null) return Gimnasios.SIN_SABER;
+        return mio.equals(suyo) ? Gimnasios.MISMO : Gimnasios.DISTINTOS;
+    }
+
     private static FactorCompatibilidad factorHorario(
-            SolapeHorario solape, List<Disponibilidad> mios, List<Disponibilidad> suyos) {
+            SolapeHorario solape, List<Disponibilidad> mios, List<Disponibilidad> suyos,
+            Gimnasios gimnasios) {
 
         // Sin horarios en alguno de los dos perfiles no es que no coincidais: es que
         // no lo sabemos. El factor sale del calculo en vez de restar 40 puntos.
@@ -243,8 +314,15 @@ public final class CalculadoraCompatibilidad {
 
         double ratio = Math.max(volumen, sueloPorAnclas(solape.diasAncla()));
 
+        // El gimnasio, aqui y no solo en su propio factor. La penalizacion se
+        // aplica al final, despues del suelo por anclas: ir los dos siempre al
+        // mismo hora no es un ancla si es a sitios distintos.
+        if (gimnasios == Gimnasios.DISTINTOS) {
+            ratio *= SOLAPE_EN_OTRO_GIMNASIO;
+        }
+
         return FactorCompatibilidad.evaluado("horario", ratio * PESO_HORARIO, PESO_HORARIO,
-                describirSolape(solape));
+                describirSolape(solape, gimnasios));
     }
 
     private static double sueloPorAnclas(int diasAncla) {
@@ -253,7 +331,14 @@ public final class CalculadoraCompatibilidad {
         return 0;
     }
 
-    private static String describirSolape(SolapeHorario solape) {
+    private static String describirSolape(SolapeHorario solape, Gimnasios gimnasios) {
+        // Lo primero que hay que decir cuando los gimnasios no son el mismo,
+        // porque cambia el significado de todo lo demas.
+        if (gimnasios == Gimnasios.DISTINTOS) {
+            return "Coincidiriais %s a la semana, pero entrenais en gimnasios distintos"
+                    .formatted(formatearDuracion(solape.minutosSemanales()));
+        }
+
         if (solape.hayAncla()) {
             String dias = solape.diasAncla() == 1 ? "un día" : solape.diasAncla() + " días";
             // Los dias de ancla, no todos: enumerar aqui solape.dias() hacia que
@@ -286,6 +371,28 @@ public final class CalculadoraCompatibilidad {
         return FactorCompatibilidad.evaluado("fuerza",
                 comparacion.ratio() * PESO_FUERZA, PESO_FUERZA,
                 CalculadoraFuerza.describir(comparacion));
+    }
+
+    /**
+     * Si vais a aparecer.
+     *
+     * <p>El unico factor que no sale de lo que alguien dice de si mismo. Alguien
+     * puede encajar contigo al noventa por ciento y llevar mes y medio sin pisar
+     * el gimnasio: eso no es un buen companero, es un buen companero hipotetico.
+     *
+     * <p>Sin historial no se juzga, que es la diferencia entre alguien que acaba
+     * de entrar y alguien que lo dejo.
+     */
+    private static FactorCompatibilidad factorConstancia(Constancia mia, Constancia suya) {
+        if (!mia.tieneHistorial() || !suya.tieneHistorial()) {
+            return FactorCompatibilidad.sinDatos("constancia",
+                    "Alguno de los dos no ha registrado entrenamientos todavía");
+        }
+
+        double ritmo = Constancia.deLaPareja(mia, suya);
+        return FactorCompatibilidad.evaluado("constancia",
+                ritmo * PESO_CONSTANCIA, PESO_CONSTANCIA,
+                Constancia.describir(mia, suya));
     }
 
     /**

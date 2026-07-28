@@ -70,17 +70,24 @@ El emparejamiento tiene dos capas, deliberadamente separadas:
 
 **1. Motor determinista** (`matching/CalculadoraCompatibilidad`) — puntúa de 0 a 100 cruzando horarios reales, fuerza, nivel, objetivo, rutina, gimnasio y edad. Mismo input, mismo resultado. Sin coste, sin red, testeado.
 
-| Factor | Peso |
-|---|---:|
-| Solape horario | 40 |
-| Objetivo | 15 |
-| Gimnasio | 15 |
-| Nivel | 10 |
-| Fuerza | 10 |
-| Edad | 5 |
-| Rutina | 5 |
+| Factor | Peso | |
+|---|---:|---|
+| Solape horario | 40 | y el gimnasio lo condiciona |
+| Objetivo | 12 | |
+| **Constancia** | **10** | **lo único que se mide y no se declara** |
+| Nivel | 10 | |
+| Fuerza | 10 | |
+| Gimnasio | 8 | además condiciona el horario |
+| Rutina | 5 | |
+| Edad | 5 | |
 
-Tres decisiones del motor que no son obvias:
+Cinco decisiones del motor que no son obvias:
+
+**Coincidir en horario en gimnasios distintos no es coincidir.** El gimnasio no es un mérito que suma aparte: es la condición bajo la cual el solape significa algo. Tú a las seis en McFit y ella a las seis en Basic-Fit no estáis juntos, estáis en dos edificios de la ciudad a la misma hora — y la aplicación llegó a decir *«los dos vais siempre un día a la misma hora»* de una pareja así. Ahora el solape en otro gimnasio vale una cuarta parte, y la frase lo dice.
+
+**Un rato compartido no es una sesión.** Cualquier solape positivo contaba: quien estuviera libre de 19:55 a 21:00 compartía cinco minutos contigo y —si los dos lo teníais marcado como fijo— eso valía por «día ancla», o sea el 75 % del factor horario. Ahora hay un mínimo de 45 minutos, que es lo que dura la sesión más corta que sigue siendo una sesión.
+
+**La constancia es el único dato que no se declara.** Todo lo demás sale de lo que alguien dice de sí mismo; esto sale de lo que ha hecho. Alguien puede encajar contigo al noventa por ciento y llevar mes y medio sin pisar el gimnasio: eso no es un buen compañero, es un buen compañero hipotético. Cuenta la del que menos aparece de los dos, porque una pareja entrena tan a menudo como su miembro menos constante. Y sin historial no se juzga: quien acaba de registrarse no ha hecho nada mal.
 
 **La fuerza y la rutina son las que justifican el nombre.** Un spotter que no puede con tu peso es un testigo, no un spotter: por eso se comparan las marcas principales (1RM estimado con Epley) y no los ejercicios que le gustan a cada uno. Y la rutina decide si compartís sesión de verdad: coincidir un martes con quien ese día hace pierna mientras tú haces pecho es coincidir en el gimnasio, no entrenar juntos.
 

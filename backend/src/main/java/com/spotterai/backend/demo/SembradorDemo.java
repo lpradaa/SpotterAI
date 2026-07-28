@@ -224,12 +224,27 @@ public class SembradorDemo implements CommandLineRunner {
         sesiones.save(pasada);
 
         // --- Historial, para que la barra de la semana no salga a cero ---
-        entrenamiento(yo, hoy().minusDays(2), "Fuerza (Torso)", 75, "McFit Madrid Centro");
-        entrenamiento(yo, hoy().minusDays(5), "Fuerza (Pierna)", 90, "McFit Madrid Centro");
-        entrenamiento(yo, hoy().minusDays(8), "Cardio suave", 30, null);
-        entrenamiento(marta, hoy().minusDays(1), "Fuerza (Torso)", 70, "McFit Madrid Centro");
-        entrenamiento(javi, hoy().minusDays(1), "Fuerza", 100, "McFit Madrid Centro");
-        entrenamiento(javi, hoy().minusDays(4), "Fuerza", 95, "McFit Madrid Centro");
+        // Un mes de historial de verdad, no tres sesiones sueltas.
+        //
+        // Desde que la constancia entra en la puntuacion, sembrar a todo el mundo
+        // con uno o dos entrenamientos hacia que la demostracion enseñara a una
+        // comunidad entera de gente que casi no va al gimnasio: todas las notas
+        // salian con el descuento por evidencia y el motor parecia mas severo de
+        // lo que es. Aqui cada uno entrena al ritmo que dice su perfil.
+        rutinaDeUnMes(yo, 3, "Fuerza (Torso)", "McFit Madrid Centro");
+        rutinaDeUnMes(marta, 4, "Fuerza (Torso)", "McFit Madrid Centro");
+        rutinaDeUnMes(javi, 3, "Fuerza", "McFit Madrid Centro");
+        rutinaDeUnMes(sara, 3, "Fuerza (Torso)", "McFit Madrid Centro");
+        rutinaDeUnMes(hugo, 2, "Pecho", "McFit Madrid Centro");
+        rutinaDeUnMes(diego, 4, "Empuje", "McFit Madrid Centro");
+        rutinaDeUnMes(pablo, 2, "Fuerza (Torso)", "McFit Madrid Centro");
+        rutinaDeUnMes(noa, 2, "Carrera y fuerza", null);
+        rutinaDeUnMes(carmen, 3, "Fuerza (Torso)", "Basic-Fit Chamberí");
+        rutinaDeUnMes(elena, 4, "Empuje", "Basic-Fit Chamberí");
+
+        // Y dos que casi no aparecen, para que se vea que el motor lo nota: uno
+        // que lo dejo hace semanas y otro que no ha registrado nunca nada.
+        entrenamiento(lucia, hoy().minusDays(26), "Cardio suave", 30, null);
 
         hito(yo, "Primer 160 en muerto", "Dos años para llegar aquí.", hoy().minusDays(20));
         hito(javi, "100 kg en banca", "Por fin, a la tercera.", hoy().minusDays(9));
@@ -365,6 +380,20 @@ public class SembradorDemo implements CommandLineRunner {
             s.setRespondidaEn(LocalDateTime.now(reloj).minusHours(20));
         }
         return sesiones.save(s);
+    }
+
+    /**
+     * Cuatro semanas entrenando al ritmo indicado.
+     *
+     * <p>Con una separacion regular entre sesiones, que es lo que hace un
+     * habito: sembrar todas seguidas daria el mismo numero pero no se pareceria
+     * a nadie.
+     */
+    private void rutinaDeUnMes(Usuario usuario, int porSemana, String tipo, String lugar) {
+        int cada = Math.max(1, 7 / porSemana);
+        for (int dia = 1; dia <= 28; dia += cada) {
+            entrenamiento(usuario, hoy().minusDays(dia), tipo, 60 + (dia % 4) * 15, lugar);
+        }
     }
 
     private void entrenamiento(Usuario usuario, LocalDate fecha, String tipo,

@@ -1,6 +1,7 @@
 package com.spotterai.backend.services;
 
 import com.spotterai.backend.dtos.ActividadDTO;
+import com.spotterai.backend.dtos.ConteoPorUsuario;
 import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.dtos.UsuarioRegistroDTO;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
@@ -12,6 +13,8 @@ import com.spotterai.backend.matching.ExplicacionMatch;
 import com.spotterai.backend.matching.FactorCompatibilidad;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.matching.PuntuacionCompatibilidad;
+import com.spotterai.backend.matching.Constancia;
+import com.spotterai.backend.matching.PerfilDeMatch;
 import com.spotterai.backend.matching.RendimientoDelPerfil;
 import com.spotterai.backend.matching.Rutina;
 import com.spotterai.backend.models.Disponibilidad;
@@ -282,7 +285,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         // necesita saber que le falta.
         List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(usuario.getId());
         perfil.put("rendimiento", RendimientoDelPerfil.de(
-                usuario, !misHorarios.isEmpty(), !misLevantamientos.isEmpty()));
+                usuario, !misHorarios.isEmpty(), !misLevantamientos.isEmpty(),
+                cargarConstanciaDe(List.of(usuario.getId()))
+                        .getOrDefault(usuario.getId(), Constancia.DESCONOCIDA)));
 
         List<UsuarioPerfilDTO.HorarioDTO> horarios = disponibilidadRepository.findByUsuarioId(usuario.getId())
                 .stream().map(d -> {
@@ -335,12 +340,23 @@ public class UsuarioServiceImpl implements UsuarioService {
         List<Levantamiento> misLevantamientos = levantamientoRepository.findByUsuarioId(miUsuario.getId());
         Map<Long, String> estadoPorCompanero = indexarSolicitudes(miUsuario.getId());
 
+        // La constancia de todos de golpe, incluida la mia: dos consultas para el
+        // grupo entero en vez de dos por candidato.
+        List<Long> todos = new java.util.ArrayList<>(candidatos.stream().map(Usuario::getId).toList());
+        todos.add(miUsuario.getId());
+        Map<Long, Constancia> constancias = cargarConstanciaDe(todos);
+        Constancia miConstancia = constancias.getOrDefault(miUsuario.getId(), Constancia.DESCONOCIDA);
+
+        PerfilDeMatch mio = new PerfilDeMatch(miUsuario, misHorarios, misLevantamientos, miConstancia);
+
         return candidatos.stream()
                 .map(candidato -> {
                     PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
-                            miUsuario, misHorarios, misLevantamientos,
-                            candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of()),
-                            levantamientosAjenos.getOrDefault(candidato.getId(), List.of()));
+                            mio,
+                            new PerfilDeMatch(candidato,
+                                    horariosAjenos.getOrDefault(candidato.getId(), List.of()),
+                                    levantamientosAjenos.getOrDefault(candidato.getId(), List.of()),
+                                    constancias.getOrDefault(candidato.getId(), Constancia.DESCONOCIDA)));
                     UsuarioResponseDTO dto = construirDtoDeMatch(candidato, puntuacion,
                             estadoPorCompanero.get(candidato.getId()));
 
@@ -369,11 +385,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         // compatibilidad, porque contigo mismo no significa nada.
         boolean esMio = yo.getId().equals(otro.getId());
 
+        Map<Long, Constancia> constancias = esMio
+                ? Map.of() : cargarConstanciaDe(List.of(yo.getId(), otro.getId()));
+
         PuntuacionCompatibilidad puntuacion = esMio ? null : CalculadoraCompatibilidad.calcular(
-                yo, disponibilidadRepository.findByUsuarioId(yo.getId()),
-                levantamientoRepository.findByUsuarioId(yo.getId()),
-                otro, disponibilidadRepository.findByUsuarioId(otro.getId()),
-                levantamientoRepository.findByUsuarioId(otro.getId()));
+                new PerfilDeMatch(yo,
+                        disponibilidadRepository.findByUsuarioId(yo.getId()),
+                        levantamientoRepository.findByUsuarioId(yo.getId()),
+                        constancias.getOrDefault(yo.getId(), Constancia.DESCONOCIDA)),
+                new PerfilDeMatch(otro,
+                        disponibilidadRepository.findByUsuarioId(otro.getId()),
+                        levantamientoRepository.findByUsuarioId(otro.getId()),
+                        constancias.getOrDefault(otro.getId(), Constancia.DESCONOCIDA)));
 
         String estado = esMio ? null : indexarSolicitudes(yo.getId()).get(otro.getId());
 
@@ -623,6 +646,32 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .sorted(Comparator.comparing(ActividadDTO::fecha).reversed())
                 .limit(MAX_ACTIVIDAD)
                 .toList();
+    }
+
+    /**
+     * La constancia de un grupo de personas, en dos consultas.
+     *
+     * <p>El total hace falta ademas del reciente para distinguir a quien acaba
+     * de entrar —sin historial, no se juzga— de quien lleva un mes sin aparecer.
+     * Los dos tienen cero entrenamientos este mes y no significan lo mismo.
+     */
+    private Map<Long, Constancia> cargarConstanciaDe(List<Long> ids) {
+        if (ids.isEmpty()) return Map.of();
+
+        Map<Long, Long> recientes = entrenamientoRepository
+                .contarDesde(ids, LocalDate.now(reloj).minusDays(Constancia.DIAS)).stream()
+                .collect(Collectors.toMap(ConteoPorUsuario::usuarioId, ConteoPorUsuario::cuantos));
+
+        Map<Long, Long> totales = entrenamientoRepository.contarTotales(ids).stream()
+                .collect(Collectors.toMap(ConteoPorUsuario::usuarioId, ConteoPorUsuario::cuantos));
+
+        Map<Long, Constancia> porUsuario = new HashMap<>();
+        for (Long id : ids) {
+            boolean tieneHistorial = totales.getOrDefault(id, 0L) > 0;
+            porUsuario.put(id, new Constancia(
+                    recientes.getOrDefault(id, 0L).intValue(), tieneHistorial));
+        }
+        return porUsuario;
     }
 
     private static ActividadDTO entrada(String tipo, Usuario de, String titulo, String detalle,

@@ -51,6 +51,26 @@ class CalculadoraCompatibilidadTest {
         return u;
     }
 
+/**
+     * Alguien que aparece: doce sesiones en cuatro semanas.
+     *
+     * Desde que la constancia es un factor, "perfil completo" incluye haber
+     * entrenado. Sin esto el techo se queda por debajo de 100 por el descuento
+     * de evidencia, que es exactamente lo que se quiere.
+     */
+    private static Constancia constante() {
+        return new Constancia(12, true);
+    }
+
+    /** Dos perfiles completos, con todo lo que el motor sabe mirar. */
+    private static PuntuacionCompatibilidad puntuar(
+            Usuario a, List<Disponibilidad> horariosA, List<Levantamiento> pesosA,
+            Usuario b, List<Disponibilidad> horariosB, List<Levantamiento> pesosB) {
+        return CalculadoraCompatibilidad.calcular(
+                new PerfilDeMatch(a, horariosA, pesosA, constante()),
+                new PerfilDeMatch(b, horariosB, pesosB, constante()));
+    }
+
     /** Franja sin compromiso: "puedo ir". */
     private static Disponibilidad franja(String dia, String inicio, String fin) {
         return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null, false);
@@ -85,8 +105,7 @@ class CalculadoraCompatibilidadTest {
         // exija el perfil entero es justo lo que se quiere.
         List<Levantamiento> pesos = List.of(levantamiento(Ejercicio.PRESS_BANCA, 100, 5));
 
-        assertEquals(100, CalculadoraCompatibilidad.calcular(
-                a, conCompromiso, pesos, b, conCompromiso, pesos).total());
+        assertEquals(100, puntuar(a, conCompromiso, pesos, b, conCompromiso, pesos).total());
 
         assertTrue(CalculadoraCompatibilidad.calcular(a, conCompromiso, b, conCompromiso).total() < 100,
                 "Sin levantamientos no se puede llegar al maximo");
@@ -194,7 +213,7 @@ class CalculadoraCompatibilidadTest {
         // confianza y deja de cuadrar con el desglose a proposito.
         List<Levantamiento> pesos = List.of(levantamiento(Ejercicio.SENTADILLA, 100, 5));
 
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = puntuar(
                 conRutina(usuario("Avanzado", "Resistencia", 41, g), Rutina.WEIDER), h, pesos,
                 conRutina(usuario("Intermedio", "Perdida de peso", 25, g), Rutina.FULL_BODY), h, pesos);
 
@@ -213,7 +232,7 @@ class CalculadoraCompatibilidadTest {
         assertEquals("Poca compatibilidad", p.etiqueta());
         // Un factor por cada dimension que evalua el motor. Se comprueba que
         // ninguna se pierda por el camino, no un numero concreto de memoria.
-        assertEquals(7, p.factores().size());
+        assertEquals(8, p.factores().size());
     }
 
     @Test

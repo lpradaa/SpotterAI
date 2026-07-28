@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.dtos.ConteoPorUsuario;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
 import com.spotterai.backend.matching.Ejercicio;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
@@ -43,6 +44,7 @@ class LaListaDeGenteTest {
     private DisponibilidadRepository disponibilidadRepository;
     private LevantamientoRepository levantamientoRepository;
     private SolicitudRepository solicitudRepository;
+    private EntrenamientoRepository entrenamientoRepository;
     private UsuarioServiceImpl servicio;
 
     private final Gimnasio gimnasio = new Gimnasio();
@@ -81,6 +83,7 @@ class LaListaDeGenteTest {
         disponibilidadRepository = Mockito.mock(DisponibilidadRepository.class);
         levantamientoRepository = Mockito.mock(LevantamientoRepository.class);
         solicitudRepository = Mockito.mock(SolicitudRepository.class);
+        entrenamientoRepository = Mockito.mock(EntrenamientoRepository.class);
 
         servicio = new UsuarioServiceImpl(
                 usuarioRepository,
@@ -90,7 +93,7 @@ class LaListaDeGenteTest {
                 disponibilidadRepository,
                 new ExplicadorCompatibilidad(),
                 Mockito.mock(HitoRepository.class),
-                Mockito.mock(EntrenamientoRepository.class),
+                entrenamientoRepository,
                 levantamientoRepository,
                 Mockito.mock(SesionRepository.class),
                 Clock.systemDefaultZone());
@@ -114,6 +117,15 @@ class LaListaDeGenteTest {
         when(levantamientoRepository.findByUsuarioId(1L)).thenReturn(List.of(marca(yo, 100)));
         when(levantamientoRepository.findByUsuarioId(2L)).thenReturn(List.of(marca(otro, 95)));
         when(levantamientoRepository.findByUsuarioIdIn(any())).thenReturn(List.of(marca(otro, 95)));
+
+        // Los dos entrenan con regularidad. Desde que la constancia es un factor,
+        // sin esto el perfil no esta completo y la puntuacion sale con descuento
+        // por evidencia, que es justo lo que la prueba de abajo comprueba que no
+        // pasa cuando hay datos.
+        when(entrenamientoRepository.contarDesde(any(), any())).thenReturn(List.of(
+                new ConteoPorUsuario(1L, 12L), new ConteoPorUsuario(2L, 12L)));
+        when(entrenamientoRepository.contarTotales(any())).thenReturn(List.of(
+                new ConteoPorUsuario(1L, 40L), new ConteoPorUsuario(2L, 40L)));
     }
 
     @Test

@@ -31,6 +31,22 @@ import java.util.Set;
  */
 public final class CalculadoraSolape {
 
+    /**
+     * Lo que dura, como poco, algo que se pueda llamar entrenar juntos.
+     *
+     * <p>Sin este minimo, cualquier solape positivo contaba. Alguien libre de
+     * 19:55 a 21:00 y tu de 18:00 a 20:00 compartis cinco minutos: la aplicacion
+     * lo tomaba como una franja comun, lo pintaba en la rejilla y —si los dos
+     * habiais marcado esas franjas como fijas— lo daba por "dia ancla", que
+     * garantiza el 75 % del factor horario. Treinta puntos por cinco minutos en
+     * los que no da tiempo ni a calentar.
+     *
+     * <p>Cuarenta y cinco minutos es lo que dura la sesion mas corta que sigue
+     * siendo una sesion: calentar, unas series, y los descansos entre ellas.
+     * Por debajo de eso no es que coincidais poco, es que no coincidis.
+     */
+    static final int MINUTOS_MINIMOS_DE_SESION = 45;
+
     private static final double CONFIANZA_AMBOS_HABITUALES = 1.00;
     private static final double CONFIANZA_UNO_HABITUAL = 0.70;
     private static final double CONFIANZA_NINGUNO_HABITUAL = 0.45;
@@ -62,7 +78,12 @@ public final class CalculadoraSolape {
                 LocalTime fin = minimo(mia.getHoraFin(), suya.getHoraFin());
 
                 int minutos = minutosEntre(inicio, fin);
-                if (minutos <= 0) continue; // no se tocan
+
+                // Los tramos que no dan para entrenar se descartan enteros: no
+                // cuentan minutos, ni dia, ni ancla, ni se dibujan en la rejilla,
+                // ni se ofrecen al proponer una sesion. Un cuarto de hora en
+                // comun no es una coincidencia pequena, es ninguna.
+                if (minutos < MINUTOS_MINIMOS_DE_SESION) continue;
 
                 double confianza = confianzaDe(mia.isHabitual(), suya.isHabitual());
 

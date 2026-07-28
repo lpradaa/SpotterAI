@@ -58,6 +58,26 @@ class RepartoDePesoTest {
         return u;
     }
 
+/**
+     * Alguien que aparece: doce sesiones en cuatro semanas.
+     *
+     * Desde que la constancia es un factor, "perfil completo" incluye haber
+     * entrenado. Sin esto el techo se queda por debajo de 100 por el descuento
+     * de evidencia, que es exactamente lo que se quiere.
+     */
+    private static Constancia constante() {
+        return new Constancia(12, true);
+    }
+
+    /** Dos perfiles completos, con todo lo que el motor sabe mirar. */
+    private static PuntuacionCompatibilidad puntuar(
+            Usuario a, List<Disponibilidad> horariosA, List<Levantamiento> pesosA,
+            Usuario b, List<Disponibilidad> horariosB, List<Levantamiento> pesosB) {
+        return CalculadoraCompatibilidad.calcular(
+                new PerfilDeMatch(a, horariosA, pesosA, constante()),
+                new PerfilDeMatch(b, horariosB, pesosB, constante()));
+    }
+
     private static Disponibilidad franja(String dia, String inicio, String fin) {
         return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null, true);
     }
@@ -71,9 +91,20 @@ class RepartoDePesoTest {
 
         PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(a, List.of(), b, List.of());
 
-        // Todo lo conocido encaja, asi que no se hunde como antes (sacaba 60 de tope
-        // y la etiqueta decia "poca compatibilidad")...
-        assertTrue(p.total() > 60);
+        // Todo lo conocido encaja, asi que no se hunde como antes, cuando la falta
+        // de horarios restaba y la etiqueta decia "poca compatibilidad". Se compara
+        // contra la misma situacion con los datos conocidos en desacuerdo, y no
+        // contra un numero: el umbral absoluto se queda viejo cada vez que cambia
+        // el reparto de pesos, y entonces la prueba se pone roja sin que nada se
+        // haya roto.
+        Gimnasio otroGimnasio = gimnasio(2L);
+        PuntuacionCompatibilidad enDesacuerdo = CalculadoraCompatibilidad.calcular(
+                usuario("Principiante", "Resistencia", 20, g), List.of(),
+                usuario("Avanzado", "Hipertrofia", 45, otroGimnasio), List.of());
+
+        assertTrue(p.total() > enDesacuerdo.total() * 2,
+                "Coincidir en todo lo conocido tiene que valer mucho mas que no coincidir: %d frente a %d"
+                        .formatted(p.total(), enDesacuerdo.total()));
         // ...pero tampoco puede alcanzar el 100 de un perfil completo: falta el
         // factor que mas pesa y eso tiene que notarse.
         assertTrue(p.total() < 100, "Sin horarios no deberia dar 100, dio %d".formatted(p.total()));
@@ -134,7 +165,7 @@ class RepartoDePesoTest {
         // a estarlo.
         List<Levantamiento> pesos = List.of(levantamiento(Ejercicio.PRESS_BANCA, 90, 5));
 
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = puntuar(
                 conRutina(usuario("Intermedio", "Hipertrofia", 30, g), Rutina.TORSO_PIERNA), h, pesos,
                 conRutina(usuario("Intermedio", "Hipertrofia", 30, g), Rutina.TORSO_PIERNA), h, pesos);
 
@@ -190,7 +221,7 @@ class RepartoDePesoTest {
 
         assertEquals(0, p.total());
         assertFalse(p.esCompleta());
-        assertEquals(7, p.factoresSinDatos().size());
+        assertEquals(8, p.factoresSinDatos().size());
     }
 
     @Test

@@ -45,6 +45,14 @@ class SolapeConCompromisoTest {
         return factorHorario(mios, suyos).puntos();
     }
 
+    /** El factor horario entre dos personas concretas, con sus gimnasios. */
+    private static double puntosHorario(Usuario yo, List<Disponibilidad> mios,
+                                        Usuario otro, List<Disponibilidad> suyos) {
+        return CalculadoraCompatibilidad.calcular(yo, mios, otro, suyos).factores().stream()
+                .filter(f -> f.nombre().equals("horario"))
+                .findFirst().orElseThrow().puntos();
+    }
+
     /**
      * Que fraccion de su propio maximo saca el factor horario.
      *
@@ -217,5 +225,80 @@ class SolapeConCompromisoTest {
 
         assertTrue(frase.contains("2 días"), frase);
         assertFalse(frase.contains("Viernes"), "No se va siempre el viernes: " + frase);
+    }
+
+    @Test
+    @DisplayName("Un solape que no da para entrenar no cuenta como coincidencia")
+    void unRatoNoEsUnaSesion() {
+        // Cinco minutos compartidos, los dos marcando "voy siempre". Antes esto
+        // contaba como dia ancla y garantizaba el 75 % del factor horario:
+        // treinta puntos por un rato en el que no da tiempo ni a calentar.
+        List<Disponibilidad> mios = List.of(voySiempre("Lunes", "18:00", "20:00"));
+        List<Disponibilidad> suyos = List.of(voySiempre("Lunes", "19:55", "21:00"));
+
+        SolapeHorario solape = CalculadoraSolape.calcular(mios, suyos);
+
+        assertFalse(solape.hayCoincidencia(), "Cinco minutos no son una coincidencia");
+        assertEquals(0, solape.diasAncla());
+        assertTrue(solape.franjas().isEmpty(), "Tampoco hay que dibujarlo ni proponerlo");
+    }
+
+    @Test
+    @DisplayName("Justo en el minimo si cuenta")
+    void elMinimoEsValido() {
+        List<Disponibilidad> mios = List.of(voySiempre("Lunes", "18:00", "20:00"));
+        List<Disponibilidad> suyos = List.of(voySiempre("Lunes", "19:15", "21:00"));
+
+        SolapeHorario solape = CalculadoraSolape.calcular(mios, suyos);
+
+        assertEquals(CalculadoraSolape.MINUTOS_MINIMOS_DE_SESION, solape.minutosSemanales());
+        assertEquals(1, solape.diasAncla());
+    }
+
+    @Test
+    @DisplayName("Coincidir en horario en gimnasios distintos no es coincidir")
+    void enOtroGimnasioNoEsCoincidir() {
+        // Los dos, los lunes de seis a ocho, marcandolo como fijo. En el mismo
+        // gimnasio eso es la mejor senal que existe; en dos edificios distintos
+        // de la ciudad no es ninguna.
+        List<Disponibilidad> horario = List.of(voySiempre("Lunes", "18:00", "20:00"));
+
+        Usuario yo = usuarioTipo();
+        Usuario mismo = usuarioTipo();
+
+        Usuario otroSitio = usuarioTipo();
+        Gimnasio lejos = new Gimnasio();
+        lejos.setId(99L);
+        lejos.setNombre("Basic-Fit Chamberi");
+        otroSitio.setGimnasio(lejos);
+
+        double juntos = puntosHorario(yo, horario, mismo, horario);
+        double separados = puntosHorario(yo, horario, otroSitio, horario);
+
+        assertTrue(separados < juntos / 3,
+                "El solape en otro gimnasio tiene que valer una fraccion: %.1f frente a %.1f"
+                        .formatted(separados, juntos));
+    }
+
+    @Test
+    @DisplayName("La explicacion dice que los gimnasios no son el mismo")
+    void laExplicacionLoDice() {
+        List<Disponibilidad> horario = List.of(voySiempre("Lunes", "18:00", "20:00"));
+
+        Usuario otroSitio = usuarioTipo();
+        Gimnasio lejos = new Gimnasio();
+        lejos.setId(99L);
+        lejos.setNombre("Basic-Fit Chamberi");
+        otroSitio.setGimnasio(lejos);
+
+        String frase = CalculadoraCompatibilidad.calcular(usuarioTipo(), horario, otroSitio, horario)
+                .factores().stream()
+                .filter(f -> f.nombre().equals("horario"))
+                .findFirst().orElseThrow().detalle();
+
+        // Decia "los dos vais siempre un dia a la misma hora (Lunes)", que de una
+        // pareja en gimnasios distintos es falso en lo unico que importa.
+        assertTrue(frase.contains("gimnasios distintos"), frase);
+        assertFalse(frase.contains("vais siempre"), frase);
     }
 }

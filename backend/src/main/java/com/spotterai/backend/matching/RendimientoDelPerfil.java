@@ -21,6 +21,15 @@ import java.util.List;
  */
 public record RendimientoDelPerfil(int puntosEnJuego, List<HuecoDelPerfil> huecos) {
 
+    /**
+     * Por debajo de este ritmo se avisa.
+     *
+     * <p>No es el listón para ser constante, es el listón para que merezca la
+     * pena decirlo: avisar a quien ya entrena dos veces por semana de que podría
+     * entrenar tres es ruido.
+     */
+    private static final double UMBRAL_CONSTANCIA = 0.6;
+
     public boolean estaCompleto() {
         return huecos.isEmpty();
     }
@@ -30,14 +39,47 @@ public record RendimientoDelPerfil(int puntosEnJuego, List<HuecoDelPerfil> hueco
         return huecos.isEmpty() ? null : huecos.get(0);
     }
 
-    /** Sin levantamientos, para quien llame sin ese dato. */
+    /** Sin levantamientos ni historial, para quien llame sin esos datos. */
     public static RendimientoDelPerfil de(Usuario usuario, boolean tieneHorarios) {
-        return de(usuario, tieneHorarios, false);
+        return de(usuario, tieneHorarios, false, Constancia.DESCONOCIDA);
     }
 
     public static RendimientoDelPerfil de(Usuario usuario, boolean tieneHorarios,
                                           boolean tieneLevantamientos) {
+        return de(usuario, tieneHorarios, tieneLevantamientos, Constancia.DESCONOCIDA);
+    }
+
+    /**
+     * Que hueco deja de tener sentido llamar "hueco".
+     *
+     * <p>La constancia no es un campo que falte: es algo que estas haciendo, y
+     * te cuesta puntos con todo el mundo a la vez. Justo lo que este panel dice
+     * medir —"puntos que no puedes ganar con nadie"— y por eso entra aqui aunque
+     * no se rellene con un formulario.
+     *
+     * <p>Hacia falta ademas por una razon practica: sin esto, entrenar poco baja
+     * tu puntuacion con todos los candidatos por igual y en la pantalla no
+     * aparece ni una palabra sobre por que. Un numero que baja sin explicacion es
+     * exactamente lo que esta aplicacion lleva evitando desde el principio.
+     */
+    public static RendimientoDelPerfil de(Usuario usuario, boolean tieneHorarios,
+                                          boolean tieneLevantamientos,
+                                          Constancia miConstancia) {
         List<HuecoDelPerfil> huecos = new ArrayList<>();
+
+        if (!miConstancia.tieneHistorial()) {
+            huecos.add(new HuecoDelPerfil("entrenamientos", "Entrenamientos",
+                    (int) CalculadoraCompatibilidad.PESO_CONSTANCIA,
+                    "Sin ningún entrenamiento registrado no hay forma de saber si apareces, "
+                            + "que es lo que más mira quien busca compañero."));
+        } else if (miConstancia.ritmo() < UMBRAL_CONSTANCIA) {
+            int perdidos = (int) Math.round(
+                    (1 - miConstancia.ritmo()) * CalculadoraCompatibilidad.PESO_CONSTANCIA);
+            huecos.add(new HuecoDelPerfil("constancia", "Constancia", perdidos,
+                    "Has registrado %d %s en el último mes. Una pareja entrena tan a menudo como el que menos aparece, así que esto te resta con todo el mundo."
+                            .formatted(miConstancia.entrenosRecientes(),
+                                    miConstancia.entrenosRecientes() == 1 ? "entrenamiento" : "entrenamientos")));
+        }
 
         if (!tieneLevantamientos) {
             huecos.add(new HuecoDelPerfil("levantamientos", "Levantamientos",
