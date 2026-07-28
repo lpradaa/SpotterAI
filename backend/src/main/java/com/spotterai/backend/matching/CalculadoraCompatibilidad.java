@@ -158,40 +158,22 @@ public final class CalculadoraCompatibilidad {
     private CalculadoraCompatibilidad() {}
 
     /**
-     * Puntua declarando que no hay datos de fuerza.
+     * La unica forma de puntuar una pareja.
      *
-     * <p><b>No es un atajo para ahorrarse una consulta.</b> Omitir los
-     * levantamientos no es lo mismo que pasarlos vacios por casualidad: el
-     * factor de fuerza queda "sin datos", su peso se reparte entre los demas y
-     * entra el descuento por evidencia, o sea que el numero que sale es
-     * distinto.
+     * <p>Aqui hubo dos sobrecargas mas —una sin levantamientos y otra sin
+     * constancia— pensadas para quien no tuviera esos datos. La idea era comoda
+     * y el efecto fue el contrario: llamar a la corta no da error, da otro
+     * numero. Paso tres veces. El tablero y Explorar ensenaban 90 y 83 de la
+     * misma pareja; despues la lista decia 56 y la explicacion 48.
      *
-     * <p>Eso ya paso: la pantalla de Explorar llamaba aqui mientras el tablero
-     * llamaba a la version completa, y la misma pareja aparecia con dos
-     * porcentajes distintos segun donde la miraras. Dos numeros para lo mismo es
-     * peor que un numero malo, porque quien lo ve no sabe cual creer.
+     * <p>Las dos veces se arreglo la llamada y se dejo el atajo con un aviso en
+     * un comentario. Un aviso en un comentario no es una defensa: a la tercera
+     * se quita el atajo.
      *
-     * <p>Si tienes las marcas a mano, usa la version de seis argumentos.
-     */
-    public static PuntuacionCompatibilidad calcular(
-            Usuario yo, List<Disponibilidad> misHorarios,
-            Usuario otro, List<Disponibilidad> susHorarios) {
-        return calcular(yo, misHorarios, List.of(), otro, susHorarios, List.of());
-    }
-
-    /** Con marcas pero sin constancia. */
-    public static PuntuacionCompatibilidad calcular(
-            Usuario yo, List<Disponibilidad> misHorarios, List<Levantamiento> misLevantamientos,
-            Usuario otro, List<Disponibilidad> susHorarios, List<Levantamiento> susLevantamientos) {
-        return calcular(PerfilDeMatch.de(yo, misHorarios, misLevantamientos),
-                        PerfilDeMatch.de(otro, susHorarios, susLevantamientos));
-    }
-
-    /**
-     * La forma canonica: dos perfiles, y cada uno lleva lo suyo junto.
-     *
-     * <p>Las sobrecargas de arriba existen para quien no tenga todos los datos,
-     * y todas acaban aqui.
+     * <p>Quien de verdad no tenga un dato construye el {@link PerfilDeMatch}
+     * diciendolo —{@code PerfilDeMatch.de(usuario, horarios)}— y entonces la
+     * ausencia esta escrita en la llamada, no escondida en que sobrecarga
+     * resuelve el compilador.
      */
     public static PuntuacionCompatibilidad calcular(PerfilDeMatch mio, PerfilDeMatch suyo) {
         Usuario yo = mio.usuario();

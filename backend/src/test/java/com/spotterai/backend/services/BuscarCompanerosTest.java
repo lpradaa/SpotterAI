@@ -97,10 +97,11 @@ class BuscarCompanerosTest {
         Usuario noCoincide = usuario(3L, "Ana", "Avanzado", "Resistencia", 45, gimnasio);
 
         when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of(noCoincide, coincide));
-        when(disponibilidadRepository.findByUsuarioId(1L))
-                .thenReturn(List.of(franja(yo, "Lunes", "18:00", "20:00")));
+        // Todo el grupo en una consulta, yo incluido: el servicio carga los
+        // perfiles de golpe y ya no pide lo mio por separado.
         when(disponibilidadRepository.findByUsuarioIdIn(any()))
                 .thenReturn(List.of(
+                        franja(yo, "Lunes", "18:00", "20:00"),
                         franja(coincide, "Lunes", "18:00", "20:00"),   // solapa entero
                         franja(noCoincide, "Domingo", "08:00", "10:00"))); // no solapa
 

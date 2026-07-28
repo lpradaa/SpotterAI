@@ -71,6 +71,22 @@ class CalculadoraCompatibilidadTest {
                 new PerfilDeMatch(b, horariosB, pesosB, constante()));
     }
 
+/**
+     * Puntua un par de perfiles sin marcas ni constancia.
+     *
+     * <p>La calculadora ya no acepta llamadas a medias: quien no tiene un dato
+     * lo dice construyendo el {@link PerfilDeMatch} incompleto a proposito.
+     * Estas pruebas van justamente de los factores que si pasan, asi que la
+     * ausencia esta declarada aqui, una vez, en vez de escondida en que
+     * sobrecarga elegia el compilador.
+     */
+    private static PuntuacionCompatibilidad calcularSoloConHorarios(
+            Usuario a, List<Disponibilidad> horariosA,
+            Usuario b, List<Disponibilidad> horariosB) {
+        return CalculadoraCompatibilidad.calcular(
+                PerfilDeMatch.de(a, horariosA), PerfilDeMatch.de(b, horariosB));
+    }
+
     /** Franja sin compromiso: "puedo ir". */
     private static Disponibilidad franja(String dia, String inicio, String fin) {
         return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null, false);
@@ -107,7 +123,7 @@ class CalculadoraCompatibilidadTest {
 
         assertEquals(100, puntuar(a, conCompromiso, pesos, b, conCompromiso, pesos).total());
 
-        assertTrue(CalculadoraCompatibilidad.calcular(a, conCompromiso, b, conCompromiso).total() < 100,
+        assertTrue(calcularSoloConHorarios(a, conCompromiso, b, conCompromiso).total() < 100,
                 "Sin levantamientos no se puede llegar al maximo");
 
         // Basta con que una de las tres sea solo disponibilidad para no llegar al tope
@@ -116,7 +132,7 @@ class CalculadoraCompatibilidadTest {
                 fija("Miercoles", "18:00", "20:00"),
                 franja("Viernes", "18:00", "20:00"));
 
-        assertTrue(CalculadoraCompatibilidad.calcular(a, casiTodoFirme, b, casiTodoFirme).total() < 100);
+        assertTrue(calcularSoloConHorarios(a, casiTodoFirme, b, casiTodoFirme).total() < 100);
 
         // Las mismas horas, pero sin que ninguno se comprometa, no llegan al maximo:
         // es disponibilidad, no una cita.
@@ -126,7 +142,7 @@ class CalculadoraCompatibilidadTest {
                 franja("Viernes", "18:00", "20:00"));
 
         PuntuacionCompatibilidad vaga =
-                CalculadoraCompatibilidad.calcular(a, soloDisponibles, b, soloDisponibles);
+                calcularSoloConHorarios(a, soloDisponibles, b, soloDisponibles);
         assertTrue(vaga.total() < 100);
         assertTrue(vaga.total() > 60, "Aun asi debe puntuar bien: %d".formatted(vaga.total()));
     }
@@ -138,7 +154,7 @@ class CalculadoraCompatibilidadTest {
         Usuario a = usuario("Intermedio", "Hipertrofia", 28, g);
         Usuario b = usuario("Intermedio", "Hipertrofia", 28, g);
 
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(
                 a, List.of(franja("Lunes", "07:00", "09:00")),
                 b, List.of(franja("Lunes", "20:00", "22:00")));
 
@@ -151,7 +167,7 @@ class CalculadoraCompatibilidadTest {
         // Con compromiso mutuo, para que el solape valga lo que puede valer: dos
         // franjas "puedo ir" apenas se separan de no coincidir, y esa comparacion
         // no distinguiria nada.
-        PuntuacionCompatibilidad conSolape = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad conSolape = calcularSoloConHorarios(
                 a, List.of(fija("Lunes", "20:00", "22:00")),
                 b, List.of(fija("Lunes", "20:00", "22:00")));
 
@@ -166,15 +182,15 @@ class CalculadoraCompatibilidadTest {
         Gimnasio g = gimnasio(1L, "Gym");
         List<Disponibilidad> h = List.of(franja("Lunes", "18:00", "19:00"));
 
-        PuntuacionCompatibilidad iguales = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad iguales = calcularSoloConHorarios(
                 usuario("Intermedio", "Fuerza", 30, g), h,
                 usuario("Intermedio", "Fuerza", 30, g), h);
 
-        PuntuacionCompatibilidad contiguos = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad contiguos = calcularSoloConHorarios(
                 usuario("Principiante", "Fuerza", 30, g), h,
                 usuario("Intermedio", "Fuerza", 30, g), h);
 
-        PuntuacionCompatibilidad extremos = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad extremos = calcularSoloConHorarios(
                 usuario("Principiante", "Fuerza", 30, g), h,
                 usuario("Avanzado", "Fuerza", 30, g), h);
 
@@ -190,11 +206,11 @@ class CalculadoraCompatibilidadTest {
         Gimnasio g = gimnasio(1L, "Gym");
         List<Disponibilidad> h = List.of(franja("Lunes", "18:00", "19:00"));
 
-        PuntuacionCompatibilidad afines = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad afines = calcularSoloConHorarios(
                 usuario("Intermedio", "Hipertrofia", 30, g), h,
                 usuario("Intermedio", "Fuerza", 30, g), h);
 
-        PuntuacionCompatibilidad iguales = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad iguales = calcularSoloConHorarios(
                 usuario("Intermedio", "Fuerza", 30, g), h,
                 usuario("Intermedio", "Fuerza", 30, g), h);
 
@@ -225,7 +241,7 @@ class CalculadoraCompatibilidadTest {
     @DisplayName("Un perfil incompleto puntua bajo pero no lanza excepciones")
     void perfilIncompletoNoRompe() {
         Usuario vacio = usuario(null, null, null, null);
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(
                 vacio, List.of(), vacio, List.of());
 
         assertEquals(0, p.total());
@@ -246,7 +262,7 @@ class CalculadoraCompatibilidadTest {
                 fija("Miercoles", "18:00", "21:00"),
                 fija("Viernes", "18:00", "21:00"));
 
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(
                 usuario("Principiante", "Fuerza", 20, g), h,
                 usuario("Avanzado", "Resistencia", 45, g), h);
 
@@ -262,7 +278,7 @@ class CalculadoraCompatibilidadTest {
                 franja("Lunes", "18:00", "21:00"),
                 franja("Miercoles", "18:00", "21:00"));
 
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(
                 usuario("Intermedio", "Hipertrofia", 30, g), h,
                 usuario("Intermedio", "Hipertrofia", 30, g), h);
 

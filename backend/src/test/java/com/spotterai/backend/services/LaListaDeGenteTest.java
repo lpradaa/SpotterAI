@@ -108,15 +108,15 @@ class LaListaDeGenteTest {
         when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of(otro));
         when(solicitudRepository.findTodasPorUsuario(any())).thenReturn(List.of());
 
-        when(disponibilidadRepository.findByUsuarioId(1L)).thenReturn(List.of(franja(yo)));
-        when(disponibilidadRepository.findByUsuarioId(2L)).thenReturn(List.of(franja(otro)));
+        // Una sola consulta por lote para todo el grupo, yo incluido: desde que
+        // hay un unico cargador de perfiles, el servicio ya no pide lo mio por
+        // separado. Devolver aqui solo lo del otro dejaba mi semana vacia.
         when(disponibilidadRepository.findByUsuarioIdIn(any()))
-                .thenReturn(List.of(franja(otro)));
+                .thenReturn(List.of(franja(yo), franja(otro)));
 
         // Los dos mueven casi lo mismo: la fuerza deberia sumar, no quedarse fuera.
-        when(levantamientoRepository.findByUsuarioId(1L)).thenReturn(List.of(marca(yo, 100)));
-        when(levantamientoRepository.findByUsuarioId(2L)).thenReturn(List.of(marca(otro, 95)));
-        when(levantamientoRepository.findByUsuarioIdIn(any())).thenReturn(List.of(marca(otro, 95)));
+        when(levantamientoRepository.findByUsuarioIdIn(any()))
+                .thenReturn(List.of(marca(yo, 100), marca(otro, 95)));
 
         // Los dos entrenan con regularidad. Desde que la constancia es un factor,
         // sin esto el perfil no esta completo y la puntuacion sale con descuento

@@ -334,38 +334,28 @@ public class UsuarioServiceImpl implements UsuarioService {
         List<Usuario> candidatos = usuarioRepository.findByIdNot(miUsuario.getId());
         if (candidatos.isEmpty()) return List.of();
 
-        List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(miUsuario.getId());
-        Map<Long, List<Disponibilidad>> horariosAjenos = cargarHorariosDe(candidatos);
-        Map<Long, List<Levantamiento>> levantamientosAjenos = cargarLevantamientosDe(candidatos);
-        List<Levantamiento> misLevantamientos = levantamientoRepository.findByUsuarioId(miUsuario.getId());
         Map<Long, String> estadoPorCompanero = indexarSolicitudes(miUsuario.getId());
 
-        // La constancia de todos de golpe, incluida la mia: dos consultas para el
-        // grupo entero en vez de dos por candidato.
-        List<Long> todos = new java.util.ArrayList<>(candidatos.stream().map(Usuario::getId).toList());
-        todos.add(miUsuario.getId());
-        Map<Long, Constancia> constancias = cargarConstanciaDe(todos);
-        Constancia miConstancia = constancias.getOrDefault(miUsuario.getId(), Constancia.DESCONOCIDA);
-
-        PerfilDeMatch mio = new PerfilDeMatch(miUsuario, misHorarios, misLevantamientos, miConstancia);
+        // Todos los perfiles de golpe, el mio incluido, por el mismo cargador.
+        List<Usuario> todos = new java.util.ArrayList<>(candidatos);
+        todos.add(miUsuario);
+        Map<Long, PerfilDeMatch> perfiles = perfilesDeMatch(todos);
+        PerfilDeMatch mio = perfiles.get(miUsuario.getId());
 
         return candidatos.stream()
                 .map(candidato -> {
-                    PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
-                            mio,
-                            new PerfilDeMatch(candidato,
-                                    horariosAjenos.getOrDefault(candidato.getId(), List.of()),
-                                    levantamientosAjenos.getOrDefault(candidato.getId(), List.of()),
-                                    constancias.getOrDefault(candidato.getId(), Constancia.DESCONOCIDA)));
+                    PerfilDeMatch suyo = perfiles.get(candidato.getId());
+                    PuntuacionCompatibilidad puntuacion =
+                            CalculadoraCompatibilidad.calcular(mio, suyo);
+
                     UsuarioResponseDTO dto = construirDtoDeMatch(candidato, puntuacion,
                             estadoPorCompanero.get(candidato.getId()));
 
                     // De la misma comparacion que ha puntuado, no de otra hecha
                     // aparte: si se recalculara, la lista podria decir que os
                     // cubris mientras la explicacion dice lo contrario.
-                    dto.setFuerzaCompatible(CalculadoraFuerza.comparar(
-                                    misLevantamientos,
-                                    levantamientosAjenos.getOrDefault(candidato.getId(), List.of()))
+                    dto.setFuerzaCompatible(CalculadoraFuerza
+                            .comparar(mio.levantamientos(), suyo.levantamientos())
                             .podeisCubriros().orElse(null));
                     return dto;
                 })
@@ -385,18 +375,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         // compatibilidad, porque contigo mismo no significa nada.
         boolean esMio = yo.getId().equals(otro.getId());
 
-        Map<Long, Constancia> constancias = esMio
-                ? Map.of() : cargarConstanciaDe(List.of(yo.getId(), otro.getId()));
+        Map<Long, PerfilDeMatch> perfiles = esMio ? Map.of() : perfilesDeMatch(List.of(yo, otro));
 
         PuntuacionCompatibilidad puntuacion = esMio ? null : CalculadoraCompatibilidad.calcular(
-                new PerfilDeMatch(yo,
-                        disponibilidadRepository.findByUsuarioId(yo.getId()),
-                        levantamientoRepository.findByUsuarioId(yo.getId()),
-                        constancias.getOrDefault(yo.getId(), Constancia.DESCONOCIDA)),
-                new PerfilDeMatch(otro,
-                        disponibilidadRepository.findByUsuarioId(otro.getId()),
-                        levantamientoRepository.findByUsuarioId(otro.getId()),
-                        constancias.getOrDefault(otro.getId(), Constancia.DESCONOCIDA)));
+                perfiles.get(yo.getId()), perfiles.get(otro.getId()));
 
         String estado = esMio ? null : indexarSolicitudes(yo.getId()).get(otro.getId());
 
@@ -507,13 +489,60 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new IllegalArgumentException("No puedes pedir la compatibilidad contigo mismo.");
         }
 
+        // Aqui estaba el fallo: se montaban los perfiles a mano con la sobrecarga
+        // de seis argumentos, o sea sin constancia, y la explicacion daba 48
+        // donde la lista daba 56. El mismo numero por dos caminos distintos.
+        Map<Long, PerfilDeMatch> perfiles = perfilesDeMatch(List.of(miUsuario, otro));
+
         PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
-                miUsuario, disponibilidadRepository.findByUsuarioId(miUsuario.getId()),
-                levantamientoRepository.findByUsuarioId(miUsuario.getId()),
-                otro, disponibilidadRepository.findByUsuarioId(otro.getId()),
-                levantamientoRepository.findByUsuarioId(otro.getId()));
+                perfiles.get(miUsuario.getId()), perfiles.get(otro.getId()));
 
         return explicador.explicar(otro.getNombre(), puntuacion);
+    }
+
+
+    /**
+     * El perfil de una persona tal y como lo necesita el motor.
+     *
+     * <p><b>Todo camino que puntue pasa por aqui.</b> No es comodidad: es que
+     * construir el {@link PerfilDeMatch} a mano en cada sitio es como se cuelan
+     * las divergencias. Ha pasado tres veces —el tablero contra Explorar, la
+     * lista contra la explicacion— y siempre igual: alguien añade un dato al
+     * motor y actualiza dos de los tres sitios que lo montan.
+     *
+     * <p>Con un solo cargador, añadir un factor obliga a tocar un metodo y todos
+     * los caminos se enteran a la vez.
+     */
+    private PerfilDeMatch perfilDeMatch(Usuario usuario) {
+        return perfilesDeMatch(List.of(usuario)).get(usuario.getId());
+    }
+
+    /**
+     * Lo mismo para un grupo, con las consultas agrupadas.
+     *
+     * <p>Cuatro consultas para todo el grupo, no cuatro por persona: esta es la
+     * ruta que recorre la lista entera de candidatos.
+     */
+    private Map<Long, PerfilDeMatch> perfilesDeMatch(List<Usuario> usuarios) {
+        if (usuarios.isEmpty()) return Map.of();
+
+        List<Long> ids = usuarios.stream().map(Usuario::getId).toList();
+
+        Map<Long, List<Disponibilidad>> horarios = disponibilidadRepository.findByUsuarioIdIn(ids)
+                .stream().collect(Collectors.groupingBy(d -> d.getUsuario().getId()));
+        Map<Long, List<Levantamiento>> levantamientos = levantamientoRepository.findByUsuarioIdIn(ids)
+                .stream().collect(Collectors.groupingBy(l -> l.getUsuario().getId()));
+        Map<Long, Constancia> constancias = cargarConstanciaDe(ids);
+
+        Map<Long, PerfilDeMatch> perfiles = new HashMap<>();
+        for (Usuario u : usuarios) {
+            perfiles.put(u.getId(), new PerfilDeMatch(
+                    u,
+                    horarios.getOrDefault(u.getId(), List.of()),
+                    levantamientos.getOrDefault(u.getId(), List.of()),
+                    constancias.getOrDefault(u.getId(), Constancia.DESCONOCIDA)));
+        }
+        return perfiles;
     }
 
     /** Una sola consulta para los horarios de todos los candidatos, agrupados por usuario. */

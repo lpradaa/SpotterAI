@@ -78,6 +78,22 @@ class RepartoDePesoTest {
                 new PerfilDeMatch(b, horariosB, pesosB, constante()));
     }
 
+/**
+     * Puntua un par de perfiles sin marcas ni constancia.
+     *
+     * <p>La calculadora ya no acepta llamadas a medias: quien no tiene un dato
+     * lo dice construyendo el {@link PerfilDeMatch} incompleto a proposito.
+     * Estas pruebas van justamente de los factores que si pasan, asi que la
+     * ausencia esta declarada aqui, una vez, en vez de escondida en que
+     * sobrecarga elegia el compilador.
+     */
+    private static PuntuacionCompatibilidad calcularSoloConHorarios(
+            Usuario a, List<Disponibilidad> horariosA,
+            Usuario b, List<Disponibilidad> horariosB) {
+        return CalculadoraCompatibilidad.calcular(
+                PerfilDeMatch.de(a, horariosA), PerfilDeMatch.de(b, horariosB));
+    }
+
     private static Disponibilidad franja(String dia, String inicio, String fin) {
         return new Disponibilidad(dia, LocalTime.parse(inicio), LocalTime.parse(fin), null, true);
     }
@@ -89,7 +105,7 @@ class RepartoDePesoTest {
         Usuario a = usuario("Intermedio", "Hipertrofia", 30, g);
         Usuario b = usuario("Intermedio", "Hipertrofia", 30, g);
 
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(a, List.of(), b, List.of());
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(a, List.of(), b, List.of());
 
         // Todo lo conocido encaja, asi que no se hunde como antes, cuando la falta
         // de horarios restaba y la etiqueta decia "poca compatibilidad". Se compara
@@ -98,7 +114,7 @@ class RepartoDePesoTest {
         // el reparto de pesos, y entonces la prueba se pone roja sin que nada se
         // haya roto.
         Gimnasio otroGimnasio = gimnasio(2L);
-        PuntuacionCompatibilidad enDesacuerdo = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad enDesacuerdo = calcularSoloConHorarios(
                 usuario("Principiante", "Resistencia", 20, g), List.of(),
                 usuario("Avanzado", "Hipertrofia", 45, otroGimnasio), List.of());
 
@@ -128,10 +144,8 @@ class RepartoDePesoTest {
 
         List<Disponibilidad> misFranjas = List.of(franja("Lunes", "18:00", "20:00"));
 
-        int puntosSinDatos = CalculadoraCompatibilidad
-                .calcular(yo, misFranjas, sinHorarios, List.of()).total();
-        int puntosConSolape = CalculadoraCompatibilidad
-                .calcular(yo, misFranjas, conSolape, misFranjas).total();
+        int puntosSinDatos = calcularSoloConHorarios(yo, misFranjas, sinHorarios, List.of()).total();
+        int puntosConSolape = calcularSoloConHorarios(yo, misFranjas, conSolape, misFranjas).total();
 
         assertTrue(puntosConSolape > puntosSinDatos,
                 "Con solape real saco %d y sin ningun dato %d"
@@ -142,7 +156,7 @@ class RepartoDePesoTest {
     @DisplayName("El factor omitido no aporta puntos ni peso")
     void elFactorOmitidoQuedaMarcado() {
         Gimnasio g = gimnasio(1L);
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(
                 usuario("Intermedio", "Hipertrofia", 30, g), List.of(),
                 usuario("Intermedio", "Hipertrofia", 30, g), List.of());
 
@@ -177,7 +191,7 @@ class RepartoDePesoTest {
     @DisplayName("Los horarios de un solo lado tampoco bastan para evaluar el solape")
     void hacenFaltaLosDosLados() {
         Gimnasio g = gimnasio(1L);
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(
                 usuario("Intermedio", "Hipertrofia", 30, g),
                 List.of(franja("Lunes", "18:00", "20:00")),
                 usuario("Intermedio", "Hipertrofia", 30, g),
@@ -194,17 +208,17 @@ class RepartoDePesoTest {
         List<Disponibilidad> h = List.of(franja("Lunes", "18:00", "20:00"));
 
         // Solo se conoce el nivel: coincide, pero es muy poco en lo que basarse
-        int soloNivel = CalculadoraCompatibilidad.calcular(
+        int soloNivel = calcularSoloConHorarios(
                 usuario("Intermedio", null, null, null), List.of(),
                 usuario("Intermedio", null, null, null), List.of()).total();
 
         // Se conoce todo menos el horario
-        int casiTodo = CalculadoraCompatibilidad.calcular(
+        int casiTodo = calcularSoloConHorarios(
                 usuario("Intermedio", "Hipertrofia", 30, g), List.of(),
                 usuario("Intermedio", "Hipertrofia", 30, g), List.of()).total();
 
         // Perfil completo
-        int completo = CalculadoraCompatibilidad.calcular(
+        int completo = calcularSoloConHorarios(
                 usuario("Intermedio", "Hipertrofia", 30, g), h,
                 usuario("Intermedio", "Hipertrofia", 30, g), h).total();
 
@@ -216,7 +230,7 @@ class RepartoDePesoTest {
     @DisplayName("Sin ningun dato comun la puntuacion es cero y se dice que esta incompleta")
     void sinNingunDato() {
         Usuario vacio = usuario(null, null, null, null);
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(
                 vacio, List.of(), vacio, List.of());
 
         assertEquals(0, p.total());
@@ -230,7 +244,7 @@ class RepartoDePesoTest {
         Gimnasio uno = gimnasio(1L);
         Gimnasio otro = gimnasio(2L);
 
-        PuntuacionCompatibilidad p = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad p = calcularSoloConHorarios(
                 usuario("Principiante", "Fuerza", 20, uno), List.of(),
                 usuario("Avanzado", "Resistencia", 55, otro), List.of());
 

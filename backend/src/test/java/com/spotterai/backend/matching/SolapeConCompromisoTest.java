@@ -41,6 +41,22 @@ class SolapeConCompromisoTest {
         return u;
     }
 
+/**
+     * Puntua un par de perfiles sin marcas ni constancia.
+     *
+     * <p>La calculadora ya no acepta llamadas a medias: quien no tiene un dato
+     * lo dice construyendo el {@link PerfilDeMatch} incompleto a proposito.
+     * Estas pruebas van justamente de los factores que si pasan, asi que la
+     * ausencia esta declarada aqui, una vez, en vez de escondida en que
+     * sobrecarga elegia el compilador.
+     */
+    private static PuntuacionCompatibilidad calcularSoloConHorarios(
+            Usuario a, List<Disponibilidad> horariosA,
+            Usuario b, List<Disponibilidad> horariosB) {
+        return CalculadoraCompatibilidad.calcular(
+                PerfilDeMatch.de(a, horariosA), PerfilDeMatch.de(b, horariosB));
+    }
+
     private static double puntosHorario(List<Disponibilidad> mios, List<Disponibilidad> suyos) {
         return factorHorario(mios, suyos).puntos();
     }
@@ -48,7 +64,7 @@ class SolapeConCompromisoTest {
     /** El factor horario entre dos personas concretas, con sus gimnasios. */
     private static double puntosHorario(Usuario yo, List<Disponibilidad> mios,
                                         Usuario otro, List<Disponibilidad> suyos) {
-        return CalculadoraCompatibilidad.calcular(yo, mios, otro, suyos).factores().stream()
+        return calcularSoloConHorarios(yo, mios, otro, suyos).factores().stream()
                 .filter(f -> f.nombre().equals("horario"))
                 .findFirst().orElseThrow().puntos();
     }
@@ -67,7 +83,7 @@ class SolapeConCompromisoTest {
 
     private static FactorCompatibilidad factorHorario(
             List<Disponibilidad> mios, List<Disponibilidad> suyos) {
-        return CalculadoraCompatibilidad.calcular(usuarioTipo(), mios, usuarioTipo(), suyos)
+        return calcularSoloConHorarios(usuarioTipo(), mios, usuarioTipo(), suyos)
                 .factores().stream()
                 .filter(f -> f.nombre().equals("horario"))
                 .findFirst().orElseThrow();
@@ -218,7 +234,7 @@ class SolapeConCompromisoTest {
         assertEquals(List.of("Lunes", "Miércoles"), solape.diasDeAncla());
         assertEquals(3, solape.dias().size(), "El viernes sigue contando como solape");
 
-        String frase = CalculadoraCompatibilidad.calcular(
+        String frase = calcularSoloConHorarios(
                 usuarioTipo(), mios, usuarioTipo(), suyos).factores().stream()
                 .filter(f -> f.nombre().equals("horario"))
                 .findFirst().orElseThrow().detalle();
@@ -291,7 +307,7 @@ class SolapeConCompromisoTest {
         lejos.setNombre("Basic-Fit Chamberi");
         otroSitio.setGimnasio(lejos);
 
-        String frase = CalculadoraCompatibilidad.calcular(usuarioTipo(), horario, otroSitio, horario)
+        String frase = calcularSoloConHorarios(usuarioTipo(), horario, otroSitio, horario)
                 .factores().stream()
                 .filter(f -> f.nombre().equals("horario"))
                 .findFirst().orElseThrow().detalle();
