@@ -28,6 +28,15 @@ export interface Match {
   biografia: string | null;
   gimnasioId: number | null;
   gimnasioNombre: string | null;
+  /** Nombre legible de su rutina ("Torso / Pierna"), o null si no la ha dicho. */
+  rutina: string | null;
+  /**
+   * Si podéis cubriros con la barra cargada.
+   *
+   * `null` es "no se sabe" —no hay ningún ejercicio en común— y no "no podéis":
+   * son cosas distintas y la interfaz tiene que poder decirlas distinto.
+   */
+  fuerzaCompatible: boolean | null;
 
   // Compatibilidad: solo llega en los endpoints de match
   compatibilidad: number;

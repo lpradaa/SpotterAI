@@ -294,3 +294,26 @@
   padding: $space-sm $space-md;
   border-top: 1px solid var(--sa-borde);
 }
+
+/* Interruptor de filtro: casilla y su explicacion, alineadas arriba porque el
+   texto de apoyo ocupa dos lineas. */
+.interruptor {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-xs;
+  cursor: pointer;
+
+  input { margin-top: 3px; }
+
+  span {
+    font-size: $text-sm;
+    color: var(--sa-texto);
+  }
+
+  small {
+    display: block;
+    margin-top: 2px;
+    font-size: $text-xs;
+    color: var(--sa-texto-suave);
+  }
+}

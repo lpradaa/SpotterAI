@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/entrenamientos")
-@CrossOrigin(origins = "http://localhost:4200")
 public class EntrenamientoController {
 
     private final EntrenamientoRepository entrenamientoRepository;

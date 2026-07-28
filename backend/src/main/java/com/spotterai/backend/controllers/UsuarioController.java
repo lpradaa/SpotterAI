@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController // Indica que esta clase responderá peticiones web devolviendo JSON
 @RequestMapping("/api/usuarios") // Todas las rutas aquí empezarán por esto
-@CrossOrigin(origins = "http://localhost:4200") // Permite que tu frontend en Angular se conecte sin bloqueos de seguridad del navegador
 public class UsuarioController {
 
     private final UsuarioService usuarioService;

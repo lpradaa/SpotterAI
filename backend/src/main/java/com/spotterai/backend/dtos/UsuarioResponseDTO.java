@@ -37,6 +37,16 @@ public class UsuarioResponseDTO {
      */
     private String rutina;
 
+    /**
+     * Si podeis cubriros con la barra cargada, o null si no se sabe.
+     *
+     * Sale del mismo umbral que usa la puntuacion de fuerza, no de una copia:
+     * la lista filtra por esto y la explicacion del match habla de lo mismo.
+     * Null cuando no hay ningun ejercicio en comun, que no es "no podeis" sino
+     * "no se sabe", y la interfaz tiene que poder distinguirlo.
+     */
+    private Boolean fuerzaCompatible;
+
     private Boolean yaConectado = false;
     private Boolean solicitudPendiente = false;
 
@@ -125,6 +135,9 @@ public class UsuarioResponseDTO {
 
     public String getRutina() { return rutina; }
     public void setRutina(String rutina) { this.rutina = rutina; }
+
+    public Boolean getFuerzaCompatible() { return fuerzaCompatible; }
+    public void setFuerzaCompatible(Boolean fuerzaCompatible) { this.fuerzaCompatible = fuerzaCompatible; }
     
     public Boolean getYaConectado() { return yaConectado; }
     public void setYaConectado(Boolean yaConectado) { this.yaConectado = yaConectado; }

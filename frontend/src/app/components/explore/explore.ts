@@ -55,8 +55,23 @@ export class Explore implements OnInit {
     gimnasio: '',
     genero: '',
     edadMin: null as number | null,
-    edadMax: null as number | null
+    edadMax: null as number | null,
+
+    /**
+     * Rutina y fuerza: los dos factores más nuevos del motor, 15 de los 100
+     * puntos entre ambos, y hasta ahora no se podía filtrar por ninguno.
+     *
+     * `soloSiPodemosCubrirnos` deja fuera también a quien no tiene marcas: sin
+     * ellas no se sabe, y quien busca a alguien que le aguante la barra no
+     * quiere "quizás".
+     */
+    rutina: '',
+    soloSiPodemosCubrirnos: false
   });
+
+  /** Rutinas presentes en los resultados, para poblar el desplegable. */
+  rutinasDisponibles = computed(() =>
+    [...new Set(this.usuarios().map(u => u.rutina).filter((r): r is string => !!r))].sort());
 
   toast: { show: boolean, message: string, type: 'success' | 'error' } = { show: false, message: '', type: 'success' };
   private toastTimeout: any;
@@ -68,7 +83,8 @@ export class Explore implements OnInit {
 
   hayFiltrosActivos = computed(() => {
     const f = this.filtrosActivos();
-    return !!(f.nivel || f.objetivo || f.gimnasio || f.genero || f.edadMin || f.edadMax || f.busqueda.trim());
+    return !!(f.nivel || f.objetivo || f.gimnasio || f.genero || f.edadMin || f.edadMax
+      || f.rutina || f.soloSiPodemosCubrirnos || f.busqueda.trim());
   });
 
   usuariosFiltrados = computed(() => {
@@ -85,6 +101,9 @@ export class Explore implements OnInit {
     if (f.genero) lista = lista.filter(u => u.genero === f.genero);
     if (f.edadMin !== null && f.edadMin > 0) lista = lista.filter(u => (u.edad ?? 0) >= f.edadMin!);
     if (f.edadMax !== null && f.edadMax > 0) lista = lista.filter(u => (u.edad ?? 0) <= f.edadMax!);
+    if (f.rutina) lista = lista.filter(u => u.rutina === f.rutina);
+    // Estrictamente true: null es "no se sabe", y aquí no vale.
+    if (f.soloSiPodemosCubrirnos) lista = lista.filter(u => u.fuerzaCompatible === true);
 
     return lista;
   });
@@ -127,10 +146,17 @@ export class Explore implements OnInit {
     this.filtrosActivos.update(f => ({ ...f, [campo]: valor }));
   }
 
+  /** Los interruptores no traen valor en el evento: hay que leer el checked. */
+  alternarFiltro(campo: string, evento: Event): void {
+    const marcado = (evento.target as HTMLInputElement).checked;
+    this.filtrosActivos.update(f => ({ ...f, [campo]: marcado }));
+  }
+
   resetearFiltros(): void {
     this.filtrosActivos.set({
       busqueda: '', nivel: '', objetivo: '',
-      gimnasio: '', genero: '', edadMin: null, edadMax: null
+      gimnasio: '', genero: '', edadMin: null, edadMax: null,
+      rutina: '', soloSiPodemosCubrirnos: false
     });
   }
 

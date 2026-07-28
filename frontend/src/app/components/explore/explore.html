@@ -78,6 +78,13 @@
           <div class="ficha__etiquetas">
             <span class="chip chip--nivel">{{ usuario.nivel || 'Sin nivel' }}</span>
             @if (usuario.objetivos) { <span class="chip chip--objetivo">{{ usuario.objetivos }}</span> }
+            @if (usuario.rutina) { <span class="chip">{{ usuario.rutina }}</span> }
+            <!-- Que podáis cubriros con la barra es lo que da sentido al nombre
+                 del producto, así que se dice y no se deja solo dentro del
+                 porcentaje. -->
+            @if (usuario.fuerzaCompatible) {
+              <span class="chip chip--fija" title="Movéis pesos parecidos">Podéis cubriros</span>
+            }
             @if (usuario.diasFijosEnComun > 0) {
               <span class="chip chip--fija">
                 {{ usuario.diasFijosEnComun }} {{ usuario.diasFijosEnComun === 1 ? 'día fijo' : 'días fijos' }}
@@ -127,6 +134,16 @@
         </select>
       </label>
 
+      <!-- El objetivo dice qué busca alguien; la rutina, qué le toca el martes.
+           Los dos entran en la puntuación, así que los dos se pueden filtrar. -->
+      <label class="campo">
+        <span>Rutina</span>
+        <select [ngModel]="filtrosActivos().rutina" (change)="actualizarFiltros('rutina', $event)">
+          <option value="">Cualquiera</option>
+          @for (r of rutinasDisponibles(); track r) { <option [value]="r">{{ r }}</option> }
+        </select>
+      </label>
+
       <label class="campo">
         <span>Objetivo</span>
         <select [ngModel]="filtrosActivos().objetivo" (change)="actualizarFiltros('objetivo', $event)">
@@ -157,6 +174,17 @@
                  [ngModel]="filtrosActivos().edadMax" (ngModelChange)="actualizarFiltros('edadMax', $event)">
         </div>
       </fieldset>
+
+      <!-- Un interruptor y no un desplegable: no hay tres respuestas posibles,
+           o quieres a alguien que pueda aguantarte la barra o te da igual. -->
+      <label class="interruptor">
+        <input type="checkbox" [checked]="filtrosActivos().soloSiPodemosCubrirnos"
+               (change)="alternarFiltro('soloSiPodemosCubrirnos', $event)">
+        <span>
+          Solo quien pueda cubrirme
+          <small>Deja fuera a quien no tenga marcas: sin ellas no se sabe.</small>
+        </span>
+      </label>
     </div>
 
     <footer class="panel__pie">

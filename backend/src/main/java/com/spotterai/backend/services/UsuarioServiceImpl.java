@@ -329,8 +329,17 @@ public class UsuarioServiceImpl implements UsuarioService {
                             miUsuario, misHorarios, misLevantamientos,
                             candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of()),
                             levantamientosAjenos.getOrDefault(candidato.getId(), List.of()));
-                    return construirDtoDeMatch(candidato, puntuacion,
+                    UsuarioResponseDTO dto = construirDtoDeMatch(candidato, puntuacion,
                             estadoPorCompanero.get(candidato.getId()));
+
+                    // De la misma comparacion que ha puntuado, no de otra hecha
+                    // aparte: si se recalculara, la lista podria decir que os
+                    // cubris mientras la explicacion dice lo contrario.
+                    dto.setFuerzaCompatible(CalculadoraFuerza.comparar(
+                                    misLevantamientos,
+                                    levantamientosAjenos.getOrDefault(candidato.getId(), List.of()))
+                            .podeisCubriros().orElse(null));
+                    return dto;
                 })
                 .sorted(Comparator.comparingInt(UsuarioResponseDTO::getCompatibilidad).reversed())
                 .collect(Collectors.toList());
@@ -573,13 +582,32 @@ public class UsuarioServiceImpl implements UsuarioService {
         List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(miUsuario.getId());
         Map<Long, List<Disponibilidad>> horariosAjenos = cargarHorariosDe(candidatos);
 
+        // Los levantamientos tambien. Esto llamaba a la version de cuatro
+        // argumentos, la que calcula sin fuerza, asi que la misma persona salia
+        // con un porcentaje aqui y otro distinto en el tablero: sin marcas, el
+        // factor de fuerza queda "sin datos" y entra el descuento por evidencia.
+        // Dos numeros para la misma pareja es peor que un numero malo, porque el
+        // que mira no sabe cual creer.
+        Map<Long, List<Levantamiento>> levantamientosAjenos = cargarLevantamientosDe(candidatos);
+        List<Levantamiento> misLevantamientos = levantamientoRepository.findByUsuarioId(miUsuario.getId());
+
         return candidatos.stream()
-                .map(candidato -> construirDtoDeMatch(
-                        candidato,
-                        CalculadoraCompatibilidad.calcular(
-                                miUsuario, misHorarios,
-                                candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of())),
-                        null))
+                .map(candidato -> {
+                    List<Levantamiento> suyos =
+                            levantamientosAjenos.getOrDefault(candidato.getId(), List.of());
+
+                    UsuarioResponseDTO dto = construirDtoDeMatch(
+                            candidato,
+                            CalculadoraCompatibilidad.calcular(
+                                    miUsuario, misHorarios, misLevantamientos,
+                                    candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of()),
+                                    suyos),
+                            null);
+
+                    dto.setFuerzaCompatible(CalculadoraFuerza.comparar(misLevantamientos, suyos)
+                            .podeisCubriros().orElse(null));
+                    return dto;
+                })
                 .sorted(Comparator.comparingInt(UsuarioResponseDTO::getCompatibilidad).reversed())
                 .collect(Collectors.toList());
     }

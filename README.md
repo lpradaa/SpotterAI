@@ -206,5 +206,4 @@ Lo que no hay, dicho claro: el token vive en `localStorage`, así que un XSS lo 
 - **Chat sin indicador de escritura ni presencia.** Los mensajes llegan al instante, pero no se ve si el otro está escribiendo.
 - **Sin paginación.** Con decenas de usuarios sobra; con miles no.
 - **`DisponibilidadController` expone un CRUD que nadie llama** — los horarios se gestionan dentro de `PUT /perfil`.
-- **La rutina no se pinta en las listas** aunque el servidor la manda, y Explorar no deja filtrar ni por rutina ni por fuerza, que son 15 de los 100 puntos.
 - **Accesibilidad sin repasar.** La rejilla semanal transmite su información solo en color, y los modales no atrapan el foco ni cierran con `Escape`.

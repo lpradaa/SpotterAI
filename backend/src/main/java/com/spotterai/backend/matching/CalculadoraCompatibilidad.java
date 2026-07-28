@@ -119,7 +119,22 @@ public final class CalculadoraCompatibilidad {
 
     private CalculadoraCompatibilidad() {}
 
-    /** Sin levantamientos, para quien llame sin ese dato. */
+    /**
+     * Puntua declarando que no hay datos de fuerza.
+     *
+     * <p><b>No es un atajo para ahorrarse una consulta.</b> Omitir los
+     * levantamientos no es lo mismo que pasarlos vacios por casualidad: el
+     * factor de fuerza queda "sin datos", su peso se reparte entre los demas y
+     * entra el descuento por evidencia, o sea que el numero que sale es
+     * distinto.
+     *
+     * <p>Eso ya paso: la pantalla de Explorar llamaba aqui mientras el tablero
+     * llamaba a la version completa, y la misma pareja aparecia con dos
+     * porcentajes distintos segun donde la miraras. Dos numeros para lo mismo es
+     * peor que un numero malo, porque quien lo ve no sabe cual creer.
+     *
+     * <p>Si tienes las marcas a mano, usa la version de seis argumentos.
+     */
     public static PuntuacionCompatibilidad calcular(
             Usuario yo, List<Disponibilidad> misHorarios,
             Usuario otro, List<Disponibilidad> susHorarios) {

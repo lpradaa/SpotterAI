@@ -5,6 +5,7 @@ import com.spotterai.backend.models.Levantamiento;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Compara la fuerza de dos personas para saber si pueden entrenar juntas.
@@ -48,6 +49,22 @@ public final class CalculadoraFuerza {
 
         public boolean hayDatos() {
             return !comunes.isEmpty();
+        }
+
+        /**
+         * Si os podeis cubrir con la barra cargada sin que sea una odisea.
+         *
+         * <p>Es el mismo umbral que usa {@link #puntuar}, no una copia con otro
+         * numero: la lista de Explorar filtra por esto y la explicacion del match
+         * habla de lo mismo, asi que si dijeran cosas distintas una de las dos
+         * estaria mintiendo.
+         *
+         * @return vacio cuando no hay ningun ejercicio en comun, que no es lo
+         *         mismo que "no podeis": es que no se sabe
+         */
+        public Optional<Boolean> podeisCubriros() {
+            if (!hayDatos()) return Optional.empty();
+            return Optional.of(ratio >= RATIO_ASISTENCIA_COMODA);
         }
     }
 

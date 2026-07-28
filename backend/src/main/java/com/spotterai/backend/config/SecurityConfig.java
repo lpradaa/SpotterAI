@@ -71,11 +71,30 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * La única política de orígenes de la aplicación.
+     *
+     * <p>Y única de verdad desde hace poco: cinco controladores llevaban
+     * {@code @CrossOrigin(origins = "http://localhost:4200")} escrito a fuego,
+     * herencia del TFG que sobrevivió a hacer el origen configurable. El
+     * resultado era que {@code FRONTEND_ORIGIN} no gobernaba lo que decía
+     * gobernar —ni el README, que lo prometía igual—, y con la aplicación
+     * servida desde otro sitio esos cinco seguían anunciando localhost.
+     *
+     * <p>Una configuración que solo manda sobre parte de la aplicación es peor
+     * que no tenerla, porque nadie sabe cuál es la parte. Si alguien vuelve a
+     * poner la anotación en un controlador, esto deja de ser cierto: la
+     * política tiene que quedarse aquí.
+     *
+     * <p>Con nginx delante, además, el frontend y la API comparten origen y esto
+     * no llega ni a usarse. Se mantiene por si alguien ataca la API directa,
+     * como en desarrollo con {@code ng serve}.
+     */
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
-        org.springframework.web.cors.CorsConfiguration configuration = 
+        org.springframework.web.cors.CorsConfiguration configuration =
                 new org.springframework.web.cors.CorsConfiguration();
-        
+
         // 1. Origen del frontend, configurable via FRONTEND_ORIGIN
         configuration.setAllowedOrigins(java.util.List.of(allowedOrigin));
         
@@ -85,7 +104,8 @@ public class SecurityConfig {
         // 3. Autorizamos las cabeceras críticas (especialmente Authorization para vuestro JWT)
         configuration.setAllowedHeaders(java.util.List.of("Authorization", "Cache-Control", "Content-Type"));
         
-        // 4. Mantenemos las credenciales activas de forma segura para localhost:4200
+        // 4. Credenciales permitidas. Exige un origen concreto y no "*", que es
+        //    justo lo que hace la línea 1: con comodín, el navegador lo rechaza.
         configuration.setAllowCredentials(true);
 
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = 

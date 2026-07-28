@@ -139,6 +139,7 @@
                       @if (usuario.objetivos) { <span>{{ usuario.objetivos }}</span> }
                       <!-- El TFG leía aquí usuario.gimnasio?.nombre, campo que el
                            backend nunca envió: siempre salía el texto de reserva. -->
+                      @if (usuario.rutina) { <span>{{ usuario.rutina }}</span> }
                       @if (usuario.gimnasioNombre) { <span>{{ usuario.gimnasioNombre }}</span> }
                     </span>
                   </span>
