@@ -127,15 +127,17 @@ public class UsuarioController {
     }
 
     /**
-     * 🔥 NUEVO: Explorar Comunidad (Modo Tinder)
-     * GET http://localhost:8080/api/usuarios/explorar
-     */
-    /**
-     * GET /api/usuarios/{id}/perfil — la ficha de otra persona.
+     * GET /api/usuarios/actividad
      *
-     * Antes no existía: se podía pulsar "Conectar" sobre una fila, pero no mirar
-     * a quién. En cualquier red social se puede ver a alguien antes de escribirle.
+     * Lo que han hecho últimamente tus compañeros. Solo los tuyos: la relación
+     * aceptada es lo que da derecho a verlo.
      */
+    @GetMapping("/actividad")
+    public ResponseEntity<?> actividad() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(usuarioService.actividadDeCompaneros(email));
+    }
+
     @GetMapping("/{otroUsuarioId}/perfil")
     public ResponseEntity<?> verPerfilDe(@PathVariable Long otroUsuarioId) {
         try {
@@ -146,16 +148,6 @@ public class UsuarioController {
         }
     }
 
-    @GetMapping("/explorar")
-    public ResponseEntity<?> explorarComunidad() {
-        try {
-            String emailLogueado = SecurityContextHolder.getContext().getAuthentication().getName();
-            List<UsuarioResponseDTO> comunidad = usuarioService.explorarComunidad(emailLogueado);
-            return ResponseEntity.ok(comunidad);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error al cargar la comunidad.");
-        }
-    }
 
     
 }

@@ -24,18 +24,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
- * La misma pareja vale lo mismo mire donde mire.
+ * La unica lista de gente lleva todo lo que la tarjeta necesita.
  *
- * <p>El tablero y Explorar cruzan a la misma gente, pero Explorar llamaba a la
- * version de la calculadora que puntua sin levantamientos. Sin marcas, el factor
- * de fuerza queda "sin datos": su peso se reparte y entra el descuento por
- * evidencia, de modo que la misma persona aparecia con un porcentaje en una
- * pantalla y otro distinto en la otra.
+ * <p>Esta clase nacio comparando dos listas: el tablero y Explorar cruzaban a la
+ * misma gente por caminos distintos, y Explorar puntuaba sin levantamientos, de
+ * modo que la misma pareja salia con 90 en una pantalla y 83 en la otra. Se
+ * arreglo, y despues se hizo lo que habia que haber hecho de entrada: borrar la
+ * segunda lista. Ya no hay dos numeros que comparar porque ya no hay dos
+ * caminos.
  *
- * <p>Nadie lo vio porque cada pantalla, por separado, daba un numero razonable.
- * Solo se nota mirando las dos a la vez, que es justo lo que hace esta prueba.
+ * <p>Lo que queda por vigilar es lo otro: que la lista traiga cada campo que la
+ * tarjeta pinta. Ese patron —campo que existe, se guarda y no llega a verse— ha
+ * mordido cinco veces.
  */
-class LasDosListasCoincidenTest {
+class LaListaDeGenteTest {
 
     private UsuarioRepository usuarioRepository;
     private DisponibilidadRepository disponibilidadRepository;
@@ -115,32 +117,20 @@ class LasDosListasCoincidenTest {
     }
 
     @Test
-    @DisplayName("El tablero y Explorar dan el mismo porcentaje para la misma persona")
-    void mismaPersonaMismoNumero() {
-        UsuarioResponseDTO enElTablero = servicio.buscarCompañeros("luis@test.com").get(0);
-        UsuarioResponseDTO enExplorar = servicio.explorarComunidad("luis@test.com").get(0);
-
-        assertEquals(enElTablero.getCompatibilidad(), enExplorar.getCompatibilidad(),
-                "Dos numeros para la misma pareja es peor que un numero malo: "
-                        + "quien lo ve no sabe cual creer");
+    @DisplayName("La lista dice si podéis cubriros")
+    void diceSiOsCubris() {
+        assertEquals(Boolean.TRUE, servicio.buscarCompañeros("luis@test.com").get(0).getFuerzaCompatible());
     }
 
     @Test
-    @DisplayName("Explorar cuenta la fuerza: no puede quedarse 'sin datos' teniendo marcas")
-    void explorarNoIgnoraLasMarcas() {
-        UsuarioResponseDTO enExplorar = servicio.explorarComunidad("luis@test.com").get(0);
+    @DisplayName("La puntuación cuenta la fuerza: no puede quedarse 'sin datos' teniendo marcas")
+    void noIgnoraLasMarcas() {
+        UsuarioResponseDTO dto = servicio.buscarCompañeros("luis@test.com").get(0);
 
         // Si el factor de fuerza se quedara fuera, la puntuacion vendria marcada
         // como incompleta y con el descuento por evidencia aplicado.
-        assertNotEquals(Boolean.TRUE, enExplorar.getCompatibilidadIncompleta(),
+        assertNotEquals(Boolean.TRUE, dto.getCompatibilidadIncompleta(),
                 "Con marcas en los dos lados, la fuerza tiene datos de sobra");
-    }
-
-    @Test
-    @DisplayName("Las dos listas dicen si podéis cubriros")
-    void lasDosDicenSiOsCubris() {
-        assertEquals(Boolean.TRUE, servicio.buscarCompañeros("luis@test.com").get(0).getFuerzaCompatible());
-        assertEquals(Boolean.TRUE, servicio.explorarComunidad("luis@test.com").get(0).getFuerzaCompatible());
     }
 
     @Test
@@ -159,7 +149,7 @@ class LasDosListasCoincidenTest {
     }
 
     @Test
-    @DisplayName("Todo lo que la tarjeta necesita llega en las dos listas")
+    @DisplayName("Todo lo que la tarjeta necesita llega en la lista")
     void nadaSeQuedaPorElCamino() {
         // El patron que ha mordido cinco veces: un campo que existe, se guarda y
         // no llega a verse. Biografia, metaSemanal, fotoUrl dos veces y rutina.
@@ -169,9 +159,7 @@ class LasDosListasCoincidenTest {
         otro.setFotoUrl("/api/medios/ana.png");
         otro.setAvatar("ciruela");
 
-        for (UsuarioResponseDTO dto : List.of(
-                servicio.buscarCompañeros("luis@test.com").get(0),
-                servicio.explorarComunidad("luis@test.com").get(0))) {
+        for (UsuarioResponseDTO dto : List.of(servicio.buscarCompañeros("luis@test.com").get(0))) {
 
             assertNotNull(dto.getNombre());
             assertNotNull(dto.getNivel());
@@ -189,9 +177,8 @@ class LasDosListasCoincidenTest {
     }
 
     @Test
-    @DisplayName("La rutina llega a las listas para poder pintarla")
+    @DisplayName("La rutina llega a la lista para poder pintarla")
     void laRutinaViaja() {
         assertEquals("Torso / Pierna", servicio.buscarCompañeros("luis@test.com").get(0).getRutina());
-        assertEquals("Torso / Pierna", servicio.explorarComunidad("luis@test.com").get(0).getRutina());
     }
 }

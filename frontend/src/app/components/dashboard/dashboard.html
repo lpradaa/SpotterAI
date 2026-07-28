@@ -21,17 +21,18 @@
           @if (perfilCargado()?.objetivos) { <span>{{ perfilCargado()?.objetivos }}</span> }
           @if (!perfilCargado()?.nivel && !perfilCargado()?.objetivos) { <span>Perfil sin completar</span> }
         </p>
+        <!-- Cuantos candidatos hay es un dato de la pantalla de buscar, no de
+             la tuya. Aqui queda lo que si es tuyo: como vas esta semana. -->
         <p class="barra__resumen">
-          <strong>{{ sugerencias().length }}</strong>
-          {{ sugerencias().length === 1 ? 'persona compatible' : 'personas compatibles' }}
-          sin conectar · <strong>{{ completedDays() }}</strong> de {{ totalDays() }} esta semana
+          <strong>{{ completedDays() }}</strong> de {{ totalDays() }}
+          {{ totalDays() === 1 ? 'entrenamiento' : 'entrenamientos' }} esta semana
         </p>
       </div>
     </div>
 
     <div class="barra__acciones">
-      <button class="btn btn--primario" (click)="abrirSugerencias()">Ver sugerencias</button>
-      <button class="btn btn--fantasma" (click)="abrirModal()">Mi perfil</button>
+      <a class="btn btn--primario" routerLink="/explorar">Buscar compañeros</a>
+      <a class="btn btn--fantasma" routerLink="/yo">Mi perfil</a>
     </div>
   </header>
 
@@ -96,107 +97,57 @@
           }
         </p>
       </div>
-      <button class="btn btn--primario btn--pequeno" (click)="abrirModal()">Completar</button>
+      <a class="btn btn--primario btn--pequeno" routerLink="/yo">Completar</a>
     </aside>
   }
 
   <div class="tablero__columnas">
 
-    <!-- ================= Compañeros sugeridos ================= -->
+    <!-- ================= Lo que hace tu gente =================
+         La lista de compañeros compatibles se ha ido a Explorar, que es donde
+         están los filtros y donde se busca. Aquí queda lo tuyo, y esto: lo que
+         han hecho últimamente las personas con las que ya entrenas.
+
+         Solo tus compañeros. Un muro abierto invita a publicar para que lo vean,
+         y de ahí a los contadores de vanidad hay un paso; la pregunta que esto
+         responde es otra, la de "¿qué está haciendo la gente con la que
+         entreno?". Por eso tampoco lleva ni "me gusta" ni comentarios: nada de
+         eso ayuda a que dos personas coincidan un martes. -->
     <main class="columna-principal">
       <section class="tarjeta">
         <div class="seccion__cabecera">
-          <h2 class="tarjeta__titulo">Compañeros compatibles</h2>
-          <span class="seccion__contador">{{ matches().length }}</span>
+          <h2 class="tarjeta__titulo">Tu gente</h2>
+          <a class="btn btn--pequeno" routerLink="/explorar">Buscar más</a>
         </div>
 
-        @if (matches().length === 0) {
+        @if (actividad().length === 0) {
           <p class="vacio">
-            Todavía no hay nadie con quien compararte. En cuanto haya más gente
-            aparecerá aquí, ordenada por compatibilidad.
+            Cuando tus compañeros registren un entrenamiento o apunten una marca,
+            aparecerá aquí.
           </p>
         } @else {
-          <ul class="lista-matches">
-            @for (usuario of matches(); track usuario.id) {
-              <li class="match" [attr.data-tramo]="tramo(usuario.compatibilidad)">
+          <ul class="actividad">
+            @for (a of actividad(); track $index) {
+              <li class="actividad__fila">
+                <a class="actividad__quien" [routerLink]="['/u', a.usuarioId]"
+                   [attr.aria-label]="'Ver el perfil de ' + a.usuarioNombre">
+                  <app-avatar [nombre]="a.usuarioNombre" [valor]="a.usuarioAvatar ?? ''"
+                              [foto]="urlMedio(a.usuarioFotoUrl)" [tamano]="36" />
+                </a>
 
-                <!--
-                  La persona primero y grande. Antes esta fila empezaba con el
-                  porcentaje en 48 px y ponía a la persona detrás con un avatar
-                  de 24: eso convierte a alguien en el renglón de un informe. El
-                  número sigue estando, porque es lo que hace útil al producto,
-                  pero como apoyo y no como titular.
-                -->
-                <button class="match__persona" (click)="verPerfil(usuario.id)"
-                        [attr.aria-label]="'Ver el perfil de ' + usuario.nombre">
-                  <app-avatar [nombre]="usuario.nombre" [valor]="usuario.avatar"
-                              [foto]="urlMedio(usuario.fotoUrl)" [tamano]="52" />
-
-                  <span class="match__quien">
-                    <span class="match__nombre">{{ usuario.nombre }}</span>
-                    <span class="match__rasgos">
-                      @if (usuario.nivel) { <span>{{ usuario.nivel }}</span> }
-                      @if (usuario.objetivos) { <span>{{ usuario.objetivos }}</span> }
-                      <!-- El TFG leía aquí usuario.gimnasio?.nombre, campo que el
-                           backend nunca envió: siempre salía el texto de reserva. -->
-                      @if (usuario.rutina) { <span>{{ usuario.rutina }}</span> }
-                      @if (usuario.gimnasioNombre) { <span>{{ usuario.gimnasioNombre }}</span> }
-                    </span>
-                  </span>
-
-                  <span class="match__marcador">
-                    <span class="match__nota">{{ usuario.compatibilidad }}<small>%</small></span>
-                    <app-carga [puntuacion]="usuario.compatibilidad" />
-                  </span>
-                </button>
-
-                <p class="match__motivo">{{ usuario.resumenCompatibilidad }}</p>
-
-                <!-- La semana, dibujada. Aquí es donde se ve de un vistazo si
-                     coincidís de verdad, en vez de leer una lista de días. -->
-                <div class="match__semana">
-                  <app-rejilla-semana
-                    modo="compacta"
-                    [misFranjas]="misFranjas()"
-                    [solape]="usuario.franjasEnComun || []" />
+                <div class="actividad__texto">
+                  <p class="actividad__titular">
+                    <a [routerLink]="['/u', a.usuarioId]">{{ a.usuarioNombre }}</a>
+                    @if (a.tipo === 'HITO') { ha apuntado } @else { ha entrenado }
+                    <strong>{{ a.titulo }}</strong>
+                  </p>
+                  @if (a.detalle) { <p class="actividad__detalle">{{ a.detalle }}</p> }
+                  <time class="actividad__cuando">{{ diaLargo(a.fecha) }}</time>
                 </div>
 
-                <div class="match__pie">
-                  <span class="match__etiquetas">
-                    @if (usuario.diasFijosEnComun > 0) {
-                      <span class="chip chip--fija" title="Los dos vais siempre a esa hora">
-                        {{ usuario.diasFijosEnComun }} {{ usuario.diasFijosEnComun === 1 ? 'día fijo' : 'días fijos' }}
-                      </span>
-                    }
-                    @if (usuario.minutosEnComun) {
-                      <span class="chip">{{ formatearSolape(usuario.minutosEnComun) }} en común</span>
-                    }
-                    @if (usuario.compatibilidadIncompleta) {
-                      <span class="chip chip--parcial" title="Faltan datos en alguno de los dos perfiles">
-                        Datos incompletos
-                      </span>
-                    }
-                  </span>
-                </div>
-
-                <div class="match__accion">
-                  <!-- Antes había un typo (yaConConnected) que hacía aparecer los
-                       dos botones a la vez para todo el mundo. -->
-                  @if (usuario.yaConectado) {
-                    <button class="btn btn--exito" (click)="irAlChat(usuario.id)">Escribir</button>
-                  } @else if (usuario.solicitudPendiente) {
-                    <!-- Antes esto era un botón inerte que decía "Pendiente" y
-                         no dejaba salida: con la restricción única, una
-                         solicitud enviada por error bloqueaba a esa persona
-                         para siempre. -->
-                    <button class="btn btn--fantasma" (click)="retirarSolicitud(usuario)"
-                            [title]="'Retirar la solicitud enviada a ' + usuario.nombre">
-                      Retirar
-                    </button>
-                  } @else {
-                    <button class="btn btn--primario" (click)="conectarConUsuario(usuario.id)">Conectar</button>
-                  }
-                </div>
+                @if (a.medioUrl) {
+                  <img class="actividad__medio" [src]="urlMedio(a.medioUrl)" [alt]="a.titulo">
+                }
               </li>
             }
           </ul>
@@ -207,28 +158,9 @@
     <!-- ================= Lateral ================= -->
     <aside class="columna-lateral">
 
-      @if (solicitudesPendientes.length > 0) {
-        <section class="tarjeta">
-          <div class="seccion__cabecera">
-            <h2 class="tarjeta__titulo">Solicitudes</h2>
-            <span class="seccion__contador seccion__contador--aviso">{{ solicitudesPendientes.length }}</span>
-          </div>
-          <ul class="lista-solicitudes">
-            @for (sol of solicitudesPendientes; track sol.id) {
-              <li class="solicitud">
-                <span class="solicitud__texto"><strong>{{ sol.emisorNombre }}</strong> quiere entrenar contigo</span>
-                <div class="solicitud__botones">
-                  <button class="btn-icono btn-icono--si"
-                          (click)="responderSolicitud(sol.id, 'ACEPTADA')">Aceptar</button>
-                  <button class="btn-icono btn-icono--no"
-                          (click)="responderSolicitud(sol.id, 'RECHAZADA')">Rechazar</button>
-                </div>
-              </li>
-            }
-          </ul>
-        </section>
-      }
-
+      <!-- Las solicitudes ya no se responden aquí: viven en /solicitudes, que
+           es la bandeja de lo que espera tu respuesta, y estaban en los dos
+           sitios. La campana lleva allí. -->
       <section class="tarjeta perfil">
         <div class="perfil__cabecera">
           <app-avatar [nombre]="userName()" [valor]="perfilCargado()?.avatar ?? ''" [tamano]="68" />
@@ -240,6 +172,8 @@
           <div><dt>Peso</dt><dd class="cifra">{{ perfilCargado()?.peso ? perfilCargado()?.peso + ' kg' : '—' }}</dd></div>
           <div><dt>Edad</dt><dd class="cifra">{{ perfilCargado()?.edad || '—' }}</dd></div>
         </dl>
+        <!-- Verte como te ven, que es distinto de editarte. -->
+        <a class="btn btn--fantasma btn--ancho" routerLink="/yo">Ver mi perfil</a>
       </section>
 
       <section class="tarjeta">
@@ -267,26 +201,6 @@
     </aside>
   </div>
 </div>
-
-<!-- ================= Modal: sugerencias ================= -->
-@if (isSugerenciasOpen()) {
-  <app-ficha-sugerencia
-    [candidatos]="sugerencias()"
-    [misFranjas]="misFranjas()"
-    (cerrar)="cerrarSugerencias()"
-    (conectar)="conectarDesdeLaFicha($event)" />
-}
-
-<!-- ================= Modal: perfil ================= -->
-@if (isModalOpen) {
-  <app-modal-perfil
-    [perfil]="perfilCargado()"
-    [gimnasios]="gimnasios"
-    [nombre]="userName()"
-    (cerrar)="cerrarModal()"
-    (guardado)="alGuardarElPerfil()"
-    (aviso)="mostrarToast($event.texto, $event.tipo)" />
-}
 
 <!-- ================= Modal: entrenamiento ================= -->
 @if (isEntrenamientoModalOpen) {
@@ -328,16 +242,6 @@
       </footer>
     </div>
   </div>
-}
-
-<!-- ================= Ficha de una persona ================= -->
-@if (perfilAbierto(); as id) {
-  <app-perfil-publico
-    [usuarioId]="id"
-    [misFranjas]="misFranjas()"
-    (cerrar)="cerrarPerfil()"
-    (cambioDeRelacion)="alCambiarRelacionDesdeElPerfil()"
-    (escribir)="irAlChat($event)" />
 }
 
 <!-- ================= Aviso ================= -->

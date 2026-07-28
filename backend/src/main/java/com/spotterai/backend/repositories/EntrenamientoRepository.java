@@ -20,4 +20,8 @@ public interface EntrenamientoRepository extends JpaRepository<Entrenamiento, Lo
      * mas que cualquier porcentaje.
      */
     long countByUsuarioIdAndFechaGreaterThanEqual(Long usuarioId, LocalDate desde);
+
+    /** Los entrenamientos recientes de un grupo, en una sola consulta. */
+    List<Entrenamiento> findByUsuarioIdInAndFechaGreaterThanEqualOrderByFechaDesc(
+            List<Long> usuarioIds, LocalDate desde);
 }

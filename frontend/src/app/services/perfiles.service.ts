@@ -44,6 +44,8 @@ export interface PerfilPublico {
   sesionesJuntos: number;
   yaConectado: boolean;
   solicitudPendiente: boolean;
+  /** Si es tu propio perfil: /yo lleva a la misma página. */
+  esMio: boolean;
 }
 
 /**

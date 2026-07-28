@@ -1,6 +1,7 @@
 package com.spotterai.backend.services;
 
 import com.spotterai.backend.dtos.PerfilPublicoDTO;
+import com.spotterai.backend.dtos.ActividadDTO;
 import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.dtos.UsuarioRegistroDTO;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
@@ -22,7 +23,6 @@ public interface UsuarioService {
     /** Explicacion redactada de un match concreto. Cuesta una llamada a la API, va bajo demanda. */
     ExplicacionMatch explicarMatch(String email, Long otroUsuarioId);
 
-    List<UsuarioResponseDTO> explorarComunidad(String email);
     Map<String, Object> obtenerMiPerfilCompleto(String email);
 
     /**
@@ -32,4 +32,13 @@ public interface UsuarioService {
      * "Conectar" sobre una fila.
      */
     PerfilPublicoDTO verPerfilDe(String email, Long otroUsuarioId);
+
+    /**
+     * Lo que han hecho ultimamente las personas con las que ya entrenas.
+     *
+     * <p>Acotado a los companeros a proposito: es lo que hace que el tablero deje
+     * de ser un panel de control y se note que hay gente al otro lado, sin abrir
+     * un muro publico al que la gente publique para que la vean.
+     */
+    List<ActividadDTO> actividadDeCompaneros(String email);
 }

@@ -33,6 +33,37 @@ El nombre viene de *spotter*: quien te asiste en el banco, el compañero que te 
 
 ---
 
+## Las pantallas
+
+Cada una hace un trabajo, y solo uno. No fue así al principio: el tablero llegó a
+concentrar la mitad de la aplicación —la lista de gente, las solicitudes, el
+historial, cuatro modales— mientras Explorar era un duplicado de esa misma lista
+con filtros.
+
+| Ruta | Para qué |
+|---|---|
+| `/dashboard` | **Lo tuyo.** Tus sesiones, cómo vas la semana, qué le falta a tu perfil, y lo que han hecho últimamente tus compañeros |
+| `/explorar` | **Buscar.** Toda la comunidad, con filtros, y el modo de fichas de una en una |
+| `/u/:id` · `/yo` | **Una persona.** Su semana, sus marcas, cuántas veces habéis quedado. Y en la tuya, el formulario para cambiarte |
+| `/conexiones` | **Hablar y quedar.** Chat, el plan en marcha y proponer |
+| `/solicitudes` | **Lo que espera tu respuesta.** Solicitudes de conexión y propuestas de sesión |
+
+Dos decisiones de este reparto:
+
+**Las personas son lugares.** La ficha de alguien era un panel flotante incrustado
+a la vez en el tablero y en Explorar: no había URL a la que enlazar, el botón
+«atrás» no hacía lo esperable y el mismo componente vivía en dos pantallas. Es lo
+que más separaba esto de una red social y lo que menos costaba arreglar.
+
+**Y no hay muro.** La única concesión social es la actividad de tus compañeros en
+el tablero: qué han entrenado, qué marcas han apuntado. Solo de la gente con la
+que ya has conectado, sin «me gusta» ni comentarios ni contadores de seguidores.
+Un muro abierto invita a publicar para que lo vean, y nada de eso ayuda a que dos
+personas coincidan un martes, que es la vara con la que se ha medido todo lo
+demás.
+
+---
+
 ## Cómo funciona el match
 
 El emparejamiento tiene dos capas, deliberadamente separadas:

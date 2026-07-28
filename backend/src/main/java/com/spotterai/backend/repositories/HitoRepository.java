@@ -28,4 +28,13 @@ public interface HitoRepository extends JpaRepository<Hito, Long> {
             GROUP BY h.usuario.id
             """)
     List<HitosPorUsuario> contarPorUsuario(@Param("ids") List<Long> ids);
+
+    /**
+     * Los hitos recientes de un grupo de personas.
+     *
+     * <p>Una consulta para todo el grupo y no una por cabeza: la actividad del
+     * tablero se pide en cada carga, y con una consulta por companero seria el
+     * clasico N+1 en la pantalla que mas se visita.
+     */
+    List<Hito> findByUsuarioIdInOrderByFechaDescIdDesc(List<Long> usuarioIds);
 }

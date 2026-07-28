@@ -1,6 +1,8 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, output, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
-import { ModalAccesible } from '../../directivas/modal-accesible';
+import { ModalPerfilComponent } from '../modal-perfil/modal-perfil';
 import { CommonModule } from '@angular/common';
 import { PerfilesService, PerfilPublico } from '../../services/perfiles.service';
 import { UsuarioService } from '../../services/usuario.service';
@@ -9,20 +11,26 @@ import { Avatar } from '../avatar/avatar';
 import { Carga } from '../carga/carga';
 
 /**
- * La ficha de una persona.
+ * La página de una persona.
  *
- * Es la pieza que más cambia el carácter de la aplicación. Hasta ahora no se
+ * Es la pieza que más cambia el carácter de la aplicación. Al principio no se
  * podía mirar a nadie: había filas con un porcentaje y un botón de "Conectar",
  * que es como se comporta un panel de administración, no un sitio donde hay
  * gente. Aquí la persona ocupa el espacio y el número queda de apoyo.
  *
- * Se abre encima de cualquier pantalla en vez de ser una ruta propia: se entra a
- * mirar y se vuelve a lo que estabas haciendo, sin perder el sitio en la lista.
+ * <p>Y ahora es una ruta, que era lo que faltaba para que se pareciera a una red
+ * social. Siendo un panel flotante, una persona no tenía sitio propio: no había
+ * URL a la que enlazar, el botón "atrás" del navegador no hacía lo esperable, y
+ * el mismo componente vivía incrustado a la vez en el tablero y en Explorar. En
+ * una red social la gente son lugares.
+ *
+ * <p>`/yo` lleva aquí también, con tu propio identificador. Verte como te ven es
+ * distinto de editarte, y hasta ahora solo existía lo segundo.
  */
 @Component({
   selector: 'app-perfil-publico',
   standalone: true,
-  imports: [CommonModule, RejillaSemana, Avatar, Carga, ProponerSesionComponent, ModalAccesible],
+  imports: [CommonModule, RejillaSemana, Avatar, Carga, ProponerSesionComponent, ModalPerfilComponent],
   templateUrl: './perfil-publico.html',
   styleUrl: './perfil-publico.scss'
 })
@@ -30,16 +38,37 @@ export class PerfilPublicoComponent {
 
   private perfiles = inject(PerfilesService);
   private usuarios = inject(UsuarioService);
+  private ruta = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  /** A quién se mira. Cambiarlo recarga la ficha. */
-  usuarioId = input.required<number>();
-  /** Mis franjas, para poder dibujar el solape sin volver a pedirlas. */
-  misFranjas = input<any[]>([]);
+  /**
+   * A quién se mira, sacado de la URL.
+   *
+   * `/yo` no lleva identificador: se resuelve con el que guardó el login, que
+   * es el mismo que usa el resto de la aplicación.
+   */
+  usuarioId = computed(() => {
+    const parametros = this.parametros();
+    const enLaUrl = Number(parametros?.get('id'));
+    return Number.isFinite(enLaUrl) && enLaUrl > 0 ? enLaUrl : this.miId();
+  });
 
-  cerrar = output<void>();
-  /** Se ha conectado o desconectado con esta persona: quien escucha refresca. */
-  cambioDeRelacion = output<void>();
-  escribir = output<number>();
+  private parametros = toSignal(this.ruta.paramMap);
+
+  /**
+   * Edición del perfil propio, alojada aquí.
+   *
+   * El formulario vivía en el tablero, así que había dos sitios desde los que
+   * tocar tu perfil y ninguno era tu perfil. Tu página es donde te ves y donde
+   * te cambias; el tablero solo enlaza aquí.
+   */
+  editando = signal(false);
+  perfilPropio = signal<any>(null);
+  gimnasios = signal<any[]>([]);
+  avisoDelFormulario = signal<string | null>(null);
+
+  /** Mis franjas, para dibujar el solape. Se piden aquí porque ya no las hereda. */
+  misFranjas = signal<any[]>([]);
 
   perfil = signal<PerfilPublico | null>(null);
   cargando = signal(true);
@@ -52,7 +81,59 @@ export class PerfilPublicoComponent {
   hitosConMedio = computed(() => this.perfil()?.hitos.filter(h => h.medioUrl) ?? []);
 
   constructor() {
-    effect(() => this.cargar(this.usuarioId()));
+    effect(() => {
+      const id = this.usuarioId();
+      if (id > 0) this.cargar(id);
+    });
+
+    // Para dibujar el solape hace falta tu semana. Antes se la pasaba la
+    // pantalla que lo incrustaba; siendo una página, se pide aquí.
+    this.usuarios.getMiPerfil().subscribe({
+      next: perfil => this.misFranjas.set(perfil?.horarios ?? []),
+      error: () => {}
+    });
+  }
+
+  private miId(): number {
+    return Number(localStorage.getItem('userId') || localStorage.getItem('id')) || 0;
+  }
+
+  /**
+   * Vuelve a donde estabas.
+   *
+   * El historial del navegador y no una ruta fija: se llega aquí desde Explorar,
+   * desde el chat y desde la actividad del tablero, y mandar siempre al mismo
+   * sitio sería perder el hilo en dos de los tres casos.
+   */
+  volver(): void {
+    if (history.length > 1) history.back();
+    else this.router.navigate(['/dashboard']);
+  }
+
+  abrirEdicion(): void {
+    // El formulario necesita el perfil crudo y el catálogo de gimnasios, que
+    // son datos distintos de los de la ficha pública.
+    this.usuarios.getMiPerfil().subscribe({
+      next: perfil => { this.perfilPropio.set(perfil); this.editando.set(true); },
+      error: () => this.error.set('No se ha podido abrir el formulario.')
+    });
+    this.usuarios.getGimnasios().subscribe({
+      next: lista => this.gimnasios.set(lista),
+      error: () => {}
+    });
+  }
+
+  /** Guardado: se cierra y la ficha se recarga para reflejarlo. */
+  alGuardar(): void {
+    this.editando.set(false);
+    this.cargar(this.usuarioId());
+    this.avisoDelFormulario.set('Perfil actualizado.');
+    setTimeout(() => this.avisoDelFormulario.set(null), 3000);
+  }
+
+  /** Al chat con esta persona. */
+  escribirA(id: number): void {
+    this.router.navigate(['/conexiones'], { queryParams: { con: id } });
   }
 
   private cargar(id: number): void {
@@ -84,7 +165,6 @@ export class PerfilPublicoComponent {
       next: () => {
         this.perfil.set({ ...p, solicitudPendiente: true });
         this.enviando.set(false);
-        this.cambioDeRelacion.emit();
       },
       error: () => {
         this.error.set('No se ha podido enviar la solicitud.');
@@ -102,7 +182,6 @@ export class PerfilPublicoComponent {
       next: () => {
         this.perfil.set({ ...p, solicitudPendiente: false, yaConectado: false });
         this.enviando.set(false);
-        this.cambioDeRelacion.emit();
       },
       error: () => {
         this.error.set('No se ha podido deshacer.');

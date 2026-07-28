@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.dtos.ActividadDTO;
 import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.dtos.UsuarioRegistroDTO;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import com.spotterai.backend.dtos.HitoDTO;
 import com.spotterai.backend.dtos.LevantamientoDTO;
 import com.spotterai.backend.dtos.PerfilPublicoDTO;
+import com.spotterai.backend.models.Entrenamiento;
 import com.spotterai.backend.models.Hito;
 import com.spotterai.backend.models.Levantamiento;
 import com.spotterai.backend.repositories.DisponibilidadRepository;
@@ -308,6 +310,16 @@ public class UsuarioServiceImpl implements UsuarioService {
      * la pantalla: simplemente pierde esos puntos.
      *
      * <p>Cuatro consultas fijas, independientemente del numero de candidatos.
+     *
+     * <p><b>Es la unica lista de gente que hay.</b> Hubo otra, {@code explorarComunidad},
+     * que servia a la pantalla de Explorar: las mismas personas por otro camino, y
+     * ademas puntuadas sin levantamientos, de modo que la misma pareja salia con un
+     * numero aqui y otro distinto alla. Dos caminos para lo mismo no se mantienen
+     * sincronizados solos; se borro el segundo en vez de vigilarlo.
+     *
+     * <p>Devuelve a todo el mundo, con {@code yaConectado} y {@code solicitudPendiente}
+     * puestos, y es quien mira quien decide que ensenar: el tablero no la usa y
+     * Explorar la filtra.
      */
     @Override
     public List<UsuarioResponseDTO> buscarCompañeros(String email) {
@@ -352,17 +364,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario otro = usuarioRepository.findById(otroUsuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Esa persona no existe."));
 
-        if (yo.getId().equals(otro.getId())) {
-            throw new IllegalArgumentException("Tu propio perfil se edita, no se visita.");
-        }
+        // Tu propio perfil ahora si se visita: desde que es una pagina con URL,
+        // /yo es donde te ves como te ven. Lo que no se calcula es la
+        // compatibilidad, porque contigo mismo no significa nada.
+        boolean esMio = yo.getId().equals(otro.getId());
 
-        PuntuacionCompatibilidad puntuacion = CalculadoraCompatibilidad.calcular(
+        PuntuacionCompatibilidad puntuacion = esMio ? null : CalculadoraCompatibilidad.calcular(
                 yo, disponibilidadRepository.findByUsuarioId(yo.getId()),
                 levantamientoRepository.findByUsuarioId(yo.getId()),
                 otro, disponibilidadRepository.findByUsuarioId(otro.getId()),
                 levantamientoRepository.findByUsuarioId(otro.getId()));
 
-        String estado = indexarSolicitudes(yo.getId()).get(otro.getId());
+        String estado = esMio ? null : indexarSolicitudes(yo.getId()).get(otro.getId());
 
         List<HitoDTO> hitos = hitoRepository.findByUsuarioIdOrderByFechaDescIdDesc(otro.getId())
                 .stream().map(UsuarioServiceImpl::aHitoDTO).toList();
@@ -384,10 +397,10 @@ public class UsuarioServiceImpl implements UsuarioService {
                 Rutina.desde(otro.getRutina()).map(Rutina::getNombre).orElse(null),
                 otro.getEdad(),
                 otro.getGimnasio() != null ? otro.getGimnasio().getNombre() : null,
-                puntuacion.total(),
-                puntuacion.etiqueta(),
-                resumenDe(puntuacion),
-                puntuacion.solape().franjas(),
+                esMio ? 0 : puntuacion.total(),
+                esMio ? null : puntuacion.etiqueta(),
+                esMio ? null : resumenDe(puntuacion),
+                esMio ? List.of() : puntuacion.solape().franjas(),
                 hitos,
                 levantamientoRepository.findByUsuarioId(otro.getId()).stream()
                         .map(UsuarioServiceImpl::aLevantamientoDTO).toList(),
@@ -395,7 +408,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 sesionRepository.contarQuedadasEntre(yo.getId(), otro.getId(),
                         LocalDate.now(reloj), LocalTime.now(reloj)),
                 "ACEPTADA".equals(estado),
-                "PENDIENTE".equals(estado));
+                "PENDIENTE".equals(estado),
+                esMio);
     }
 
     /**
@@ -558,57 +572,62 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     /**
-     * La comunidad entera, con quien todavia no hay ninguna solicitud.
+     * Dias hacia atras que se miran para la actividad.
      *
-     * <p>Devuelve exactamente la misma informacion que las sugerencias: puntuacion,
-     * franjas en comun y desglose. Antes era una lista sin puntuar, de modo que la
-     * pantalla de explorar mostraba perfiles sueltos y no habia forma de saber si
-     * merecia la pena escribir a alguien. Un solo camino de calculo para las dos
-     * vistas: el tablero enseña la cabeza de la lista y explorar deja filtrarla.
+     * <p>Corto a proposito: "lo que ha hecho la gente ultimamente" deja de
+     * significar nada si incluye lo de hace dos meses, y una lista larga en el
+     * tablero tapa lo que de verdad espera algo de ti.
      */
+    static final int DIAS_DE_ACTIVIDAD = 14;
+
+    /** Tope de entradas. Es una señal de vida, no un muro por el que bajar. */
+    static final int MAX_ACTIVIDAD = 12;
+
     @Override
-    public List<UsuarioResponseDTO> explorarComunidad(String email) {
-        Usuario miUsuario = usuarioRepository.findByEmail(email)
+    public List<ActividadDTO> actividadDeCompaneros(String email) {
+        Usuario yo = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        Map<Long, String> estadoPorCompanero = indexarSolicitudes(miUsuario.getId());
-
-        List<Usuario> candidatos = usuarioRepository.findByIdNot(miUsuario.getId()).stream()
-                .filter(u -> !estadoPorCompanero.containsKey(u.getId()))
+        // Solo companeros: la relacion aceptada es lo que da derecho a ver esto.
+        List<Long> companeros = solicitudRepository.findAceptadasPorUsuario(yo.getId()).stream()
+                .map(s -> s.getEmisor().getId().equals(yo.getId())
+                        ? s.getReceptor().getId() : s.getEmisor().getId())
+                .distinct()
                 .toList();
 
-        if (candidatos.isEmpty()) return List.of();
+        if (companeros.isEmpty()) return List.of();
 
-        List<Disponibilidad> misHorarios = disponibilidadRepository.findByUsuarioId(miUsuario.getId());
-        Map<Long, List<Disponibilidad>> horariosAjenos = cargarHorariosDe(candidatos);
+        LocalDate desde = LocalDate.now(reloj).minusDays(DIAS_DE_ACTIVIDAD);
+        Map<Long, Usuario> porId = usuarioRepository.findAllById(companeros).stream()
+                .collect(Collectors.toMap(Usuario::getId, u -> u));
 
-        // Los levantamientos tambien. Esto llamaba a la version de cuatro
-        // argumentos, la que calcula sin fuerza, asi que la misma persona salia
-        // con un porcentaje aqui y otro distinto en el tablero: sin marcas, el
-        // factor de fuerza queda "sin datos" y entra el descuento por evidencia.
-        // Dos numeros para la misma pareja es peor que un numero malo, porque el
-        // que mira no sabe cual creer.
-        Map<Long, List<Levantamiento>> levantamientosAjenos = cargarLevantamientosDe(candidatos);
-        List<Levantamiento> misLevantamientos = levantamientoRepository.findByUsuarioId(miUsuario.getId());
+        List<ActividadDTO> actividad = new java.util.ArrayList<>();
 
-        return candidatos.stream()
-                .map(candidato -> {
-                    List<Levantamiento> suyos =
-                            levantamientosAjenos.getOrDefault(candidato.getId(), List.of());
+        for (Hito h : hitoRepository.findByUsuarioIdInOrderByFechaDescIdDesc(companeros)) {
+            if (h.getFecha() == null || h.getFecha().isBefore(desde)) continue;
+            actividad.add(entrada(ActividadDTO.HITO, porId.get(h.getUsuario().getId()),
+                    h.getTitulo(), h.getDescripcion(), h.getFecha(),
+                    h.getMedioUrl(), h.getMedioTipo()));
+        }
 
-                    UsuarioResponseDTO dto = construirDtoDeMatch(
-                            candidato,
-                            CalculadoraCompatibilidad.calcular(
-                                    miUsuario, misHorarios, misLevantamientos,
-                                    candidato, horariosAjenos.getOrDefault(candidato.getId(), List.of()),
-                                    suyos),
-                            null);
+        for (Entrenamiento e : entrenamientoRepository
+                .findByUsuarioIdInAndFechaGreaterThanEqualOrderByFechaDesc(companeros, desde)) {
+            actividad.add(entrada(ActividadDTO.ENTRENAMIENTO, porId.get(e.getUsuario().getId()),
+                    e.getTipo(), e.getLugarONotas(), e.getFecha(), null, null));
+        }
 
-                    dto.setFuerzaCompatible(CalculadoraFuerza.comparar(misLevantamientos, suyos)
-                            .podeisCubriros().orElse(null));
-                    return dto;
-                })
-                .sorted(Comparator.comparingInt(UsuarioResponseDTO::getCompatibilidad).reversed())
-                .collect(Collectors.toList());
+        // Las dos listas vienen ordenadas por separado, asi que hay que
+        // reordenarlas juntas o saldrian los hitos primero y los entrenamientos
+        // despues, no lo mas reciente primero.
+        return actividad.stream()
+                .sorted(Comparator.comparing(ActividadDTO::fecha).reversed())
+                .limit(MAX_ACTIVIDAD)
+                .toList();
+    }
+
+    private static ActividadDTO entrada(String tipo, Usuario de, String titulo, String detalle,
+                                        LocalDate fecha, String medioUrl, String medioTipo) {
+        return new ActividadDTO(tipo, de.getId(), de.getNombre(), de.getAvatar(), de.getFotoUrl(),
+                titulo, detalle, fecha, medioUrl, medioTipo);
     }
 }

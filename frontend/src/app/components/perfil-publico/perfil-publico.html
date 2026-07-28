@@ -1,8 +1,13 @@
-<div class="velo" (click)="cerrar.emit()"></div>
-
-<aside class="ficha" role="dialog" aria-label="Perfil"
-       appModalAccesible (cerrarPedido)="cerrar.emit()">
-  <button class="cerrar ficha__cerrar" (click)="cerrar.emit()" aria-label="Cerrar perfil">✕</button>
+<!-- Una pagina, no un panel encima de otra pantalla.
+     Antes esto se abria flotando sobre el tablero y sobre Explorar, lo que
+     significa que una persona no tenia sitio propio: no habia URL a la que
+     enlazar, el boton "atras" del navegador no hacia lo que se espera, y el
+     mismo componente vivia incrustado en dos pantallas. En una red social la
+     gente son lugares, no estados de un componente. -->
+<article class="ficha">
+  <nav class="ficha__volver">
+    <button class="btn btn--fantasma btn--pequeno" (click)="volver()">← Volver</button>
+  </nav>
 
   @if (cargando()) {
     <p class="ficha__cargando">Cargando…</p>
@@ -51,7 +56,10 @@
       <p class="ficha__bio">{{ p.biografia }}</p>
     }
 
-    <!-- ================= Cómo encajáis ================= -->
+    <!-- ================= Cómo encajáis =================
+         No en el tuyo: la compatibilidad de alguien consigo mismo no significa
+         nada, y un 0 % en tu propia ficha se leeria como un juicio. -->
+    @if (!p.esMio) {
     <section class="ficha__bloque">
       <div class="ficha__encaje">
         <span class="ficha__marcador">
@@ -68,6 +76,7 @@
         <app-rejilla-semana [misFranjas]="misFranjas()" [solape]="p.franjasEnComun" />
       }
     </section>
+    }
 
     <!-- ================= Lo que mueve =================
          La ficha técnica. Es lo que decide si podéis cubriros con la barra
@@ -95,7 +104,7 @@
          como una herramienta. -->
     @if (p.hitos.length > 0) {
       <section class="ficha__bloque">
-        <h3 class="ficha__subtitulo">Sus marcas</h3>
+        <h3 class="ficha__subtitulo">{{ p.esMio ? 'Mis marcas' : 'Sus marcas' }}</h3>
 
         <ul class="hitos">
           @for (hito of p.hitos; track hito.id) {
@@ -137,13 +146,17 @@
 
     <!-- ================= Qué puedes hacer ================= -->
     <footer class="ficha__acciones">
-      @if (p.yaConectado) {
+      @if (p.esMio) {
+        <button class="btn btn--primario btn--ancho" (click)="abrirEdicion()">
+          Editar mi perfil
+        </button>
+      } @else if (p.yaConectado) {
         @if (!proponiendo()) {
           <button class="btn btn--primario btn--ancho" (click)="proponiendo.set(true)">
             Proponer sesión
           </button>
         }
-        <button class="btn btn--fantasma btn--ancho" (click)="escribir.emit(p.id)">
+        <button class="btn btn--fantasma btn--ancho" (click)="escribirA(p.id)">
           Escribir a {{ p.nombre.split(' ')[0] }}
         </button>
         <button class="btn btn--fantasma" [disabled]="enviando()" (click)="retirar()">
@@ -160,4 +173,22 @@
       }
     </footer>
   }
-</aside>
+</article>
+
+<!-- Editarte donde estás.
+     El formulario vivía en el tablero, así que había dos sitios desde los que
+     tocar tu perfil y ninguno era tu perfil. Ahora tu página es donde te ves y
+     donde te cambias; el tablero solo enlaza aquí. -->
+@if (editando() && perfilPropio()) {
+  <app-modal-perfil
+    [perfil]="perfilPropio()"
+    [gimnasios]="gimnasios()"
+    [nombre]="perfil()?.nombre ?? ''"
+    (cerrar)="editando.set(false)"
+    (guardado)="alGuardar()"
+    (aviso)="avisoDelFormulario.set($event.texto)" />
+}
+
+@if (avisoDelFormulario(); as texto) {
+  <p class="aviso" role="status">{{ texto }}</p>
+}

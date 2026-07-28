@@ -32,6 +32,9 @@
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
+  // Un enlace con pinta de boton no lleva subrayado: desde que hay rutas, la
+  // mitad de los botones de navegar son <a>.
+  text-decoration: none;
   transition: background-color var(--sa-transicion), transform var(--sa-transicion),
               border-color var(--sa-transicion), color var(--sa-transicion);
 

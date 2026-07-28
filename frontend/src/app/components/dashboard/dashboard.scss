@@ -47,21 +47,6 @@
   margin-bottom: $space-sm;
 }
 
-.seccion__contador {
-  font-family: $font-display;
-  font-size: $text-sm;
-  font-weight: $font-semibold;
-  color: var(--sa-texto-suave);
-  background: var(--sa-superficie-alt);
-  border-radius: $radius-full;
-  padding: 2px 10px;
-
-  &--aviso {
-    background: var(--sa-acento);
-    color: var(--sa-sobre-acento);
-  }
-}
-
 /* ===================== Barra de estado =====================
    Densa y horizontal. Antes esto era un banner con degradado, saludo grande y
    anillo de progreso: el movimiento por defecto de cualquier plantilla, y
@@ -187,12 +172,6 @@
   }
 }
 
-.barra__cifras {
-  display: flex;
-  gap: $space-md;
-  margin: 0;
-}
-
 .dato {
   display: flex;
   flex-direction: column;
@@ -213,12 +192,6 @@
     line-height: 1;
     color: var(--sa-texto);
   }
-}
-
-.dato__de {
-  font-size: $text-sm;
-  font-weight: $font-medium;
-  color: var(--sa-texto-tenue);
 }
 
 .barra__acciones {
@@ -253,14 +226,6 @@
 }
 
 /* ===================== Fila de match ===================== */
-.lista-matches {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: $space-xs;
-}
 
 /*
  * Tarjeta de persona, no fila de tabla.
@@ -270,154 +235,18 @@
  * de un informe porque estaba construida como tal. Ahora es una tarjeta que se
  * apila: quién, por qué, cuándo, y qué puedes hacer.
  */
-.match {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: $space-sm;
-  border: 1px solid var(--sa-borde);
-  border-radius: $radius-lg;
-  background: var(--sa-superficie);
-  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
-  position: relative;
-  overflow: hidden;
-
-  /* Banda de color en el canto, como la del disco que marca su peso. Es lo que
-     deja leer el tramo de compatibilidad de un vistazo al recorrer la lista,
-     sin tener que fijarse en cada numero. */
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--sa-comp-baja);
-  }
-
-  &[data-tramo='media']::before { background: var(--sa-comp-media); }
-  &[data-tramo='alta']::before { background: var(--sa-acento); }
-
-  &:hover {
-    border-color: var(--sa-borde-fuerte);
-  }
-}
 
 /* Toda la cabecera es el enlace al perfil: en una lista de gente, tocar a
    alguien tiene que llevar a esa persona. */
-.match__persona {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-
-  &:hover .match__nombre {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--sa-acento);
-    outline-offset: 4px;
-    border-radius: $radius-sm;
-  }
-}
-
-.match__quien {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.match__nombre {
-  font-family: $font-display;
-  font-size: $text-lg;
-  font-weight: $font-semibold;
-  color: var(--sa-texto);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* Separadores generados en CSS: en el HTML serían ruido, y un lector de
    pantalla leería los puntos uno a uno. */
-.match__rasgos {
-  font-size: $text-xs;
-  color: var(--sa-texto-suave);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  span + span::before {
-    content: '·';
-    margin: 0 5px;
-    color: var(--sa-texto-tenue);
-  }
-}
 
 /* El número, de apoyo. Sigue siendo lo que hace útil al producto, así que
    conserva el acento y la tipografía de titulares, pero deja de ser lo primero
    que ves de una persona. */
 /* Cifra y discos juntos, alineados a la derecha: leen como un marcador, no
    como una barra de progreso a lo ancho de la tarjeta. */
-.match__marcador {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
-.match__nota {
-  font-family: $font-display;
-  font-size: $text-xl;
-  font-weight: $font-bold;
-  color: var(--sa-acento);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  flex-shrink: 0;
-
-  small {
-    font-size: 0.55em;
-    margin-left: 1px;
-  }
-}
-
-.match__motivo {
-  margin: 0;
-  font-size: $text-sm;
-  color: var(--sa-texto-suave);
-  line-height: $leading-snug;
-}
-
-.match__semana {
-  min-width: 0;
-}
-
-.match__pie {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $space-xs;
-}
-
-.match__etiquetas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.match__accion {
-  .btn { width: 100%; }
-}
 
 /* A partir de tablet caben las acciones al lado de las etiquetas, en vez de en
    una fila propia a lo ancho. */
@@ -430,14 +259,6 @@
 }
 
 /* ===================== Solicitudes ===================== */
-.lista-solicitudes {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: $space-xs;
-}
 
 .solicitud {
   display: flex;
@@ -448,18 +269,6 @@
   background: var(--sa-superficie-alt);
 }
 
-.solicitud__texto {
-  font-size: $text-sm;
-  color: var(--sa-texto-suave);
-
-  strong { color: var(--sa-texto); }
-}
-
-.solicitud__botones {
-  display: flex;
-  gap: 6px;
-}
-
 /* ===================== Perfil lateral ===================== */
 .perfil__cabecera {
   display: flex;
@@ -468,17 +277,6 @@
   gap: 6px;
   padding-bottom: $space-sm;
   border-bottom: 1px solid var(--sa-borde);
-}
-
-.perfil__avatar {
-  width: 68px;
-  height: 68px;
-  display: grid;
-  place-items: center;
-  font-size: 34px;
-  border-radius: 50%;
-  background: var(--sa-superficie-alt);
-  border: 2px solid var(--sa-acento);
 }
 
 .perfil__nombre {
@@ -543,4 +341,74 @@
   display: block;
   font-size: $text-xs;
   color: var(--sa-texto-tenue);
+}
+
+/* ===================== Lo que hace tu gente =====================
+   Ocupa el sitio que dejo la lista de companeros compatibles, que se fue a
+   Explorar. No es un muro: son doce entradas como mucho, solo de gente con la
+   que ya entrenas, y sin nada que pulsar salvo ir a su perfil. */
+.actividad {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.actividad__fila {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-xs;
+  padding: $space-xs 0;
+  border-bottom: 1px solid var(--sa-borde);
+
+  &:last-child { border-bottom: none; }
+}
+
+.actividad__quien {
+  flex-shrink: 0;
+}
+
+.actividad__texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.actividad__titular {
+  margin: 0;
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+
+  a {
+    color: var(--sa-texto);
+    font-weight: $font-semibold;
+    text-decoration: none;
+
+    &:hover { color: var(--sa-acento-texto); }
+  }
+
+  strong { color: var(--sa-texto); }
+}
+
+.actividad__detalle {
+  margin: 2px 0 0;
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+}
+
+.actividad__cuando {
+  display: block;
+  margin-top: 2px;
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+  // La fecha viene del locale en minuscula y aqui empieza la linea.
+  &::first-letter { text-transform: uppercase; }
+}
+
+.actividad__medio {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
 }

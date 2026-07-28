@@ -1,27 +1,22 @@
 import { Component, signal, computed, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UsuarioService, Match } from '../../services/usuario.service';
 import { EventosService } from '../../services/eventos.service';
 import { PerfilEstadoService } from '../../services/perfil-estado.service';
 import { AvisosService } from '../../services/avisos.service';
-import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
-import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
 import { PerfilesService } from '../../services/perfiles.service';
-import { ModalPerfilComponent, AvisoPerfil } from '../modal-perfil/modal-perfil';
-import { FichaSugerenciaComponent } from '../ficha-sugerencia/ficha-sugerencia';
 import { SesionesService, Sesion } from '../../services/sesiones.service';
-import { Carga } from '../carga/carga';
 import { ModalAccesible } from '../../directivas/modal-accesible';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent,
-            Carga, ModalPerfilComponent, FichaSugerenciaComponent, ModalAccesible],
+  imports: [CommonModule, FormsModule, Avatar,
+            ModalAccesible, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -47,28 +42,22 @@ export class DashboardComponent implements OnInit {
    */
   sesiones = signal<Sesion[]>([]);
 
+  /**
+   * Lo que han hecho últimamente tus compañeros.
+   *
+   * Es lo que ocupa el sitio que dejó la lista de gente, y responde a otra
+   * pregunta: la lista servía para buscar —eso vive ahora en Explorar— y esto
+   * para saber qué hace la gente con la que ya entrenas.
+   */
+  actividad = signal<any[]>([]);
+
   // --- Progreso semanal ---
   completedDays = signal(0);
   totalDays = signal(4);
   progressPercentage = signal(0);
 
-  // --- Matches ---
-  matches = signal<Match[]>([]);
-  solicitudesPendientes: any[] = [];
-
-  /** Candidatos que aún se pueden sugerir: ni conectados ni con solicitud en curso. */
-  sugerencias = computed(() =>
-    this.matches().filter(m => !m.yaConectado && !m.solicitudPendiente)
-  );
-
-  /** El mejor candidato sin conectar, para el titular de la tarjeta de bienvenida. */
-  mejorSugerencia = computed(() => this.sugerencias()[0] ?? null);
-
   // --- Gimnasios ---
   gimnasios: any[] = [];
-
-  // --- Modal de perfil ---
-  isModalOpen = false;
 
   /**
    * El perfil tal y como lo devuelve el servidor.
@@ -103,34 +92,30 @@ export class DashboardComponent implements OnInit {
   historialEntrenamientos: any[] = [];
   nuevoEntrenamiento: any = { fecha: '', tipo: '', duracionMinutos: null, lugarONotas: '' };
 
-  // --- Modal de sugerencias ---
-  isSugerenciasOpen = signal(false);
-
   // --- Avisos ---
   toast: { show: boolean, message: string, type: 'success' | 'error' } = { show: false, message: '', type: 'success' };
   private toastTimeout: any;
 
   ngOnInit(): void {
-    this.cargarMatches();
     this.cargarHistorialEntrenamientos();
-    this.cargarSolicitudesPendientes();
     this.cargarGimnasios();
     this.cargarMiPerfil();
     this.cargarSesiones();
+    this.cargarActividad();
     this.escucharEventos();
   }
 
   /**
-   * Esto es lo que más se echaba en falta: una solicitud sin responder no se veía
-   * hasta recargar la página, y mientras tanto se pierde un compañero.
+   * Lo que llega sin que lo hayas pedido.
+   *
+   * Las solicitudes se avisan pero ya no se listan aquí: se responden en
+   * /solicitudes, que es la bandeja, y estaban en los dos sitios.
    */
   private escucharEventos(): void {
     this.eventos.solicitudes
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(solicitud => {
-        this.solicitudesPendientes = [solicitud, ...this.solicitudesPendientes];
         this.mostrarToast(`${solicitud.emisorNombre} quiere entrenar contigo.`, 'success');
-        this.cdr.detectChanges();
       });
 
     // Una propuesta que llega mientras miras el tablero. Se avisa y se recarga
@@ -162,8 +147,8 @@ export class DashboardComponent implements OnInit {
             : `${solicitud.receptorNombre} ha rechazado tu solicitud.`,
           aceptada ? 'success' : 'error'
         );
-        // Cambia si el candidato pasa a conectado o vuelve a estar disponible.
-        this.cargarMatches();
+        // Un compañero nuevo estrena actividad que enseñar.
+        this.cargarActividad();
       });
   }
 
@@ -201,32 +186,6 @@ export class DashboardComponent implements OnInit {
     }, 3000);
   }
 
-  // ---------------------------------------------------------------------------
-  // Sugerencias
-  //
-  // La lista ya llega puntuada y ordenada por el backend, así que abrir el modal
-  // es instantáneo: no hay ninguna espera artificial como antes. Lo que sí cuesta
-  // una llamada al modelo es la explicación redactada, y por eso se pide de una
-  // en una, solo para la ficha que se está viendo.
-  // ---------------------------------------------------------------------------
-  abrirSugerencias(): void {
-    if (this.sugerencias().length === 0) {
-      this.mostrarToast('No hay sugerencias nuevas por ahora.', 'error');
-      return;
-    }
-    this.isSugerenciasOpen.set(true);
-  }
-
-  cerrarSugerencias(): void {
-    this.isSugerenciasOpen.set(false);
-  }
-
-  /** Conectar desde la ficha la cierra: ya no hay nada que decidir ahí. */
-  conectarDesdeLaFicha(usuarioId: number): void {
-    this.conectarConUsuario(usuarioId);
-    this.cerrarSugerencias();
-  }
-
   // --- Progreso semanal ---
   calcularProgresoSemanal(): void {
     // La meta viene del perfil, que viene de la base. Antes se leia de
@@ -248,97 +207,15 @@ export class DashboardComponent implements OnInit {
     this.progressPercentage.set(Math.min(100, (totalEntrenos / meta) * 100));
   }
 
-  // --- Matches y solicitudes ---
-  cargarMatches(): void {
-    this.usuarioService.getMatches().subscribe({
-      next: (data) => { this.matches.set(data || []); this.cdr.detectChanges(); },
-      error: (err) => console.error('Error al cargar los matches:', err)
-    });
-  }
-
-  conectarConUsuario(usuarioId: number): void {
-    this.usuarioService.enviarSolicitudConexion(usuarioId).subscribe({
-      next: () => {
-        this.mostrarToast('Solicitud enviada correctamente.');
-        this.matches.update(lista =>
-          lista.map(m => m.id === usuarioId ? { ...m, solicitudPendiente: true } : m));
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error(err);
-        this.mostrarToast('No se pudo enviar la solicitud.', 'error');
-      }
-    });
-  }
-
-  cargarSolicitudesPendientes(): void {
-    this.usuarioService.obtenerSolicitudesPendientes().subscribe({
-      next: (data) => { this.solicitudesPendientes = data || []; this.cdr.detectChanges(); },
-      error: (err) => console.error('Error al cargar la bandeja de solicitudes:', err)
+  private cargarActividad(): void {
+    this.usuarioService.getActividad().subscribe({
+      next: lista => { this.actividad.set(lista || []); this.cdr.detectChanges(); },
+      error: err => console.error('Error al cargar la actividad:', err)
     });
   }
 
   urlMedio(ruta: string | null): string | null {
     return this.perfiles.urlDeMedio(ruta);
-  }
-
-  /**
-   * El modal ha guardado.
-   *
-   * Se recargan perfil y matches: cambiar horarios altera la compatibilidad con
-   * todo el mundo. Y el guardián no puede seguir creyendo lo que sabía, porque
-   * ahí dentro se pueden borrar todas las franjas.
-   */
-  alGuardarElPerfil(): void {
-    this.cerrarModal();
-    this.perfilEstado.olvidar();
-    this.cargarMiPerfil();
-    this.cargarMatches();
-  }
-
-  /** A quién se está mirando, o null. */
-  perfilAbierto = signal<number | null>(null);
-
-  verPerfil(usuarioId: number): void {
-    this.perfilAbierto.set(usuarioId);
-  }
-
-  cerrarPerfil(): void {
-    this.perfilAbierto.set(null);
-  }
-
-  /** Desde el perfil se puede conectar o deshacer: la lista tiene que enterarse. */
-  alCambiarRelacionDesdeElPerfil(): void {
-    this.cargarMatches();
-    this.avisos.refrescar();
-  }
-
-  /**
-   * Retira una solicitud enviada. Vuelve a dejar a esa persona como candidata.
-   */
-  retirarSolicitud(usuario: Match): void {
-    this.usuarioService.deshacerRelacion(usuario.id).subscribe({
-      next: () => {
-        this.matches.update(lista =>
-          lista.map(m => m.id === usuario.id ? { ...m, solicitudPendiente: false } : m));
-        this.mostrarToast(`Solicitud a ${usuario.nombre} retirada.`);
-      },
-      error: () => this.mostrarToast('No se ha podido retirar la solicitud.', 'error')
-    });
-  }
-
-  responderSolicitud(solicitudId: number, estado: 'ACEPTADA' | 'RECHAZADA'): void {
-    this.usuarioService.responderSolicitud(solicitudId, estado).subscribe({
-      next: () => {
-        this.mostrarToast(estado === 'ACEPTADA'
-          ? 'Nuevo compañero añadido. Ya podéis hablar.'
-          : 'Solicitud rechazada.');
-        this.cargarSolicitudesPendientes();
-        this.cargarMatches();
-        this.avisos.refrescar();
-      },
-      error: () => this.mostrarToast('Hubo un error al procesar la solicitud.', 'error')
-    });
   }
 
   // ================= Sesiones =================
@@ -411,26 +288,7 @@ export class DashboardComponent implements OnInit {
 
   // --- Presentación ---
 
-  /** Convierte los minutos de solape en algo legible: "4h 30min". */
-  formatearSolape(minutos: number): string {
-    if (!minutos) return '';
-    const horas = Math.floor(minutos / 60);
-    const resto = minutos % 60;
-    if (horas === 0) return `${resto} min`;
-    if (resto === 0) return horas === 1 ? '1 hora' : `${horas} horas`;
-    return `${horas}h ${resto}min`;
-  }
-
-  /** Tramo de compatibilidad, para no repetir umbrales por toda la plantilla. */
-  tramo(puntuacion: number): 'alta' | 'media' | 'baja' {
-    if (puntuacion >= 70) return 'alta';
-    if (puntuacion >= 40) return 'media';
-    return 'baja';
-  }
-
-  // --- Modales de perfil y entrenamiento ---
-  abrirModal(): void { this.isModalOpen = true; this.cdr.detectChanges(); }
-  cerrarModal(): void { this.isModalOpen = false; this.cdr.detectChanges(); }
+  // --- Modal de entrenamiento ---
   cargarHistorialEntrenamientos(): void {
     this.usuarioService.getMisEntrenamientos().subscribe({
       next: (data) => {

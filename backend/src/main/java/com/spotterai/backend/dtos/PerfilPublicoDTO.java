@@ -48,5 +48,13 @@ public record PerfilPublicoDTO(
          */
         long sesionesJuntos,
         boolean yaConectado,
-        boolean solicitudPendiente
+        boolean solicitudPendiente,
+        /**
+         * Si es tu propio perfil.
+         *
+         * Hace falta desde que el perfil es una pagina con URL propia: /yo lleva
+         * aqui, y la compatibilidad de alguien consigo mismo no significa nada,
+         * asi que ese bloque no se calcula ni se pinta.
+         */
+        boolean esMio
 ) {}

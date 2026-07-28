@@ -5,15 +5,15 @@ import { Router } from '@angular/router';
 import { UsuarioService, Match } from '../../services/usuario.service';
 import { RejillaSemana, Franja } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
-import { PerfilPublicoComponent } from '../perfil-publico/perfil-publico';
 import { Carga } from '../carga/carga';
+import { FichaSugerenciaComponent } from '../ficha-sugerencia/ficha-sugerencia';
 import { PerfilesService } from '../../services/perfiles.service';
 import { ModalAccesible } from '../../directivas/modal-accesible';
 
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, PerfilPublicoComponent, Carga, ModalAccesible],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, Carga, ModalAccesible, FichaSugerenciaComponent],
   templateUrl: './explore.html',
   styleUrl: './explore.scss'
 })
@@ -23,15 +23,14 @@ export class Explore implements OnInit {
   private router = inject(Router);
   private perfiles = inject(PerfilesService);
 
-  /** A quién se está mirando, o null. */
-  perfilAbierto = signal<number | null>(null);
-
+  /**
+   * A la pagina de una persona.
+   *
+   * Navegar y no abrir un panel: cada persona tiene su URL, asi que se puede
+   * enlazar, volver con el boton del navegador y compartir.
+   */
   verPerfil(usuarioId: number): void {
-    this.perfilAbierto.set(usuarioId);
-  }
-
-  cerrarPerfil(): void {
-    this.perfilAbierto.set(null);
+    this.router.navigate(['/u', usuarioId]);
   }
 
   irAlChat(usuarioId: number): void {
@@ -114,8 +113,16 @@ export class Explore implements OnInit {
     this.cargarMisHorarios();
   }
 
+  /**
+   * La gente, de la única lista que hay.
+   *
+   * Antes esto pedía /explorar, un segundo endpoint que devolvía a las mismas
+   * personas por otro camino y ademas puntuadas sin levantamientos: la misma
+   * pareja salía con 90 en el tablero y 83 aquí. Se borró aquel camino en vez de
+   * vigilarlo.
+   */
   cargarComunidad(): void {
-    this.usuarioService.getExplorarUsuarios().subscribe({
+    this.usuarioService.getMatches().subscribe({
       next: (data) => { this.usuarios.set(data || []); this.cdr.detectChanges(); },
       error: (err) => console.error('Error cargando la comunidad:', err)
     });
@@ -172,8 +179,12 @@ export class Explore implements OnInit {
     this.usuarioService.enviarSolicitudConexion(id).subscribe({
       next: () => {
         this.mostrarToast('Solicitud enviada.');
-        // Sale de la lista: explorar muestra solo a quien no has escrito todavía
-        this.usuarios.update(lista => lista.filter(u => u.id !== id));
+        // Se queda en la lista, cambiando de estado. Antes desaparecia, que era
+        // coherente cuando esta pantalla solo ensenaba a desconocidos; ahora
+        // ensena a todo el mundo y hacer desaparecer a alguien al conectar seria
+        // exactamente lo contrario de lo que acabas de hacer.
+        this.usuarios.update(lista => lista.map(u =>
+          u.id === id ? { ...u, solicitudPendiente: true } : u));
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -181,5 +192,44 @@ export class Explore implements OnInit {
         this.mostrarToast('No se pudo enviar la solicitud.', 'error');
       }
     });
+  }
+
+  /** Retira una solicitud enviada y deja a esa persona otra vez como candidata. */
+  retirarSolicitud(usuario: Match): void {
+    this.usuarioService.deshacerRelacion(usuario.id).subscribe({
+      next: () => {
+        this.usuarios.update(lista => lista.map(u =>
+          u.id === usuario.id ? { ...u, solicitudPendiente: false } : u));
+        this.mostrarToast(`Solicitud a ${usuario.nombre} retirada.`);
+        this.cdr.detectChanges();
+      },
+      error: () => this.mostrarToast('No se ha podido retirar la solicitud.', 'error')
+    });
+  }
+
+  // ================= Fichas de una en una =================
+
+  isSugerenciasOpen = signal(false);
+
+  /**
+   * Con quien todavia no hay nada.
+   *
+   * El carrusel es para descubrir, asi que no tiene sentido pasear por gente con
+   * la que ya has conectado o a la que ya has escrito.
+   */
+  sinContactar = computed(() =>
+    this.usuarios().filter(u => !u.yaConectado && !u.solicitudPendiente));
+
+  abrirSugerencias(): void {
+    if (this.sinContactar().length === 0) {
+      this.mostrarToast('No hay nadie nuevo por ahora.', 'error');
+      return;
+    }
+    this.isSugerenciasOpen.set(true);
+  }
+
+  conectarDesdeLaFicha(usuarioId: number): void {
+    this.conectarConUsuario(usuarioId);
+    this.isSugerenciasOpen.set(false);
   }
 }

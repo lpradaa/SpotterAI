@@ -128,8 +128,9 @@ export class UsuarioService {
     return this.http.get<any[]>(this.entrenamientos);
   }
 
-  getExplorarUsuarios(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.usuarios}/explorar`);
+  /** Lo que han hecho últimamente tus compañeros. Solo los tuyos. */
+  getActividad(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.usuarios}/actividad`);
   }
 
   getGimnasios(): Observable<any[]> {
