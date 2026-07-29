@@ -41,16 +41,51 @@ class EnviarSolicitudTest {
         return u;
     }
 
+    private final UsuarioService usuarioService = Mockito.mock(UsuarioService.class);
+
     @BeforeEach
     void preparar() {
         solicitudRepository = Mockito.mock(SolicitudRepository.class);
         usuarioRepository = Mockito.mock(UsuarioRepository.class);
-        servicio = new SolicitudServiceImpl(solicitudRepository, usuarioRepository, new CanalEventos());
+        servicio = new SolicitudServiceImpl(solicitudRepository, usuarioRepository, new CanalEventos(),
+                usuarioService);
 
         Mockito.when(usuarioRepository.findByEmail(emisor.getEmail())).thenReturn(Optional.of(emisor));
         Mockito.when(usuarioRepository.findById(receptor.getId())).thenReturn(Optional.of(receptor));
         Mockito.when(solicitudRepository.findFirstByEmisorIdAndReceptorId(any(), any()))
                 .thenReturn(Optional.empty());
+    }
+
+    @Test
+    @DisplayName("La solicitud se lleva puesta la compatibilidad del momento en que se mandó")
+    void guardaLaCompatibilidadDelMomento() {
+        // Es el unico instante en que este numero se puede capturar. Manana la
+        // constancia lo habra movido y despues de reajustar pesos ya no sera
+        // comparable con el de la semana pasada, asi que sin esto la pregunta
+        // "¿las de mas de 80 acaban en mas entrenamientos?" no tiene respuesta.
+        Mockito.when(usuarioService.compatibilidadEntre(1L, 2L)).thenReturn(87);
+        Mockito.when(solicitudRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        servicio.enviarSolicitud(emisor.getEmail(), receptor.getId());
+
+        var capturada = org.mockito.ArgumentCaptor.forClass(Solicitud.class);
+        Mockito.verify(solicitudRepository).save(capturada.capture());
+
+        assertEquals(87, capturada.getValue().getCompatibilidad());
+    }
+
+    @Test
+    @DisplayName("Se puntúa a la pareja en el orden correcto, no al revés ni contra sí mismo")
+    void puntuaALaParejaDeVerdad() {
+        // Con dos Long del mismo tipo seguidos, cruzarlos no da error de
+        // compilacion: da un numero equivocado que ademas parece razonable. Ya
+        // paso una vez en la calculadora y por eso existe PerfilDeMatch.
+        Mockito.when(usuarioService.compatibilidadEntre(any(), any())).thenReturn(50);
+        Mockito.when(solicitudRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        servicio.enviarSolicitud(emisor.getEmail(), receptor.getId());
+
+        Mockito.verify(usuarioService).compatibilidadEntre(1L, 2L);
     }
 
     @Test

@@ -40,6 +40,23 @@ public class Solicitud {
 
     private LocalDateTime fechaSolicitud;
 
+    /**
+     * La compatibilidad que se veia al mandarla, congelada.
+     *
+     * <p>No se recalcula nunca. El numero de hoy no dice que viste tu aquel dia:
+     * la constancia lo mueve sola —depende de los ultimos 28 dias de cada uno— y
+     * cada reajuste de pesos deja los historicos sin poder compararse entre si.
+     *
+     * <p>Es lo unico que permite preguntar hacia atras si el motor acierta, o
+     * sea si de las solicitudes que salieron con mas de 80 % acabaron mas en
+     * entrenamientos de verdad. Sin esto, cada peso de la calculadora es una
+     * opinion que no se puede contrastar con nada.
+     *
+     * <p>{@code null} en las anteriores a que esto existiera. Se quedan asi:
+     * rellenarlas con la puntuacion de hoy seria inventar el dato.
+     */
+    private Integer compatibilidad;
+
     @ManyToOne
     @JoinColumn(name = "emisor_id")
     private Usuario emisor;
@@ -58,6 +75,8 @@ public class Solicitud {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
     public LocalDateTime getFechaSolicitud() { return fechaSolicitud; }
+    public Integer getCompatibilidad() { return compatibilidad; }
+    public void setCompatibilidad(Integer compatibilidad) { this.compatibilidad = compatibilidad; }
     public Usuario getEmisor() {
         return emisor;
     }

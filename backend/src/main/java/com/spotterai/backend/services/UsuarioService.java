@@ -41,4 +41,15 @@ public interface UsuarioService {
      * un muro publico al que la gente publique para que la vean.
      */
     List<ActividadDTO> actividadDeCompaneros(String email);
+
+    /**
+     * Lo que puntua una pareja ahora mismo, sin explicacion ni ficha.
+     *
+     * <p>Existe para congelarlo en la solicitud, que es lo unico que permite
+     * preguntar despues si el motor acierta. Va por el mismo cargador que la
+     * lista, la ficha y la explicacion, y no por un camino propio: son cuatro
+     * llamadas al mismo sitio, que es justo lo que la sobrecarga borrada hacia
+     * imposible.
+     */
+    int compatibilidadEntre(Long unoId, Long otroId);
 }

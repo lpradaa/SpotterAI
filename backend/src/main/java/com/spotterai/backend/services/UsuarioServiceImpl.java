@@ -525,6 +525,19 @@ public class UsuarioServiceImpl implements UsuarioService {
         return explicador.explicar(otro.getNombre(), puntuacion);
     }
 
+    @Override
+    public int compatibilidadEntre(Long unoId, Long otroId) {
+        Usuario uno = usuarioRepository.findById(unoId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        Usuario otro = usuarioRepository.findById(otroId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        Map<Long, PerfilDeMatch> perfiles = perfilesDeMatch(List.of(uno, otro));
+
+        return CalculadoraCompatibilidad.calcular(
+                perfiles.get(unoId), perfiles.get(otroId)).total();
+    }
+
 
     /**
      * El perfil de una persona tal y como lo necesita el motor.

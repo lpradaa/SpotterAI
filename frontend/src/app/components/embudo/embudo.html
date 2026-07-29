@@ -1,0 +1,80 @@
+<div class="embudo">
+
+  <header class="embudo__cabecera">
+    <h1 class="embudo__titulo">¿Acierta el motor?</h1>
+    <p class="embudo__texto">
+      La compatibilidad se calcula con ocho factores y unos pesos que salen de
+      razonar sobre cómo funciona un gimnasio, no de haber mirado qué pasa
+      después. Esta tabla mira qué pasa después: de las solicitudes que salieron
+      con cada puntuación, cuántas se aceptaron y cuántas acabaron en un
+      entrenamiento que <strong>las dos personas</strong> confirmaron.
+    </p>
+  </header>
+
+  @if (error()) {
+    <p class="aviso" role="alert">No se ha podido cargar el embudo.</p>
+  } @else if (embudo(); as e) {
+
+    <table class="tabla">
+      <caption class="visually-hidden">
+        Solicitudes enviadas, aceptadas y acabadas en entrenamiento, por tramo de compatibilidad
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Compatibilidad</th>
+          <th scope="col">Enviadas</th>
+          <th scope="col">Se aceptaron</th>
+          <th scope="col">Entrenaron</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of e.filas; track f.tramo) {
+          <tr [class.tabla__fila--sinMuestra]="!f.hayBastante">
+            <th scope="row">{{ nombre(f.tramo) }}</th>
+            <td>{{ f.enviadas }}</td>
+
+            <!-- Sin muestra se enseña el recuento pero no el porcentaje. Un
+                 "50 %" sobre cuatro casos es la forma más rápida de confirmar
+                 la hipótesis que uno ya traía puesta. -->
+            <td>
+              {{ f.aceptadas }}
+              @if (f.tasaAceptacion !== null) { <span class="tabla__tasa">{{ f.tasaAceptacion }} %</span> }
+            </td>
+            <td>
+              {{ f.entrenadas }}
+              @if (f.tasaEntrenamiento !== null) { <span class="tabla__tasa">{{ f.tasaEntrenamiento }} %</span> }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Lo más honesto que puede decir esta pantalla hoy, y por eso va aquí
+         arriba del todo y no en una nota al pie. -->
+    @if (!e.sePuedeComparar) {
+      <p class="embudo__veredicto embudo__veredicto--pronto">
+        <strong>Todavía no se puede concluir nada.</strong>
+        Hacen falta al menos 20 solicitudes en cada tramo para que la diferencia
+        entre unos y otros no se explique por quién pulsó el botón esa semana.
+        Ahora mismo hay {{ totalMedibles() }} medibles en total.
+      </p>
+    } @else {
+      <p class="embudo__veredicto">
+        Hay muestra suficiente en los tres tramos: la comparación entre ellos ya
+        significa algo.
+      </p>
+    }
+
+    @if (e.sinPuntuacion > 0) {
+      <p class="embudo__nota">
+        Quedan fuera {{ e.sinPuntuacion }} solicitudes anteriores a que se
+        guardara la puntuación. No se rellenan con el número de hoy: la
+        constancia lo mueve sola cada semana y los pesos han cambiado desde
+        entonces, así que sería inventarse el dato.
+      </p>
+    }
+
+  } @else {
+    <p class="embudo__nota">Cargando…</p>
+  }
+</div>

@@ -1,0 +1,94 @@
+@use '../../../scss/index' as *;
+
+:host {
+  display: block;
+}
+
+.embudo {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: $space-md $space-sm;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.embudo__titulo {
+  font-size: $text-2xl;
+  font-weight: $font-bold;
+  margin: 0;
+}
+
+.embudo__texto {
+  margin: $space-xs 0 0;
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+  line-height: $leading-normal;
+}
+
+/* Scroll propio: una tabla de cuatro columnas no cabe a 375 px, y lo que no
+   puede pasar es que arrastre la pagina entera con ella. */
+.tabla {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $text-sm;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--sa-borde);
+  }
+
+  thead th {
+    font-family: $font-display;
+    font-size: $text-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sa-texto-suave);
+  }
+
+  tbody th {
+    font-weight: $font-semibold;
+  }
+
+  td {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Atenuada, no oculta: que un tramo no tenga muestra es un dato. */
+.tabla__fila--sinMuestra {
+  color: var(--sa-texto-tenue);
+}
+
+.tabla__tasa {
+  margin-left: 6px;
+  font-family: $font-display;
+  font-weight: $font-bold;
+  color: var(--sa-acento);
+}
+
+.embudo__veredicto {
+  margin: 0;
+  padding: 12px $space-md;
+  border-left: 3px solid var(--sa-exito);
+  border-radius: $radius-sm;
+  background: var(--sa-superficie);
+  font-size: $text-sm;
+  line-height: $leading-normal;
+}
+
+.embudo__veredicto--pronto {
+  border-left-color: var(--sa-acero);
+}
+
+.embudo__nota {
+  margin: 0;
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+  line-height: $leading-normal;
+}

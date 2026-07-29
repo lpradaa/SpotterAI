@@ -38,6 +38,15 @@ export const routes: Routes = [
   // /conexiones?con=ID y solo hay un sitio que mantener.
   { path: 'chat/:id', redirectTo: 'conexiones', pathMatch: 'full' },
 
+  // Si el motor acierta. Fuera de la navegacion principal a proposito: no es
+  // una pantalla que le sirva a nadie para entrenar, es la que dice si lo que
+  // hace el resto de la aplicacion esta justificado. Se llega desde el pie.
+  {
+    path: 'embudo',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/embudo/embudo').then(m => m.EmbudoComponent),
+  },
+
   // Redirecciones por defecto
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   

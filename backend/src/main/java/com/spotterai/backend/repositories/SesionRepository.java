@@ -1,5 +1,6 @@
 package com.spotterai.backend.repositories;
 
+import com.spotterai.backend.metricas.ParDeUsuarios;
 import com.spotterai.backend.models.Sesion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -88,4 +89,25 @@ public interface SesionRepository extends JpaRepository<Sesion, Long> {
                              @Param("otroId") Long otroId,
                              @Param("hoy") LocalDate hoy,
                              @Param("ahora") LocalTime ahora);
+
+    /**
+     * Las parejas de las que consta que entrenaron juntas de verdad.
+     *
+     * <p>Las dos confirmaciones y no una: "entrenamos" dicho por los dos es el
+     * unico dato de esta aplicacion que no es una intencion. Que quedarais es
+     * un acuerdo, que la fecha pasara es un calendario; esto es lo unico que
+     * dice que la aplicacion sirvio para lo que existe.
+     *
+     * <p>Por eso es la ultima columna del embudo, y por eso no vale
+     * {@code contarQuedadasEntre}, que a proposito solo llega a "habeis
+     * quedado".
+     */
+    @Query("""
+            SELECT DISTINCT new com.spotterai.backend.metricas.ParDeUsuarios(
+                       s.proponente.id, s.invitado.id)
+              FROM Sesion s
+             WHERE s.confirmadaProponente = true
+               AND s.confirmadaInvitado = true
+            """)
+    List<ParDeUsuarios> paresQueEntrenaron();
 }

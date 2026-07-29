@@ -46,11 +46,14 @@ class DeshacerRelacionTest {
         return s;
     }
 
+    private final UsuarioService usuarioService = Mockito.mock(UsuarioService.class);
+
     @BeforeEach
     void preparar() {
         solicitudRepository = Mockito.mock(SolicitudRepository.class);
         usuarioRepository = Mockito.mock(UsuarioRepository.class);
-        servicio = new SolicitudServiceImpl(solicitudRepository, usuarioRepository, new CanalEventos());
+        servicio = new SolicitudServiceImpl(solicitudRepository, usuarioRepository, new CanalEventos(),
+                usuarioService);
 
         Mockito.when(usuarioRepository.findByEmail(yo.getEmail())).thenReturn(Optional.of(yo));
         Mockito.when(solicitudRepository.findFirstByEmisorIdAndReceptorId(any(), any()))

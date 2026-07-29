@@ -25,12 +25,14 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final SolicitudRepository solicitudRepository;
     private final UsuarioRepository usuarioRepository;
     private final CanalEventos canalEventos;
+    private final UsuarioService usuarioService;
 
     public SolicitudServiceImpl(SolicitudRepository solicitudRepository, UsuarioRepository usuarioRepository,
-                                CanalEventos canalEventos) {
+                                CanalEventos canalEventos, UsuarioService usuarioService) {
         this.solicitudRepository = solicitudRepository;
         this.usuarioRepository = usuarioRepository;
         this.canalEventos = canalEventos;
+        this.usuarioService = usuarioService;
     }
 
     @Override
@@ -71,7 +73,13 @@ public class SolicitudServiceImpl implements SolicitudService {
         Solicitud nueva = new Solicitud();
         nueva.setEmisor(emisor);
         nueva.setReceptor(receptor);
-        nueva.setEstado("PENDIENTE"); 
+        nueva.setEstado("PENDIENTE");
+
+        // El unico momento en que este numero se puede capturar. Manana ya no es
+        // el mismo —la constancia se mueve sola— y despues de reajustar pesos
+        // tampoco es comparable con el de la semana pasada. Es lo que convierte
+        // "creo que el motor acierta" en algo que se puede mirar.
+        nueva.setCompatibilidad(usuarioService.compatibilidadEntre(emisor.getId(), receptor.getId()));
 
         Solicitud guardada;
         try {

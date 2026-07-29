@@ -21,4 +21,14 @@
       &:hover { text-decoration: underline; }
     }
   }
+
+  &__enlace {
+    display: inline-block;
+    margin-top: 6px;
+    color: var(--sa-texto-tenue);
+    font-size: $text-xs;
+    text-decoration: none;
+
+    &:hover { color: var(--sa-acento-texto); text-decoration: underline; }
+  }
 }

@@ -30,4 +30,15 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
     // cada candidato sin lanzar dos consultas por candidato.
     @Query("SELECT s FROM Solicitud s WHERE s.emisor.id = :usuarioId OR s.receptor.id = :usuarioId")
     List<Solicitud> findTodasPorUsuario(@Param("usuarioId") Long usuarioId);
+
+    /**
+     * Las que llevan la puntuacion congelada, que son las unicas medibles.
+     *
+     * <p>Las anteriores a que se guardara quedan fuera: no se sabe con que
+     * numero se mandaron y rellenarlo con el de hoy seria inventarlo. El embudo
+     * cuenta cuantas descarto por esto en vez de callarselo.
+     */
+    List<Solicitud> findByCompatibilidadIsNotNull();
+
+    long countByCompatibilidadIsNull();
 }
