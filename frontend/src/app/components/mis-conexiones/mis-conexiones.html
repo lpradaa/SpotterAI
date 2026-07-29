@@ -178,13 +178,24 @@
       }
 
       <div class="mensajes" #scrollMe>
-        @for (msg of historial(); track msg.id) {
-          <div class="mensaje"
-               [class.mensaje--mio]="msg.emisorId !== chatActivo()!.usuarioId"
-               [class.mensaje--suyo]="msg.emisorId === chatActivo()!.usuarioId">
-            <p class="mensaje__texto">{{ msg.contenido }}</p>
-            <time class="mensaje__hora">{{ msg.fechaEnvio | date:'shortTime' }}</time>
-          </div>
+        @for (linea of lineas(); track linea.tipo === 'dia' ? 'd' + linea.clave : linea.msg.id) {
+          @if (linea.tipo === 'dia') {
+            <!-- La burbuja solo lleva la hora, asi que sin esto una conversacion
+                 de tres semanas es una columna de "18:30" y no hay forma de
+                 saber si "quedamos manana" se dijo hoy o hace un mes. -->
+            <p class="separador-dia"><span>{{ linea.etiqueta }}</span></p>
+          } @else {
+            <div class="mensaje"
+                 [class.mensaje--mio]="linea.msg.emisorId !== chatActivo()!.usuarioId"
+                 [class.mensaje--suyo]="linea.msg.emisorId === chatActivo()!.usuarioId">
+              <p class="mensaje__texto">{{ linea.msg.contenido }}</p>
+              <time class="mensaje__hora"
+                    [attr.datetime]="linea.msg.fechaEnvio"
+                    [title]="fechaCompleta(linea.msg.fechaEnvio)">
+                {{ linea.msg.fechaEnvio | date:'shortTime' }}
+              </time>
+            </div>
+          }
         } @empty {
           <div class="mensajes__vacio">
             <p>Aún no hay mensajes.</p>

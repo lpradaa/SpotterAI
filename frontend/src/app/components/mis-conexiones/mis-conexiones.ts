@@ -14,6 +14,16 @@ import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
 import { Avatar } from '../avatar/avatar';
 
+/**
+ * Una fila del historial: o un mensaje, o la marca del día en que empieza.
+ *
+ * Las marcas no son mensajes vacíos con una bandera: eso obliga a que todo lo
+ * que recorra el historial se acuerde de saltárselas.
+ */
+export type LineaDelChat =
+  | { tipo: 'dia'; clave: string; etiqueta: string }
+  | { tipo: 'mensaje'; msg: Mensaje };
+
 @Component({
   selector: 'app-mis-conexiones',
   standalone: true,
@@ -71,6 +81,65 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
     if (!texto) return this.conversaciones();
     return this.conversaciones().filter(c => c.nombre.toLowerCase().includes(texto));
   });
+
+  /**
+   * El historial con una marca de día donde cambia el día.
+   *
+   * Cada burbuja llevaba solo la hora, así que una conversación de tres semanas
+   * era una columna de "18:30" sin saber a qué día pertenecía ninguna. En una
+   * aplicación cuyo asunto entero es acordar cuándo entrenar, eso no es un
+   * detalle de presentación: "quedamos mañana a las 7" leído tres días después
+   * es información falsa, y no hay forma de darse cuenta.
+   *
+   * Se arma aquí y no en la plantilla —comparando con el mensaje anterior sobre
+   * la marcha— porque así se puede probar sin montar el componente entero, que
+   * es lo que hace que esto se quede probado.
+   */
+  lineas = computed<LineaDelChat[]>(() => {
+    const salida: LineaDelChat[] = [];
+    let diaAnterior = '';
+
+    for (const msg of this.historial()) {
+      const dia = new Date(msg.fechaEnvio).toDateString();
+      if (dia !== diaAnterior) {
+        salida.push({ tipo: 'dia', clave: dia, etiqueta: this.etiquetaDeDia(msg.fechaEnvio) });
+        diaAnterior = dia;
+      }
+      salida.push({ tipo: 'mensaje', msg });
+    }
+    return salida;
+  });
+
+  /**
+   * "Hoy", "Ayer" o la fecha escrita.
+   *
+   * Los dos primeros son los que se usan al hablar, y son justo los días en los
+   * que un plan todavía sirve. A partir de ahí se pone la fecha entera: "jue"
+   * a secas vuelve a ser ambiguo en cuanto pasa una semana.
+   */
+  etiquetaDeDia(fecha: string): string {
+    const d = new Date(fecha);
+    const hoy = new Date();
+    const ayer = new Date(hoy);
+    ayer.setDate(hoy.getDate() - 1);
+
+    if (d.toDateString() === hoy.toDateString()) return 'Hoy';
+    if (d.toDateString() === ayer.toDateString()) return 'Ayer';
+
+    const mismoAno = d.getFullYear() === hoy.getFullYear();
+    return d.toLocaleDateString('es-ES', {
+      weekday: 'long', day: 'numeric', month: 'long',
+      ...(mismoAno ? {} : { year: 'numeric' }),
+    });
+  }
+
+  /** La fecha completa, para el title y el atributo datetime de cada burbuja. */
+  fechaCompleta(fecha: string): string {
+    return new Date(fecha).toLocaleString('es-ES', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  }
 
   ngOnInit(): void {
     this.miId = Number(localStorage.getItem('userId') || localStorage.getItem('id'));

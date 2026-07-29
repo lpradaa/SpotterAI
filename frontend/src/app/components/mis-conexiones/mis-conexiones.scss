@@ -349,6 +349,22 @@
   }
 }
 
+/* Centrado y sin burbuja: es una marca del hilo, no algo que dijera nadie. */
+.separador-dia {
+  align-self: center;
+  margin: $space-xs 0;
+  text-align: center;
+
+  span {
+    padding: 3px 10px;
+    border-radius: $radius-full;
+    background: var(--sa-superficie-alt);
+    font-size: $text-xs;
+    color: var(--sa-texto-suave);
+    text-transform: capitalize;
+  }
+}
+
 .mensaje {
   max-width: min(78%, 480px);
   padding: 8px 12px;
@@ -511,8 +527,13 @@
   border-left-color: var(--sa-acero);
 }
 
+/* Base de 220 px y no 0: con `flex: 1` el texto se queda con lo que sobre
+   despues de unos botones que no encogen, y a 375 px eso partia "Domingo, 26 de
+   julio · 18:00-20:00 en McFit Madrid Centro" en cuatro lineas. Es el mismo
+   arreglo que las bandas del tablero, y el mismo motivo: cuando no caben los
+   dos al lado, bajan los botones. */
 .plan__texto {
-  flex: 1;
+  flex: 1 1 220px;
   min-width: 0;
 }
 
@@ -548,6 +569,8 @@
 
 .plan__acciones {
   display: flex;
+  flex-wrap: wrap;
   gap: $space-xs;
   flex-shrink: 0;
+  margin-left: auto;
 }

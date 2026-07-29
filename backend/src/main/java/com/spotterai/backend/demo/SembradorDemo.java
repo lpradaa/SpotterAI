@@ -349,17 +349,32 @@ public class SembradorDemo implements CommandLineRunner {
     /**
      * Los mensajes se alternan entre los dos, empezando por el primero.
      *
-     * La fecha de envio la pone el propio Mensaje al construirse, asi que toda
-     * la conversacion queda con la hora del arranque. Es lo que hay sin abrir un
-     * hueco para escribirla, y para una demostracion no molesta.
+     * <p>Repartidos hacia atras en el tiempo y no todos con la hora del
+     * arranque. Antes quedaban todos en el mismo segundo, y se veia una charla
+     * entera —"¿te viene bien el martes?", "hecho"— dicha de golpe: ni parece
+     * una conversacion ni deja ver las marcas de dia del chat, que existen justo
+     * para eso.
+     *
+     * <p>El ultimo cae hoy y los anteriores van subiendo hacia atras, un rato
+     * antes cada uno y cambiando de dia cada dos. Asi la conversacion arranca
+     * hace unos dias y termina reciente, que es la forma que tiene una de
+     * verdad.
      */
     private void conversacion(Usuario uno, Usuario otro, String... textos) {
+        LocalDateTime ahora = LocalDateTime.now(reloj);
+
         for (int i = 0; i < textos.length; i++) {
             Mensaje m = new Mensaje();
             m.setEmisor(i % 2 == 0 ? uno : otro);
             m.setReceptor(i % 2 == 0 ? otro : uno);
             m.setContenido(textos[i]);
             m.setLeido(true);
+
+            int desdeElFinal = textos.length - 1 - i;
+            m.setFechaEnvio(ahora
+                    .minusDays(desdeElFinal / 2L)
+                    .minusMinutes(desdeElFinal * 37L));
+
             mensajes.save(m);
         }
     }

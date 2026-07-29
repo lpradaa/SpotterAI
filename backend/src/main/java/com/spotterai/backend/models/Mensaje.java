@@ -50,6 +50,17 @@ public class Mensaje {
     public String getContenido() { return contenido; }
     public void setContenido(String contenido) { this.contenido = contenido; }
     public LocalDateTime getFechaEnvio() { return fechaEnvio; }
+
+    /**
+     * Solo para sembrar la demostracion con un historial que parezca uno.
+     *
+     * <p>Un mensaje se fecha al construirse y nadie deberia poder moverlo
+     * despues. La excepcion es la demostracion: si toda la conversacion queda
+     * con la hora del arranque, se ve una charla entera —"¿te viene bien el
+     * martes?", "hecho"— dicha en el mismo segundo, y las marcas de dia del chat
+     * no tienen nada que separar.
+     */
+    public void setFechaEnvio(LocalDateTime fechaEnvio) { this.fechaEnvio = fechaEnvio; }
     public Usuario getEmisor() { return emisor; }
     public void setEmisor(Usuario emisor) { this.emisor = emisor; }
     public Usuario getReceptor() { return receptor; }
