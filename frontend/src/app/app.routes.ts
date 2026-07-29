@@ -47,6 +47,15 @@ export const routes: Routes = [
     loadComponent: () => import('./components/embudo/embudo').then(m => m.EmbudoComponent),
   },
 
+  // Dejar de recibir avisos por correo. La unica pantalla sin authGuard aparte
+  // del login, y a proposito: quien quiere dejar de recibir correos no va a
+  // iniciar sesion para conseguirlo. Lo que hace es marcar el remitente como no
+  // deseado, y entonces tampoco le llegan los avisos que si queria.
+  {
+    path: 'baja',
+    loadComponent: () => import('./components/baja/baja').then(m => m.BajaComponent),
+  },
+
   // Redirecciones por defecto
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   

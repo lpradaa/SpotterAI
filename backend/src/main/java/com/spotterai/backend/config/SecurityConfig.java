@@ -50,6 +50,14 @@ public class SecurityConfig {
                 // uso que se pide antes con el token (ver TicketsSse).
                 .requestMatchers("/api/eventos/suscribir").permitAll()
 
+                // Darse de baja de los avisos, desde el enlace del propio correo.
+                // Quien quiere dejar de recibirlos no va a iniciar sesion para
+                // conseguirlo: lo que hace es marcar el remitente como no deseado,
+                // y entonces tampoco le llegan los avisos que si queria. Lo que se
+                // arriesga esta acotado: con esa llave —aleatoria, de 32 bytes— lo
+                // unico que se puede hacer es cambiar esa preferencia.
+                .requestMatchers(HttpMethod.POST, "/api/avisos/baja", "/api/avisos/alta").permitAll()
+
                 // La entrega de fotos y videos es publica; la subida no.
                 // Un <img> o un <video> no pueden mandar la cabecera Authorization
                 // —la misma limitacion del navegador que obligo a los tickets del

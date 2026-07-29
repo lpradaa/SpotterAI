@@ -79,14 +79,16 @@ public class RastreadorDeAvisos {
     private final SesionRepository sesiones;
     private final RedactorDeAvisos redactor;
     private final Cartero cartero;
+    private final Bajas bajas;
     private final Clock reloj;
 
     public RastreadorDeAvisos(SolicitudRepository solicitudes, SesionRepository sesiones,
-                              RedactorDeAvisos redactor, Cartero cartero, Clock reloj) {
+                              RedactorDeAvisos redactor, Cartero cartero, Bajas bajas, Clock reloj) {
         this.solicitudes = solicitudes;
         this.sesiones = sesiones;
         this.redactor = redactor;
         this.cartero = cartero;
+        this.bajas = bajas;
         this.reloj = reloj;
     }
 
@@ -97,16 +99,19 @@ public class RastreadorDeAvisos {
         LocalDateTime hasta = ahora.minus(DEMORA);
         LocalDateTime desde = ahora.minus(CADUCIDAD);
 
+        // Las consultas ya dejan fuera a quien se dio de baja, asi que aqui no
+        // hay que acordarse de comprobarlo: lo que no sale de la base no se
+        // puede mandar por descuido.
         for (Solicitud s : solicitudes.pendientesPorAvisar(desde, hasta)) {
-            intentar(() -> redactor.paraSolicitud(s), () -> s.setAvisadoEn(ahora),
-                    "solicitud " + s.getId());
+            intentar(() -> redactor.paraSolicitud(s, bajas.llaveDe(s.getReceptor())),
+                    () -> s.setAvisadoEn(ahora), "solicitud " + s.getId());
         }
 
         // Solo las de un dia que aun no ha pasado: avisar de una propuesta para
         // el martes cuando ya es miercoles no le sirve a nadie.
         for (Sesion s : sesiones.propuestasPorAvisar(desde, hasta, LocalDate.now(reloj))) {
-            intentar(() -> redactor.paraSesion(s), () -> s.setAvisadoEn(ahora),
-                    "sesion " + s.getId());
+            intentar(() -> redactor.paraSesion(s, bajas.llaveDe(s.getInvitado())),
+                    () -> s.setAvisadoEn(ahora), "sesion " + s.getId());
         }
     }
 

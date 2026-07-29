@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class RedactorDeAvisosTest {
 
+    /** La llave de baja no es lo que se prueba aqui; solo tiene que viajar. */
+    private static final String LLAVE = "LLAVE-DE-PRUEBA";
+
     private final RedactorDeAvisos redactor = new RedactorDeAvisos("https://spotterai.example");
 
     private static Usuario usuario(Long id, String nombre, String email) {
@@ -59,13 +62,13 @@ class RedactorDeAvisosTest {
         // Con dos usuarios del mismo tipo en la misma clase, cruzarlos no da
         // error de compilacion: da un correo que llega a la persona equivocada
         // y le cuenta que ella misma quiere entrenar consigo.
-        assertEquals("luis@test.com", redactor.paraSolicitud(solicitud()).para());
+        assertEquals("luis@test.com", redactor.paraSolicitud(solicitud(), LLAVE).para());
     }
 
     @Test
     @DisplayName("El asunto dice quién y qué: es lo único que se ve sin abrirlo")
     void elAsuntoSeExplicaSolo() {
-        String asunto = redactor.paraSolicitud(solicitud()).asunto();
+        String asunto = redactor.paraSolicitud(solicitud(), LLAVE).asunto();
 
         assertTrue(asunto.contains("Marta Ibáñez"), asunto);
         // "Tienes una notificación" no dice si merece la pena abrirlo.
@@ -75,7 +78,7 @@ class RedactorDeAvisosTest {
     @Test
     @DisplayName("El enlace usa la url configurada, no localhost")
     void elEnlaceApuntaDondeDebe() {
-        String cuerpo = redactor.paraSolicitud(solicitud()).cuerpo();
+        String cuerpo = redactor.paraSolicitud(solicitud(), LLAVE).cuerpo();
 
         // El fallo mas facil de cometer y el mas dificil de notar: desde la
         // maquina que manda los correos, un enlace a localhost abre bien.
@@ -87,7 +90,7 @@ class RedactorDeAvisosTest {
     @DisplayName("Una barra de más en la url no produce enlaces con //")
     void laBarraSobranteNoEnsucia() {
         String cuerpo = new RedactorDeAvisos("https://spotterai.example/")
-                .paraSolicitud(solicitud()).cuerpo();
+                .paraSolicitud(solicitud(), LLAVE).cuerpo();
 
         assertTrue(cuerpo.contains("https://spotterai.example/solicitudes"), cuerpo);
         assertFalse(cuerpo.contains("example//"), cuerpo);
@@ -96,7 +99,7 @@ class RedactorDeAvisosTest {
     @Test
     @DisplayName("El de una sesión dice el día y la hora en cristiano")
     void laFechaSeLee() {
-        Aviso aviso = redactor.paraSesion(sesion());
+        Aviso aviso = redactor.paraSesion(sesion(), LLAVE);
 
         assertEquals("luis@test.com", aviso.para());
         assertTrue(aviso.cuerpo().contains("lunes 3 de agosto"), aviso.cuerpo());
@@ -110,7 +113,7 @@ class RedactorDeAvisosTest {
     @Test
     @DisplayName("El enlace de la sesión abre la conversación con quien la propone")
     void elEnlaceLlevaAlSitio() {
-        assertTrue(redactor.paraSesion(sesion()).cuerpo()
+        assertTrue(redactor.paraSesion(sesion(), LLAVE).cuerpo()
                 .contains("https://spotterai.example/conexiones?con=1"));
     }
 
@@ -120,7 +123,7 @@ class RedactorDeAvisosTest {
         Sesion s = sesion();
         s.setGimnasio(null);
 
-        String cuerpo = redactor.paraSesion(s).cuerpo();
+        String cuerpo = redactor.paraSesion(s, LLAVE).cuerpo();
 
         assertFalse(cuerpo.contains("null"), cuerpo);
         assertFalse(cuerpo.contains(", en "), cuerpo);
@@ -135,7 +138,7 @@ class RedactorDeAvisosTest {
         Solicitud s = solicitud();
         s.setCompatibilidad(93);
 
-        Aviso aviso = redactor.paraSolicitud(s);
+        Aviso aviso = redactor.paraSolicitud(s, LLAVE);
 
         assertFalse(aviso.cuerpo().contains("93"), aviso.cuerpo());
         assertFalse(aviso.cuerpo().contains("%"), aviso.cuerpo());

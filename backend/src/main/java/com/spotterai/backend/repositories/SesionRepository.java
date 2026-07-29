@@ -129,6 +129,7 @@ public interface SesionRepository extends JpaRepository<Sesion, Long> {
                AND s.avisadoEn IS NULL
                AND s.creadaEn BETWEEN :desde AND :hasta
                AND s.fecha >= :hoy
+               AND s.invitado.avisosPorCorreo = true
             """)
     List<Sesion> propuestasPorAvisar(@Param("desde") LocalDateTime desde,
                                      @Param("hasta") LocalDateTime hasta,

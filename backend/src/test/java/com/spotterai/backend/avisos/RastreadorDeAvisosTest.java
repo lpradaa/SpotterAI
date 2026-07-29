@@ -32,6 +32,7 @@ class RastreadorDeAvisosTest {
     private SolicitudRepository solicitudes;
     private SesionRepository sesiones;
     private Cartero cartero;
+    private Bajas bajas;
     private RastreadorDeAvisos rastreador;
 
     private final List<Aviso> enviados = new ArrayList<>();
@@ -76,8 +77,11 @@ class RastreadorDeAvisosTest {
 
         cartero = enviados::add;
 
+        bajas = Mockito.mock(Bajas.class);
+        when(bajas.llaveDe(any())).thenReturn("llave-de-prueba");
+
         rastreador = new RastreadorDeAvisos(solicitudes, sesiones,
-                new RedactorDeAvisos("https://spotterai.example"), cartero, reloj);
+                new RedactorDeAvisos("https://spotterai.example"), cartero, bajas, reloj);
 
         when(solicitudes.pendientesPorAvisar(any(), any())).thenReturn(List.of());
         when(sesiones.propuestasPorAvisar(any(), any(), any())).thenReturn(List.of());
@@ -114,7 +118,7 @@ class RastreadorDeAvisosTest {
         when(solicitudes.pendientesPorAvisar(any(), any())).thenReturn(List.of(s));
         rastreador = new RastreadorDeAvisos(solicitudes, sesiones,
                 new RedactorDeAvisos("https://spotterai.example"),
-                aviso -> { throw new IllegalStateException("SMTP caído"); }, reloj);
+                aviso -> { throw new IllegalStateException("SMTP caído"); }, bajas, reloj);
 
         rastreador.barrer();
 
@@ -135,7 +139,7 @@ class RastreadorDeAvisosTest {
                 aviso -> {
                     if (aviso.para().equals("rebota@test.com")) throw new IllegalStateException("rebota");
                     enviados.add(aviso);
-                }, reloj);
+                }, bajas, reloj);
 
         assertDoesNotThrow(() -> rastreador.barrer());
 
@@ -177,6 +181,37 @@ class RastreadorDeAvisosTest {
         Mockito.verify(solicitudes).pendientesPorAvisar(
                 AHORA.minus(RastreadorDeAvisos.CADUCIDAD),
                 AHORA.minus(RastreadorDeAvisos.DEMORA));
+    }
+
+    @Test
+    @DisplayName("Todos los avisos llevan la salida para dejar de recibirlos")
+    void todosTraenLaSalida() {
+        when(solicitudes.pendientesPorAvisar(any(), any())).thenReturn(List.of(solicitud()));
+        when(sesiones.propuestasPorAvisar(any(), any(), any())).thenReturn(List.of(sesion()));
+
+        rastreador.barrer();
+
+        // En todos y no solo en el primero: el correo que alguien abre cuando se
+        // harta es el que tiene delante. Si ese no trae la salida, lo marca como
+        // no deseado y deja de recibir tambien los que si queria.
+        assertEquals(2, enviados.size());
+        assertTrue(enviados.stream().allMatch(a -> a.cuerpo().contains("/baja?t=llave-de-prueba")),
+                "Un aviso sin forma de pararlo es un aviso que acaba en la carpeta de spam");
+    }
+
+    @Test
+    @DisplayName("La llave del enlace es la del destinatario, no la de quien escribe")
+    void laLlaveEsDeQuienRecibe() {
+        Solicitud s = solicitud();
+        when(solicitudes.pendientesPorAvisar(any(), any())).thenReturn(List.of(s));
+
+        rastreador.barrer();
+
+        // Cruzarlas no da error de compilacion: da un correo cuyo enlace de baja
+        // da de baja a otra persona, que es de las peores cosas que puede hacer
+        // un boton de "no quiero esto".
+        Mockito.verify(bajas).llaveDe(s.getReceptor());
+        Mockito.verify(bajas, Mockito.never()).llaveDe(s.getEmisor());
     }
 
     @Test

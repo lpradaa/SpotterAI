@@ -65,6 +65,9 @@ services:
       CORREO_PUERTO: ${CORREO_PUERTO:-587}
       CORREO_USUARIO: ${CORREO_USUARIO:-}
       CORREO_CLAVE: ${CORREO_CLAVE:-}
+      # Solo para depurar: en produccion llena el disco y deja datos de la gente
+      # escritos en texto plano en los logs.
+      SQL_AL_REGISTRO: ${SQL_AL_REGISTRO:-false}
     volumes:
       # Fuera de la imagen: si no, cada despliegue borra las fotos subidas.
       - medios:/app/medios

@@ -44,7 +44,7 @@ public class RedactorDeAvisos {
         this.urlBase = urlBase.endsWith("/") ? urlBase.substring(0, urlBase.length() - 1) : urlBase;
     }
 
-    public Aviso paraSolicitud(Solicitud solicitud) {
+    public Aviso paraSolicitud(Solicitud solicitud, String llaveDeBaja) {
         String quien = solicitud.getEmisor().getNombre();
 
         return new Aviso(
@@ -57,10 +57,10 @@ public class RedactorDeAvisos {
                 %s/solicitudes
 
                 Si no respondes no pasa nada: la solicitud se queda esperando.
-                """.formatted(quien, urlBase));
+                %s""".formatted(quien, urlBase, pieDeBaja(llaveDeBaja)));
     }
 
-    public Aviso paraSesion(Sesion sesion) {
+    public Aviso paraSesion(Sesion sesion, String llaveDeBaja) {
         String quien = sesion.getProponente().getNombre();
 
         return new Aviso(
@@ -75,14 +75,37 @@ public class RedactorDeAvisos {
                 %s/conexiones?con=%d
 
                 Si ese día no te viene bien, dilo y proponéis otro.
-                """.formatted(
+                %s""".formatted(
                         quien,
                         diaLargo(sesion),
                         sesion.getHoraInicio().format(HORA),
                         sesion.getHoraFin().format(HORA),
                         donde(sesion),
                         urlBase,
-                        sesion.getProponente().getId()));
+                        sesion.getProponente().getId(),
+                        pieDeBaja(llaveDeBaja)));
+    }
+
+    /**
+     * La salida, al final de todos los avisos.
+     *
+     * <p>Va en todos y no solo en el primero: el correo que alguien abre cuando
+     * se harta es el que tiene delante, no el de hace tres semanas, y si ese no
+     * trae la salida lo que hace es marcarlo como no deseado. A partir de ahi
+     * tampoco llegan los que si queria.
+     *
+     * <p>El enlace lleva a una pantalla con un boton y no da de baja al abrirlo.
+     * Los antivirus de correo y los previsualizadores siguen los enlaces por su
+     * cuenta: con una baja de un solo clic, media lista se da de baja sola sin
+     * que nadie haya tocado nada.
+     */
+    private String pieDeBaja(String llave) {
+        return """
+
+                --
+                ¿No quieres estos avisos? Páralos aquí:
+                %s/baja?t=%s
+                """.formatted(urlBase, llave);
     }
 
     /** "en McFit Madrid Centro", o nada si no consta el gimnasio. */

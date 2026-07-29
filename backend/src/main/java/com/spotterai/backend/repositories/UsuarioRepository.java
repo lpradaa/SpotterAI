@@ -12,6 +12,15 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     
     Optional<Usuario> findByEmail(String email);
 
+    /**
+     * Quien tiene esa llave de baja, si alguien la tiene.
+     *
+     * <p>Es lo unico que se puede hacer con la llave. No devuelve una sesion ni
+     * autentica a nadie: solo identifica de quien es la preferencia que se va a
+     * cambiar, porque esa llave viaja en el cuerpo de un correo.
+     */
+    Optional<Usuario> findByTokenAvisos(String tokenAvisos);
+
     // Devuelve a todos los usuarios menos al que está logueado.
     // El emparejamiento ya no se filtra en SQL: CalculadoraCompatibilidad puntua a
     // todos los candidatos y los ordena. El antiguo buscarMatches (mismo gimnasio

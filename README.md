@@ -136,13 +136,24 @@ Para arrancar con la base limpia:
 SPRING_PROFILES=default docker compose up
 ```
 
-Para un despliegue de verdad, pon tu propio secreto en un `.env`:
+Para un despliegue de verdad, parte de la plantilla:
 
 ```bash
-echo "JWT_SECRET=$(openssl rand -base64 48)" > .env
+cp .env.example .env
 ```
 
 Las fotos y vídeos van en un volumen (`medios`), no dentro de la imagen: si no, cada despliegue borraría lo que haya subido la gente.
+
+### Antes de que entre alguien que no seas tú
+
+Esto no es una lista de buenas prácticas genéricas: son las cuatro cosas que en este proyecto están puestas para desarrollo y que en producción hacen daño.
+
+1. **`JWT_SECRET` propio.** `openssl rand -base64 48`. El valor por defecto del `docker-compose.yml` está escrito en un repositorio público, así que cualquiera puede firmarse un token.
+2. **`SPRING_PROFILES` vacío.** Con `demo` se siembran catorce personas inventadas en cada arranque, y quien se registre de verdad va a encontrárselas en Explorar.
+3. **`CORREO_URL_BASE` con tu dominio.** Es el fallo más fácil de cometer aquí: si se queda en `localhost`, los avisos salen con enlaces que no le funcionan a nadie y no te enteras, porque desde el servidor que los manda abren perfectamente.
+4. **HTTPS delante.** El token viaja en cada petición y hoy vive en `localStorage`; sin TLS va en claro por la red. Esto no lo resuelve el `docker-compose.yml`: hace falta un proxy con certificado por delante.
+
+Y una que no puedo cerrar yo, dicha claramente: **el token en `localStorage` significa que cualquier XSS lo lee**. Como decisión para un proyecto local está asumida y documentada abajo; para un despliegue con gente real, lo correcto es cookie `HttpOnly` con protección CSRF. Es un cambio de calado en el login, el interceptor y el canal de eventos, y conviene hacerlo a propósito y no de paso.
 
 ### Sin Docker
 
@@ -274,7 +285,7 @@ Lo que no hay, dicho claro: el token vive en `localStorage`, así que un XSS lo 
 
 - **Chat sin indicador de escritura ni presencia.** Los mensajes llegan al instante, pero no se ve si el otro está escribiendo.
 - **No se avisa de los mensajes por correo, solo de solicitudes y propuestas.** Es deliberado: un correo por cada mensaje de un chat es la forma más rápida de que alguien silencie el remitente, y entonces se pierden también los avisos que sí importaban. Lo que falta de verdad es un resumen —"tienes 3 mensajes sin leer"— y eso pide decidir cada cuánto, que es una decisión de producto, no de código.
-- **No se puede dejar de recibir los avisos.** Hoy es una única opción global del servidor; debería ser una preferencia de cada persona, con su enlace para darse de baja en el propio correo.
+- **La baja de los avisos no está en el perfil.** Se puede dejar de recibirlos desde el enlace de cualquier correo, pero quien ya está dentro de la aplicación no tiene dónde cambiarlo sin ir a buscar un correo antiguo.
 - **Sin paginación.** Con decenas de usuarios sobra; con miles no.
 - **`DisponibilidadController` expone un CRUD que nadie llama** — los horarios se gestionan dentro de `PUT /perfil`.
 - **Accesibilidad, solo lo básico.** Está el equivalente textual de la rejilla, el foco atrapado en los diálogos y el contraste medido; falta pasarle un lector de pantalla de verdad y revisar el orden de tabulación pantalla por pantalla.

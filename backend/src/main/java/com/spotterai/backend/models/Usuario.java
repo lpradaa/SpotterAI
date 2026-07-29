@@ -76,6 +76,35 @@ public class Usuario {
     @Column(length = 30)
     private String rutina;
 
+    /**
+     * Si quiere recibir avisos por correo.
+     *
+     * <p>true por defecto, porque quien se registra en una aplicacion para
+     * emparejarse con gente espera que le avisen cuando alguien le escribe. Lo
+     * que no puede faltar es la salida, y la salida es esto: una preferencia de
+     * cada persona y no una propiedad del servidor, que es lo unico que habia y
+     * apagaba los avisos de todo el mundo a la vez.
+     */
+    @Column(name = "avisos_por_correo", nullable = false)
+    private boolean avisosPorCorreo = true;
+
+    /**
+     * La llave para darse de baja desde el propio correo, sin iniciar sesion.
+     *
+     * <p>Tiene que poder usarse sin sesion: quien quiere dejar de recibir
+     * correos no va a iniciar sesion para conseguirlo, y obligarle a ello es la
+     * forma educada de no dejarle salir.
+     *
+     * <p>Aleatoria y no derivada del id, para que nadie pueda dar de baja a
+     * nadie probando numeros. No autentica ni abre sesion: lo unico que permite
+     * es cambiar esta preferencia.
+     *
+     * <p>Se genera la primera vez que se le manda un aviso a esa persona, que es
+     * el primer momento en que el enlace tiene que existir.
+     */
+    @Column(name = "token_avisos", length = 64, unique = true)
+    private String tokenAvisos;
+
     
     @ManyToOne
     @JoinColumn(name = "gimnasio_id")
@@ -133,6 +162,11 @@ public class Usuario {
 
     public String getRutina() { return rutina; }
     public void setRutina(String rutina) { this.rutina = rutina; }
+
+    public boolean isAvisosPorCorreo() { return avisosPorCorreo; }
+    public void setAvisosPorCorreo(boolean avisosPorCorreo) { this.avisosPorCorreo = avisosPorCorreo; }
+    public String getTokenAvisos() { return tokenAvisos; }
+    public void setTokenAvisos(String tokenAvisos) { this.tokenAvisos = tokenAvisos; }
 
     public List<Disponibilidad> getDisponibilidades() { return disponibilidades; }
     public void setDisponibilidades(List<Disponibilidad> disponibilidades) { this.disponibilidades = disponibilidades; }

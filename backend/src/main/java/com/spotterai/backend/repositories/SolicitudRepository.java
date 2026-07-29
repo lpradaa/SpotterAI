@@ -56,6 +56,7 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
              WHERE s.estado = 'PENDIENTE'
                AND s.avisadoEn IS NULL
                AND s.fechaSolicitud BETWEEN :desde AND :hasta
+               AND s.receptor.avisosPorCorreo = true
             """)
     List<Solicitud> pendientesPorAvisar(@Param("desde") LocalDateTime desde,
                                         @Param("hasta") LocalDateTime hasta);
