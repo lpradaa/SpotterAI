@@ -78,6 +78,34 @@
   }
 }
 
+/* Explica de golpe por que toda la lista puntua bajo, asi que va arriba y con
+   el mismo peso visual que las bandas del tablero. */
+.banda-aviso {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  flex-wrap: wrap;
+  padding: 12px $space-md;
+  border: 1px solid var(--sa-borde);
+  border-left: 3px solid var(--sa-acento);
+  border-radius: $radius-md;
+  background: var(--sa-superficie);
+  font-size: $text-sm;
+  line-height: $leading-normal;
+
+  /* Base y no 0: si no, el boton le come media banda a 375 px. Es el mismo
+     arreglo que las bandas del tablero. */
+  > div {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+
+  .btn {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
+
 /* ===================== Fichas ===================== */
 .fichas {
   list-style: none;

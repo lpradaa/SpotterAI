@@ -382,6 +382,16 @@ public class UsuarioServiceImpl implements UsuarioService {
                     dto.setFuerzaCompatible(CalculadoraFuerza
                             .comparar(mio.levantamientos(), suyo.levantamientos())
                             .podeisCubriros().orElse(null));
+
+                    // Por id y no comparando nombres: dos gimnasios pueden
+                    // llamarse igual y el mismo puede estar escrito de dos
+                    // formas. Sin saberlo, quien es el primero de su gimnasio ve
+                    // una lista entera de puntuaciones bajas sin explicacion.
+                    dto.setMismoGimnasio(
+                            miUsuario.getGimnasio() != null
+                                    && candidato.getGimnasio() != null
+                                    && miUsuario.getGimnasio().getId()
+                                            .equals(candidato.getGimnasio().getId()));
                     return dto;
                 })
                 .sorted(Comparator.comparingInt(UsuarioResponseDTO::getCompatibilidad).reversed())

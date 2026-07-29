@@ -71,6 +71,22 @@ public class UsuarioResponseDTO {
      */
     private List<FranjaComunDTO> franjasEnComun;
 
+    /**
+     * Si esta persona entrena donde entrenas tu.
+     *
+     * <p>Lo decide el backend y no la interfaz porque la interfaz no sabe cual
+     * es tu gimnasio: tendria que pedirlo aparte y comparar nombres, que es
+     * comparar dos cadenas para responder algo que aqui se sabe por id.
+     *
+     * <p>Importa mas de lo que parece. Coincidir en un horario estando en dos
+     * edificios distintos de la ciudad no es coincidir, asi que el solape de
+     * quien entrena en otro sitio vale una cuarta parte. Alguien que sea el
+     * primero de su gimnasio ve entonces una lista entera de puntuaciones bajas
+     * sin saber por que, y el numero sin explicacion es justo lo que esta
+     * aplicacion lleva evitando desde el principio.
+     */
+    private Boolean mismoGimnasio;
+
     /** Un tramo compartido, tal y como lo necesita la interfaz para pintarlo. */
     public record FranjaComunDTO(String dia, String inicio, String fin, boolean ambosFijos) {}
 
@@ -183,4 +199,7 @@ public class UsuarioResponseDTO {
     public void setFranjasEnComun(List<FranjaComunDTO> franjasEnComun) {
         this.franjasEnComun = franjasEnComun;
     }
+
+    public Boolean getMismoGimnasio() { return mismoGimnasio; }
+    public void setMismoGimnasio(Boolean mismoGimnasio) { this.mismoGimnasio = mismoGimnasio; }
 }

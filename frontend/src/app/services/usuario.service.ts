@@ -38,6 +38,16 @@ export interface Match {
    */
   fuerzaCompatible: boolean | null;
 
+  /**
+   * Si entrena donde entrenas tú.
+   *
+   * Lo decide el backend por id, no comparando nombres de gimnasio. Es lo que
+   * permite explicar por qué alguien puntúa bajo: el solape horario en otro
+   * edificio vale una cuarta parte, porque coincidir a la misma hora en dos
+   * sitios distintos de la ciudad no es coincidir.
+   */
+  mismoGimnasio: boolean;
+
   // Compatibilidad: solo llega en los endpoints de match
   compatibilidad: number;
   etiquetaCompatibilidad: string;

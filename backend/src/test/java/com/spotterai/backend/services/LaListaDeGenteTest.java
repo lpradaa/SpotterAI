@@ -185,7 +185,32 @@ class LaListaDeGenteTest {
             assertNotNull(dto.getCompatibilidad());
             assertNotNull(dto.getResumenCompatibilidad());
             assertNotNull(dto.getFranjasEnComun());
+            assertNotNull(dto.getMismoGimnasio());
         }
+    }
+
+    @Test
+    @DisplayName("La lista dice quién entrena en tu gimnasio y quién no")
+    void diceSiEsDeTuGimnasio() {
+        assertTrue(servicio.buscarCompañeros("luis@test.com").get(0).getMismoGimnasio());
+
+        Gimnasio otroSitio = new Gimnasio();
+        otroSitio.setId(99L);
+        otroSitio.setNombre("Basic-Fit Chamberí");
+        otro.setGimnasio(otroSitio);
+
+        // Sin esto, quien es el primero de su gimnasio ve una lista entera de
+        // puntuaciones bajas y ningun motivo: el solape en otro edificio vale
+        // una cuarta parte, y eso hay que poder contarlo.
+        assertFalse(servicio.buscarCompañeros("luis@test.com").get(0).getMismoGimnasio());
+    }
+
+    @Test
+    @DisplayName("Sin gimnasio declarado no se afirma que sea el mismo")
+    void sinGimnasioNoEsElMismo() {
+        otro.setGimnasio(null);
+
+        assertFalse(servicio.buscarCompañeros("luis@test.com").get(0).getMismoGimnasio());
     }
 
     @Test

@@ -32,12 +32,39 @@
     </div>
   </header>
 
+  <!-- Hay gente, pero ninguna donde tú entrenas. Se dice aquí arriba y no en una
+       nota al pie porque explica todas las puntuaciones de la lista de golpe. -->
+  @if (soyElPrimeroDeMiGimnasio()) {
+    <div class="banda-aviso">
+      <div>
+        <strong>Eres el primero de tu gimnasio.</strong>
+        Aquí abajo hay gente, pero entrena en otros sitios, y coincidir a la misma
+        hora en dos edificios distintos no es coincidir: por eso puntúan bajo.
+        Con alguien de tu gimnasio los números son otros.
+      </div>
+      <button class="btn btn--primario" (click)="invitar()">
+        {{ textoInvitar() }}
+      </button>
+    </div>
+  }
+
   @if (usuariosFiltrados().length === 0) {
     <div class="vacio-grande">
-      <h2>Sin resultados</h2>
-      <p>No hay nadie que encaje con esa combinación de filtros.</p>
-      @if (hayFiltrosActivos()) {
-        <button class="btn btn--fantasma" (click)="resetearFiltros()">Quitar filtros</button>
+      <!-- Dos situaciones distintas que decían lo mismo: que no haya nadie
+           todavía no es que tus filtros no dejen pasar a nadie. -->
+      @if (comunidadVacia()) {
+        <h2>Todavía no hay nadie</h2>
+        <p>
+          Esto se llena con gente de tu gimnasio. Trae a alguien con quien ya
+          entrenes y el resto viene solo.
+        </p>
+        <button class="btn btn--primario" (click)="invitar()">{{ textoInvitar() }}</button>
+      } @else {
+        <h2>Sin resultados</h2>
+        <p>No hay nadie que encaje con esa combinación de filtros.</p>
+        @if (hayFiltrosActivos()) {
+          <button class="btn btn--fantasma" (click)="resetearFiltros()">Quitar filtros</button>
+        }
       }
     </div>
   } @else {

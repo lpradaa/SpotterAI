@@ -108,6 +108,65 @@ export class Explore implements OnInit {
     return lista;
   });
 
+  /**
+   * Cuánta gente de tu propio gimnasio hay.
+   *
+   * Lo dice el backend por id en `mismoGimnasio`; aquí no se comparan nombres.
+   */
+  enMiGimnasio = computed(() => this.usuarios().filter(u => u.mismoGimnasio).length);
+
+  /**
+   * Ser el primero de tu gimnasio no es lo mismo que no tener resultados.
+   *
+   * Hay gente en la lista, pero ninguna donde tú entrenas, y por eso todas
+   * puntúan bajo: coincidir en un horario estando en dos edificios distintos de
+   * la ciudad no es coincidir, y el motor descuenta ese solape a una cuarta
+   * parte. Sin decirlo, la pantalla es una pared de números bajos sin motivo.
+   */
+  soyElPrimeroDeMiGimnasio = computed(
+    () => this.usuarios().length > 0 && this.enMiGimnasio() === 0);
+
+  /** Nadie todavía, que no es lo mismo que "tus filtros no dejan pasar a nadie". */
+  comunidadVacia = computed(() => this.usuarios().length === 0);
+
+  /**
+   * Traer a alguien de tu gimnasio.
+   *
+   * Comparte el enlace de registro, sin código ni invitación registrada en la
+   * base: eso pide una tabla, un token y una caducidad, y lo que resuelve el
+   * arranque en frío es que puedas mandarle algo a tu compañero por WhatsApp.
+   *
+   * `navigator.share` en el móvil —que es donde se manda esto— y copiar al
+   * portapapeles en el escritorio. El aviso se dice en el propio botón y no en
+   * una alerta: una alerta hay que cerrarla y esto no merece un clic más.
+   */
+  protected textoInvitar = signal('Invitar a alguien de tu gimnasio');
+
+  async invitar(): Promise<void> {
+    const enlace = `${location.origin}/login`;
+    const mensaje = `Estoy usando SpotterAI para no entrenar solo. Si te apuntas, `
+      + `cruzamos horarios y vemos qué días coincidimos: ${enlace}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'SpotterAI', text: mensaje, url: enlace });
+        return;
+      }
+      await navigator.clipboard.writeText(mensaje);
+      this.avisarEnElBoton('Enlace copiado');
+    } catch {
+      // Cancelar el diálogo de compartir entra por aquí y no es un error: no se
+      // dice nada. Solo se avisa si de verdad no se ha podido copiar.
+      if (!navigator.share) this.avisarEnElBoton('No se ha podido copiar');
+    }
+  }
+
+  private avisarEnElBoton(texto: string): void {
+    const original = 'Invitar a alguien de tu gimnasio';
+    this.textoInvitar.set(texto);
+    setTimeout(() => this.textoInvitar.set(original), 2500);
+  }
+
   ngOnInit(): void {
     this.cargarComunidad();
     this.cargarMisHorarios();
