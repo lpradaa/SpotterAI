@@ -2,6 +2,8 @@ package com.spotterai.backend.controllers;
 
 import com.spotterai.backend.config.JwtUtil;
 import com.spotterai.backend.dtos.AuthResponseDTO;
+import com.spotterai.backend.seguridad.GalletaDeSesion;
+import jakarta.servlet.http.HttpServletResponse;
 import com.spotterai.backend.dtos.UsuarioLoginDTO;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.UsuarioRepository;
@@ -28,16 +30,37 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final ControlDeIntentos control;
 
+    private final GalletaDeSesion galleta;
+
     public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil, ControlDeIntentos control) {
+                          JwtUtil jwtUtil, ControlDeIntentos control, GalletaDeSesion galleta) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.control = control;
+        this.galleta = galleta;
+    }
+
+    /**
+     * Cerrar sesion de verdad.
+     *
+     * <p>Antes bastaba con que el frontend se olvidara del token, porque lo
+     * tenia el. Ahora la sesion la guarda el navegador en una galleta que el
+     * JavaScript no puede tocar, asi que cerrarla es algo que solo puede hacer
+     * el servidor: hay que pedirle que la borre.
+     *
+     * <p>Responde igual haya sesion o no. Quien llama a esto quiere quedarse sin
+     * sesion, y no la tiene: eso es exito, no error.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse respuesta) {
+        respuesta.addHeader(GalletaDeSesion.CABECERA, galleta.cerrar());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UsuarioLoginDTO loginDTO, HttpServletRequest peticion) {
+    public ResponseEntity<?> login(@RequestBody UsuarioLoginDTO loginDTO, HttpServletRequest peticion,
+                                   HttpServletResponse respuesta) {
 
         String claveCorreo = ControlDeIntentos.claveDeCorreo(loginDTO.getEmail());
         String claveDireccion = ControlDeIntentos.claveDeDireccion(direccionDe(peticion));
@@ -64,8 +87,27 @@ public class AuthController {
 
                 String token = jwtUtil.generarToken(usuario.getEmail());
 
-                return ResponseEntity.ok(new AuthResponseDTO(
-                        token, usuario.getId(), usuario.getEmail(), usuario.getNombre()));
+                // La galleta va en la respuesta del servlet y NO como cabecera
+                // del ResponseEntity, y esto no es estilo: al volcar las
+                // cabeceras del ResponseEntity, Spring reemplaza el valor de
+                // Set-Cookie en vez de anadirlo, asi que borraba la galleta del
+                // CSRF que FiltroGalletaCsrf acababa de escribir.
+                //
+                // El sintoma no era "falta una galleta". Era que entrabas, el
+                // frontend pedia un ticket por POST sin token de CSRF, se
+                // llevaba un 403, el interceptor lo leia como sesion invalida y
+                // te devolvia al login diciendo que habia caducado. Se entraba y
+                // se salia solo, y costo un rato encontrarlo.
+                respuesta.addHeader(GalletaDeSesion.CABECERA, galleta.abrir(token));
+
+                // El token sale en la galleta y NO en el cuerpo. Devolverlo
+                // tambien aqui dejaria la puerta abierta a que alguien lo
+                // guardara en localStorage, que es exactamente lo que este
+                // cambio quita de en medio.
+                return ResponseEntity.ok()
+                        .body(new AuthResponseDTO(
+                                usuario.getId(), usuario.getEmail(), usuario.getNombre(),
+                                System.currentTimeMillis() + jwtUtil.duracion().toMillis()));
             }
         }
 

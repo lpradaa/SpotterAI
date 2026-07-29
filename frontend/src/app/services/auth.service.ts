@@ -1,102 +1,122 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, of, tap } from 'rxjs';
 import { api } from '../config/api';
 
+/** Lo que el login devuelve ahora. Sin token: ese va en la galleta. */
+interface RespuestaLogin {
+  id: number;
+  email: string;
+  nombre: string;
+  /** Milisegundos desde 1970, comparable con Date.now(). */
+  expiraEn: number;
+}
+
+/**
+ * La sesión, que ya no vive aquí.
+ *
+ * <p>El token estaba en `localStorage`, o sea al alcance de cualquier script
+ * que se ejecutara en la página. Ahora está en una galleta `HttpOnly` que este
+ * código no puede leer ni escribir, y de la que solo el servidor puede
+ * deshacerse.
+ *
+ * <p>Lo que queda guardado aquí no son credenciales: el nombre, el id, el correo
+ * y **cuándo caduca la sesión**. Nada de eso permite iniciar una; con todo ello
+ * copiado a otro navegador no se entra. Sirve para lo mismo que antes se sacaba
+ * leyendo el token: no montar la aplicación entera con una sesión ya muerta y
+ * dejar al usuario mirando pantallas vacías sin explicación.
+ *
+ * <p>Quien decide de verdad sigue siendo el backend, que valida la firma. Esto
+ * es comodidad, no seguridad — y ahora se nota más, porque el navegador puede
+ * tener la galleta caducada y estos datos no, o al revés.
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private URL_AUTH = api('/api/auth'); 
+  private URL_AUTH = api('/api/auth');
 
-  // Almacén reactivo del Token recuperado del almacenamiento del navegador
-  currentUserToken = signal<string | null>(localStorage.getItem('token'));
+  /** Quién está dentro, o null. Reactivo para que la cabecera se entere. */
+  usuario = signal<{ id: number; nombre: string; email: string } | null>(this.leerGuardado());
 
-  login(credenciales: { email: string; password: string }): Observable<any> {
-    return this.http.post<any>(`${this.URL_AUTH}/login`, credenciales).pipe(
-      tap(response => {
-        if (response && response.token) {
-          localStorage.setItem('token', response.token);
-          
-          if (response.nombre) {
-            localStorage.setItem('usuario_nombre', response.nombre);
-          }
+  login(credenciales: { email: string; password: string }): Observable<RespuestaLogin> {
+    return this.http.post<RespuestaLogin>(`${this.URL_AUTH}/login`, credenciales).pipe(
+      tap(respuesta => {
+        if (!respuesta) return;
 
-          // Guardamos el ID del usuario
-          const userId = response.id || response.usuarioId; 
-          if (userId) {
-            localStorage.setItem('userId', userId.toString());
-          }
+        localStorage.setItem('usuario_nombre', respuesta.nombre ?? '');
+        localStorage.setItem('usuario_email', respuesta.email ?? '');
+        localStorage.setItem('userId', String(respuesta.id));
+        localStorage.setItem('sesion_expira', String(respuesta.expiraEn));
 
-          this.currentUserToken.set(response.token);
-        }
+        this.usuario.set({ id: respuesta.id, nombre: respuesta.nombre, email: respuesta.email });
       })
     );
   }
 
-  // 🔥 MODIFICADO: Ahora apunta al endpoint correcto del backend para registrar usuarios
-  // Fíjate en la última palabra de la URL (/registro)
   register(nuevoUsuario: any): Observable<any> {
     return this.http.post<any>(api('/api/usuarios/registro'), nuevoUsuario);
   }
 
-  logout(): void {
-    localStorage.removeItem('token');
+  /**
+   * Cerrar sesión de verdad.
+   *
+   * <p>Antes bastaba con olvidarse del token, porque lo teníamos nosotros. Ahora
+   * la galleta la guarda el navegador y solo el servidor puede borrarla, así que
+   * **hay que pedírselo**: limpiar `localStorage` sin llamar aquí dejaría la
+   * sesión abierta con la interfaz diciendo que no lo está.
+   *
+   * <p>Los datos locales se borran pase lo que pase con la llamada. Si el
+   * servidor no responde, lo que el usuario quiere sigue siendo salir.
+   */
+  logout(): Observable<unknown> {
+    return this.http.post(`${this.URL_AUTH}/logout`, {}).pipe(
+      catchError(() => of(null)),
+      tap(() => this.olvidarSesion())
+    );
+  }
+
+  /** Borra lo local. No cierra la sesión del servidor: para eso está `logout()`. */
+  olvidarSesion(): void {
     localStorage.removeItem('usuario_nombre');
-    localStorage.removeItem('userId'); 
-    this.currentUserToken.set(null);
+    localStorage.removeItem('usuario_email');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('sesion_expira');
+    this.usuario.set(null);
   }
 
   /**
-   * Hay sesión utilizable, no solo un token guardado.
+   * Hay sesión utilizable, hasta donde se puede saber desde aquí.
    *
-   * Comprobar unicamente que exista dejaba entrar con un token caducado: la
-   * aplicacion se montaba entera y luego fallaban todas las llamadas en
-   * silencio, asi que lo que veias eran pantallas vacias sin ninguna
-   * explicacion. Esto es comodidad, no seguridad: quien decide sigue siendo el
-   * backend, que valida la firma.
+   * <p>Ya no se lee la caducidad del token —no lo tenemos— sino la que el login
+   * dijo. Si no consta, se da por buena y que responda el backend: bloquear al
+   * usuario por un dato que nos falta es peor que dejar que llegue un 401.
    */
   isAuthenticated(): boolean {
-    const token = this.currentUserToken();
-    if (!token) return false;
+    if (!this.usuario()) return false;
 
-    if (this.haCaducado(token)) {
-      this.logout(); // no tiene sentido conservar un token muerto
+    const expira = Number(localStorage.getItem('sesion_expira'));
+    if (!expira) return true;
+
+    // Margen para no entrar con una sesión que muere a los dos segundos y deja
+    // la aplicación a medias.
+    const MARGEN_MS = 10_000;
+    if (expira - MARGEN_MS <= Date.now()) {
+      this.olvidarSesion();
       return false;
     }
     return true;
   }
 
-  private haCaducado(token: string): boolean {
-    const caduca = this.caducidadDe(token);
+  private leerGuardado(): { id: number; nombre: string; email: string } | null {
+    const id = Number(localStorage.getItem('userId'));
+    if (!id) return null;
 
-    // Un token cuya caducidad no se puede leer se da por bueno: puede ser un
-    // formato que no esperabamos, y bloquear al usuario por eso seria peor que
-    // dejar que el backend responda 401.
-    if (caduca === null) return false;
-
-    // Margen para no entrar con un token que muere a los dos segundos y deja la
-    // sesion a medias.
-    const MARGEN_MS = 10_000;
-    return caduca - MARGEN_MS <= Date.now();
-  }
-
-  /** Milisegundos de la caducidad del JWT, o null si no se puede leer. */
-  private caducidadDe(token: string): number | null {
-    try {
-      const carga = token.split('.')[1];
-      if (!carga) return null;
-
-      // base64url -> base64, y de ahi a texto respetando UTF-8: el correo del
-      // usuario viaja dentro y atob() por si solo destroza los acentos.
-      const base64 = carga.replace(/-/g, '+').replace(/_/g, '/');
-      const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-      const datos = JSON.parse(new TextDecoder().decode(bytes));
-
-      return typeof datos.exp === 'number' ? datos.exp * 1000 : null;
-    } catch {
-      return null;
-    }
+    return {
+      id,
+      nombre: localStorage.getItem('usuario_nombre') ?? '',
+      email: localStorage.getItem('usuario_email') ?? '',
+    };
   }
 }

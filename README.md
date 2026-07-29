@@ -151,9 +151,7 @@ Esto no es una lista de buenas prácticas genéricas: son las cuatro cosas que e
 1. **`JWT_SECRET` propio.** `openssl rand -base64 48`. El valor por defecto del `docker-compose.yml` está escrito en un repositorio público, así que cualquiera puede firmarse un token.
 2. **`SPRING_PROFILES` vacío.** Con `demo` se siembran catorce personas inventadas en cada arranque, y quien se registre de verdad va a encontrárselas en Explorar.
 3. **`CORREO_URL_BASE` con tu dominio.** Es el fallo más fácil de cometer aquí: si se queda en `localhost`, los avisos salen con enlaces que no le funcionan a nadie y no te enteras, porque desde el servidor que los manda abren perfectamente.
-4. **HTTPS delante.** El token viaja en cada petición y hoy vive en `localStorage`; sin TLS va en claro por la red. Esto no lo resuelve el `docker-compose.yml`: hace falta un proxy con certificado por delante.
-
-Y una que no puedo cerrar yo, dicha claramente: **el token en `localStorage` significa que cualquier XSS lo lee**. Como decisión para un proyecto local está asumida y documentada abajo; para un despliegue con gente real, lo correcto es cookie `HttpOnly` con protección CSRF. Es un cambio de calado en el login, el interceptor y el canal de eventos, y conviene hacerlo a propósito y no de paso.
+4. **HTTPS delante, y `COOKIE_SEGURA=true`.** La galleta de sesión viaja en cada petición; sin TLS va en claro por la red. `COOKIE_SEGURA` está en `false` por defecto porque en `http://localhost` una galleta `Secure` no se manda y nadie podría entrar — pero en producción, sin ponerla a `true`, la sesión se puede leer en cualquier red por la que pase.
 
 ### Sin Docker
 
@@ -277,7 +275,13 @@ Lo que hay, y por qué:
 
 ---
 
-Lo que no hay, dicho claro: el token vive en `localStorage`, así que un XSS lo lee. Para esto —proyecto local, sin datos sensibles— es una decisión asumida; en un despliegue de verdad tocaría cookie `HttpOnly` con protección CSRF.
+- **La sesión no está al alcance del JavaScript.** El token vivía en `localStorage`, que es un almacén al que llega cualquier script de la página: eso convierte **cualquier** XSS —propio, de una dependencia, de un anuncio— en robo de sesión, y el token robado sigue valiendo veinticuatro horas aunque la víctima cierre el navegador. Ahora va en una galleta `HttpOnly` que el navegador manda sola y el JavaScript no puede leer.
+
+  Eso obliga a traer detrás la **protección CSRF**, porque una galleta se manda sola y por tanto otra página puede provocar peticiones con la sesión puesta. Van juntas `SameSite=Lax` y el token de doble envío: el servidor deja el suyo en una galleta que el JavaScript sí puede leer, la página lo copia a una cabecera, y otro sitio no puede leer nuestras galletas para hacer lo mismo.
+
+  Y **cerrar sesión pasa a cerrarla de verdad**: antes era olvidarse del token, porque lo teníamos nosotros; ahora hay que pedirle al servidor que borre la galleta, y hasta que no lo hace la sesión sigue viva.
+
+Lo que sigue sin estar, dicho claro: el JWT no se revoca. Cerrar sesión quita la credencial del navegador, pero el token en sí sigue siendo válido hasta que caduca. Para revocarlo de verdad haría falta llevar registro de sesiones vivas en el servidor.
 
 ---
 

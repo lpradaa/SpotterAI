@@ -10,6 +10,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.spotterai.backend.seguridad.FiltroGalletaCsrf;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration; 
 import java.util.List; 
 
@@ -31,12 +35,62 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Donde vive el token de CSRF: en una galleta que el JavaScript SI puede leer.
+     *
+     * <p>Es un bean y no algo montado dentro de la cadena porque el login lo
+     * necesita tambien: esa ruta esta exenta de CSRF —quien inicia sesion aun no
+     * tiene token que enviar— y en las rutas exentas el mecanismo perezoso de
+     * Spring ni se dispara, asi que la galleta hay que escribirla a mano alli.
+     * Compartir el bean es lo que garantiza que las dos partes usen el mismo
+     * nombre de galleta y la misma configuracion.
+     */
+    @Bean
+    public org.springframework.security.web.csrf.CsrfTokenRepository repositorioCsrf() {
+        return CookieCsrfTokenRepository.withHttpOnlyFalse();
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Desactivamos CSRF porque usamos tokens JWT de forma stateless
-            .csrf(csrf -> csrf.disable())
+            // 1. CSRF encendido, y no es opcional desde que la sesion va en una
+            //    galleta. Estaba apagado con la razon correcta para entonces: el
+            //    token viajaba en una cabecera que el frontend ponia a mano, y
+            //    otra pagina no puede poner cabeceras en una peticion ajena. Una
+            //    galleta, en cambio, la manda el navegador sola, asi que
+            //    cualquier sitio puede provocar peticiones a esta con la sesion
+            //    puesta. Eso es exactamente el CSRF.
+            //
+            //    withHttpOnlyFalse porque este token SI tiene que leerlo el
+            //    JavaScript: la defensa consiste en que la pagina lo copie a una
+            //    cabecera, y otro sitio no puede leer nuestras galletas para
+            //    hacer lo mismo. Es el patron de doble envio, y aqui el secreto
+            //    de sesion sigue siendo inaccesible.
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(repositorioCsrf())
+                // Sin enmascarado XOR. Con el que trae por defecto, el valor de
+                // la galleta y el que el servidor espera no coinciden, y copiar
+                // uno en el otro —que es lo que hace el interceptor— no valdria
+                // nunca. El enmascarado protege de BREACH, que es un ataque
+                // sobre respuestas comprimidas; aqui el token va en una galleta,
+                // no en el HTML, asi que no aplica.
+                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                // Estas tres se llaman sin sesion previa, o sea sin que haya
+                // ninguna galleta de CSRF todavia. Exigirla convertiria el
+                // primer login en un 403 imposible de resolver. Y no hay nada
+                // que proteger: quien las llama no tiene sesion que usurpar.
+                .ignoringRequestMatchers(
+                        "/api/auth/login",
+                        "/api/usuarios/registro",
+                        "/api/avisos/baja",
+                        "/api/avisos/alta"))
             
+            // 1b. Y que la galleta del CSRF exista siempre, no solo cuando algo
+            //     la pide. Spring la genera de forma perezosa, asi que la
+            //     respuesta del login —que esta exento— salia sin ella y el
+            //     primer POST de despues se llevaba un 403. Ver FiltroGalletaCsrf.
+            .addFilterAfter(new FiltroGalletaCsrf(), CsrfFilter.class)
+
             // 2. Configuramos el CORS para que Angular pueda hablar con Spring Boot
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
             
@@ -109,8 +163,12 @@ public class SecurityConfig {
         // 2. Autorizamos los métodos estándar
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         
-        // 3. Autorizamos las cabeceras críticas (especialmente Authorization para vuestro JWT)
-        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Cache-Control", "Content-Type"));
+        // 3. Cabeceras. Authorization ya no esta: la sesion va en una galleta y el
+        //    filtro ni la mira. X-XSRF-TOKEN es la que lleva la defensa contra
+        //    CSRF, y sin permitirla aqui el navegador tumba toda peticion que
+        //    cambie algo —desde otro origen, que es el caso de `ng serve`—.
+        configuration.setAllowedHeaders(java.util.List.of(
+                "X-XSRF-TOKEN", "Cache-Control", "Content-Type"));
         
         // 4. Credenciales permitidas. Exige un origen concreto y no "*", que es
         //    justo lo que hace la línea 1: con comodín, el navegador lo rechaza.

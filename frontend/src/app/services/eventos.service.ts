@@ -59,7 +59,9 @@ export class EventosService {
   readonly sesionesRespondidas = this._sesionesRespondidas.asObservable();
 
   async conectar(): Promise<void> {
-    if (this.fuente || !localStorage.getItem('token')) return;
+    // Ya no hay token que mirar: la sesion va en una galleta HttpOnly.
+    // Lo que dice si hay alguien dentro es el marcador que deja el login.
+    if (this.fuente || !localStorage.getItem('userId')) return;
 
     this.queremosEstarConectados = true;
     this.estado.set('conectando');

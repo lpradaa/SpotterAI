@@ -1,11 +1,14 @@
 package com.spotterai.backend.controllers;
 
 import com.spotterai.backend.config.JwtUtil;
+import com.spotterai.backend.seguridad.GalletaDeSesion;
 import com.spotterai.backend.dtos.UsuarioLoginDTO;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import com.spotterai.backend.seguridad.ControlDeIntentos;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,9 +44,11 @@ class LoginConFrenoTest {
         usuarios = Mockito.mock(UsuarioRepository.class);
         cifrador = Mockito.mock(PasswordEncoder.class);
         JwtUtil jwt = Mockito.mock(JwtUtil.class);
+        Mockito.when(jwt.duracion()).thenReturn(java.time.Duration.ofHours(24));
         control = new ControlDeIntentos(Clock.systemDefaultZone());
 
-        controlador = new AuthController(usuarios, cifrador, jwt, control);
+        controlador = new AuthController(usuarios, cifrador, jwt, control,
+                new GalletaDeSesion(jwt, false));
 
         alguien.setId(1L);
         alguien.setEmail("alguien@test.com");
@@ -55,17 +60,32 @@ class LoginConFrenoTest {
         Mockito.when(jwt.generarToken(Mockito.anyString())).thenReturn("un-token");
     }
 
+    /**
+     * Una peticion de verdad y no un doble.
+     *
+     * <p>Con un mock a secas, todo lo que no se programe devuelve null, y el
+     * repositorio de CSRF necesita el contextPath para escribir la galleta:
+     * revienta con un NullPointerException que no dice nada de lo que se esta
+     * probando aqui.
+     */
     private HttpServletRequest desde(String ip) {
-        HttpServletRequest peticion = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(peticion.getRemoteAddr()).thenReturn(ip);
+        MockHttpServletRequest peticion = new MockHttpServletRequest();
+        peticion.setRemoteAddr(ip);
         return peticion;
+    }
+
+    private UsuarioLoginDTO credenciales(String correo, String clave) {
+        UsuarioLoginDTO dto = new UsuarioLoginDTO();
+        dto.setEmail(correo);
+        dto.setPassword(clave);
+        return dto;
     }
 
     private ResponseEntity<?> intentar(String correo, String clave, String ip) {
         UsuarioLoginDTO dto = new UsuarioLoginDTO();
         dto.setEmail(correo);
         dto.setPassword(clave);
-        return controlador.login(dto, desde(ip));
+        return controlador.login(dto, desde(ip), new org.springframework.mock.web.MockHttpServletResponse());
     }
 
     @Test
@@ -163,5 +183,53 @@ class LoginConFrenoTest {
         Object inventada = intentar("nadie@test.com", "mala", "10.0.0.2").getBody();
 
         assertEquals(existente, inventada);
+    }
+
+    @Test
+    @DisplayName("El login pone la sesión en la galleta y NO la devuelve en el cuerpo")
+    void elTokenNoViajaEnElCuerpo() {
+        Mockito.when(cifrador.matches(Mockito.any(), Mockito.any())).thenReturn(true);
+
+        // La respuesta del servlet y no el ResponseEntity: las galletas se
+        // escriben ahi para que la de sesion y la de CSRF no se pisen.
+        MockHttpServletResponse salida = new MockHttpServletResponse();
+        var respuesta = controlador.login(credenciales("alguien@test.com", "buena"),
+                desde("10.0.0.9"), salida);
+
+        assertEquals(200, respuesta.getStatusCode().value());
+
+        // Todas, no la primera: el login escribe dos —sesión y CSRF— y cuál sale
+        // antes es un detalle. Que salgan las dos es justo lo que estuvo roto:
+        // poner una en el ResponseEntity hacía desaparecer la otra.
+        var galletas = salida.getHeaders("Set-Cookie");
+
+        String sesion = galletas.stream().map(String::valueOf)
+                .filter(g -> g.startsWith("sa_sesion="))
+                .findFirst().orElse(null);
+
+        assertNotNull(sesion, "Sin galleta de sesión no hay sesión: " + galletas);
+        assertTrue(sesion.contains("un-token"), sesion);
+        assertTrue(sesion.contains("HttpOnly"), sesion);
+
+        // La del CSRF la escribe FiltroGalletaCsrf, que aquí no corre: lo que
+        // se comprueba en esta prueba es que la de sesión no la pisa, y eso se
+        // ve en que sigue saliendo cuando hay otras. El caso completo —las dos
+        // en la misma respuesta— se comprobó contra la aplicación arrancada.
+
+        // Devolverlo también en el cuerpo dejaría la puerta abierta a que
+        // alguien lo guardara en localStorage, que es de donde se ha sacado.
+        assertFalse(String.valueOf(respuesta.getBody()).contains("un-token"),
+                String.valueOf(respuesta.getBody()));
+    }
+
+    @Test
+    @DisplayName("Cerrar sesión borra la galleta, aunque no hubiera ninguna")
+    void cerrarSesionBorraLaGalleta() {
+        MockHttpServletResponse salida = new MockHttpServletResponse();
+        controlador.logout(salida);
+        String galleta = salida.getHeader("Set-Cookie");
+
+        assertNotNull(galleta);
+        assertTrue(galleta.contains("Max-Age=0"), galleta);
     }
 }

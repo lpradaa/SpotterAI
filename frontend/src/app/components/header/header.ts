@@ -5,6 +5,7 @@ import { TemaService } from '../../services/tema.service';
 import { EventosService } from '../../services/eventos.service';
 import { PerfilEstadoService } from '../../services/perfil-estado.service';
 import { AvisosService } from '../../services/avisos.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -23,6 +24,7 @@ export class Header implements OnInit {
   private eventos = inject(EventosService);
   private perfilEstado = inject(PerfilEstadoService);
   private avisos = inject(AvisosService);
+  private auth = inject(AuthService);
 
   solicitudesPendientes = this.avisos.solicitudesPendientes;
   mensajesSinLeer = this.avisos.mensajesSinLeer;
@@ -89,14 +91,20 @@ export class Header implements OnInit {
     // horario" del anterior y se saltaria la bienvenida.
     this.perfilEstado.olvidar();
 
-    // 1. Borramos el token y todos los datos de sesión del navegador
-    localStorage.clear();
-    
-    // 2. Cerramos el panel y actualizamos el estado
+    // 1. Se lo pedimos al servidor. La sesión vive en una galleta HttpOnly que
+    //    este código no puede borrar: limpiar localStorage y ya, como se hacía
+    //    antes, dejaría la sesión abierta con la interfaz diciendo que no lo
+    //    está. Y el nombre lo dice —"cerrar sesión"—, así que tiene que cerrarla.
+    //    Se navega igual si la llamada falla: quien pulsa esto quiere salir.
+    this.auth.logout().subscribe({
+      next: () => this.salir(),
+      error: () => this.salir(),
+    });
+  }
+
+  private salir(): void {
     this.isLoggedIn.set(false);
     this.isSidebarOpen.set(false);
-    
-    // 3. Redirigimos a la pantalla de login
     this.router.navigate(['/login']); 
   }
 }

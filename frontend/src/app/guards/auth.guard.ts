@@ -6,10 +6,11 @@ export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Se mira antes de preguntar: isAuthenticated() borra el token si esta
-  // caducado, asi que despues ya no se puede distinguir "se le acabo la sesion"
-  // de "nunca entro".
-  const habiaToken = localStorage.getItem('token') !== null;
+  // Se mira antes de preguntar: isAuthenticated() borra los datos locales si la
+  // sesion ha caducado, asi que despues ya no se puede distinguir "se le acabo"
+  // de "nunca entro". Ya no se mira un token —vive en una galleta HttpOnly que
+  // este codigo no puede leer— sino si constaba alguien dentro.
+  const habiaSesion = authService.usuario() !== null;
 
   if (authService.isAuthenticated()) {
     return true; // Le abrimos la puerta, puede pasar a la pantalla
@@ -18,6 +19,6 @@ export const authGuard: CanActivateFn = () => {
   // Se avisa igual que hace el interceptor: aparecer en el login sin ninguna
   // explicacion se lee como que algo se ha roto.
   return router.createUrlTree(['/login'], {
-    queryParams: habiaToken ? { sesion: 'caducada' } : {}
+    queryParams: habiaSesion ? { sesion: 'caducada' } : {}
   });
 };

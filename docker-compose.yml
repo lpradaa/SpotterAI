@@ -53,6 +53,9 @@ services:
       # el motor de compatibilidad, que es lo único que merece la pena enseñar.
       # Para una base con datos de verdad, quítalo.
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES:-demo}
+      # La galleta de sesion solo por HTTPS. En produccion tiene que ir en true:
+      # si no, la sesion viaja legible por cualquier red por la que pase.
+      COOKIE_SEGURA: ${COOKIE_SEGURA:-false}
       # Avisos por correo. Apagados salvo que se configuren: con CORREO_ACTIVO
       # en false no se manda nada y los avisos van al registro del contenedor,
       # que es lo que deja verlos con `docker compose logs backend`.

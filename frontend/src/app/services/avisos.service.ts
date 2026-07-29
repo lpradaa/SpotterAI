@@ -43,7 +43,9 @@ export class AvisosService {
 
   /** Carga inicial y enganche al canal. Idempotente: se puede llamar de más. */
   iniciar(): void {
-    if (!localStorage.getItem('token')) return;
+    // La sesion va en una galleta HttpOnly: lo que dice si hay alguien
+    // dentro es el marcador que deja el login, no un token.
+    if (!localStorage.getItem('userId')) return;
 
     this.refrescar();
     if (this.escuchando) return;
@@ -63,7 +65,9 @@ export class AvisosService {
 
   /** Tras responder solicitudes o abrir conversaciones, para volver a la verdad. */
   refrescar(): void {
-    if (!localStorage.getItem('token')) return;
+    // La sesion va en una galleta HttpOnly: lo que dice si hay alguien
+    // dentro es el marcador que deja el login, no un token.
+    if (!localStorage.getItem('userId')) return;
 
     this.usuarios.obtenerSolicitudesPendientes().subscribe({
       next: lista => this.solicitudes.set(lista?.length ?? 0),

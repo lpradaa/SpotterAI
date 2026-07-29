@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 
 @Component
@@ -19,6 +20,18 @@ public class JwtUtil {
 
     // Tiempo de validez del token: 24 horas (en milisegundos)
     private final long EXPIRATION_TIME = 86400000;
+
+    /**
+     * Cuanto vale un token recien firmado.
+     *
+     * <p>Lo necesitan dos sitios: la galleta, que tiene que caducar a la vez que
+     * lo que lleva dentro, y la respuesta del login, que le dice al navegador
+     * cuando se le acaba la sesion. Desde que el token va en una galleta
+     * HttpOnly, el frontend ya no puede leer esa fecha por su cuenta.
+     */
+    public Duration duracion() {
+        return Duration.ofMillis(EXPIRATION_TIME);
+    }
 
     public JwtUtil(@Value("${spotterai.jwt.secret}") String secret) {
         if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
