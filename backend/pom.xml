@@ -66,6 +66,17 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!--
+			Correo. Va siempre en el classpath pero no manda nada por su cuenta:
+			el envio real depende de spotterai.correo.activo, que es false salvo
+			que se configure un servidor. Sin eso, los avisos se escriben en el
+			registro, que es lo que permite verlos en desarrollo sin tener SMTP.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

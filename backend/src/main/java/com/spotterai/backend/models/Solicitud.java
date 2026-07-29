@@ -57,6 +57,15 @@ public class Solicitud {
      */
     private Integer compatibilidad;
 
+    /**
+     * Cuando se aviso por correo de esta solicitud, si se aviso.
+     *
+     * <p>Es lo que impide mandar el mismo aviso dos veces. El barrido corre cada
+     * minuto y tiene que sobrevivir a reinicios y a que haya dos instancias, asi
+     * que lo que decide si ya se aviso vive en la base y no en memoria.
+     */
+    private LocalDateTime avisadoEn;
+
     @ManyToOne
     @JoinColumn(name = "emisor_id")
     private Usuario emisor;
@@ -75,6 +84,8 @@ public class Solicitud {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
     public LocalDateTime getFechaSolicitud() { return fechaSolicitud; }
+    public LocalDateTime getAvisadoEn() { return avisadoEn; }
+    public void setAvisadoEn(LocalDateTime avisadoEn) { this.avisadoEn = avisadoEn; }
     public Integer getCompatibilidad() { return compatibilidad; }
     public void setCompatibilidad(Integer compatibilidad) { this.compatibilidad = compatibilidad; }
     public Usuario getEmisor() {

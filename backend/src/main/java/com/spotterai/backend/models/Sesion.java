@@ -77,6 +77,15 @@ public class Sesion {
     @Column(name = "respondida_en")
     private LocalDateTime respondidaEn;
 
+    /**
+     * Cuando se aviso por correo de esta propuesta, si se aviso.
+     *
+     * <p>Vive en la base y no en memoria por lo mismo que en Solicitud: el
+     * barrido tiene que poder reiniciarse sin que a nadie le lleguen dos correos
+     * de la misma propuesta.
+     */
+    private LocalDateTime avisadoEn;
+
     @Column(name = "confirmada_proponente", nullable = false)
     private boolean confirmadaProponente = false;
 
@@ -153,6 +162,8 @@ public class Sesion {
     public LocalDateTime getCreadaEn() { return creadaEn; }
     public void setCreadaEn(LocalDateTime creadaEn) { this.creadaEn = creadaEn; }
     public LocalDateTime getRespondidaEn() { return respondidaEn; }
+    public LocalDateTime getAvisadoEn() { return avisadoEn; }
+    public void setAvisadoEn(LocalDateTime avisadoEn) { this.avisadoEn = avisadoEn; }
     public void setRespondidaEn(LocalDateTime respondidaEn) { this.respondidaEn = respondidaEn; }
     public boolean isConfirmadaProponente() { return confirmadaProponente; }
     public void setConfirmadaProponente(boolean v) { this.confirmadaProponente = v; }

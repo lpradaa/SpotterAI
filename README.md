@@ -165,6 +165,24 @@ Variables de entorno del backend:
 | `FRONTEND_ORIGIN` | No | Por defecto `http://localhost:4200`. |
 | `SPRING_PROFILES_ACTIVE` | No | `demo` siembra los datos de ejemplo. Sin valor, la base se queda como esté. |
 
+### Avisos por correo
+
+Sin configurar nada **no se manda ningún correo**: los avisos se escriben en el registro con destinatario, asunto y cuerpo, que es lo que permite verlos en desarrollo sin tener un servidor SMTP. Para que salgan de verdad:
+
+| Variable | Obligatoria | Para qué |
+|---|---|---|
+| `CORREO_ACTIVO` | — | `true` para mandar de verdad. Por defecto `false`. |
+| `CORREO_URL_BASE` | Si `CORREO_ACTIVO=true` | Raíz de los enlaces del correo. **Si se queda en `localhost`, los avisos salen con enlaces que no le funcionan a nadie**, y no se nota porque desde el propio servidor abren bien. |
+| `CORREO_REMITENTE` | Si `CORREO_ACTIVO=true` | Dirección desde la que se manda. El servidor de abajo tiene que permitirla. |
+| `CORREO_HOST`, `CORREO_PUERTO` | Si `CORREO_ACTIVO=true` | Servidor SMTP. Por defecto `localhost:587`. |
+| `CORREO_USUARIO`, `CORREO_CLAVE` | Según el servidor | Credenciales SMTP. |
+| `CORREO_TLS`, `CORREO_AUTH` | No | Ambas `true` por defecto. |
+| `CORREO_CADA_CUANTO_MS` | No | Cada cuánto se busca qué avisar. Por defecto 60 000. |
+
+Ojo con `CORREO_HOST`: con `CORREO_ACTIVO=true` y sin ningún `spring.mail.host`, la aplicación **no arranca**. Por eso tiene valor por defecto.
+
+Se avisa de dos cosas —una solicitud nueva y una propuesta de sesión— y solo si **siguen sin responder diez minutos después**. Quien lo vio en directo y contestó no recibe nada.
+
 Genera el secreto JWT:
 
 ```bash
@@ -255,6 +273,8 @@ Lo que no hay, dicho claro: el token vive en `localStorage`, así que un XSS lo 
 ## Lo que falta
 
 - **Chat sin indicador de escritura ni presencia.** Los mensajes llegan al instante, pero no se ve si el otro está escribiendo.
+- **No se avisa de los mensajes por correo, solo de solicitudes y propuestas.** Es deliberado: un correo por cada mensaje de un chat es la forma más rápida de que alguien silencie el remitente, y entonces se pierden también los avisos que sí importaban. Lo que falta de verdad es un resumen —"tienes 3 mensajes sin leer"— y eso pide decidir cada cuánto, que es una decisión de producto, no de código.
+- **No se puede dejar de recibir los avisos.** Hoy es una única opción global del servidor; debería ser una preferencia de cada persona, con su enlace para darse de baja en el propio correo.
 - **Sin paginación.** Con decenas de usuarios sobra; con miles no.
 - **`DisponibilidadController` expone un CRUD que nadie llama** — los horarios se gestionan dentro de `PUT /perfil`.
 - **Accesibilidad, solo lo básico.** Está el equivalente textual de la rejilla, el foco atrapado en los diálogos y el contraste medido; falta pasarle un lector de pantalla de verdad y revisar el orden de tabulación pantalla por pantalla.

@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -110,4 +111,26 @@ public interface SesionRepository extends JpaRepository<Sesion, Long> {
                AND s.confirmadaInvitado = true
             """)
     List<ParDeUsuarios> paresQueEntrenaron();
+
+    /**
+     * Las propuestas que siguen sin respuesta y aun no se han avisado por correo.
+     *
+     * <p>Solo las de un dia que todavia no ha pasado: avisar de una propuesta
+     * para el martes cuando ya es miercoles no le sirve a nadie, y encima
+     * invita a responder a algo que ya no se puede responder.
+     *
+     * @param desde limite de antiguedad; mas viejas que esto ya no se avisan
+     * @param hasta hay que esperar a que sean al menos asi de viejas
+     * @param hoy   para descartar las que ya han pasado
+     */
+    @Query("""
+            SELECT s FROM Sesion s
+             WHERE s.estado = 'PROPUESTA'
+               AND s.avisadoEn IS NULL
+               AND s.creadaEn BETWEEN :desde AND :hasta
+               AND s.fecha >= :hoy
+            """)
+    List<Sesion> propuestasPorAvisar(@Param("desde") LocalDateTime desde,
+                                     @Param("hasta") LocalDateTime hasta,
+                                     @Param("hoy") LocalDate hoy);
 }
