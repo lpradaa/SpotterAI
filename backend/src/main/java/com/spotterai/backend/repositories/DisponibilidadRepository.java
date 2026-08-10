@@ -27,4 +27,8 @@ public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, 
     @Modifying
     @Query("DELETE FROM Disponibilidad d WHERE d.usuario.id = :usuarioId")
     void deleteByUsuarioId(@Param("usuarioId") Long usuarioId);
+
+    @Modifying
+    @Query("DELETE FROM Disponibilidad d WHERE d.usuario.id = :usuarioId")
+    void borrarTodasDe(@Param("usuarioId") Long usuarioId);
 }

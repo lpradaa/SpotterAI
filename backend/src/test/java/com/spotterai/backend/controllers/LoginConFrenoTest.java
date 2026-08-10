@@ -51,7 +51,8 @@ class LoginConFrenoTest {
                 new GalletaDeSesion(jwt, false),
                 Mockito.mock(com.spotterai.backend.seguridad.Restablecimientos.class),
                 new com.spotterai.backend.avisos.RedactorDeAvisos("http://localhost:4200"),
-                aviso -> { });
+                aviso -> { },
+                Mockito.mock(com.spotterai.backend.seguridad.BorradoDeCuenta.class));
 
         alguien.setId(1L);
         alguien.setEmail("alguien@test.com");

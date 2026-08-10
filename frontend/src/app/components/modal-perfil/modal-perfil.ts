@@ -7,6 +7,8 @@ import { UsuarioService } from '../../services/usuario.service';
 import { PerfilesService, Hito } from '../../services/perfiles.service';
 import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
 import { ModalAccesible } from '../../directivas/modal-accesible';
+import { HttpClient } from '@angular/common/http';
+import { api } from '../../config/api';
 
 /** Lo que sale hacia el tablero para que enseñe un aviso. */
 export interface AvisoPerfil {
@@ -40,6 +42,7 @@ export class ModalPerfilComponent {
   private usuarioService = inject(UsuarioService);
   private perfiles = inject(PerfilesService);
   private cdr = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
 
   /** El perfil tal y como lo devuelve /api/usuarios/perfil. */
   perfil = input.required<any>();
@@ -71,6 +74,37 @@ export class ModalPerfilComponent {
    * luego se recorta al guardar.
    */
   readonly maxHabituales = 3;
+
+  // --- BORRAR LA CUENTA ---
+  protected borrando = signal(false);
+  protected borradoEnCurso = signal(false);
+  protected errorBorrado = signal<string | null>(null);
+  protected contrasenaParaBorrar = '';
+
+  /**
+   * Borra la cuenta y saca a la persona de la aplicación.
+   *
+   * <p>Se navega con `location.href` y no con el router: hay que dejar el
+   * estado del navegador limpio del todo. Con una navegación de Angular, los
+   * servicios siguen vivos y algunos seguirían pidiendo datos de una cuenta que
+   * ya no existe.
+   */
+  protected borrarCuenta(): void {
+    this.borradoEnCurso.set(true);
+    this.errorBorrado.set(null);
+
+    this.http.post(api('/api/auth/cuenta/borrar'), { password: this.contrasenaParaBorrar })
+      .subscribe({
+        next: () => {
+          localStorage.clear();
+          location.href = '/login';
+        },
+        error: (e) => {
+          this.borradoEnCurso.set(false);
+          this.errorBorrado.set(e?.error?.error ?? 'No se ha podido borrar la cuenta.');
+        },
+      });
+  }
 
   perfilForm: any = {
     avatar: '', edad: null, genero: '', peso: null, nivel: '',

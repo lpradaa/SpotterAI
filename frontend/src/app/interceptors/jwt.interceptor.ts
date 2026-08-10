@@ -5,8 +5,22 @@ import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { PerfilEstadoService } from '../services/perfil-estado.service';
 
-/** Rutas donde un 401 significa "credenciales incorrectas", no "sesion caducada". */
-const RUTAS_PUBLICAS = ['/api/auth/login', '/api/usuarios/registro'];
+/**
+ * Rutas donde un 401 o un 403 significan "esa contraseña no es", no "se te ha
+ * acabado la sesión".
+ *
+ * <p>Sin esta lista, escribir mal la contraseña al borrar la cuenta te echaba al
+ * login diciendo que había caducado, en vez de decirte que te habías
+ * equivocado. Lo mismo al cambiarla. Es lo que pasa cuando un código de estado
+ * se interpreta en un solo sitio para todas las rutas: en cuanto aparece una que
+ * lo usa con otro sentido, el atajo miente.
+ */
+const RUTAS_PUBLICAS = [
+  '/api/auth/login',
+  '/api/usuarios/registro',
+  '/api/auth/contrasena',
+  '/api/auth/cuenta/borrar',
+];
 
 /** Métodos que no cambian nada y por tanto no necesitan la defensa contra CSRF. */
 const SOLO_LEEN = ['GET', 'HEAD', 'OPTIONS'];

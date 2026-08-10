@@ -3,6 +3,7 @@ package com.spotterai.backend.repositories;
 import com.spotterai.backend.dtos.ConteoPorUsuario;
 import com.spotterai.backend.models.Entrenamiento;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -55,4 +56,8 @@ public interface EntrenamientoRepository extends JpaRepository<Entrenamiento, Lo
     /** Los entrenamientos recientes de un grupo, en una sola consulta. */
     List<Entrenamiento> findByUsuarioIdInAndFechaGreaterThanEqualOrderByFechaDesc(
             List<Long> usuarioIds, LocalDate desde);
+
+    @Modifying
+    @Query("DELETE FROM Entrenamiento e WHERE e.usuario.id = :usuarioId")
+    void borrarTodosDe(@Param("usuarioId") Long usuarioId);
 }

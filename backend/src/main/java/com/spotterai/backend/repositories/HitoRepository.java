@@ -3,6 +3,7 @@ package com.spotterai.backend.repositories;
 import com.spotterai.backend.dtos.HitosPorUsuario;
 import com.spotterai.backend.models.Hito;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -37,4 +38,8 @@ public interface HitoRepository extends JpaRepository<Hito, Long> {
      * clasico N+1 en la pantalla que mas se visita.
      */
     List<Hito> findByUsuarioIdInOrderByFechaDescIdDesc(List<Long> usuarioIds);
+
+    @Modifying
+    @Query("DELETE FROM Hito h WHERE h.usuario.id = :usuarioId")
+    void borrarTodosDe(@Param("usuarioId") Long usuarioId);
 }

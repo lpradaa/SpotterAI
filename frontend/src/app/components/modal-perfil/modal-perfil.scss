@@ -396,3 +396,25 @@
     margin-top: 2px;
   }
 }
+
+/* Separado del resto y en rojo: es lo unico del formulario que no se deshace. */
+.bloque--peligro {
+  border-color: var(--sa-peligro, #b3261e);
+
+  .bloque__titulo { color: var(--sa-peligro, #b3261e); }
+}
+
+.bloque__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+  margin-top: $space-xs;
+}
+
+.btn--peligro {
+  background: var(--sa-peligro, #b3261e);
+  color: #fff;
+  border-color: transparent;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

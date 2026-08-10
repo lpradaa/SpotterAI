@@ -9,6 +9,7 @@ import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import com.spotterai.backend.avisos.Cartero;
 import com.spotterai.backend.avisos.RedactorDeAvisos;
+import com.spotterai.backend.seguridad.BorradoDeCuenta;
 import com.spotterai.backend.seguridad.ControlDeIntentos;
 import com.spotterai.backend.seguridad.Restablecimientos;
 
@@ -41,13 +42,14 @@ public class AuthController {
     private final Restablecimientos restablecimientos;
     private final RedactorDeAvisos redactor;
     private final Cartero cartero;
+    private final BorradoDeCuenta borrado;
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
                           JwtUtil jwtUtil, ControlDeIntentos control, GalletaDeSesion galleta,
                           Restablecimientos restablecimientos, RedactorDeAvisos redactor,
-                          Cartero cartero) {
+                          Cartero cartero, BorradoDeCuenta borrado) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -56,6 +58,7 @@ public class AuthController {
         this.restablecimientos = restablecimientos;
         this.redactor = redactor;
         this.cartero = cartero;
+        this.borrado = borrado;
     }
 
     /**
@@ -157,6 +160,32 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    /**
+     * Borrar la cuenta.
+     *
+     * <p>Se pide la contraseña por lo mismo que para cambiarla, y con mas razon:
+     * una sesion abierta en un ordenador prestado no deberia bastar para
+     * borrarle la cuenta a alguien, y esto no tiene vuelta atras.
+     *
+     * <p>Va en /api/auth y no en /api/usuarios porque lo que decide si se puede
+     * es la credencial, no el perfil.
+     */
+    @PostMapping("/cuenta/borrar")
+    public ResponseEntity<?> borrarCuenta(@RequestBody Map<String, String> cuerpo,
+                                          HttpServletResponse respuesta) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if (!borrado.borrar(email, cuerpo.get("password"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", "La contraseña no es correcta."));
+        }
+
+        // La galleta apunta a una cuenta que ya no existe: dejarla puesta seria
+        // un 403 en cada peticion sin que la interfaz supiera por que.
+        respuesta.addHeader(GalletaDeSesion.CABECERA, galleta.cerrar());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/logout")

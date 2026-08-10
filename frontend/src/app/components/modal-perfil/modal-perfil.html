@@ -298,6 +298,45 @@
           </p>
         }
       </fieldset>
+
+      <!-- ================= Irse =================
+           Abajo del todo y detras de dos pasos: no es una accion que nadie haga
+           por error, y no tiene vuelta atras. -->
+      <fieldset class="bloque bloque--peligro">
+        <legend class="bloque__titulo">Borrar mi cuenta</legend>
+
+        @if (!borrando()) {
+          <p class="bloque__pista">
+            Se borra todo: tu perfil, tus horarios, tus marcas y tus entrenamientos.
+            <strong>También las conversaciones enteras</strong>, que desaparecen
+            igual para la otra persona. No se puede deshacer.
+          </p>
+          <button type="button" class="btn btn--fantasma" (click)="borrando.set(true)">
+            Quiero borrar mi cuenta
+          </button>
+        } @else {
+          <p class="bloque__pista">Escribe tu contraseña para confirmarlo.</p>
+
+          <label class="campo campo--ancho">
+            <span class="visually-hidden">Contraseña</span>
+            <input type="password" [(ngModel)]="contrasenaParaBorrar"
+                   autocomplete="current-password" placeholder="Tu contraseña">
+          </label>
+
+          @if (errorBorrado()) { <p class="aviso" role="alert">{{ errorBorrado() }}</p> }
+
+          <div class="bloque__acciones">
+            <button type="button" class="btn btn--fantasma" (click)="borrando.set(false)">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn--peligro"
+                    [disabled]="!contrasenaParaBorrar || borradoEnCurso()"
+                    (click)="borrarCuenta()">
+              @if (borradoEnCurso()) { Borrando… } @else { Borrar para siempre }
+            </button>
+          </div>
+        }
+      </fieldset>
     </div>
 
     <footer class="modal__pie">

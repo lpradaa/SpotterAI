@@ -70,4 +70,15 @@ public interface MensajeRepository extends JpaRepository<Mensaje, Long> {
     @Query("UPDATE Mensaje m SET m.leido = true " +
            "WHERE m.receptor.id = :usuarioId AND m.emisor.id = :otroId AND m.leido = false")
     int marcarConversacionLeida(@Param("usuarioId") Long usuarioId, @Param("otroId") Long otroId);
+
+    /**
+     * Todo lo que mandaste y todo lo que te mandaron.
+     *
+     * <p>El hilo entero, no solo tus mensajes: cada uno apunta a las dos
+     * personas, asi que los suyos tambien te referencian. Ver {@code
+     * BorradoDeCuenta}, donde esta la decision y por que se toma asi.
+     */
+    @Modifying
+    @Query("DELETE FROM Mensaje m WHERE m.emisor.id = :usuarioId OR m.receptor.id = :usuarioId")
+    void borrarTodosDe(@Param("usuarioId") Long usuarioId);
 }

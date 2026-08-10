@@ -2,6 +2,7 @@ package com.spotterai.backend.repositories;
 
 import com.spotterai.backend.models.Solicitud;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -62,4 +63,9 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
                                         @Param("hasta") LocalDateTime hasta);
 
     long countByCompatibilidadIsNull();
+
+    /** Las solicitudes en las que participabas, en cualquier direccion. */
+    @Modifying
+    @Query("DELETE FROM Solicitud s WHERE s.emisor.id = :usuarioId OR s.receptor.id = :usuarioId")
+    void borrarTodasDe(@Param("usuarioId") Long usuarioId);
 }

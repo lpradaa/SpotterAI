@@ -3,6 +3,7 @@ package com.spotterai.backend.repositories;
 import com.spotterai.backend.metricas.ParDeUsuarios;
 import com.spotterai.backend.models.Sesion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -134,4 +135,9 @@ public interface SesionRepository extends JpaRepository<Sesion, Long> {
     List<Sesion> propuestasPorAvisar(@Param("desde") LocalDateTime desde,
                                      @Param("hasta") LocalDateTime hasta,
                                      @Param("hoy") LocalDate hoy);
+
+    /** Las sesiones en las que participabas, propusieras tu o el otro. */
+    @Modifying
+    @Query("DELETE FROM Sesion s WHERE s.proponente.id = :usuarioId OR s.invitado.id = :usuarioId")
+    void borrarTodasDe(@Param("usuarioId") Long usuarioId);
 }

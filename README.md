@@ -287,6 +287,12 @@ Lo que hay, y por qué:
 
   Y **cambiar la contraseña echa a las sesiones abiertas**, que es lo que resuelve de paso la revocación del JWT: se guarda desde cuándo valen los tokens de cada persona y el filtro rechaza los anteriores. Sin eso, quien te hubiera robado la sesión seguiría dentro veinticuatro horas y el cambio solo tranquilizaría. El precio es que autenticar pasa a costar una consulta por petición: revocar exige estado en el servidor y no hay forma de evitarlo con tokens firmados.
 
+- **Se puede borrar la cuenta.** En la UE el derecho de supresión no es opcional, y aquí pesa más de lo normal por lo que se guarda: en qué gimnasio estás y a qué horas, que es dónde encontrarte. Se pide la contraseña —una sesión abierta en un ordenador prestado no debería bastar para borrarle la cuenta a alguien— y se borra todo en una transacción: perfil, horarios, marcas, entrenamientos, hitos, solicitudes, sesiones y mensajes.
+
+  **También las conversaciones enteras**, y es la decisión incómoda del cambio. Conservar tus mensajes con el autor anonimizado dejaría escrito lo que escribiste después de pedir que te borraran; borrar solo los tuyos no se puede, porque cada mensaje apunta a las dos personas. Se borra el hilo, la otra persona pierde también lo suyo, y la pantalla lo dice antes de confirmar.
+
+  Las claves ajenas están en `RESTRICT` a propósito: si aparece una tabla nueva que referencie al usuario y nadie la añade al borrado, éste falla en vez de dejar basura.
+
 - **Hay una regla de contraseña, y vive en un solo sitio.** Antes no se comprobaba nada: se podía registrar una cuenta con la contraseña `a`. Ahora son doce caracteres mínimos y ninguna exigencia de mayúsculas ni símbolos, que no producen contraseñas mejores sino `Password1!` y un post-it.
 
 ---
