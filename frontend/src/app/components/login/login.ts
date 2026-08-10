@@ -7,6 +7,7 @@ import { EventosService } from '../../services/eventos.service';
 import { AvisosService } from '../../services/avisos.service';
 import { HttpClient } from '@angular/common/http';
 import { api } from '../../config/api';
+import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-login',
@@ -146,9 +147,11 @@ export class LoginComponent implements OnInit {
         this.ejecutarLogin(); // Redirige al login automáticamente
       },
       error: (err) => {
-        console.error('Error en el registro:', err);
         this.isLoading.set(false);
-        this.errorMessage.set('Hubo un problema al crear la cuenta. Revisa los datos.');
+        // El backend ya dice el motivo concreto —correo repetido, contraseña
+        // demasiado corta, edad fuera de rango—; mostrar siempre el mismo
+        // texto genérico obligaba a adivinar qué campo revisar.
+        this.errorMessage.set(mensajeDeError(err, 'Hubo un problema al crear la cuenta.'));
       }
     });
   }

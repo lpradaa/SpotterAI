@@ -44,7 +44,14 @@ public final class CalculadoraCompatibilidad {
     // Visibles fuera para que el aviso de "esto te esta costando puntos" use los
     // mismos numeros que el calculo. Duplicarlos en el frontend seria garantizar
     // que un dia digan cosas distintas.
-    static final double PESO_HORARIO = 40;
+    //
+    // Ya no son `final`. Antes ajustar un peso exigia recompilar y desplegar;
+    // ahora ConfiguracionDelMotor los rellena una vez al arrancar, desde
+    // configuracion, con {@link #configurar}. Los valores de aqui abajo siguen
+    // siendo los que rigen si nadie llama a configurar —en un test que no
+    // levanta Spring, por ejemplo—, asi que el comportamiento por defecto no
+    // cambia en nada.
+    static double PESO_HORARIO = 40;
     /*
      * Nivel baja de 20 a 10 y esos 10 pasan a fuerza.
      *
@@ -53,8 +60,8 @@ public final class CalculadoraCompatibilidad {
      * en banca no. Se le deja la mitad porque sigue sirviendo para quien no ha
      * registrado ningun levantamiento, que sera la mayoria al principio.
      */
-    static final double PESO_NIVEL = 10;
-    static final double PESO_FUERZA = 10;
+    static double PESO_NIVEL = 10;
+    static double PESO_FUERZA = 10;
     /*
      * Objetivo baja de 20 a 15 y esos 5 pasan a la rutina.
      *
@@ -62,8 +69,8 @@ public final class CalculadoraCompatibilidad {
      * semana de forma parecida. Pero el objetivo dice que quieres y la rutina
      * dice que haces el martes, que es lo que decide si podeis compartir sesion.
      */
-    static final double PESO_OBJETIVO = 12;
-    static final double PESO_RUTINA = 5;
+    static double PESO_OBJETIVO = 12;
+    static double PESO_RUTINA = 5;
     /*
      * Gimnasio baja de 15 a 8.
      *
@@ -72,8 +79,8 @@ public final class CalculadoraCompatibilidad {
      * que es donde de verdad se nota. Dejarlo en 15 seria cobrar dos veces por
      * el mismo dato y hundir de mas a quien entrena en otro sitio.
      */
-    static final double PESO_GIMNASIO = 8;
-    static final double PESO_EDAD = 5;
+    static double PESO_GIMNASIO = 8;
+    static double PESO_EDAD = 5;
 
     /*
      * Constancia: 10 puntos, de los 7 que suelta el gimnasio y 3 del objetivo.
@@ -82,7 +89,7 @@ public final class CalculadoraCompatibilidad {
      * lo que ha hecho, y responde a la pregunta que decide si el match sirve de
      * algo: de todos los que encajan sobre el papel, quien va a aparecer.
      */
-    static final double PESO_CONSTANCIA = 10;
+    static double PESO_CONSTANCIA = 10;
 
     /** Minutos efectivos semanales a partir de los cuales el solape es de sobra. */
     private static final double MINUTOS_SOLAPE_IDEAL = 300; // 5 h/semana
@@ -156,6 +163,34 @@ public final class CalculadoraCompatibilidad {
     );
 
     private CalculadoraCompatibilidad() {}
+
+    /**
+     * Cambia el reparto de pesos entre los ocho factores.
+     *
+     * <p>Pensado para llamarse una vez, al arrancar, desde
+     * {@code ConfiguracionDelMotor}. No es {@code synchronized} ni thread-safe
+     * frente a llamadas concurrentes: el reparto de pesos no cambia mientras la
+     * aplicacion esta sirviendo trafico, cambia entre despliegues, y añadir
+     * bloqueo aqui seria proteger un caso que no existe.
+     *
+     * <p><b>Ojo si se llama desde una prueba.</b> Estos campos son estaticos y
+     * por tanto compartidos por toda la maquina virtual: una prueba que llame a
+     * este metodo con valores distintos de los de fabrica y no los devuelva a
+     * su sitio deja el resto de la suite —incluidas pruebas de otras clases,
+     * si se ejecutan en el mismo proceso— calculando con un motor distinto del
+     * que creen estar probando. Quien lo haga, que restaure los valores en un
+     * {@code @AfterEach} o equivalente.
+     */
+    public static void configurar(PesosDelMotor pesos) {
+        PESO_HORARIO = pesos.horario();
+        PESO_NIVEL = pesos.nivel();
+        PESO_FUERZA = pesos.fuerza();
+        PESO_OBJETIVO = pesos.objetivo();
+        PESO_CONSTANCIA = pesos.constancia();
+        PESO_RUTINA = pesos.rutina();
+        PESO_GIMNASIO = pesos.gimnasio();
+        PESO_EDAD = pesos.edad();
+    }
 
     /**
      * La unica forma de puntuar una pareja.

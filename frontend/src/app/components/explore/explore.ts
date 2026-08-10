@@ -9,6 +9,7 @@ import { Carga } from '../carga/carga';
 import { FichaSugerenciaComponent } from '../ficha-sugerencia/ficha-sugerencia';
 import { PerfilesService } from '../../services/perfiles.service';
 import { ModalAccesible } from '../../directivas/modal-accesible';
+import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-explore',
@@ -247,8 +248,9 @@ export class Explore implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error(err);
-        this.mostrarToast('No se pudo enviar la solicitud.', 'error');
+        // "Ya existe una solicitud", "No se puede conectar con esa persona"
+        // (bloqueo)... un texto fijo obligaba a adivinar cuál de los dos era.
+        this.mostrarToast(mensajeDeError(err, 'No se pudo enviar la solicitud.'), 'error');
       }
     });
   }
