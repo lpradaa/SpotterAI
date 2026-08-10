@@ -171,6 +171,34 @@
           Conectar con {{ p.nombre.split(' ')[0] }}
         </button>
       }
+
+      <!-- Fuera del grupo de arriba y siempre visible salvo en tu propia
+           pagina: quitarte a alguien de encima no puede depender de que exista
+           relacion. Quien te incomoda no tiene por que ser tu companero. -->
+      @if (!p.esMio) {
+        @if (!confirmandoBloqueo()) {
+          <button class="btn btn--enlace" (click)="confirmandoBloqueo.set(true)">
+            Bloquear a {{ p.nombre.split(' ')[0] }}
+          </button>
+        } @else {
+          <div class="bloqueo">
+            <p class="bloqueo__texto">
+              Dejaréis de veros en la aplicación y no podrá volver a escribirte.
+              Si erais compañeros, se deshace. Puedes quitarlo cuando quieras
+              desde tu perfil.
+            </p>
+            <div class="bloqueo__acciones">
+              <button class="btn btn--fantasma btn--pequeno" (click)="confirmandoBloqueo.set(false)">
+                Cancelar
+              </button>
+              <button class="btn btn--peligro btn--pequeno" [disabled]="enviando()"
+                      (click)="bloquear(p.id)">
+                Bloquear
+              </button>
+            </div>
+          </div>
+        }
+      }
     </footer>
   }
 </article>

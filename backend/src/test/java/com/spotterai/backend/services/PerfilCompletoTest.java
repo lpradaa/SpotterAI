@@ -49,6 +49,7 @@ class PerfilCompletoTest {
                 Mockito.mock(EntrenamientoRepository.class),
                 Mockito.mock(LevantamientoRepository.class),
                 Mockito.mock(SesionRepository.class),
+                Mockito.mock(BloqueoRepository.class),
                 Clock.systemDefaultZone());
 
         Mockito.when(disponibilidadRepository.findByUsuarioId(Mockito.any())).thenReturn(List.of());

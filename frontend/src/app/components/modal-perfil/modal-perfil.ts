@@ -75,6 +75,22 @@ export class ModalPerfilComponent {
    */
   readonly maxHabituales = 3;
 
+  // --- BLOQUEADOS ---
+  protected bloqueados = signal<{ usuarioId: number; nombre: string }[]>([]);
+
+  private cargarBloqueados(): void {
+    this.http.get<{ usuarioId: number; nombre: string }[]>(api('/api/bloqueos'))
+      .subscribe({ next: l => { this.bloqueados.set(l ?? []); this.cdr.detectChanges(); },
+                   error: () => {} });
+  }
+
+  protected desbloquear(otroId: number): void {
+    this.http.delete(api(`/api/bloqueos/${otroId}`)).subscribe({
+      next: () => this.bloqueados.update(l => l.filter(b => b.usuarioId !== otroId)),
+      error: () => {},
+    });
+  }
+
   // --- BORRAR LA CUENTA ---
   protected borrando = signal(false);
   protected borradoEnCurso = signal(false);
@@ -156,6 +172,7 @@ export class ModalPerfilComponent {
     // formulario cada vez que cambia, que en la práctica es al abrirse.
     effect(() => this.volcar(this.perfil()));
     this.cargarMisHitos();
+    this.cargarBloqueados();
   }
 
   private volcar(data: any): void {

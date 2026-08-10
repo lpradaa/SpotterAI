@@ -45,6 +45,7 @@ class LaListaDeGenteTest {
     private LevantamientoRepository levantamientoRepository;
     private SolicitudRepository solicitudRepository;
     private EntrenamientoRepository entrenamientoRepository;
+    private BloqueoRepository bloqueoRepository;
     private UsuarioServiceImpl servicio;
 
     private final Gimnasio gimnasio = new Gimnasio();
@@ -85,6 +86,8 @@ class LaListaDeGenteTest {
         solicitudRepository = Mockito.mock(SolicitudRepository.class);
         entrenamientoRepository = Mockito.mock(EntrenamientoRepository.class);
 
+        bloqueoRepository = Mockito.mock(BloqueoRepository.class);
+
         servicio = new UsuarioServiceImpl(
                 usuarioRepository,
                 Mockito.mock(PasswordEncoder.class),
@@ -96,6 +99,7 @@ class LaListaDeGenteTest {
                 entrenamientoRepository,
                 levantamientoRepository,
                 Mockito.mock(SesionRepository.class),
+                bloqueoRepository,
                 Clock.systemDefaultZone());
 
         gimnasio.setId(1L);
@@ -217,5 +221,26 @@ class LaListaDeGenteTest {
     @DisplayName("La rutina llega a la lista para poder pintarla")
     void laRutinaViaja() {
         assertEquals("Torso / Pierna", servicio.buscarCompañeros("luis@test.com").get(0).getRutina());
+    }
+
+    @Test
+    @DisplayName("Quien tiene bloqueo contigo no sale en la lista")
+    void elBloqueadoNoSale() {
+        when(bloqueoRepository.idsConBloqueoDe(1L)).thenReturn(List.of(2L));
+
+        // Primera de las tres puertas. Si se escapa por ésta, quien te bloqueó
+        // vuelve a tener tu horario delante, que es de lo que te querías librar.
+        assertTrue(servicio.buscarCompañeros("luis@test.com").isEmpty());
+    }
+
+    @Test
+    @DisplayName("Da igual quién puso el bloqueo: la consulta mira los dos sentidos")
+    void enLosDosSentidos() {
+        // idsConBloqueoDe devuelve al otro lo pusiera quien lo pusiera. Si solo
+        // mirara los que has puesto tú, quien te bloqueó te seguiría viendo.
+        when(bloqueoRepository.idsConBloqueoDe(1L)).thenReturn(List.of(2L));
+
+        assertEquals(0, servicio.buscarCompañeros("luis@test.com").size());
+        Mockito.verify(bloqueoRepository).idsConBloqueoDe(1L);
     }
 }

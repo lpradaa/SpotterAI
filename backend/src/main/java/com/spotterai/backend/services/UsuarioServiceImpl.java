@@ -30,6 +30,7 @@ import com.spotterai.backend.dtos.PerfilPublicoDTO;
 import com.spotterai.backend.models.Entrenamiento;
 import com.spotterai.backend.models.Hito;
 import com.spotterai.backend.models.Levantamiento;
+import com.spotterai.backend.repositories.BloqueoRepository;
 import com.spotterai.backend.repositories.DisponibilidadRepository;
 import com.spotterai.backend.repositories.EntrenamientoRepository;
 import com.spotterai.backend.repositories.HitoRepository;
@@ -63,6 +64,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final GimnasioRepository gimnasioRepository;
     private final SolicitudRepository solicitudRepository;
+    private final BloqueoRepository bloqueoRepository;
     /**
      * Maximo de franjas que un usuario puede marcar como habituales.
      *
@@ -110,6 +112,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                               EntrenamientoRepository entrenamientoRepository,
                               LevantamientoRepository levantamientoRepository,
                               SesionRepository sesionRepository,
+                              BloqueoRepository bloqueoRepository,
                               Clock reloj) {
         this.levantamientoRepository = levantamientoRepository;
         this.sesionRepository = sesionRepository;
@@ -122,6 +125,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.explicador = explicador;
         this.hitoRepository = hitoRepository;
         this.entrenamientoRepository = entrenamientoRepository;
+        this.bloqueoRepository = bloqueoRepository;
     }
 
     @Override
@@ -368,7 +372,16 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario miUsuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        List<Usuario> candidatos = usuarioRepository.findByIdNot(miUsuario.getId());
+        // Quien tenga bloqueo contigo no sale, lo pusiera quien lo pusiera. Es la
+        // primera de las tres puertas: esta, la ficha y la solicitud. Un bloqueo
+        // que se escapa por una de ellas no sirve de nada, porque basta esa para
+        // volver a tener delante el horario de alguien de quien te querias
+        // librar.
+        Set<Long> bloqueados = new HashSet<>(bloqueoRepository.idsConBloqueoDe(miUsuario.getId()));
+
+        List<Usuario> candidatos = usuarioRepository.findByIdNot(miUsuario.getId()).stream()
+                .filter(u -> !bloqueados.contains(u.getId()))
+                .toList();
         if (candidatos.isEmpty()) return List.of();
 
         Map<Long, String> estadoPorCompanero = indexarSolicitudes(miUsuario.getId());
@@ -416,6 +429,13 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         Usuario otro = usuarioRepository.findById(otroUsuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Esa persona no existe."));
+
+        // Segunda puerta. Se responde lo mismo que si no existiera, y no "esta
+        // persona te ha bloqueado": eso le confirmaria el bloqueo a quien lo
+        // sufre, que es justo lo que convierte un bloqueo en un motivo.
+        if (bloqueoRepository.hayBloqueoEntre(yo.getId(), otro.getId())) {
+            throw new IllegalArgumentException("Esa persona no existe.");
+        }
 
         // Tu propio perfil ahora si se visita: desde que es una pagina con URL,
         // /yo es donde te ves como te ven. Lo que no se calcula es la
@@ -534,6 +554,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         if (miUsuario.getId().equals(otro.getId())) {
             throw new IllegalArgumentException("No puedes pedir la compatibilidad contigo mismo.");
+        }
+
+        if (bloqueoRepository.hayBloqueoEntre(miUsuario.getId(), otro.getId())) {
+            throw new IllegalArgumentException("Esa persona no está disponible.");
         }
 
         // Aqui estaba el fallo: se montaban los perfiles a mano con la sobrecarga

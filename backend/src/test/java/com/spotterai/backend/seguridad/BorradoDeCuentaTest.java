@@ -34,6 +34,7 @@ class BorradoDeCuentaTest {
     private MensajeRepository mensajes;
     private SesionRepository sesiones;
     private SolicitudRepository solicitudes;
+    private BloqueoRepository bloqueos;
 
     private BorradoDeCuenta borrado;
     private final PasswordEncoder cifrador = new BCryptPasswordEncoder();
@@ -49,9 +50,10 @@ class BorradoDeCuentaTest {
         mensajes = mock(MensajeRepository.class);
         sesiones = mock(SesionRepository.class);
         solicitudes = mock(SolicitudRepository.class);
+        bloqueos = mock(BloqueoRepository.class);
 
         borrado = new BorradoDeCuenta(usuarios, cifrador, disponibilidades, entrenamientos,
-                hitos, levantamientos, mensajes, sesiones, solicitudes);
+                hitos, levantamientos, mensajes, sesiones, solicitudes, bloqueos);
 
         luis.setId(7L);
         luis.setEmail("luis@test.com");
@@ -69,6 +71,7 @@ class BorradoDeCuentaTest {
         // Si aparece una tabla nueva que referencie al usuario y no se añada al
         // servicio, el borrado fallará por la clave ajena en vez de dejar
         // basura. Esta lista es la que hay que mantener al día.
+        verify(bloqueos).borrarTodosDe(7L);
         verify(mensajes).borrarTodosDe(7L);
         verify(sesiones).borrarTodasDe(7L);
         verify(solicitudes).borrarTodasDe(7L);

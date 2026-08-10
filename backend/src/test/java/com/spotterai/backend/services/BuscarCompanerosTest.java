@@ -10,6 +10,7 @@ import com.spotterai.backend.repositories.DisponibilidadRepository;
 import com.spotterai.backend.repositories.GimnasioRepository;
 import com.spotterai.backend.repositories.SesionRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
+import com.spotterai.backend.repositories.BloqueoRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -62,6 +63,7 @@ class BuscarCompanerosTest {
                 Mockito.mock(com.spotterai.backend.repositories.EntrenamientoRepository.class),
                 Mockito.mock(com.spotterai.backend.repositories.LevantamientoRepository.class),
                 Mockito.mock(com.spotterai.backend.repositories.SesionRepository.class),
+                Mockito.mock(com.spotterai.backend.repositories.BloqueoRepository.class),
                 java.time.Clock.systemDefaultZone());
 
         gimnasio = new Gimnasio();

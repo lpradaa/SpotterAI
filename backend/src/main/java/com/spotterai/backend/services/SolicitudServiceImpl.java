@@ -7,6 +7,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
+import com.spotterai.backend.repositories.BloqueoRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -26,13 +27,16 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final UsuarioRepository usuarioRepository;
     private final CanalEventos canalEventos;
     private final UsuarioService usuarioService;
+    private final BloqueoRepository bloqueoRepository;
 
     public SolicitudServiceImpl(SolicitudRepository solicitudRepository, UsuarioRepository usuarioRepository,
-                                CanalEventos canalEventos, UsuarioService usuarioService) {
+                                CanalEventos canalEventos, UsuarioService usuarioService,
+                                BloqueoRepository bloqueoRepository) {
         this.solicitudRepository = solicitudRepository;
         this.usuarioRepository = usuarioRepository;
         this.canalEventos = canalEventos;
         this.usuarioService = usuarioService;
+        this.bloqueoRepository = bloqueoRepository;
     }
 
     @Override
@@ -60,6 +64,13 @@ public class SolicitudServiceImpl implements SolicitudService {
 
         if (emisor.getId().equals(receptor.getId())) {
             throw new IllegalArgumentException("No puedes enviarte una solicitud a ti mismo.");
+        }
+
+        // Tercera puerta, y la que de verdad hacia falta: sin esto, deshacer la
+        // relacion no servia de nada porque el otro podia mandar otra solicitud
+        // al segundo siguiente. El mensaje no dice que hay un bloqueo.
+        if (bloqueoRepository.hayBloqueoEntre(emisor.getId(), receptor.getId())) {
+            throw new IllegalArgumentException("No se puede conectar con esa persona.");
         }
 
         // Usamos findFirstBy para evitar errores si en el futuro hay basura en la BD

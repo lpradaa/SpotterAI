@@ -98,6 +98,7 @@ class ElMismoNumeroPorTodosLosCaminosTest {
                 entrenamientos,
                 levantamientos,
                 Mockito.mock(SesionRepository.class),
+                Mockito.mock(BloqueoRepository.class),
                 Clock.systemDefaultZone());
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));

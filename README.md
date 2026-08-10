@@ -287,6 +287,12 @@ Lo que hay, y por qué:
 
   Y **cambiar la contraseña echa a las sesiones abiertas**, que es lo que resuelve de paso la revocación del JWT: se guarda desde cuándo valen los tokens de cada persona y el filtro rechaza los anteriores. Sin eso, quien te hubiera robado la sesión seguiría dentro veinticuatro horas y el cambio solo tranquilizaría. El precio es que autenticar pasa a costar una consulta por petición: revocar exige estado en el servidor y no hay forma de evitarlo con tokens firmados.
 
+- **Se puede bloquear a alguien.** No se podía. «Deshacer relación» solo borraba la fila de la solicitud, así que la otra persona podía mandarte otra al segundo siguiente y te seguía viendo en Explorar — con tu gimnasio y tu horario delante. En una aplicación que le enseña eso a un desconocido, no tener forma de cortar no es un hueco de comodidad.
+
+  Se bloquea, no se denuncia: una denuncia necesita a alguien que la lea, aquí no hay nadie, y un botón de denunciar sin moderación detrás es teatro —uno peligroso, porque quien lo pulsa se queda creyendo que ha hecho algo—.
+
+  El bloqueo cierra **las tres puertas**: la lista de gente, la ficha de la persona y la solicitud. Una que se escape basta para volver a tener delante a quien te querías quitar de encima. Y es **silencioso**: al bloqueado no se le avisa, y ni la ficha ni la solicitud dicen que hay un bloqueo, porque enterarse es justo lo que convierte un bloqueo en un motivo.
+
 - **Se puede borrar la cuenta.** En la UE el derecho de supresión no es opcional, y aquí pesa más de lo normal por lo que se guarda: en qué gimnasio estás y a qué horas, que es dónde encontrarte. Se pide la contraseña —una sesión abierta en un ordenador prestado no debería bastar para borrarle la cuenta a alguien— y se borra todo en una transacción: perfil, horarios, marcas, entrenamientos, hitos, solicitudes, sesiones y mensajes.
 
   **También las conversaciones enteras**, y es la decisión incómoda del cambio. Conservar tus mensajes con el autor anonimizado dejaría escrito lo que escribiste después de pedir que te borraran; borrar solo los tuyos no se puede, porque cada mensaje apunta a las dos personas. Se borra el hilo, la otra persona pierde también lo suyo, y la pantalla lo dice antes de confirmar.
@@ -298,6 +304,9 @@ Lo que hay, y por qué:
 ---
 
 ## Lo que falta
+
+- **No hay moderación.** Bloquear te quita a alguien de encima, pero nadie revisa nada: si alguien se comporta mal con varias personas, la aplicación no se entera. Eso pide gente, no código.
+
 
 - **Chat sin indicador de escritura.** Los mensajes llegan al instante y se ve si el otro los ha leído, pero no si está escribiendo.
 - **No se avisa de los mensajes por correo, solo de solicitudes y propuestas.** Es deliberado: un correo por cada mensaje de un chat es la forma más rápida de que alguien silencie el remitente, y entonces se pierden también los avisos que sí importaban. Lo que falta de verdad es un resumen —"tienes 3 mensajes sin leer"— y eso pide decidir cada cuánto, que es una decisión de producto, no de código.

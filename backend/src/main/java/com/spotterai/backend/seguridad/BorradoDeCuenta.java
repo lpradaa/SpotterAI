@@ -63,6 +63,7 @@ public class BorradoDeCuenta {
     private final MensajeRepository mensajes;
     private final SesionRepository sesiones;
     private final SolicitudRepository solicitudes;
+    private final BloqueoRepository bloqueos;
 
     public BorradoDeCuenta(UsuarioRepository usuarios, PasswordEncoder cifrador,
                            DisponibilidadRepository disponibilidades,
@@ -71,7 +72,8 @@ public class BorradoDeCuenta {
                            LevantamientoRepository levantamientos,
                            MensajeRepository mensajes,
                            SesionRepository sesiones,
-                           SolicitudRepository solicitudes) {
+                           SolicitudRepository solicitudes,
+                           BloqueoRepository bloqueos) {
         this.usuarios = usuarios;
         this.cifrador = cifrador;
         this.disponibilidades = disponibilidades;
@@ -81,6 +83,7 @@ public class BorradoDeCuenta {
         this.mensajes = mensajes;
         this.sesiones = sesiones;
         this.solicitudes = solicitudes;
+        this.bloqueos = bloqueos;
     }
 
     /**
@@ -107,6 +110,7 @@ public class BorradoDeCuenta {
 
         Long id = usuario.getId();
 
+        bloqueos.borrarTodosDe(id);
         mensajes.borrarTodosDe(id);
         sesiones.borrarTodasDe(id);
         solicitudes.borrarTodasDe(id);

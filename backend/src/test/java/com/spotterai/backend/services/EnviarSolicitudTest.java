@@ -4,6 +4,7 @@ import com.spotterai.backend.eventos.CanalEventos;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.SolicitudRepository;
+import com.spotterai.backend.repositories.BloqueoRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,12 +44,14 @@ class EnviarSolicitudTest {
 
     private final UsuarioService usuarioService = Mockito.mock(UsuarioService.class);
 
+    private final BloqueoRepository bloqueoRepository = Mockito.mock(BloqueoRepository.class);
+
     @BeforeEach
     void preparar() {
         solicitudRepository = Mockito.mock(SolicitudRepository.class);
         usuarioRepository = Mockito.mock(UsuarioRepository.class);
         servicio = new SolicitudServiceImpl(solicitudRepository, usuarioRepository, new CanalEventos(),
-                usuarioService);
+                usuarioService, bloqueoRepository);
 
         Mockito.when(usuarioRepository.findByEmail(emisor.getEmail())).thenReturn(Optional.of(emisor));
         Mockito.when(usuarioRepository.findById(receptor.getId())).thenReturn(Optional.of(receptor));
@@ -143,6 +146,21 @@ class EnviarSolicitudTest {
         assertThrows(IllegalArgumentException.class,
                 () -> servicio.enviarSolicitud(emisor.getEmail(), receptor.getId()));
 
+        Mockito.verify(solicitudRepository, Mockito.never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Con bloqueo de por medio no se puede mandar solicitud")
+    void elBloqueadoNoPuedeEscribir() {
+        Mockito.when(bloqueoRepository.hayBloqueoEntre(1L, 2L)).thenReturn(true);
+
+        // Tercera puerta, y la que de verdad hacía falta: sin esto, deshacer la
+        // relación no servía de nada porque el otro mandaba otra al segundo.
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> servicio.enviarSolicitud(emisor.getEmail(), receptor.getId()));
+
+        // Y el mensaje no dice que hay un bloqueo: eso se lo confirmaría.
+        assertFalse(error.getMessage().toLowerCase().contains("bloque"), error.getMessage());
         Mockito.verify(solicitudRepository, Mockito.never()).save(any());
     }
 }

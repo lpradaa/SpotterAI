@@ -57,6 +57,9 @@ describe('ModalPerfilComponent', () => {
 
     // Las marcas se piden al construirse; aquí no interesan.
     http.expectOne(api('/api/hitos')).flush([]);
+    // La lista de bloqueados se pide al abrir el modal: sin esto, el verify()
+    // del afterEach la ve como una petición que nadie esperaba.
+    http.expectOne(api('/api/bloqueos')).flush([]);
   });
 
   afterEach(() => http.verify());

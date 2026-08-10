@@ -91,6 +91,7 @@ class ActividadDeCompanerosTest {
                 entrenamientoRepository,
                 Mockito.mock(LevantamientoRepository.class),
                 Mockito.mock(SesionRepository.class),
+                Mockito.mock(BloqueoRepository.class),
                 congelado);
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));

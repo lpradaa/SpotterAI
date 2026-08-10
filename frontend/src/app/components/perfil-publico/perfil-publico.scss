@@ -307,3 +307,42 @@
 .ficha__volver {
   margin-bottom: $space-sm;
 }
+
+/* Discreto y separado del resto de acciones: no es una alternativa a "conectar",
+   es la salida. */
+.btn--enlace {
+  background: none;
+  border: none;
+  color: var(--sa-texto-tenue);
+  font-size: $text-xs;
+  cursor: pointer;
+  padding: 6px;
+
+  &:hover { color: var(--sa-peligro, #b3261e); text-decoration: underline; }
+}
+
+.bloqueo {
+  border: 1px solid var(--sa-borde);
+  border-left: 3px solid var(--sa-peligro, #b3261e);
+  border-radius: $radius-sm;
+  padding: 10px 12px;
+}
+
+.bloqueo__texto {
+  margin: 0 0 8px;
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+  line-height: $leading-normal;
+}
+
+.bloqueo__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+}
+
+.btn--peligro {
+  background: var(--sa-peligro, #b3261e);
+  color: #fff;
+  border-color: transparent;
+}

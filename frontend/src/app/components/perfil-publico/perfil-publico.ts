@@ -1,5 +1,7 @@
 import { Component, computed, effect, inject, output, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { api } from '../../config/api';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
 import { ModalPerfilComponent } from '../modal-perfil/modal-perfil';
@@ -40,6 +42,7 @@ export class PerfilPublicoComponent {
   private usuarios = inject(UsuarioService);
   private ruta = inject(ActivatedRoute);
   private router = inject(Router);
+  private http = inject(HttpClient);
 
   /**
    * A quién se mira, sacado de la URL.
@@ -154,6 +157,25 @@ export class PerfilPublicoComponent {
 
   url(ruta: string | null): string | null {
     return this.perfiles.urlDeMedio(ruta);
+  }
+
+  confirmandoBloqueo = signal(false);
+
+  /**
+   * Bloquea y saca de la ficha.
+   *
+   * Se vuelve a Explorar porque esa persona ya no existe para ti: quedarse en
+   * una página que a partir de ahora responde "no existe" sería enseñar un
+   * error justo donde acaba de haber un acierto.
+   */
+  bloquear(otroId: number): void {
+    if (this.enviando()) return;
+    this.enviando.set(true);
+
+    this.http.post(api(`/api/bloqueos/${otroId}`), {}).subscribe({
+      next: () => this.router.navigate(['/explorar']),
+      error: () => this.enviando.set(false),
+    });
   }
 
   conectar(): void {

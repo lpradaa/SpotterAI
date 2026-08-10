@@ -4,6 +4,7 @@ import com.spotterai.backend.eventos.CanalEventos;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.SolicitudRepository;
+import com.spotterai.backend.repositories.BloqueoRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,12 +49,14 @@ class DeshacerRelacionTest {
 
     private final UsuarioService usuarioService = Mockito.mock(UsuarioService.class);
 
+    private final BloqueoRepository bloqueoRepository = Mockito.mock(BloqueoRepository.class);
+
     @BeforeEach
     void preparar() {
         solicitudRepository = Mockito.mock(SolicitudRepository.class);
         usuarioRepository = Mockito.mock(UsuarioRepository.class);
         servicio = new SolicitudServiceImpl(solicitudRepository, usuarioRepository, new CanalEventos(),
-                usuarioService);
+                usuarioService, bloqueoRepository);
 
         Mockito.when(usuarioRepository.findByEmail(yo.getEmail())).thenReturn(Optional.of(yo));
         Mockito.when(solicitudRepository.findFirstByEmisorIdAndReceptorId(any(), any()))

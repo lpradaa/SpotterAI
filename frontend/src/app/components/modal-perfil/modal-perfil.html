@@ -299,6 +299,32 @@
         }
       </fieldset>
 
+      <!-- ================= Bloqueados =================
+           Sin esto, bloquear seria irreversible desde la interfaz. -->
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Personas bloqueadas</legend>
+
+        @if (bloqueados().length === 0) {
+          <p class="bloque__pista">No has bloqueado a nadie.</p>
+        } @else {
+          <p class="bloque__pista">
+            No os veis en la aplicación. Quitar el bloqueo no os vuelve a
+            conectar: eso lo decidís otra vez.
+          </p>
+          <ul class="bloqueados">
+            @for (b of bloqueados(); track b.usuarioId) {
+              <li class="bloqueados__fila">
+                <span>{{ b.nombre }}</span>
+                <button type="button" class="btn btn--fantasma btn--pequeno"
+                        (click)="desbloquear(b.usuarioId)">
+                  Quitar el bloqueo
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </fieldset>
+
       <!-- ================= Irse =================
            Abajo del todo y detras de dos pasos: no es una accion que nadie haga
            por error, y no tiene vuelta atras. -->
