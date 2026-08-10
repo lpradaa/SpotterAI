@@ -29,6 +29,16 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      */
     Optional<Usuario> findByTokenReset(String tokenReset);
 
+    /**
+     * Si queda alguna cuenta de un dominio, sea cual sea.
+     *
+     * <p>Lo usa el sembrador de la demostracion para saber si ya hay datos. No
+     * le vale preguntar por la cuenta principal: desde que se puede borrar una
+     * cuenta, esa puede faltar mientras las otras trece siguen ahi, y entonces
+     * sembraria otra vez y chocaria con la primera que ya existe.
+     */
+    boolean existsByEmailEndingWith(String sufijo);
+
     // Devuelve a todos los usuarios menos al que está logueado.
     // El emparejamiento ya no se filtra en SQL: CalculadoraCompatibilidad puntua a
     // todos los candidatos y los ordena. El antiguo buscarMatches (mismo gimnasio

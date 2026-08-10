@@ -51,6 +51,9 @@ public class SembradorDemo implements CommandLineRunner {
     public static final String EMAIL_DEMO = "demo@spotterai.test";
     public static final String CLAVE_DEMO = "Demo1234";
 
+    /** Todas las cuentas sembradas lo comparten: es como se reconoce la demostracion. */
+    static final String DOMINIO_DEMO = "@spotterai.test";
+
     private final UsuarioRepository usuarios;
     private final GimnasioRepository gimnasios;
     private final DisponibilidadRepository disponibilidades;
@@ -85,9 +88,27 @@ public class SembradorDemo implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         // Idempotente: el contenedor se reinicia y el volumen de la base
-        // sobrevive. Sembrar dos veces dejaría todo duplicado.
-        if (usuarios.findByEmail(EMAIL_DEMO).isPresent()) {
-            log.info("Datos de demostración ya presentes. Entra con {} / {}", EMAIL_DEMO, CLAVE_DEMO);
+        // sobrevive. Sembrar dos veces dejaria todo duplicado.
+        //
+        // Se pregunta por CUALQUIER cuenta del dominio y no por la principal.
+        // Preguntando solo por esa, borrar la cuenta de demostracion —que desde
+        // hace poco se puede hacer desde la propia aplicacion— hacia que el
+        // siguiente arranque intentara sembrarlo todo otra vez y reventara
+        // contra la primera de las otras trece, que si seguia ahi. Y no fallaba
+        // suave: se caia la aplicacion entera al arrancar, en el camino que
+        // ejecuta cualquiera que clone esto y haga `docker compose up`.
+        if (usuarios.existsByEmailEndingWith(DOMINIO_DEMO)) {
+            if (usuarios.findByEmail(EMAIL_DEMO).isEmpty()) {
+                // Media demostracion: alguien borro la cuenta principal. No se
+                // vuelve a sembrar —duplicaria a los demas— pero callarselo
+                // dejaria a quien arranca esto probando una clave que ya no
+                // existe y sin ninguna pista.
+                log.warn("Hay datos de demostración pero falta la cuenta {}. "
+                        + "Entra con otra (misma clave: {}) o vacía la base para sembrarla de cero.",
+                        EMAIL_DEMO, CLAVE_DEMO);
+            } else {
+                log.info("Datos de demostración ya presentes. Entra con {} / {}", EMAIL_DEMO, CLAVE_DEMO);
+            }
             return;
         }
 
