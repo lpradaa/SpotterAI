@@ -129,7 +129,7 @@
           <!-- Tres estados, porque la lista ya trae a todo el mundo: antes
                excluia a quien tuviera solicitud y por eso bastaba "Conectar". -->
           @if (usuario.yaConectado) {
-            <button class="btn btn--exito btn--ancho" (click)="irAlChat(usuario.id)">Escribir</button>
+            <button class="btn btn--exito-contorno btn--ancho" (click)="irAlChat(usuario.id)">Escribir</button>
           } @else if (usuario.solicitudPendiente) {
             <button class="btn btn--fantasma btn--ancho" (click)="retirarSolicitud(usuario)"
                     [title]="'Retirar la solicitud enviada a ' + usuario.nombre">Retirar</button>

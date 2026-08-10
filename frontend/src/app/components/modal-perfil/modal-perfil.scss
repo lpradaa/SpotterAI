@@ -411,13 +411,10 @@
   margin-top: $space-xs;
 }
 
-.btn--peligro {
-  background: var(--sa-peligro, #b3261e);
-  color: #fff;
-  border-color: transparent;
-
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-}
+// .btn--peligro vive ahora en _componentes.scss: estaba copiada aqui y en
+// perfil-publico.scss con var(--sa-peligro, #b3261e), un token que no existia
+// en _tokens.scss —siempre caia al valor de respaldo, igual en claro y en
+// oscuro—. Ya habia un --sa-error pensado para esto mismo.
 
 .bloqueados {
   list-style: none;

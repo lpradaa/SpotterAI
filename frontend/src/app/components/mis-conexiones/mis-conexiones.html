@@ -100,7 +100,12 @@
           <div class="conversacion__confirmar">
             <span>¿Dejar de ser compañeros?</span>
             <button class="btn btn--fantasma btn--pequeno" (click)="confirmandoBorrado.set(false)">No</button>
-            <button class="btn btn--primario btn--pequeno" (click)="eliminarCompanero()">Sí</button>
+            <!-- Color de error, no de acento: el naranja significa "esto espera
+                 tu respuesta" en el resto de la pantalla (Aceptar, Sí,
+                 entrenamos). Dejar de ser compañeros es lo contrario, una
+                 confirmacion destructiva, y usar el mismo color confundia las
+                 dos cosas. -->
+            <button class="btn btn--peligro btn--pequeno" (click)="eliminarCompanero()">Sí</button>
           </div>
         } @else {
           <!-- El botón que cierra el bucle: de "encajáis al 90 %" a "el lunes

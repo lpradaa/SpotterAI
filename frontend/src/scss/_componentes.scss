@@ -458,3 +458,34 @@
     background: var(--sa-acento-suave);
   }
 }
+
+/* La misma idea que --contorno, con el color de "ya sois compañeros".
+   Al apagar el "Conectar" naranja de Explorar, el "Escribir" —que seguía
+   solido en verde— pasó a ser lo más ruidoso de la pantalla sin que nadie lo
+   tocara. El color no sobra: distingue un estado real (ya conectado) de
+   "Conectar" (no conectado) y "Retirar" (pendiente). Lo que sobraba era que
+   fuera el único de los tres con relleno. */
+.btn--exito-contorno {
+  background: transparent;
+  color: var(--sa-exito);
+  border: 1px solid var(--sa-exito);
+
+  &:hover:not(:disabled) {
+    background: var(--sa-exito-suave);
+  }
+}
+
+/* Confirmar borrar la cuenta o bloquear a alguien: relleno solido, y en el
+   color de error, no en el de acento. Estaba duplicada en modal-perfil.scss y
+   en perfil-publico.scss, cada una con un var(--sa-peligro, #b3261e) que caia
+   siempre al valor de respaldo porque --sa-peligro no llego a definirse en
+   _tokens.scss —mismo rojo en claro y en oscuro, sin adaptar—. --sa-error ya
+   existia para esto mismo. */
+.btn--peligro {
+  background: var(--sa-error);
+  color: var(--sa-fondo);
+  border-color: transparent;
+
+  &:hover:not(:disabled) { filter: brightness(1.1); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

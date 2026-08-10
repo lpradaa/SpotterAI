@@ -341,8 +341,5 @@
   gap: $space-xs;
 }
 
-.btn--peligro {
-  background: var(--sa-peligro, #b3261e);
-  color: #fff;
-  border-color: transparent;
-}
+// .btn--peligro vive en _componentes.scss: ver el comentario en
+// modal-perfil.scss, que tenia la misma copia.
