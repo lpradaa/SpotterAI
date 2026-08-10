@@ -8,6 +8,7 @@ import { AvisosService } from '../../services/avisos.service';
 import { HttpClient } from '@angular/common/http';
 import { api } from '../../config/api';
 import { mensajeDeError } from '../../utils/errores';
+import { MINIMO_CONTRASENA } from '../restablecer/restablecer';
 
 @Component({
   selector: 'app-login',
@@ -35,6 +36,9 @@ export class LoginComponent implements OnInit {
 
   // 🔄 Interruptor de modo (Login vs Registro)
   isLoginMode = true;
+
+  /** La misma regla que exige el backend, para poder decirla antes de fallar. */
+  protected minimoContrasena = MINIMO_CONTRASENA;
 
   // ⏳ Estado de carga para dar feedback visual al botón
   isLoading = signal(false);

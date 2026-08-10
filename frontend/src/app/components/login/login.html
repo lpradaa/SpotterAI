@@ -90,8 +90,17 @@
           <label for="password">Contraseña</label>
           <div class="input-container">
             <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>
-            <input type="password" id="password" name="password" [(ngModel)]="password" placeholder="••••••••" required>
+            <!-- El marcador de posición ya lo decía en /restablecer desde que se
+                 escribió esa pantalla; aquí, la más antigua del formulario,
+                 nadie lo puso al añadir la regla de los 12 caracteres al
+                 backend. Se descubría fallando, no leyendo. -->
+            <input type="password" id="password" name="password" [(ngModel)]="password"
+                   [placeholder]="isLoginMode ? '••••••••' : 'Al menos ' + minimoContrasena + ' caracteres'"
+                   required>
           </div>
+          @if (!isLoginMode && password.length > 0 && password.length < minimoContrasena) {
+            <small class="campo-pista">Faltan {{ minimoContrasena - password.length }} caracteres</small>
+          }
         </div>
 
         @if (errorMessage()) {
