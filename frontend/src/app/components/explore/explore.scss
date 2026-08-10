@@ -197,7 +197,10 @@
    escala secuencial, el orden se ve antes de leer. */
 .ficha__nota {
   font-family: $font-display;
-  font-size: 34px;
+  /* De la escala, no a ojo. Lo puse a 34 px a mano y eso es exactamente como
+     una escala tipografica deja de servir: en cuanto hay un tamaño inventado,
+     el siguiente tambien se inventa y a las diez pantallas no hay escala. */
+  font-size: $text-4xl;
   font-weight: $font-bold;
   letter-spacing: -0.02em;
   color: var(--sa-comp-baja);
