@@ -198,6 +198,43 @@
             </div>
           </div>
         }
+
+        <!-- Aparte de bloquear, y no dentro: son dos acciones distintas. Esta
+             no saca a nadie de la ficha ni deshace la relación. -->
+        @if (!confirmandoReporte()) {
+          <button class="btn btn--enlace" (click)="confirmandoReporte.set(true)">
+            Reportar a {{ p.nombre.split(' ')[0] }}
+          </button>
+        } @else if (reporteEnviado()) {
+          <p class="bloqueo__texto">Reporte enviado. Gracias por avisar.</p>
+        } @else {
+          <div class="bloqueo">
+            <label class="campo campo--ancho">
+              <span>Motivo</span>
+              <select [ngModel]="motivoReporte()" (ngModelChange)="motivoReporte.set($event)">
+                <option [ngValue]="null" disabled>Elige un motivo</option>
+                @for (m of motivosDeReporte; track m.valor) {
+                  <option [ngValue]="m.valor">{{ m.etiqueta }}</option>
+                }
+              </select>
+            </label>
+            <label class="campo campo--ancho">
+              <span>Algo más que añadir (opcional)</span>
+              <textarea [(ngModel)]="detalleReporte" rows="2" maxlength="500"
+                        placeholder="Lo que creas que ayuda a entender lo que ha pasado"></textarea>
+            </label>
+            <div class="bloqueo__acciones">
+              <button class="btn btn--fantasma btn--pequeno" (click)="confirmandoReporte.set(false)">
+                Cancelar
+              </button>
+              <button class="btn btn--peligro btn--pequeno"
+                      [disabled]="!motivoReporte() || enviando()"
+                      (click)="reportar(p.id)">
+                Enviar reporte
+              </button>
+            </div>
+          </div>
+        }
       }
     </footer>
   }

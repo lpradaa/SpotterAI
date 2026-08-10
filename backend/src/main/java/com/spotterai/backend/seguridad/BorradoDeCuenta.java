@@ -23,7 +23,8 @@ import java.util.Optional;
  * <h2>Que se borra, y por que las conversaciones enteras</h2>
  *
  * <p>Todo lo que te incluye: horarios, marcas, entrenamientos, hitos,
- * solicitudes, sesiones y mensajes —los tuyos y los que te escribieron—.
+ * solicitudes, sesiones, mensajes —los tuyos y los que te escribieron—,
+ * bloqueos y reportes en cualquiera de los dos sentidos.
  *
  * <p>Lo ultimo es la decision incomoda, y se toma a conciencia. Habia tres
  * salidas y ninguna es limpia:
@@ -64,6 +65,7 @@ public class BorradoDeCuenta {
     private final SesionRepository sesiones;
     private final SolicitudRepository solicitudes;
     private final BloqueoRepository bloqueos;
+    private final ReporteRepository reportes;
 
     public BorradoDeCuenta(UsuarioRepository usuarios, PasswordEncoder cifrador,
                            DisponibilidadRepository disponibilidades,
@@ -73,7 +75,8 @@ public class BorradoDeCuenta {
                            MensajeRepository mensajes,
                            SesionRepository sesiones,
                            SolicitudRepository solicitudes,
-                           BloqueoRepository bloqueos) {
+                           BloqueoRepository bloqueos,
+                           ReporteRepository reportes) {
         this.usuarios = usuarios;
         this.cifrador = cifrador;
         this.disponibilidades = disponibilidades;
@@ -84,6 +87,7 @@ public class BorradoDeCuenta {
         this.sesiones = sesiones;
         this.solicitudes = solicitudes;
         this.bloqueos = bloqueos;
+        this.reportes = reportes;
     }
 
     /**
@@ -111,6 +115,7 @@ public class BorradoDeCuenta {
         Long id = usuario.getId();
 
         bloqueos.borrarTodosDe(id);
+        reportes.borrarTodosDe(id);
         mensajes.borrarTodosDe(id);
         sesiones.borrarTodasDe(id);
         solicitudes.borrarTodasDe(id);

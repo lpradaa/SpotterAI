@@ -47,6 +47,15 @@ export const routes: Routes = [
     loadComponent: () => import('./components/embudo/embudo').then(m => m.EmbudoComponent),
   },
 
+  // Los reportes, para quien está en AdminEmails. No hay guardia propia de rol
+  // porque no hay roles en la aplicación: authGuard solo exige sesión, y quien
+  // no es admin recibe un 404 del backend, que aquí se enseña como "sin acceso".
+  {
+    path: 'admin/reportes',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/admin-reportes/admin-reportes').then(m => m.AdminReportesComponent),
+  },
+
   // Dejar de recibir avisos por correo. La unica pantalla sin authGuard aparte
   // del login, y a proposito: quien quiere dejar de recibir correos no va a
   // iniciar sesion para conseguirlo. Lo que hace es marcar el remitente como no

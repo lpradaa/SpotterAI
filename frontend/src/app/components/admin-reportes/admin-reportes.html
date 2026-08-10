@@ -1,0 +1,54 @@
+<div class="reportes">
+
+  <header class="reportes__cabecera">
+    <h1 class="reportes__titulo">Reportes</h1>
+    <p class="reportes__texto">
+      Lo que la gente ha reportado sobre otras personas. Reportar no bloquea
+      por sí solo: quien reporta puede seguir viendo la conversación.
+    </p>
+  </header>
+
+  @if (sinAcceso()) {
+    <p class="aviso" role="alert">No tienes acceso a esta pantalla.</p>
+  } @else if (error()) {
+    <p class="aviso aviso--error" role="alert">No se han podido cargar los reportes.</p>
+  } @else if (reportes(); as lista) {
+
+    @if (lista.length === 0) {
+      <p class="reportes__nota">No hay ningún reporte todavía.</p>
+    } @else {
+      <table class="tabla">
+        <caption class="visually-hidden">Reportes enviados por las personas usuarias</caption>
+        <thead>
+          <tr>
+            <th scope="col">Cuándo</th>
+            <th scope="col">Quién reporta</th>
+            <th scope="col">A quién</th>
+            <th scope="col">Motivo</th>
+            <th scope="col">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of lista; track r.id) {
+            <tr>
+              <td>{{ cuando(r.creadoEn) }}</td>
+              <td>
+                {{ r.reportadorNombre }}
+                <span class="tabla__email">{{ r.reportadorEmail }}</span>
+              </td>
+              <td>
+                {{ r.reportadoNombre }}
+                <span class="tabla__email">{{ r.reportadoEmail }}</span>
+              </td>
+              <td>{{ r.motivo }}</td>
+              <td>{{ r.detalle || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+  } @else {
+    <p class="reportes__nota">Cargando…</p>
+  }
+</div>

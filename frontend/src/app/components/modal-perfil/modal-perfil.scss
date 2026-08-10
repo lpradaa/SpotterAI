@@ -399,9 +399,9 @@
 
 /* Separado del resto y en rojo: es lo unico del formulario que no se deshace. */
 .bloque--peligro {
-  border-color: var(--sa-peligro, #b3261e);
+  border-color: var(--sa-error);
 
-  .bloque__titulo { color: var(--sa-peligro, #b3261e); }
+  .bloque__titulo { color: var(--sa-error); }
 }
 
 .bloque__acciones {

@@ -35,6 +35,7 @@ class BorradoDeCuentaTest {
     private SesionRepository sesiones;
     private SolicitudRepository solicitudes;
     private BloqueoRepository bloqueos;
+    private ReporteRepository reportes;
 
     private BorradoDeCuenta borrado;
     private final PasswordEncoder cifrador = new BCryptPasswordEncoder();
@@ -51,9 +52,10 @@ class BorradoDeCuentaTest {
         sesiones = mock(SesionRepository.class);
         solicitudes = mock(SolicitudRepository.class);
         bloqueos = mock(BloqueoRepository.class);
+        reportes = mock(ReporteRepository.class);
 
         borrado = new BorradoDeCuenta(usuarios, cifrador, disponibilidades, entrenamientos,
-                hitos, levantamientos, mensajes, sesiones, solicitudes, bloqueos);
+                hitos, levantamientos, mensajes, sesiones, solicitudes, bloqueos, reportes);
 
         luis.setId(7L);
         luis.setEmail("luis@test.com");
@@ -72,6 +74,7 @@ class BorradoDeCuentaTest {
         // servicio, el borrado fallará por la clave ajena en vez de dejar
         // basura. Esta lista es la que hay que mantener al día.
         verify(bloqueos).borrarTodosDe(7L);
+        verify(reportes).borrarTodosDe(7L);
         verify(mensajes).borrarTodosDe(7L);
         verify(sesiones).borrarTodasDe(7L);
         verify(solicitudes).borrarTodasDe(7L);

@@ -1,0 +1,65 @@
+@use '../../../scss/index' as *;
+
+:host {
+  display: block;
+}
+
+.reportes {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: $space-md $space-sm;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.reportes__titulo {
+  font-size: $text-2xl;
+  font-weight: $font-bold;
+  margin: 0;
+}
+
+.reportes__texto {
+  margin: $space-xs 0 0;
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+  line-height: $leading-normal;
+}
+
+.reportes__nota {
+  margin: 0;
+  font-size: $text-sm;
+  color: var(--sa-texto-tenue);
+}
+
+/* Scroll propio, no de la página: cinco columnas no caben a 375 px. */
+.tabla {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $text-sm;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--sa-borde);
+  }
+
+  thead th {
+    font-family: $font-display;
+    font-size: $text-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sa-texto-suave);
+    white-space: nowrap;
+  }
+}
+
+.tabla__email {
+  display: block;
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+}

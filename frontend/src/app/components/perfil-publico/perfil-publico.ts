@@ -6,6 +6,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
 import { ModalPerfilComponent } from '../modal-perfil/modal-perfil';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { PerfilesService, PerfilPublico } from '../../services/perfiles.service';
 import { UsuarioService } from '../../services/usuario.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
@@ -32,7 +33,7 @@ import { Carga } from '../carga/carga';
 @Component({
   selector: 'app-perfil-publico',
   standalone: true,
-  imports: [CommonModule, RejillaSemana, Avatar, Carga, ProponerSesionComponent, ModalPerfilComponent],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, Carga, ProponerSesionComponent, ModalPerfilComponent],
   templateUrl: './perfil-publico.html',
   styleUrl: './perfil-publico.scss'
 })
@@ -176,6 +177,47 @@ export class PerfilPublicoComponent {
       next: () => this.router.navigate(['/explorar']),
       error: () => this.enviando.set(false),
     });
+  }
+
+  /**
+   * Reportar, aparte de bloquear.
+   *
+   * Son dos acciones distintas a propósito. Bloquear te protege a ti; reportar
+   * es lo que le permite a la aplicación enterarse de que la misma persona se
+   * ha portado mal con varias, algo que bloqueando por tu cuenta nunca llega a
+   * saberse. No se bloquea sola al reportar: quien reporta puede querer seguir
+   * viendo la conversación, por ejemplo como prueba de lo que está contando.
+   */
+  confirmandoReporte = signal(false);
+  motivoReporte = signal<string | null>(null);
+  detalleReporte = '';
+  reporteEnviado = signal(false);
+
+  protected readonly motivosDeReporte: { valor: string; etiqueta: string }[] = [
+    { valor: 'COMPORTAMIENTO_INAPROPIADO', etiqueta: 'Comportamiento inapropiado' },
+    { valor: 'PERFIL_FALSO', etiqueta: 'Perfil falso o suplantación' },
+    { valor: 'ACOSO', etiqueta: 'Acoso o mensajes no deseados' },
+    { valor: 'SPAM', etiqueta: 'Spam o publicidad' },
+    { valor: 'OTRO', etiqueta: 'Otro motivo' },
+  ];
+
+  reportar(otroId: number): void {
+    const motivo = this.motivoReporte();
+    if (!motivo || this.enviando()) return;
+
+    this.enviando.set(true);
+
+    this.http.post(api(`/api/reportes/${otroId}`), { motivo, detalle: this.detalleReporte })
+      .subscribe({
+        next: () => {
+          this.enviando.set(false);
+          this.reporteEnviado.set(true);
+          // No se cierra el formulario a un estado "en blanco": se queda un
+          // mensaje de confirmación, para que quede claro que sí se ha
+          // registrado antes de que la persona se vaya de la pantalla.
+        },
+        error: () => this.enviando.set(false),
+      });
   }
 
   conectar(): void {

@@ -318,15 +318,20 @@
   cursor: pointer;
   padding: 6px;
 
-  &:hover { color: var(--sa-peligro, #b3261e); text-decoration: underline; }
+  &:hover { color: var(--sa-error); text-decoration: underline; }
 }
 
 .bloqueo {
   border: 1px solid var(--sa-borde);
-  border-left: 3px solid var(--sa-peligro, #b3261e);
+  border-left: 3px solid var(--sa-error);
   border-radius: $radius-sm;
   padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
 }
+
+.campo--ancho { width: 100%; }
 
 .bloqueo__texto {
   margin: 0 0 8px;
