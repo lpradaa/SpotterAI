@@ -127,14 +127,17 @@
 }
 
 /* --- Modo compacto: cabe en una fila de lista --- */
+/* Mas alta de lo que estaba. Es lo unico que esta aplicacion tiene y nadie
+   mas —la prueba visual de "coincidis martes y jueves de 18 a 20"— y a 34 px de
+   alto con franjas de 12 no se leia: era una tira decorativa. */
 .rejilla--compacta {
   .rejilla__lienzo {
-    height: 34px;
+    height: 56px;
   }
 
   .rejilla__dias {
-    height: 12px;
-    gap: 1px;
+    height: 26px;
+    gap: 2px;
   }
 
   .rejilla__dia {

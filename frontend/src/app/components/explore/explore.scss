@@ -141,7 +141,11 @@
   }
 
   &[data-tramo='media']::before { background: var(--sa-comp-media); }
-  &[data-tramo='alta']::before { background: var(--sa-acento); }
+  &[data-tramo='alta']::before { background: var(--sa-comp-alta); }
+
+  /* La escala llega al número, que es donde de verdad se lee. */
+  &[data-tramo='media'] .ficha__nota { color: var(--sa-comp-media); }
+  &[data-tramo='alta'] .ficha__nota { color: var(--sa-comp-alta); }
 
   &:hover {
     border-color: var(--sa-borde-fuerte);
@@ -184,13 +188,19 @@
   flex-shrink: 0;
 }
 
-/* El número, de apoyo: conserva el acento porque es lo que hace útil al
-   producto, pero deja de ser lo primero que se ve de una persona. */
+/* El número ES el producto, así que se ve como tal: es lo más grande de la
+   tarjeta después del nombre.
+
+   Y va coloreado por tramo, no con el acento fijo. Antes un 87 y un 50 salían
+   del mismo naranja, así que la lista estaba ordenada por compatibilidad y no
+   lo parecía: había que leer los dígitos para notar la diferencia. Con la
+   escala secuencial, el orden se ve antes de leer. */
 .ficha__nota {
   font-family: $font-display;
-  font-size: $text-xl;
+  font-size: 34px;
   font-weight: $font-bold;
-  color: var(--sa-acento);
+  letter-spacing: -0.02em;
+  color: var(--sa-comp-baja);
   font-variant-numeric: tabular-nums;
   line-height: 1;
   flex-shrink: 0;

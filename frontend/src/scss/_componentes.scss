@@ -443,3 +443,18 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Acción presente pero no protagonista.
+   Nace en las tarjetas de Explorar: seis botones naranjas sólidos, idénticos,
+   eran lo que más gritaba en una pantalla cuyo asunto es comparar personas. Un
+   contorno se ve igual de bien y deja el color para lo que sí cambia de una
+   tarjeta a otra. */
+.btn--contorno {
+  background: transparent;
+  color: var(--sa-acento-texto);
+  border: 1px solid var(--sa-acento);
+
+  &:hover:not(:disabled) {
+    background: var(--sa-acento-suave);
+  }
+}

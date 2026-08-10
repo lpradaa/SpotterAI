@@ -134,7 +134,12 @@
             <button class="btn btn--fantasma btn--ancho" (click)="retirarSolicitud(usuario)"
                     [title]="'Retirar la solicitud enviada a ' + usuario.nombre">Retirar</button>
           } @else {
-            <button class="btn btn--primario btn--ancho" (click)="conectarConUsuario(usuario.id)">
+            <!-- Contorno y no relleno. Con seis tarjetas en pantalla, seis
+                 botones naranjas solidos eran lo mas llamativo de la pagina, y
+                 el boton es identico en todas: no aporta nada para comparar.
+                 El acento se queda donde si distingue a una persona de otra,
+                 que es la compatibilidad. -->
+            <button class="btn btn--contorno btn--ancho" (click)="conectarConUsuario(usuario.id)">
               Conectar
             </button>
           }
