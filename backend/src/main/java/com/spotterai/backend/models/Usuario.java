@@ -1,5 +1,6 @@
 package com.spotterai.backend.models;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.Column;
@@ -105,6 +106,35 @@ public class Usuario {
     @Column(name = "token_avisos", length = 64, unique = true)
     private String tokenAvisos;
 
+    /**
+     * Desde cuando valen los tokens de esta persona.
+     *
+     * <p>Un JWT no se puede retirar: esta firmado y vale hasta que caduca, lo
+     * tenga quien lo tenga. Esta marca es la forma barata de invalidarlos
+     * igualmente, y hace falta justo donde mas importa: al cambiar la
+     * contraseña. Si alguien te habia robado la sesion, cambiarla sin esto no lo
+     * echa —sigue dentro veinticuatro horas—, y eso convierte el cambio de
+     * contraseña en un gesto que tranquiliza sin arreglar nada.
+     */
+    @Column(name = "sesiones_validas_desde")
+    private LocalDateTime sesionesValidasDesde;
+
+    /**
+     * La huella del token de restablecimiento, no el token.
+     *
+     * <p>Aqui se guarda en hash y {@link #tokenAvisos} no, y la diferencia no es
+     * capricho: con la llave de baja, quien lea la base puede dejar a alguien
+     * sin correos; con esta, puede entrar en su cuenta. Mientras vive es una
+     * credencial en toda regla, asi que el valor de verdad solo existe dentro
+     * del correo que se manda.
+     */
+    @Column(name = "token_reset", length = 64, unique = true)
+    private String tokenReset;
+
+    /** Corta a proposito: un enlace de recuperacion no tiene por que durar. */
+    @Column(name = "token_reset_expira")
+    private LocalDateTime tokenResetExpira;
+
     
     @ManyToOne
     @JoinColumn(name = "gimnasio_id")
@@ -167,6 +197,13 @@ public class Usuario {
     public void setAvisosPorCorreo(boolean avisosPorCorreo) { this.avisosPorCorreo = avisosPorCorreo; }
     public String getTokenAvisos() { return tokenAvisos; }
     public void setTokenAvisos(String tokenAvisos) { this.tokenAvisos = tokenAvisos; }
+
+    public LocalDateTime getSesionesValidasDesde() { return sesionesValidasDesde; }
+    public void setSesionesValidasDesde(LocalDateTime f) { this.sesionesValidasDesde = f; }
+    public String getTokenReset() { return tokenReset; }
+    public void setTokenReset(String tokenReset) { this.tokenReset = tokenReset; }
+    public LocalDateTime getTokenResetExpira() { return tokenResetExpira; }
+    public void setTokenResetExpira(LocalDateTime f) { this.tokenResetExpira = f; }
 
     public List<Disponibilidad> getDisponibilidades() { return disponibilidades; }
     public void setDisponibilidades(List<Disponibilidad> disponibilidades) { this.disponibilidades = disponibilidades; }

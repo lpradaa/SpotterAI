@@ -5,6 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EventosService } from '../../services/eventos.service';
 import { AvisosService } from '../../services/avisos.service';
+import { HttpClient } from '@angular/common/http';
+import { api } from '../../config/api';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +21,7 @@ export class LoginComponent implements OnInit {
   private eventos = inject(EventosService);
   private avisos = inject(AvisosService);
   private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
 
   ngOnInit(): void {
     // El interceptor manda aquí cuando el token muere con la app abierta. Sin
@@ -62,6 +65,37 @@ export class LoginComponent implements OnInit {
     } else {
       this.ejecutarRegistro();
     }
+  }
+
+  protected olvidoEnviando = signal(false);
+  protected olvidoPedido = signal(false);
+
+  /**
+   * Pedir el enlace para recuperar la contraseña.
+   *
+   * <p>Se usa el correo que ya está escrito en el formulario: si has llegado a
+   * pulsar esto es porque has probado a entrar, así que pedirlo otra vez en otra
+   * pantalla es un paso de más justo cuando la persona ya está molesta.
+   *
+   * <p>El mensaje es el mismo exista la cuenta o no, y el botón se sustituye por
+   * él pase lo que pase. Cualquier otra cosa —"no encontramos ese correo"—
+   * convertiría esto en un comprobador de quién está registrado.
+   */
+  protected olvideLaContrasena(): void {
+    const email = (this.email || '').trim();
+    if (!email) {
+      this.errorMessage.set('Escribe tu correo y vuelve a pulsar.');
+      return;
+    }
+
+    this.olvidoEnviando.set(true);
+    this.errorMessage.set(null);
+
+    this.http.post(api('/api/auth/olvide'), { email }).subscribe({
+      next: () => { this.olvidoEnviando.set(false); this.olvidoPedido.set(true); },
+      // Tampoco al fallar: un error distinto seguiría delatando la cuenta.
+      error: () => { this.olvidoEnviando.set(false); this.olvidoPedido.set(true); },
+    });
   }
 
   private ejecutarLogin(): void {

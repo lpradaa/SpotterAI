@@ -7,15 +7,22 @@ import jakarta.servlet.http.HttpServletResponse;
 import com.spotterai.backend.dtos.UsuarioLoginDTO;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.UsuarioRepository;
+import com.spotterai.backend.avisos.Cartero;
+import com.spotterai.backend.avisos.RedactorDeAvisos;
 import com.spotterai.backend.seguridad.ControlDeIntentos;
+import com.spotterai.backend.seguridad.Restablecimientos;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -31,14 +38,24 @@ public class AuthController {
     private final ControlDeIntentos control;
 
     private final GalletaDeSesion galleta;
+    private final Restablecimientos restablecimientos;
+    private final RedactorDeAvisos redactor;
+    private final Cartero cartero;
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil, ControlDeIntentos control, GalletaDeSesion galleta) {
+                          JwtUtil jwtUtil, ControlDeIntentos control, GalletaDeSesion galleta,
+                          Restablecimientos restablecimientos, RedactorDeAvisos redactor,
+                          Cartero cartero) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.control = control;
         this.galleta = galleta;
+        this.restablecimientos = restablecimientos;
+        this.redactor = redactor;
+        this.cartero = cartero;
     }
 
     /**
@@ -52,6 +69,96 @@ public class AuthController {
      * <p>Responde igual haya sesion o no. Quien llama a esto quiere quedarse sin
      * sesion, y no la tiene: eso es exito, no error.
      */
+    /**
+     * "He olvidado mi contraseña".
+     *
+     * <p><b>Responde siempre lo mismo</b>, exista la cuenta o no. Si contestara
+     * distinto, este formulario seria un comprobador de quien esta registrado:
+     * abierto, sin sesion y con solo meter correos. Eso importa especialmente en
+     * esta aplicacion, donde estar dado de alta dice algo de la persona.
+     *
+     * <p>Pasa por el mismo freno que el login y por correo, no por direccion: sin
+     * eso, esto es un boton para inundar el buzon de cualquiera.
+     */
+    @PostMapping("/olvide")
+    public ResponseEntity<?> olvide(@RequestBody Map<String, String> cuerpo) {
+        String email = cuerpo.getOrDefault("email", "").trim();
+        String clave = ControlDeIntentos.claveDeCorreo("olvide:" + email);
+
+        if (!email.isBlank() && !control.bloqueada(clave)) {
+            control.fallo(clave);
+
+            restablecimientos.abrirPara(email).ifPresent(token ->
+                    usuarioRepository.findByEmail(email).ifPresent(usuario -> {
+                        try {
+                            cartero.enviar(redactor.paraRestablecer(usuario, token));
+                        } catch (Exception e) {
+                            // Que el correo no salga no puede cambiar la respuesta:
+                            // decir "no se ha podido enviar" tambien delata que la
+                            // cuenta existe.
+                            log.warn("No se ha podido mandar el correo de recuperacion: {}", e.getMessage());
+                        }
+                    }));
+        }
+
+        return ResponseEntity.accepted().body(Map.of(
+                "mensaje", "Si ese correo tiene cuenta, te hemos mandado un enlace."));
+    }
+
+    /** Poner la contraseña nueva con el token del correo. */
+    @PostMapping("/restablecer")
+    public ResponseEntity<?> restablecer(@RequestBody Map<String, String> cuerpo) {
+        try {
+            boolean hecho = restablecimientos.consumir(
+                    cuerpo.get("token"), cuerpo.get("password"));
+
+            if (!hecho) {
+                return ResponseEntity.status(HttpStatus.GONE).body(Map.of(
+                        "error", "Ese enlace ya no vale. Pide uno nuevo."));
+            }
+            return ResponseEntity.noContent().build();
+
+        } catch (IllegalArgumentException e) {
+            // La regla de la contraseña, tal cual, para poder enseñarla.
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Cambiar la contraseña estando dentro.
+     *
+     * <p>Se pide la actual aunque haya sesion: una sesion abierta en un ordenador
+     * prestado no deberia bastar para quedarse con la cuenta.
+     *
+     * <p>Al cambiarla se invalidan todas las sesiones, incluida esta. Es
+     * deliberado y la pantalla lo dice: si cambias la contraseña porque crees
+     * que alguien ha entrado, lo que quieres es justo eso.
+     */
+    @PostMapping("/contrasena")
+    public ResponseEntity<?> cambiarContrasena(@RequestBody Map<String, String> cuerpo,
+                                               HttpServletResponse respuesta) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        try {
+            boolean hecho = restablecimientos.cambiar(
+                    email, cuerpo.get("actual"), cuerpo.get("nueva"));
+
+            if (!hecho) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "error", "La contraseña actual no es correcta."));
+            }
+
+            // La galleta de esta sesion tambien deja de valer, asi que se borra:
+            // dejarla puesta significaria un 403 en cada peticion sin que la
+            // interfaz supiera por que.
+            respuesta.addHeader(GalletaDeSesion.CABECERA, galleta.cerrar());
+            return ResponseEntity.noContent().build();
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse respuesta) {
         respuesta.addHeader(GalletaDeSesion.CABECERA, galleta.cerrar());

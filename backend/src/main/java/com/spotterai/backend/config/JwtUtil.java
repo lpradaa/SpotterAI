@@ -74,6 +74,23 @@ public class JwtUtil {
     }
 
     /**
+     * Cuando se firmo este token.
+     *
+     * <p>Lo necesita la revocacion: un JWT no se puede retirar, asi que la forma
+     * de invalidar los que ya estan sueltos es rechazar los emitidos antes de
+     * cierta fecha. Sin este dato no hay con que comparar.
+     */
+    public java.time.Instant emitidoEn(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getIssuedAt()
+                .toInstant();
+    }
+
+    /**
      * MÉTODO 3: VALIDAR EL TOKEN
      * Comprueba que el token no ha sido manipulado por un hacker y no ha caducado.
      */

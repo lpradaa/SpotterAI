@@ -110,6 +110,24 @@
 
       </form>
 
+      <!-- Sin esto, quien olvide su contraseña se queda fuera para siempre: no
+           habia ninguna forma de recuperarla. -->
+      @if (isLoginMode) {
+        <div class="olvide">
+          @if (olvidoPedido()) {
+            <p class="olvide__hecho" role="status">
+              Si ese correo tiene cuenta, te hemos mandado un enlace. Mira también
+              en la carpeta de no deseados.
+            </p>
+          } @else {
+            <button type="button" class="toggle-btn" [disabled]="olvidoEnviando()"
+                    (click)="olvideLaContrasena()">
+              @if (olvidoEnviando()) { Enviando… } @else { He olvidado mi contraseña }
+            </button>
+          }
+        </div>
+      }
+
       <div class="login-footer">
         <p>{{ isLoginMode ? '¿No tienes cuenta?' : '¿Ya tienes una cuenta?' }} 
           <button type="button" class="toggle-btn" (click)="toggleMode()">

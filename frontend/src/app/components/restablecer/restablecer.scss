@@ -1,0 +1,32 @@
+@use '../../../scss/index' as *;
+
+:host {
+  display: block;
+}
+
+.restablecer {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: $space-lg $space-sm;
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  align-items: flex-start;
+}
+
+.restablecer__titulo {
+  margin: 0;
+  font-size: $text-2xl;
+  font-weight: $font-bold;
+}
+
+.restablecer__texto {
+  margin: 0;
+  font-size: $text-sm;
+  color: var(--sa-texto-suave);
+  line-height: $leading-normal;
+}
+
+.restablecer__acciones {
+  margin-top: $space-xs;
+}

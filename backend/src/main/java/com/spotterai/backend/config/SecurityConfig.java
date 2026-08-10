@@ -81,6 +81,8 @@ public class SecurityConfig {
                 // que proteger: quien las llama no tiene sesion que usurpar.
                 .ignoringRequestMatchers(
                         "/api/auth/login",
+                        "/api/auth/olvide",
+                        "/api/auth/restablecer",
                         "/api/usuarios/registro",
                         "/api/avisos/baja",
                         "/api/avisos/alta"))

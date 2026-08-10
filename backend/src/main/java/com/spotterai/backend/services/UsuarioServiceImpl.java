@@ -38,6 +38,7 @@ import com.spotterai.backend.repositories.GimnasioRepository;
 import com.spotterai.backend.repositories.SesionRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
+import com.spotterai.backend.seguridad.Contrasenas;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -128,6 +129,12 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Error: El email ya está registrado en SpotterAI.");
         }
+
+        // No se comprobaba nada: se podia registrar una cuenta con la contraseña
+        // "a". La regla vive en un solo sitio porque hay tres puertas por las que
+        // se pone una —esta, el restablecimiento y el cambio desde el perfil— y
+        // separadas acabarian siendo distintas.
+        Contrasenas.exigirQueValga(dto.getPassword());
 
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setNombre(dto.getNombre());

@@ -48,7 +48,10 @@ class LoginConFrenoTest {
         control = new ControlDeIntentos(Clock.systemDefaultZone());
 
         controlador = new AuthController(usuarios, cifrador, jwt, control,
-                new GalletaDeSesion(jwt, false));
+                new GalletaDeSesion(jwt, false),
+                Mockito.mock(com.spotterai.backend.seguridad.Restablecimientos.class),
+                new com.spotterai.backend.avisos.RedactorDeAvisos("http://localhost:4200"),
+                aviso -> { });
 
         alguien.setId(1L);
         alguien.setEmail("alguien@test.com");

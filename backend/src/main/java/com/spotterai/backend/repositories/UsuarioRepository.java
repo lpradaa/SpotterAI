@@ -21,6 +21,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      */
     Optional<Usuario> findByTokenAvisos(String tokenAvisos);
 
+    /**
+     * Quien tiene abierto ese restablecimiento.
+     *
+     * <p>Se busca por la huella del token, nunca por el token: en la base solo
+     * vive el hash. Ver {@code Restablecimientos}.
+     */
+    Optional<Usuario> findByTokenReset(String tokenReset);
+
     // Devuelve a todos los usuarios menos al que está logueado.
     // El emparejamiento ya no se filtra en SQL: CalculadoraCompatibilidad puntua a
     // todos los candidatos y los ordena. El antiguo buscarMatches (mismo gimnasio

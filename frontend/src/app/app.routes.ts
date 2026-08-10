@@ -56,6 +56,14 @@ export const routes: Routes = [
     loadComponent: () => import('./components/baja/baja').then(m => m.BajaComponent),
   },
 
+  // Poner una contraseña nueva con el enlace del correo. Sin authGuard por lo
+  // mismo que /baja: quien ha olvidado su contraseña no puede iniciar sesion,
+  // que es exactamente el problema que viene a resolver.
+  {
+    path: 'restablecer',
+    loadComponent: () => import('./components/restablecer/restablecer').then(m => m.RestablecerComponent),
+  },
+
   // Redirecciones por defecto
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   

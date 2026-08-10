@@ -2,6 +2,7 @@ package com.spotterai.backend.avisos;
 
 import com.spotterai.backend.models.Sesion;
 import com.spotterai.backend.models.Solicitud;
+import com.spotterai.backend.models.Usuario;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -84,6 +85,34 @@ public class RedactorDeAvisos {
                         urlBase,
                         sesion.getProponente().getId(),
                         pieDeBaja(llaveDeBaja)));
+    }
+
+    /**
+     * El correo para recuperar la contraseña.
+     *
+     * <p>Sin pie de baja, y no es un olvido: esto no es un aviso del que uno
+     * pueda darse de baja, es la respuesta a algo que la persona acaba de pedir.
+     * Quitarle la posibilidad de recibirlo la dejaria sin forma de recuperar su
+     * cuenta.
+     *
+     * <p>Dice cuanto dura y que hacer si no fue uno quien lo pidio. Lo segundo
+     * importa: recibir esto sin haberlo pedido significa que alguien esta
+     * intentando entrar, y la persona merece saber que no tiene que hacer nada.
+     */
+    public Aviso paraRestablecer(Usuario usuario, String token) {
+        return new Aviso(
+                usuario.getEmail(),
+                "Recuperar tu contraseña de SpotterAI",
+                """
+                Has pedido cambiar tu contraseña. Puedes hacerlo aquí:
+
+                %s/restablecer?t=%s
+
+                El enlace vale una hora y solo se puede usar una vez.
+
+                Si no has sido tú, no hace falta que hagas nada: mientras no
+                abras ese enlace, tu contraseña sigue siendo la de siempre.
+                """.formatted(urlBase, token));
     }
 
     /**

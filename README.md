@@ -281,7 +281,13 @@ Lo que hay, y por qué:
 
   Y **cerrar sesión pasa a cerrarla de verdad**: antes era olvidarse del token, porque lo teníamos nosotros; ahora hay que pedirle al servidor que borre la galleta, y hasta que no lo hace la sesión sigue viva.
 
-Lo que sigue sin estar, dicho claro: el JWT no se revoca. Cerrar sesión quita la credencial del navegador, pero el token en sí sigue siendo válido hasta que caduca. Para revocarlo de verdad haría falta llevar registro de sesiones vivas en el servidor.
+- **Se puede recuperar la contraseña, y cambiarla.** No se podía: quien la olvidaba se quedaba fuera de su cuenta para siempre y sin recurso. El enlace del correo dura una hora, sirve una sola vez y en la base solo vive su huella SHA-256 — a diferencia de la llave de baja de los avisos, que sí se guarda tal cual, porque con aquélla lo máximo que se consigue es dejar a alguien sin correos y con ésta se entra en su cuenta.
+
+  Pedir el enlace **responde siempre lo mismo**, exista la cuenta o no: contestar distinto convertiría ese formulario en un comprobador de quién está registrado, abierto y sin sesión.
+
+  Y **cambiar la contraseña echa a las sesiones abiertas**, que es lo que resuelve de paso la revocación del JWT: se guarda desde cuándo valen los tokens de cada persona y el filtro rechaza los anteriores. Sin eso, quien te hubiera robado la sesión seguiría dentro veinticuatro horas y el cambio solo tranquilizaría. El precio es que autenticar pasa a costar una consulta por petición: revocar exige estado en el servidor y no hay forma de evitarlo con tokens firmados.
+
+- **Hay una regla de contraseña, y vive en un solo sitio.** Antes no se comprobaba nada: se podía registrar una cuenta con la contraseña `a`. Ahora son doce caracteres mínimos y ninguna exigencia de mayúsculas ni símbolos, que no producen contraseñas mejores sino `Password1!` y un post-it.
 
 ---
 
