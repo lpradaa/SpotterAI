@@ -54,9 +54,23 @@
   --sa-error: #f87171;
 
   /* --- Escala de compatibilidad --- */
-  --sa-comp-baja: #6f6660;
-  --sa-comp-media: #fbbf24;
-  --sa-comp-alta: #ff7a45;
+  /* La compatibilidad es una MAGNITUD, no tres categorias, asi que es una
+     escala secuencial de un solo tono que solo cambia de luminosidad. Antes
+     eran tres colores sueltos —gris, ambar y naranja— y el naranja de "alta"
+     era exactamente --sa-acento, el mismo del boton "Conectar". Con el estado y
+     la accion pintados igual, una tarjeta del 87 % y una del 50 % se parecian
+     demasiado y lo que mas gritaba en la pagina era el boton.
+
+     Comprobado con el validador de paletas, no a ojo: los tres tonos que tenia
+     antes en mente daban ΔE 5,6 entre "media" y "alta", o sea indistinguibles
+     incluso con vision normal. Estos separan 16,1.
+
+     El mas apagado se queda en 2,52:1 sobre el fondo, por debajo de 3:1. Es
+     aceptable aqui y solo aqui porque el numero va SIEMPRE escrito al lado: el
+     color acompaña al dato, no lo sustituye. */
+  --sa-comp-baja: #7d4a2e;
+  --sa-comp-media: #c26a35;
+  --sa-comp-alta: #ff9a68;
 
   /* --- Carga: los discos de la barra ---
      Un disco cargado y un disco vacio. Es el indicador que sustituye a la
@@ -125,9 +139,12 @@
   --sa-aviso: #b45309;
   --sa-error: #b91c1c;
 
-  --sa-comp-baja: #a8a29a;
-  --sa-comp-media: #d97706;
-  --sa-comp-alta: #c2410c;
+  /* La misma escala secuencial, con el sentido invertido: sobre fondo claro la
+     magnitud crece hacia lo oscuro. Separacion comprobada con el validador
+     (ΔE 13,9 en el par mas justo, con el numero al lado como apoyo). */
+  --sa-comp-baja: #e0a882;
+  --sa-comp-media: #d1741f;
+  --sa-comp-alta: #9a3412;
 
   --sa-disco: #c2410c;
   --sa-disco-vacio: #e7e2dc;
