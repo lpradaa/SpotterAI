@@ -25,7 +25,7 @@ describe('MisConexionesComponent · las marcas de día', () => {
   function mensaje(id: number, fecha: Date): Mensaje {
     return {
       id, emisorId: 2, emisorNombre: 'Ana', receptorId: 1,
-      contenido: `Mensaje ${id}`, fechaEnvio: fecha.toISOString(),
+      contenido: `Mensaje ${id}`, fechaEnvio: fecha.toISOString(), leido: true,
     };
   }
 
@@ -111,5 +111,38 @@ describe('MisConexionesComponent · las marcas de día', () => {
     const [primera, segunda] = component.lineas();
     expect(primera.tipo).toBe('dia');
     expect(segunda.tipo).toBe('mensaje');
+  });
+
+  describe('el «visto»', () => {
+
+    function mio(id: number, leido: boolean): Mensaje {
+      return {
+        id, emisorId: 1, emisorNombre: 'Yo', receptorId: 2,
+        contenido: 'lo mío', fechaEnvio: new Date().toISOString(), leido,
+      };
+    }
+
+    beforeEach(() => {
+      component.chatActivo.set({ usuarioId: 2 } as any);
+    });
+
+    it('la marca va solo en el último tuyo', () => {
+      component.historial.set([mio(1, true), mensaje(2, new Date()), mio(3, false)]);
+
+      // En todos sería una columna de "Visto" repetida que no aporta nada.
+      expect(component.ultimoMio()).toBe(3);
+    });
+
+    it('los suyos nunca son el último tuyo', () => {
+      component.historial.set([mio(1, true), mensaje(9, new Date())]);
+
+      expect(component.ultimoMio()).toBe(1);
+    });
+
+    it('sin mensajes tuyos no hay marca', () => {
+      component.historial.set([mensaje(9, new Date())]);
+
+      expect(component.ultimoMio()).toBeNull();
+    });
   });
 });

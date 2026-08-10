@@ -35,7 +35,16 @@ public enum TipoEvento {
      * Hace falta avisar porque si no la otra persona sigue viendo un chat que ya
      * no existe, y el primer mensaje que mande se lleva un 403 sin explicacion.
      */
-    RELACION_DESHECHA("relacion-deshecha");
+    RELACION_DESHECHA("relacion-deshecha"),
+
+    /**
+     * El otro ha abierto la conversacion y ha leido lo tuyo.
+     *
+     * <p>Va al que escribio, no al que lee: quien lee ya lo sabe. Sin esto, el
+     * "visto" solo aparecia al recargar, o sea que mentia justo cuando los dos
+     * estais conectados, que es cuando alguien mira si le han leido.
+     */
+    MENSAJES_LEIDOS("mensajes-leidos");
 
     private final String clave;
 

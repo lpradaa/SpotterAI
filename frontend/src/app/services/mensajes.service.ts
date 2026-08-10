@@ -10,6 +10,13 @@ export interface Mensaje {
   receptorId: number;
   contenido: string;
   fechaEnvio: string;
+  /**
+   * Si el otro ya lo ha abierto.
+   *
+   * Solo tiene sentido mirarlo en los tuyos: en los suyos siempre es cierto en
+   * cuanto los ves, porque verlos es lo que lo pone a true.
+   */
+  leido: boolean;
 }
 
 /** Una fila de la lista de compañeros. */

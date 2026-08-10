@@ -194,6 +194,15 @@
                     [title]="fechaCompleta(linea.msg.fechaEnvio)">
                 {{ linea.msg.fechaEnvio | date:'shortTime' }}
               </time>
+
+              <!-- Solo en el último tuyo: en todos sería una columna de "Visto"
+                   repetida. Lo que se quiere saber es si lo último que dijiste
+                   ha llegado a leerse. -->
+              @if (linea.msg.id === ultimoMio()) {
+                <span class="mensaje__visto">
+                  @if (linea.msg.leido) { Visto } @else { Enviado }
+                </span>
+              }
             </div>
           }
         } @empty {

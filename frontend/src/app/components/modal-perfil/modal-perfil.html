@@ -103,6 +103,20 @@
             {{ restanteBiografia() }} caracteres
           </small>
         </label>
+
+        <!-- La baja se puede hacer desde el enlace de cualquier correo, pero
+             quien ya está dentro no tenía dónde cambiarlo sin ir a buscar un
+             correo antiguo. -->
+        <label class="campo campo--ancho casilla">
+          <input type="checkbox" [(ngModel)]="perfilForm.avisosPorCorreo">
+          <span>
+            Avisarme por correo
+            <small class="campo__pista">
+              Solo cuando alguien quiere entrenar contigo o te propone un día, y
+              solo si sigue sin respuesta diez minutos después.
+            </small>
+          </span>
+        </label>
       </fieldset>
 
       <!-- ================= Mis levantamientos =================

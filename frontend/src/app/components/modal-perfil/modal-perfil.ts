@@ -75,7 +75,8 @@ export class ModalPerfilComponent {
   perfilForm: any = {
     avatar: '', edad: null, genero: '', peso: null, nivel: '',
     objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', biografia: '',
-    horarios: [], levantamientos: [], metaSemanal: 4, rutina: '', fotoUrl: null
+    horarios: [], levantamientos: [], metaSemanal: 4, rutina: '', fotoUrl: null,
+    avisosPorCorreo: true
   };
 
   /** Los catálogos los manda el backend: duplicarlos aquí es que diverjan. */
@@ -137,7 +138,10 @@ export class ModalPerfilComponent {
       levantamientos: (data.levantamientos || []).map((l: any) => ({ ...l })),
       metaSemanal: data.metaSemanal || 4,
       rutina: data.rutina || '',
-      fotoUrl: data.fotoUrl ?? null
+      fotoUrl: data.fotoUrl ?? null,
+      // ?? y no ||: con || un false del servidor se convertiria en true y la
+      // pantalla diria que recibes avisos justo despues de que te dieras de baja.
+      avisosPorCorreo: data.avisosPorCorreo ?? true
     };
 
     this.ejerciciosDisponibles.set(data.ejerciciosDisponibles || []);

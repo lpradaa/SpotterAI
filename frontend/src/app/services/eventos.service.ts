@@ -39,6 +39,7 @@ export class EventosService {
   readonly estado = signal<EstadoCanal>('desconectado');
 
   private readonly _mensajes = new Subject<any>();
+  private readonly _mensajesLeidos = new Subject<any>();
   private readonly _solicitudes = new Subject<any>();
   private readonly _respuestas = new Subject<any>();
   private readonly _relacionesDeshechas = new Subject<any>();
@@ -47,6 +48,14 @@ export class EventosService {
 
   /** Mensaje de chat recibido, con su contenido completo. */
   readonly mensajes = this._mensajes.asObservable();
+
+  /**
+   * El otro ha abierto la conversación y ha leído lo tuyo.
+   *
+   * Llega al que escribió, no al que lee. Trae `{ conId }`: con quién es la
+   * conversación que se acaba de leer.
+   */
+  readonly mensajesLeidos = this._mensajesLeidos.asObservable();
   /** Alguien te ha enviado una solicitud de conexión. */
   readonly solicitudes = this._solicitudes.asObservable();
   /** Han aceptado o rechazado una solicitud tuya. */
@@ -90,6 +99,7 @@ export class EventosService {
     }));
 
     fuente.addEventListener('mensaje', e => this.emitir(this._mensajes, e));
+    fuente.addEventListener('mensajes-leidos', e => this.emitir(this._mensajesLeidos, e));
     fuente.addEventListener('solicitud', e => this.emitir(this._solicitudes, e));
     fuente.addEventListener('solicitud-respondida', e => this.emitir(this._respuestas, e));
     fuente.addEventListener('relacion-deshecha', e => this.emitir(this._relacionesDeshechas, e));

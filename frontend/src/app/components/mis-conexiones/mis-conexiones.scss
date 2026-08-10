@@ -395,6 +395,14 @@
   overflow-wrap: anywhere;
 }
 
+/* Discreto y al lado de la hora: es un dato de servicio, no parte de lo que
+   se dijo. Solo aparece en el último tuyo. */
+.mensaje__visto {
+  margin-left: 6px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
 .mensaje__hora {
   display: block;
   margin-top: 2px;

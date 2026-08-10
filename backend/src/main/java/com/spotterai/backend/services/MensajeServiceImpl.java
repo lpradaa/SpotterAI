@@ -134,8 +134,16 @@ public class MensajeServiceImpl implements MensajeService {
     @Override
     @Transactional
     public void marcarConversacionLeida(String emailUsuario, Long otroUsuarioId) {
-        usuarioRepository.findByEmail(emailUsuario).ifPresent(
-                yo -> mensajeRepository.marcarConversacionLeida(yo.getId(), otroUsuarioId));
+        usuarioRepository.findByEmail(emailUsuario).ifPresent(yo -> {
+            mensajeRepository.marcarConversacionLeida(yo.getId(), otroUsuarioId);
+
+            // Al que escribio, no al que lee: quien lee ya lo sabe. Sin esto el
+            // "visto" solo aparece al recargar, o sea que miente justo cuando
+            // los dos estais conectados, que es cuando alguien mira si le han
+            // leido.
+            canalEventos.publicar(otroUsuarioId, TipoEvento.MENSAJES_LEIDOS,
+                    Map.of("conId", yo.getId()));
+        });
     }
 
     @Override
@@ -167,7 +175,8 @@ public class MensajeServiceImpl implements MensajeService {
                 m.getEmisor().getNombre(),
                 m.getReceptor().getId(),
                 m.getContenido(),
-                m.getFechaEnvio()
+                m.getFechaEnvio(),
+                m.isLeido()
         );
     }
 }

@@ -41,6 +41,16 @@ public class UsuarioPerfilDTO {
     private String rutina;
 
     /**
+     * Si quiere seguir recibiendo avisos por correo.
+     *
+     * <p>Boolean y no boolean: aqui null significa "no se ha tocado". El perfil
+     * se parchea campo a campo —solo se aplica lo que llega— y con un primitivo
+     * cualquier guardado parcial que no lo incluyera lo pondria en false y
+     * daria de baja a la gente sin que nadie lo pidiera.
+     */
+    private Boolean avisosPorCorreo;
+
+    /**
      * Hasta tres marcas principales. Null significa "no las toques"; una lista
      * vacia, "borralas todas".
      */
@@ -85,6 +95,8 @@ public class UsuarioPerfilDTO {
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
     public String getRutina() { return rutina; }
     public void setRutina(String rutina) { this.rutina = rutina; }
+    public Boolean getAvisosPorCorreo() { return avisosPorCorreo; }
+    public void setAvisosPorCorreo(Boolean avisosPorCorreo) { this.avisosPorCorreo = avisosPorCorreo; }
     public List<LevantamientoEntradaDTO> getLevantamientos() { return levantamientos; }
     public void setLevantamientos(List<LevantamientoEntradaDTO> levantamientos) {
         this.levantamientos = levantamientos;

@@ -83,6 +83,20 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
   });
 
   /**
+   * El id de tu último mensaje, que es el único que lleva el "visto".
+   *
+   * En todos sería una columna de "Visto" repetida que no aporta nada: lo que
+   * se quiere saber es si lo último que dijiste ha llegado a leerse.
+   */
+  ultimoMio = computed(() => {
+    const otro = this.chatActivo()?.usuarioId;
+    if (!otro) return null;
+
+    const mios = this.historial().filter(m => m.emisorId !== otro);
+    return mios.length ? mios[mios.length - 1].id : null;
+  });
+
+  /**
    * El historial con una marca de día donde cambia el día.
    *
    * Cada burbuja llevaba solo la hora, así que una conversación de tres semanas
@@ -184,6 +198,11 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(msg => this.alLlegarMensaje(msg));
 
+    // El otro ha abierto la conversación: lo que le mandaste pasa a "visto".
+    this.eventos.mensajesLeidos
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(datos => this.alLeerlosElOtro(datos?.conId));
+
     // Una solicitud aceptada estrena compañero, y por tanto conversación.
     this.eventos.respuestas
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -215,6 +234,19 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
     const sigueViva = sesion.estado === 'PROPUESTA' || sesion.estado === 'ACEPTADA';
     this.sesionActiva.set(sigueViva ? sesion : null);
     this.cdr.detectChanges();
+  }
+
+  /**
+   * El otro ha abierto la conversación que tienes con él.
+   *
+   * Solo se tocan los tuyos: los suyos ya estaban leídos por tu parte desde que
+   * los viste.
+   */
+  private alLeerlosElOtro(conId: number | undefined): void {
+    if (!conId || this.chatActivo()?.usuarioId !== conId) return;
+
+    this.historial.update(lista =>
+      lista.map(m => (m.emisorId === conId ? m : { ...m, leido: true })));
   }
 
   private alLlegarMensaje(msg: Mensaje): void {

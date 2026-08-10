@@ -373,3 +373,26 @@
     cursor: not-allowed;
   }
 }
+
+/* La casilla y su texto en fila, con la casilla arriba: el texto lleva una
+   pista de dos líneas debajo y centrarla verticalmente la dejaría flotando. */
+.casilla {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--sa-acento);
+    cursor: pointer;
+  }
+
+  .campo__pista {
+    display: block;
+    margin-top: 2px;
+  }
+}

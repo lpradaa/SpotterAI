@@ -175,6 +175,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (dto.getNivel() != null) usuario.setNivel(enBlancoANull(dto.getNivel()));
         if (dto.getObjetivos() != null) usuario.setObjetivos(enBlancoANull(dto.getObjetivos()));
         if (dto.getAvatar() != null) usuario.setAvatar(dto.getAvatar());
+        // Solo si viene. Un guardado parcial que no lo incluya no puede dar de
+        // baja a nadie por descuido: la salida de los avisos tiene que ser algo
+        // que se pide, nunca algo que pasa.
+        if (dto.getAvisosPorCorreo() != null) usuario.setAvisosPorCorreo(dto.getAvisosPorCorreo());
         if (dto.getBiografia() != null) {
             usuario.setBiografia(recortar(dto.getBiografia(), MAX_BIOGRAFIA));
         }
@@ -288,6 +292,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         // este mapa se construye a mano y añadir una columna no obliga a nada.
         perfil.put("fotoUrl", usuario.getFotoUrl());
         perfil.put("biografia", usuario.getBiografia());
+        perfil.put("avisosPorCorreo", usuario.isAvisosPorCorreo());
         perfil.put("rutina", Rutina.desde(usuario.getRutina()).map(Enum::name).orElse(null));
         perfil.put("rutinasDisponibles", Arrays.stream(Rutina.values())
                 .map(r -> Map.of("clave", r.name(), "nombre", r.getNombre())).toList());

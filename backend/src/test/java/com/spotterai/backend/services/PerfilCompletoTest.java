@@ -176,4 +176,46 @@ class PerfilCompletoTest {
         assertTrue(perfil.containsKey("perfilMinimo"),
                 "El guardián necesita saber si se puede emparejar a esta persona");
     }
+
+    @Test
+    @DisplayName("Todo el mundo empieza recibiendo avisos, y el perfil lo dice")
+    void elPerfilDiceSiRecibesAvisos() {
+        conUsuario(usuarioCompleto());
+
+        assertEquals(true, servicio.obtenerMiPerfilCompleto("yo@test.com").get("avisosPorCorreo"));
+    }
+
+    @Test
+    @DisplayName("Se puede dejar de recibirlos desde el perfil")
+    void sePuedeDarseDeBajaDesdeElPerfil() {
+        Usuario u = usuarioCompleto();
+        conUsuario(u);
+        Mockito.when(usuarioRepository.save(Mockito.any())).thenAnswer(i -> i.getArgument(0));
+
+        UsuarioPerfilDTO dto = new UsuarioPerfilDTO();
+        dto.setAvisosPorCorreo(false);
+
+        servicio.actualizarPerfil("yo@test.com", dto);
+
+        assertFalse(u.isAvisosPorCorreo());
+    }
+
+    @Test
+    @DisplayName("Un guardado que no la menciona NO da de baja a nadie")
+    void unGuardadoParcialNoDaDeBaja() {
+        Usuario u = usuarioCompleto();
+        conUsuario(u);
+        Mockito.when(usuarioRepository.save(Mockito.any())).thenAnswer(i -> i.getArgument(0));
+
+        // Es la razon de que el campo del DTO sea Boolean y no boolean. Con un
+        // primitivo, cualquier guardado parcial que no lo incluyera llegaria
+        // como false y daria de baja a quien solo queria cambiar su biografia.
+        // Un aviso se deja de recibir porque alguien lo pide, nunca porque pase.
+        UsuarioPerfilDTO soloBiografia = new UsuarioPerfilDTO();
+        soloBiografia.setBiografia("Busco a alguien constante");
+
+        servicio.actualizarPerfil("yo@test.com", soloBiografia);
+
+        assertTrue(u.isAvisosPorCorreo());
+    }
 }

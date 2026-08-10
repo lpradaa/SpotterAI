@@ -11,18 +11,34 @@ public class MensajeDTO {
     private String contenido;
     private LocalDateTime fechaEnvio;
 
+    /**
+     * Si el otro ya lo ha abierto.
+     *
+     * <p>El dato existia en la base desde siempre y se actualizaba al abrir la
+     * conversacion, pero no salia de ahi: se usaba solo para contar los no
+     * leidos de quien recibe. A quien escribe no le decia nada, y "¿lo habra
+     * visto?" es justo la pregunta que uno se hace cuando propone entrenar el
+     * martes y no le contestan.
+     */
+    private boolean leido;
+
     // Constructor vacío (Obligatorio para que Spring Boot no se queje)
     public MensajeDTO() {}
 
     // Constructor completo (El que estamos usando en tu MensajeServiceImpl)
-    public MensajeDTO(Long id, Long emisorId, String emisorNombre, Long receptorId, String contenido, LocalDateTime fechaEnvio) {
+    public MensajeDTO(Long id, Long emisorId, String emisorNombre, Long receptorId, String contenido,
+                      LocalDateTime fechaEnvio, boolean leido) {
         this.id = id;
         this.emisorId = emisorId;
         this.emisorNombre = emisorNombre;
         this.receptorId = receptorId;
         this.contenido = contenido;
         this.fechaEnvio = fechaEnvio;
+        this.leido = leido;
     }
+
+    public boolean isLeido() { return leido; }
+    public void setLeido(boolean leido) { this.leido = leido; }
 
     // --- GETTERS Y SETTERS ---
     public Long getId() { return id; }
