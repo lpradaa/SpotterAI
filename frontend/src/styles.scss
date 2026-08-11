@@ -2,6 +2,12 @@
 
 @import './scss/index';
 
+// La capa de tema, aqui y una sola vez. Estaba dentro de scss/index, que lo
+// importan los 21 componentes, asi que el bloque :root entero —y su gemelo del
+// tema claro— acababa copiado veintiuna veces en el bundle. Un token no cambia
+// de valor segun quien lo lea: con una copia basta.
+@import './scss/tokens';
+
 // Botones, chips, campos, velos y avisos. Van aqui y no importados por cada
 // componente que los usa: importarlos copia el fichero entero en cada uno, y
 // con seis copias de 8,8 KB el build de produccion reventaba los presupuestos

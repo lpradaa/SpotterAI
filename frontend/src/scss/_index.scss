@@ -1,5 +1,21 @@
-@import 'colors';
-@import 'tokens';
+/* ===========================================================================
+   Lo que un componente puede importar sin coste
+   ---------------------------------------------------------------------------
+   Solo variables SCSS y mixins: cosas que se resuelven en compilacion y no
+   generan ni una linea de CSS hasta que alguien las usa. Por eso los 21
+   componentes pueden importar esto sin pagar nada.
+
+   `tokens` NO esta aqui, y es a proposito. Es CSS de verdad —un bloque :root
+   con sesenta y pico propiedades, mas su gemelo para el tema claro—, asi que
+   estando en este fichero se copiaba entero en cada componente que lo
+   importaba: veintiuna copias en el bundle. Vive en styles.scss, que se carga
+   una sola vez, que es justo lo que necesita una capa de tema.
+
+   Es el mismo razonamiento que ya llevo a `componentes` fuera de aqui, escrito
+   en styles.scss: importar reglas hechas en cada componente las duplica y
+   revienta los presupuestos de tamaño de Angular.
+   =========================================================================== */
+
 @import 'spacing';
 @import 'breakpoints';
 @import 'typography';
