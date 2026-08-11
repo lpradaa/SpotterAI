@@ -15,14 +15,27 @@
   gap: 8px;
 }
 
+/* Alto del lienzo en modo completo.
+   ---------------------------------------------------------------------------
+   190 px daba franjas de dos horas de unos 15: se leian como marcas, no como
+   tramos, y la trama diagonal del ancla —que es la mejor señal que produce el
+   motor, "los dos vais siempre"— quedaba tan comprimida que no llegaba a verse
+   como trama. Es la pieza que esta aplicacion tiene y ninguna otra: merece el
+   sitio.
+
+   En una variable porque lo usan el lienzo y la columna de horas, y si se
+   separan la escala horaria deja de coincidir con los bloques. */
+$alto-lienzo: 240px;
+$alto-cabecera: 18px;
+
 /* --- Columna de horas --- */
 .rejilla__horas {
   position: relative;
   width: 30px;
   flex-shrink: 0;
   // Se alinea con el lienzo, saltando la altura de la cabecera de dias
-  margin-top: 18px;
-  height: 190px;
+  margin-top: $alto-cabecera;
+  height: $alto-lienzo;
 }
 
 .rejilla__hora {
@@ -45,38 +58,60 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
-  height: 18px;
+  height: $alto-cabecera;
 }
 
+/* Sube de 3xs a 2xs y de tenue a suave: son la referencia que dice de que dia
+   habla cada columna, o sea lo que convierte el dibujo en un horario. A 10 px y
+   en el gris mas apagado competian hacia abajo con la propia rejilla. */
 .rejilla__dia {
   font-family: $font-display;
-  font-size: $text-3xs;
+  font-size: $text-2xs;
   font-weight: $font-semibold;
   letter-spacing: $tracking-wide;
   text-transform: uppercase;
-  color: var(--sa-texto-tenue);
+  color: var(--sa-texto-suave);
   text-align: center;
   line-height: 1.4;
+
+  /* El fin de semana, tambien en la cabecera: si solo se tiñe el lienzo, la
+     banda empieza de la nada a media altura. */
+  &:nth-child(6),
+  &:nth-child(7) {
+    color: var(--sa-texto-tenue);
+  }
 }
 
 /* --- Lienzo --- */
 .rejilla__lienzo {
   position: relative;
-  height: 190px;
+  height: $alto-lienzo;
   border-radius: $radius-sm;
-  background: var(--sa-rejilla-fondo);
+  background-color: var(--sa-rejilla-fondo);
   border: 1px solid var(--sa-rejilla-linea);
   overflow: hidden;
 
-  // Separadores de columna dibujados con el propio fondo: siete franjas sin
-  // necesidad de siete elementos vacios en el DOM
-  background-image: repeating-linear-gradient(
-    to right,
-    transparent 0,
-    transparent calc(100% / 7 - 1px),
-    var(--sa-rejilla-linea) calc(100% / 7 - 1px),
-    var(--sa-rejilla-linea) calc(100% / 7)
-  );
+  /* Dos capas, en este orden (la primera va encima):
+     1. Separadores de columna: siete franjas sin siete elementos vacios en el
+        DOM.
+     2. Sabado y domingo, un punto mas hundidos. Sin esto la semana se leia como
+        siete columnas iguales y habia que contar para saber donde empieza el
+        fin de semana; con la banda, se ve que es una semana. */
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent calc(100% / 7 - 1px),
+      var(--sa-rejilla-linea) calc(100% / 7 - 1px),
+      var(--sa-rejilla-linea) calc(100% / 7)
+    ),
+    linear-gradient(
+      to right,
+      transparent 0,
+      transparent calc(100% / 7 * 5),
+      var(--sa-rejilla-finde) calc(100% / 7 * 5),
+      var(--sa-rejilla-finde) 100%
+    );
 }
 
 /* Lineas de hora, de referencia */
@@ -93,7 +128,7 @@
 .bloque {
   position: absolute;
   // La geometria (left, width, top, height) la calcula el componente
-  border-radius: 3px;
+  border-radius: 4px;
   pointer-events: none;
 }
 
@@ -107,23 +142,35 @@
   box-shadow: inset 2px 0 0 var(--sa-borde-fuerte);
 }
 
-/* El solape: esto es lo que el usuario ha venido a ver */
+/* El solape: esto es lo que el usuario ha venido a ver.
+   El canto claro de arriba es lo que separa una pieza de una mancha: da un
+   milimetro de volumen y hace que el bloque se lea como algo puesto sobre el
+   lienzo, no como un hueco pintado en el. El resplandor sigue, pero ya no es
+   lo unico que lo despega del fondo. */
 .bloque--solape {
   background: var(--sa-rejilla-solape);
-  box-shadow: 0 0 12px -2px var(--sa-rejilla-solape);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 0 12px -2px var(--sa-rejilla-solape);
 }
 
 /* Compromiso por ambas partes: el dato mas fiable del sistema.
    Se distingue con trama, no solo con color, para que se lea tambien sin
    percibir bien el matiz. */
 .bloque--ancla {
+  /* La trama sube de 3 a 4 px por franja. Con el lienzo a 240 la diagonal por
+     fin tiene sitio para leerse como trama; a 3 px se veia como un degradado
+     sucio, que es justo lo contrario de lo que se buscaba al elegir una textura
+     en vez de otro color. */
   background:
     repeating-linear-gradient(
       -45deg,
-      var(--sa-rejilla-ancla) 0 3px,
-      var(--sa-rejilla-solape) 3px 6px
+      var(--sa-rejilla-ancla) 0 4px,
+      var(--sa-rejilla-solape) 4px 8px
     );
-  box-shadow: 0 0 14px -1px var(--sa-rejilla-ancla);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 0 14px -1px var(--sa-rejilla-ancla);
 }
 
 /* --- Modo compacto: cabe en una fila de lista --- */
@@ -161,10 +208,12 @@
 }
 
 /* --- Leyenda --- */
+/* Es una clave de lectura, no contenido: baja a 2xs para que no compita con lo
+   que explica. A $text-xs pesaba lo mismo que las etiquetas de dia de dentro. */
 .leyenda {
   display: flex;
   flex-wrap: wrap;
-  gap: $space-sm;
+  gap: $space-xs $space-sm;
   list-style: none;
   margin: $space-xs 0 0;
   padding: 0;
@@ -172,9 +221,9 @@
   li {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: $text-xs;
-    color: var(--sa-texto-suave);
+    gap: 5px;
+    font-size: $text-2xs;
+    color: var(--sa-texto-tenue);
   }
 }
 
@@ -186,11 +235,13 @@
 
   &--mio { background: var(--sa-rejilla-mia); }
   &--solape { background: var(--sa-rejilla-solape); }
+  // Misma trama que el bloque, con el mismo paso: si divergen, la leyenda deja
+  // de explicar lo que hay al lado.
   &--ancla {
     background: repeating-linear-gradient(
       -45deg,
-      var(--sa-rejilla-ancla) 0 3px,
-      var(--sa-rejilla-solape) 3px 6px
+      var(--sa-rejilla-ancla) 0 4px,
+      var(--sa-rejilla-solape) 4px 8px
     );
   }
 }

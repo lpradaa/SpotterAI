@@ -195,7 +195,10 @@ export class RejillaSemana {
    */
   estiloBloque(b: Bloque): Record<string, string> {
     const ancho = 100 / 7;
-    const separacion = this.modo() === 'compacta' ? 1 : 2;
+    // 3 px en completa y no 2: con el lienzo a 240 los bloques son mas anchos de
+    // lo que eran, y dos franjas contiguas del mismo dia se tocaban hasta
+    // parecer una sola. El aire entre columnas es lo que deja contar los dias.
+    const separacion = this.modo() === 'compacta' ? 1 : 3;
 
     return {
       left: `calc(${(b.columna - 1) * ancho}% + ${separacion}px)`,
