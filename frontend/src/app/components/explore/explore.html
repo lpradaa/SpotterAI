@@ -231,6 +231,34 @@
           <small>Deja fuera a quien no tenga marcas: sin ellas no se sabe.</small>
         </span>
       </label>
+
+      <!-- Los dos que de verdad discriminan. Van al final porque son los más
+           duros: cada uno recorta mucho, y puestos arriba dejarían la pantalla
+           vacía antes de que nadie hubiera mirado nada. -->
+      <label class="interruptor">
+        <input type="checkbox" [checked]="filtrosActivos().soloMiGimnasio"
+               (change)="alternarFiltro('soloMiGimnasio', $event)">
+        <span>
+          Solo mi gimnasio
+          <small>
+            Va por el sitio, no por el nombre: hay gimnasios repetidos en la
+            lista de arriba. Entrenar en el mismo vale 8 puntos y además
+            cuadruplica lo que cuenta coincidir de horario.
+          </small>
+        </span>
+      </label>
+
+      <label class="interruptor">
+        <input type="checkbox" [checked]="filtrosActivos().soloConDiasFijos"
+               (change)="alternarFiltro('soloConDiasFijos', $event)">
+        <span>
+          Solo con días fijos en común
+          <small>
+            No que podáis coincidir: que los dos vais siempre ese día a esa
+            hora. Es la señal más fuerte que tiene el motor.
+          </small>
+        </span>
+      </label>
     </div>
 
     <footer class="panel__pie">

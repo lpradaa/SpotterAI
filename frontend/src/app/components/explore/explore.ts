@@ -68,7 +68,21 @@ export class Explore implements OnInit {
      * quiere "quizás".
      */
     rutina: '',
-    soloSiPodemosCubrirnos: false
+    soloSiPodemosCubrirnos: false,
+
+    /**
+     * Los dos que de verdad discriminan, y los unicos que faltaban.
+     *
+     * `soloMiGimnasio` va por id y no por el nombre del desplegable de arriba:
+     * el catalogo tiene nombres repetidos —hay dos "McFit Madrid Centro"— asi
+     * que filtrar por texto no es lo mismo que filtrar por el sitio donde
+     * entrenas. El dato ya venia en cada tarjeta y solo se usaba para contar.
+     *
+     * `soloConDiasFijos` es la señal mas fuerte del motor: no que podais
+     * coincidir, sino que los dos vais siempre ese dia a esa hora.
+     */
+    soloMiGimnasio: false,
+    soloConDiasFijos: false
   });
 
   /** Rutinas presentes en los resultados, para poblar el desplegable. */
@@ -86,7 +100,8 @@ export class Explore implements OnInit {
   hayFiltrosActivos = computed(() => {
     const f = this.filtrosActivos();
     return !!(f.nivel || f.objetivo || f.gimnasio || f.genero || f.edadMin || f.edadMax
-      || f.rutina || f.soloSiPodemosCubrirnos || f.busqueda.trim());
+      || f.rutina || f.soloSiPodemosCubrirnos || f.soloMiGimnasio
+      || f.soloConDiasFijos || f.busqueda.trim());
   });
 
   usuariosFiltrados = computed(() => {
@@ -106,6 +121,8 @@ export class Explore implements OnInit {
     if (f.rutina) lista = lista.filter(u => u.rutina === f.rutina);
     // Estrictamente true: null es "no se sabe", y aquí no vale.
     if (f.soloSiPodemosCubrirnos) lista = lista.filter(u => u.fuerzaCompatible === true);
+    if (f.soloMiGimnasio) lista = lista.filter(u => u.mismoGimnasio);
+    if (f.soloConDiasFijos) lista = lista.filter(u => u.diasFijosEnComun > 0);
 
     return lista;
   });
@@ -225,7 +242,8 @@ export class Explore implements OnInit {
     this.filtrosActivos.set({
       busqueda: '', nivel: '', objetivo: '',
       gimnasio: '', genero: '', edadMin: null, edadMax: null,
-      rutina: '', soloSiPodemosCubrirnos: false
+      rutina: '', soloSiPodemosCubrirnos: false,
+      soloMiGimnasio: false, soloConDiasFijos: false
     });
   }
 
