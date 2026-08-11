@@ -30,3 +30,39 @@
     );
   }
 }
+
+/* La superficie de una tarjeta.
+   ---------------------------------------------------------------------------
+   Estaba escrita a mano en diez ficheros —fondo, borde de un pixel y radio— con
+   cinco radios distintos entre ellos, asi que no habia una tarjeta: habia diez
+   parecidas. Y ninguna tenia sombra: --sa-sombra-sm estaba definida en los
+   tokens con cero usos en toda la aplicacion, que es literalmente por que todo
+   se leia plano —un borde de un pixel sobre un fondo un cuatro por ciento mas
+   claro y nada mas—.
+
+   Mixin y no clase porque _componentes.scss se carga una sola vez desde
+   styles.scss y desde un componente no se puede extender lo que vive alli. Un
+   mixin si se importa por componente sin coste, que es el mismo motivo por el
+   que `cepillado` esta en este fichero. */
+@mixin superficie($radio: $radius-lg) {
+  background: var(--sa-superficie);
+  border: 1px solid var(--sa-borde);
+  border-radius: $radio;
+  box-shadow: var(--sa-sombra-sm);
+}
+
+/* La misma, para lo que se puede pulsar.
+   El relieve al pasar por encima es lo que separa una tarjeta de un rectangulo
+   con texto: dice que hay algo debajo antes de que nadie haga clic. */
+@mixin superficie-interactiva($radio: $radius-lg) {
+  @include superficie($radio);
+  transition: border-color var(--sa-transicion), background-color var(--sa-transicion),
+              transform var(--sa-transicion), box-shadow var(--sa-transicion);
+
+  &:hover {
+    border-color: var(--sa-borde-fuerte);
+    background: var(--sa-superficie-alt);
+    box-shadow: var(--sa-sombra-md);
+    transform: translateY(-1px);
+  }
+}

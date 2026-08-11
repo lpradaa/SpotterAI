@@ -29,7 +29,7 @@
   position: absolute;
   right: 0;
   transform: translateY(-50%);
-  font-size: 10px;
+  font-size: $text-3xs;
   font-variant-numeric: tabular-nums;
   color: var(--sa-texto-tenue);
   line-height: 1;
@@ -50,7 +50,7 @@
 
 .rejilla__dia {
   font-family: $font-display;
-  font-size: 10px;
+  font-size: $text-3xs;
   font-weight: $font-semibold;
   letter-spacing: $tracking-wide;
   text-transform: uppercase;
@@ -140,6 +140,11 @@
     gap: 2px;
   }
 
+  /* El unico tamaño de toda la aplicacion fuera de la escala, y a proposito: en
+     modo compacto el lienzo mide 56 px de alto y las siete iniciales de los dias
+     tienen que caber en esa franja sin comerse el espacio del propio horario.
+     Por debajo de 3xs (10 px) ya no hay peldaños porque no deberia haberlos:
+     esto es una marca de referencia, no texto que nadie vaya a leer seguido. */
   .rejilla__dia {
     font-size: 8px;
   }

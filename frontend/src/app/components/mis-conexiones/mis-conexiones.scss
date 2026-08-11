@@ -55,9 +55,15 @@
   gap: $space-xs;
 }
 
+/* Es el <h1> de la pantalla y estaba a 18px: el unico titulo de pagina de toda
+   la aplicacion por debajo de 20, cuando las demas lo tienen a 24. Un titulo que
+   pesa menos que el de al lado no es una decision de densidad, es un descuido
+   que hace que la pantalla no parezca una pantalla. */
 .lista__titulo {
-  font-size: $text-lg;
-  font-weight: $font-semibold;
+  font-family: $font-display;
+  font-size: $text-2xl;
+  font-weight: $font-bold;
+  letter-spacing: $tracking-tight;
 }
 
 .lista__contador {
@@ -167,7 +173,7 @@
 }
 
 .contacto__hora {
-  font-size: 11px;
+  font-size: $text-2xs;
   color: var(--sa-texto-tenue);
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
@@ -204,7 +210,7 @@
   background: var(--sa-acento);
   color: var(--sa-sobre-acento);
   font-family: $font-display;
-  font-size: 11px;
+  font-size: $text-2xs;
   font-weight: $font-bold;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
@@ -399,14 +405,14 @@
    se dijo. Solo aparece en el último tuyo. */
 .mensaje__visto {
   margin-left: 6px;
-  font-size: 11px;
+  font-size: $text-2xs;
   opacity: 0.75;
 }
 
 .mensaje__hora {
   display: block;
   margin-top: 2px;
-  font-size: 10px;
+  font-size: $text-3xs;
   text-align: right;
   opacity: 0.65;
 }

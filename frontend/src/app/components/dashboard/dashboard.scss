@@ -25,11 +25,12 @@
   }
 }
 
-/* --- Superficie base compartida --- */
+/* --- Superficie base compartida ---
+   Decia "compartida" y era local: la misma receta estaba escrita a mano en diez
+   ficheros con cinco radios distintos. Ahora sale del mixin de scss/_material,
+   que es donde vive el material de la marca. */
 .tarjeta {
-  background: var(--sa-superficie);
-  border: 1px solid var(--sa-borde);
-  border-radius: $radius-lg;
+  @include superficie;
   padding: $space-md;
 }
 
@@ -121,9 +122,7 @@
   align-items: center;
   gap: $space-sm $space-md;
   padding: $space-md;
-  border-radius: $radius-lg;
-  background: var(--sa-superficie);
-  border: 1px solid var(--sa-borde);
+  @include superficie;
   // Grano de metal cepillado. Es la superficie mas grande y vacia de la
   // pantalla: sin nada encima se leia como un rectangulo de color.
   @include cepillado;
@@ -185,7 +184,7 @@
   gap: 1px;
 
   dt {
-    font-size: 10px;
+    font-size: $text-3xs;
     letter-spacing: $tracking-wide;
     text-transform: uppercase;
     color: var(--sa-texto-tenue);

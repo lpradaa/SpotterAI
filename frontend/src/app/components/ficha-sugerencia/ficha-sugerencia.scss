@@ -25,16 +25,6 @@
   }
 }
 
-.sugerencia__avatar {
-  width: 84px;
-  height: 84px;
-  display: grid;
-  place-items: center;
-  font-size: 40px;
-  border-radius: 50%;
-  background: var(--sa-superficie-alt);
-  border: 3px solid var(--sa-acento);
-}
 
 .sugerencia__nombre {
   font-size: $text-2xl;

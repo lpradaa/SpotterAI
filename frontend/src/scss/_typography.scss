@@ -9,7 +9,15 @@
 $font-display: 'Space Grotesk', 'Archivo', system-ui, sans-serif;
 $font-primary: 'Archivo', system-ui, -apple-system, sans-serif;
 
-/* Tamaños de fuente (en píxeles) */
+/* Tamaños de fuente (en píxeles)
+   ---------------------------------------------------------------------------
+   Los dos peldaños por debajo de xs no son un capricho: estaban escritos a mano
+   doce veces repartidas por siete componentes —etiquetas de la rejilla, globos
+   de aviso, pies de tarjeta— porque la escala empezaba en 12 y hacía falta algo
+   más pequeño. Una escala a la que hay que salirse doce veces no es la escala,
+   es una sugerencia. */
+$text-3xs: 10px;
+$text-2xs: 11px;
 $text-xs: 12px;
 $text-sm: 14px;
 $text-base: 16px;

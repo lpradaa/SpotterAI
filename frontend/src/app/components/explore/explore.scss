@@ -121,10 +121,7 @@
   flex-direction: column;
   gap: $space-xs;
   padding: $space-sm;
-  border-radius: $radius-lg;
-  background: var(--sa-superficie);
-  border: 1px solid var(--sa-borde);
-  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
+  @include superficie-interactiva;
   position: relative;
   overflow: hidden;
 
@@ -147,10 +144,10 @@
   &[data-tramo='media'] .ficha__nota { color: var(--sa-comp-media); }
   &[data-tramo='alta'] .ficha__nota { color: var(--sa-comp-alta); }
 
-  &:hover {
-    border-color: var(--sa-borde-fuerte);
-    background: var(--sa-superficie-alt);
-  }
+  // El hover lo pone superficie-interactiva, con el mismo borde y el mismo
+  // fondo que habia aqui mas la elevacion. Dejar la copia local significaba dos
+  // reglas para lo mismo, que es como divergen: la de aqui ganaba por orden y
+  // se comia cualquier ajuste futuro del mixin sin que nadie lo notara.
 }
 
 /* Toda la cabecera lleva al perfil: en una lista de gente, tocar a alguien
@@ -214,17 +211,6 @@
   }
 }
 
-.ficha__avatar {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  border-radius: 50%;
-  background: var(--sa-superficie-alt);
-  border: 1px solid var(--sa-borde);
-  flex-shrink: 0;
-}
 
 .ficha__quien {
   display: flex;
@@ -234,8 +220,10 @@
   margin-right: auto;
 }
 
+/* El nombre es el titular de la tarjeta: por debajo del numero, pero por encima
+   de todo lo demas. A $text-base pesaba lo mismo que la bio. */
 .ficha__nombre {
-  font-size: $text-base;
+  font-size: $text-lg;
   font-weight: $font-semibold;
   line-height: 1.2;
   overflow: hidden;

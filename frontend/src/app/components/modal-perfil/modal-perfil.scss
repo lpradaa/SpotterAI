@@ -192,13 +192,15 @@
   gap: $space-xs;
 }
 
+/* El titulo de una seccion no puede ser el texto mas apagado de esa seccion, y
+   eso era exactamente lo que pasaba: a 14px, en versalitas y con --sa-texto-tenue
+   pesaba menos que la pista que va debajo. En un formulario de diez bloques y
+   dos mil pixeles de scroll, los titulos son lo unico que permite orientarse. */
 .bloque__titulo {
   font-family: $font-display;
-  font-size: $text-sm;
+  font-size: $text-base;
   font-weight: $font-semibold;
-  letter-spacing: $tracking-wide;
-  text-transform: uppercase;
-  color: var(--sa-texto-tenue);
+  color: var(--sa-texto);
   padding: 0;
 }
 

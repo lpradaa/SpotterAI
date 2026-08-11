@@ -110,8 +110,8 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
 
     .feature-item {
-      display: flex; align-items: center; gap: 12px; font-weight: $font-semibold; font-size: 15px;
-      span { font-size: 20px; }
+      display: flex; align-items: center; gap: 12px; font-weight: $font-semibold; font-size: $text-base;
+      span { font-size: $text-xl; }
     }
   }
 }
@@ -156,7 +156,7 @@
 
 /* --- Banner de Error --- */
 .error-banner {
-  background: transparent; border: 1px solid var(--sa-error); border-left-width: 4px; color: var(--sa-error); padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; animation: shake 0.4s ease-in-out;
+  background: transparent; border: 1px solid var(--sa-error); border-left-width: 4px; color: var(--sa-error); padding: 12px 16px; border-radius: 8px; font-size: $text-sm; font-weight: 600; display: flex; align-items: center; gap: 8px; animation: shake 0.4s ease-in-out;
 }
 
 @keyframes shake {
@@ -172,7 +172,7 @@
 .login-footer {
   text-align: center; margin-top: 30px; border-top: 1px solid var(--sa-borde); padding-top: 20px;
 
-  p { color: var(--sa-texto-suave); font-size: 15px; margin: 0; }
+  p { color: var(--sa-texto-suave); font-size: $text-base; margin: 0; }
 }
 
 /* Enlace discreto, compartido por "Regístrate aquí" (en .login-footer) y "He
@@ -181,7 +181,7 @@
    botón nativo del navegador: gris, sin relación con el resto de la pantalla —
    exactamente el caso de "olvidé mi contraseña". */
 .toggle-btn {
-  background: none; border: none; color: var(--sa-acento-texto); font-weight: 700; font-size: 15px; cursor: pointer; padding: 0 5px; transition: color 0.2s;
+  background: none; border: none; color: var(--sa-acento-texto); font-weight: 700; font-size: $text-base; cursor: pointer; padding: 0 5px; transition: color 0.2s;
   &:hover:not(:disabled) { color: var(--sa-acento); text-decoration: underline; }
   &:disabled { color: var(--sa-texto-tenue); cursor: not-allowed; }
 }

@@ -119,15 +119,13 @@
   flex-direction: column;
   gap: $space-sm;
   padding: $space-sm;
-  border: 1px solid var(--sa-borde);
-  border-radius: $radius-lg;
-  background: var(--sa-superficie);
+  @include superficie;
 }
 
 .ficha__subtitulo {
   margin: 0;
   font-family: $font-display;
-  font-size: $text-sm;
+  font-size: $text-base;
   font-weight: $font-semibold;
   color: var(--sa-texto);
 }
@@ -282,7 +280,7 @@
 .hito__cuando {
   display: block;
   margin-top: 4px;
-  font-size: 11px;
+  font-size: $text-2xs;
   color: var(--sa-texto-tenue);
 }
 
