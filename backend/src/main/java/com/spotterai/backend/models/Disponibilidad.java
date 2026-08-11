@@ -42,7 +42,23 @@ public class Disponibilidad {
     @Column(nullable = false)
     private boolean habitual = false;
 
-    @ManyToOne
+    /**
+     * De quien es esta franja.
+     *
+     * <p>LAZY y no el EAGER que pone JPA por defecto, que aqui costaba caro: el
+     * motor carga los horarios de todos los candidatos de golpe con
+     * {@code findByUsuarioIdIn} y despues los agrupa por {@code getUsuario().getId()}.
+     * Con EAGER, Hibernate materializaba el Usuario entero de cada franja, y
+     * como la sesion de esa consulta no es la misma en la que se cargaron los
+     * usuarios —{@code open-in-view} esta en false a proposito— salia un SELECT
+     * por persona. Medido: 59 consultas identicas en una sola llamada a
+     * /api/usuarios/matches.
+     *
+     * <p>Con LAZY el proxy devuelve el identificador sin ir a la base, que es lo
+     * unico que se le pide en todo el proyecto: no hay ni un sitio que lea otro
+     * campo del usuario a traves de una disponibilidad.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
     

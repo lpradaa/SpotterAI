@@ -43,7 +43,8 @@ public class Levantamiento {
     @Column(nullable = false)
     private Integer repeticiones;
 
-    @ManyToOne(optional = false)
+    /** LAZY por lo mismo que en Disponibilidad: solo se le pide el identificador. */
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 

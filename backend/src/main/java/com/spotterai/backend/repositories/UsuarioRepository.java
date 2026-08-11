@@ -2,6 +2,8 @@ package com.spotterai.backend.repositories;
 
 import com.spotterai.backend.models.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -39,10 +41,25 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      */
     boolean existsByEmailEndingWith(String sufijo);
 
-    // Devuelve a todos los usuarios menos al que está logueado.
-    // El emparejamiento ya no se filtra en SQL: CalculadoraCompatibilidad puntua a
-    // todos los candidatos y los ordena. El antiguo buscarMatches (mismo gimnasio
-    // AND mismo nivel) descartaba de golpe a gente perfectamente compatible.
-    List<Usuario> findByIdNot(Long id);
+    /**
+     * Todos los usuarios menos el que esta dentro, con su gimnasio ya cargado.
+     *
+     * <p>El emparejamiento no se filtra en SQL: CalculadoraCompatibilidad puntua
+     * a todos los candidatos y los ordena. El antiguo buscarMatches (mismo
+     * gimnasio AND mismo nivel) descartaba de golpe a gente perfectamente
+     * compatible.
+     *
+     * <p>El {@code LEFT JOIN FETCH} no es adorno. Sin el, esta consulta traia
+     * solo el gimnasio_id y despues Hibernate resolvia la asociacion —que es
+     * EAGER, y tiene que serlo porque el nombre del gimnasio va en cada tarjeta—
+     * con un SELECT por cada gimnasio distinto. Medido: diez consultas extra en
+     * una sola llamada, y creciendo con el numero de gimnasios del catalogo, que
+     * es justo lo que aumenta cuando la aplicacion tiene mas usuarios.
+     *
+     * <p>LEFT y no INNER: quien todavia no ha puesto gimnasio tiene que seguir
+     * saliendo en la lista. Con INNER desapareceria sin que nadie lo notara.
+     */
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.gimnasio WHERE u.id <> :id")
+    List<Usuario> candidatosPara(@Param("id") Long id);
 
 }

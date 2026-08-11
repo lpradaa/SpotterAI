@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.dtos.EstadoConCompanero;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.models.Disponibilidad;
@@ -72,7 +73,7 @@ class BuscarCompanerosTest {
 
         yo = usuario(1L, "Luis", "Intermedio", "Hipertrofia", 28, gimnasio);
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));
-        when(solicitudRepository.findTodasPorUsuario(anyLong())).thenReturn(List.of());
+        when(solicitudRepository.estadosPorCompanero(anyLong())).thenReturn(List.of());
     }
 
     private static Usuario usuario(Long id, String nombre, String nivel, String objetivo,
@@ -98,7 +99,7 @@ class BuscarCompanerosTest {
         Usuario coincide = usuario(2L, "Marta", "Intermedio", "Hipertrofia", 29, gimnasio);
         Usuario noCoincide = usuario(3L, "Ana", "Avanzado", "Resistencia", 45, gimnasio);
 
-        when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of(noCoincide, coincide));
+        when(usuarioRepository.candidatosPara(1L)).thenReturn(List.of(noCoincide, coincide));
         // Todo el grupo en una consulta, yo incluido: el servicio carga los
         // perfiles de golpe y ya no pide lo mio por separado.
         when(disponibilidadRepository.findByUsuarioIdIn(any()))
@@ -121,7 +122,7 @@ class BuscarCompanerosTest {
     void sinGimnasioNoLanzaExcepcion() {
         Usuario sinGimnasio = usuario(1L, "Luis", "Intermedio", "Hipertrofia", 28, null);
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(sinGimnasio));
-        when(usuarioRepository.findByIdNot(1L))
+        when(usuarioRepository.candidatosPara(1L))
                 .thenReturn(List.of(usuario(2L, "Marta", "Intermedio", "Hipertrofia", 29, gimnasio)));
         when(disponibilidadRepository.findByUsuarioId(1L)).thenReturn(List.of());
         when(disponibilidadRepository.findByUsuarioIdIn(any())).thenReturn(List.of());
@@ -145,21 +146,16 @@ class BuscarCompanerosTest {
         Usuario aceptado = usuario(2L, "Marta", "Intermedio", "Hipertrofia", 29, gimnasio);
         Usuario pendiente = usuario(3L, "Ana", "Intermedio", "Hipertrofia", 29, gimnasio);
 
-        when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of(aceptado, pendiente));
+        when(usuarioRepository.candidatosPara(1L)).thenReturn(List.of(aceptado, pendiente));
         when(disponibilidadRepository.findByUsuarioId(1L)).thenReturn(List.of());
         when(disponibilidadRepository.findByUsuarioIdIn(any())).thenReturn(List.of());
 
-        Solicitud ida = new Solicitud();       // yo -> Marta
-        ida.setEmisor(yo);
-        ida.setReceptor(aceptado);
-        ida.setEstado("ACEPTADA");
+        // La proyeccion ya resuelve en SQL quien es "el otro", asi que aqui llega
+        // el identificador del companero sin importar quien mando la solicitud.
+        EstadoConCompanero ida = new EstadoConCompanero(aceptado.getId(), "ACEPTADA");
+        EstadoConCompanero vuelta = new EstadoConCompanero(pendiente.getId(), "PENDIENTE");
 
-        Solicitud vuelta = new Solicitud();    // Ana -> yo
-        vuelta.setEmisor(pendiente);
-        vuelta.setReceptor(yo);
-        vuelta.setEstado("PENDIENTE");
-
-        when(solicitudRepository.findTodasPorUsuario(1L)).thenReturn(List.of(ida, vuelta));
+        when(solicitudRepository.estadosPorCompanero(1L)).thenReturn(List.of(ida, vuelta));
 
         List<UsuarioResponseDTO> resultado = servicio.buscarCompañeros("luis@test.com");
 
@@ -183,7 +179,7 @@ class BuscarCompanerosTest {
                 usuario(4L, "C", "Intermedio", "Fuerza", 30, gimnasio),
                 usuario(5L, "D", "Intermedio", "Fuerza", 30, gimnasio));
 
-        when(usuarioRepository.findByIdNot(1L)).thenReturn(muchos);
+        when(usuarioRepository.candidatosPara(1L)).thenReturn(muchos);
         when(disponibilidadRepository.findByUsuarioId(1L)).thenReturn(List.of());
         when(disponibilidadRepository.findByUsuarioIdIn(any())).thenReturn(List.of());
 
@@ -191,16 +187,28 @@ class BuscarCompanerosTest {
 
         // Una sola consulta agrupada de horarios y una de solicitudes, con 4 candidatos.
         verify(disponibilidadRepository, times(1)).findByUsuarioIdIn(any());
-        verify(solicitudRepository, times(1)).findTodasPorUsuario(1L);
+        verify(solicitudRepository, times(1)).estadosPorCompanero(1L);
         // El metodo antiguo lanzaba dos consultas por candidato; ya no se usa.
         verify(solicitudRepository, Mockito.never())
                 .findFirstByEmisorIdAndReceptorId(anyLong(), anyLong());
+
+        // Y no se piden las Solicitud enteras: de cada una solo hacen falta el
+        // identificador del otro y el estado, y traer la entidad arrastraba
+        // emisor, receptor y los gimnasios de los dos. Con datos de demostracion
+        // no se notaba —casi nadie tiene solicitudes— y crecia justo con lo que
+        // se quiere que crezca: cuanta mas gente conectada, mas cara la lista.
+        verify(solicitudRepository, Mockito.never()).findTodasPorUsuario(anyLong());
+
+        // Los candidatos vienen con su gimnasio ya unido. Sin eso, Hibernate
+        // resolvia la asociacion con un SELECT por gimnasio distinto del
+        // catalogo, que crece con el numero de usuarios.
+        verify(usuarioRepository, times(1)).candidatosPara(1L);
     }
 
     @Test
     @DisplayName("Sin candidatos se devuelve lista vacia sin tocar la base de datos")
     void sinCandidatos() {
-        when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of());
+        when(usuarioRepository.candidatosPara(1L)).thenReturn(List.of());
 
         assertTrue(servicio.buscarCompañeros("luis@test.com").isEmpty());
         verify(disponibilidadRepository, Mockito.never()).findByUsuarioIdIn(any());

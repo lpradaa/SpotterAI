@@ -109,8 +109,8 @@ class LaListaDeGenteTest {
         persona(otro, 2L, "Ana", "ana@test.com").setGimnasio(gimnasio);
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));
-        when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of(otro));
-        when(solicitudRepository.findTodasPorUsuario(any())).thenReturn(List.of());
+        when(usuarioRepository.candidatosPara(1L)).thenReturn(List.of(otro));
+        when(solicitudRepository.estadosPorCompanero(any())).thenReturn(List.of());
 
         // Una sola consulta por lote para todo el grupo, yo incluido: desde que
         // hay un unico cargador de perfiles, el servicio ya no pide lo mio por

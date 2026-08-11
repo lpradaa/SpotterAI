@@ -1,6 +1,7 @@
 package com.spotterai.backend.repositories;
 
 import com.spotterai.backend.models.Solicitud;
+import com.spotterai.backend.dtos.EstadoConCompanero;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -32,6 +33,32 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
     // cada candidato sin lanzar dos consultas por candidato.
     @Query("SELECT s FROM Solicitud s WHERE s.emisor.id = :usuarioId OR s.receptor.id = :usuarioId")
     List<Solicitud> findTodasPorUsuario(@Param("usuarioId") Long usuarioId);
+
+    /**
+     * Lo mismo, pero solo con quien y en que estado.
+     *
+     * <p>El emparejamiento necesita exactamente eso de cada candidato, y traer
+     * las {@code Solicitud} enteras para leerlo salia caro sin que se notara:
+     * emisor y receptor son {@code @ManyToOne} —EAGER por defecto— asi que
+     * Hibernate materializaba los dos usuarios de cada solicitud, y con ellos su
+     * gimnasio, para acabar usando un identificador y una cadena.
+     *
+     * <p>No parecia grave con los datos de demostracion porque casi nadie tiene
+     * solicitudes. Crece justo con lo que se quiere que crezca: cuanta mas gente
+     * conectada, mas caro salia calcular la lista.
+     *
+     * <p>El CASE resuelve en SQL lo que antes se hacia en Java —quien es "el
+     * otro" segun quien mandara la solicitud— y {@code s.emisor.id} no obliga a
+     * unir con usuario: sale de la clave ajena que ya esta en la fila.
+     */
+    @Query("""
+            SELECT new com.spotterai.backend.dtos.EstadoConCompanero(
+                CASE WHEN s.emisor.id = :usuarioId THEN s.receptor.id ELSE s.emisor.id END,
+                s.estado)
+            FROM Solicitud s
+            WHERE s.emisor.id = :usuarioId OR s.receptor.id = :usuarioId
+            """)
+    List<EstadoConCompanero> estadosPorCompanero(@Param("usuarioId") Long usuarioId);
 
     /**
      * Las que llevan la puntuacion congelada, que son las unicas medibles.

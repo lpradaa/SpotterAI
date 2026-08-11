@@ -2,6 +2,7 @@ package com.spotterai.backend.services;
 
 import com.spotterai.backend.dtos.ActividadDTO;
 import com.spotterai.backend.dtos.ConteoPorUsuario;
+import com.spotterai.backend.dtos.EstadoConCompanero;
 import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.dtos.UsuarioRegistroDTO;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
@@ -393,7 +394,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         // librar.
         Set<Long> bloqueados = new HashSet<>(bloqueoRepository.idsConBloqueoDe(miUsuario.getId()));
 
-        List<Usuario> candidatos = usuarioRepository.findByIdNot(miUsuario.getId()).stream()
+        List<Usuario> candidatos = usuarioRepository.candidatosPara(miUsuario.getId()).stream()
                 .filter(u -> !bloqueados.contains(u.getId()))
                 .toList();
         if (candidatos.isEmpty()) return List.of();
@@ -675,12 +676,12 @@ public class UsuarioServiceImpl implements UsuarioService {
      */
     private Map<Long, String> indexarSolicitudes(Long miId) {
         Map<Long, String> porCompanero = new HashMap<>();
-        for (Solicitud s : solicitudRepository.findTodasPorUsuario(miId)) {
-            Long idCompanero = s.getEmisor().getId().equals(miId)
-                    ? s.getReceptor().getId()
-                    : s.getEmisor().getId();
+        // Una proyeccion y no las Solicitud enteras: de cada una solo hacen falta
+        // el identificador del otro y el estado, y traer la entidad arrastraba
+        // consigo emisor, receptor y los gimnasios de los dos.
+        for (EstadoConCompanero e : solicitudRepository.estadosPorCompanero(miId)) {
             // Si hubiera varias entre los mismos usuarios, ACEPTADA manda sobre el resto
-            porCompanero.merge(idCompanero, s.getEstado(),
+            porCompanero.merge(e.companeroId(), e.estado(),
                     (previo, nuevo) -> "ACEPTADA".equals(previo) ? previo : nuevo);
         }
         return porCompanero;

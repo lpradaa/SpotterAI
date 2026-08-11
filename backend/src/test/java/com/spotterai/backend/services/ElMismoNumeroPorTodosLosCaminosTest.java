@@ -103,8 +103,8 @@ class ElMismoNumeroPorTodosLosCaminosTest {
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));
         when(usuarioRepository.findById(2L)).thenReturn(Optional.of(otro));
-        when(usuarioRepository.findByIdNot(1L)).thenReturn(List.of(otro));
-        when(solicitudes.findTodasPorUsuario(any())).thenReturn(List.of());
+        when(usuarioRepository.candidatosPara(1L)).thenReturn(List.of(otro));
+        when(solicitudes.estadosPorCompanero(any())).thenReturn(List.of());
         when(solicitudes.findAceptadasPorUsuario(any())).thenReturn(List.of());
 
         // Todos los datos que mira el motor, para que ninguno se quede "sin
