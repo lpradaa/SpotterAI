@@ -43,15 +43,17 @@ public class GimnasioController {
         return ResponseEntity.ok(gimnasios);
     }
 
-    /**
-     * 3. AÑADIR UN GIMNASIO NUEVO
-     * POST http://localhost:8080/api/gimnasios
-     * Uso: Temporalmente lo usaremos nosotros para "poblar" la base de datos con Postman o Angular.
-     * En un futuro comercial (B2B), esto lo usarían los dueños de los centros deportivos.
+    /*
+     * Aqui habia un POST abierto a cualquiera con sesion, que guardaba el
+     * Gimnasio del cuerpo tal cual. Era de cuando la base se poblaba a mano con
+     * Postman; ahora la siembra la hace SembradorDemo y los gimnasios que faltan
+     * los añade la gente desde su perfil, que pasa por buscarOCrear y compara
+     * los nombres normalizados.
+     *
+     * Se quita porque dejarlo seria dejar abierta la puerta que el arreglo
+     * cierra: sin normalizar, "McFit Centro", "mcfit centro" y "McFit  Centro"
+     * son tres gimnasios, y dos personas del mismo edificio pasan a valer 0,25x
+     * de solape de horario. Fragmentar el catalogo no rompe nada visible: solo
+     * hace que el motor puntue peor sin que nadie sepa por que.
      */
-    @PostMapping
-    public ResponseEntity<Gimnasio> crearGimnasio(@RequestBody Gimnasio gimnasio) {
-        Gimnasio nuevoGimnasio = gimnasioService.guardar(gimnasio);
-        return ResponseEntity.ok(nuevoGimnasio);
-    }
 }

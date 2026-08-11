@@ -24,4 +24,10 @@ public class GimnasioServiceImpl implements GimnasioService {
 
     @Override
     public Gimnasio guardar(Gimnasio gimnasio) { return gimnasioRepository.save(gimnasio); }
+
+    /** {@inheritDoc} */
+    @Override
+    public Gimnasio buscarOCrear(String nombre) {
+        return gimnasioRepository.buscarOCrear(nombre);
+    }
 }

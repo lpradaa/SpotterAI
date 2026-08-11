@@ -18,7 +18,11 @@ public class Gimnasio {
     @Column(nullable = false)
     private String nombre;
 
-    @Column(nullable = false)
+    /**
+     * Puede faltar: los gimnasios que añade la gente desde su perfil se crean
+     * solo con el nombre, que es lo unico que hace falta para agrupar a dos
+     * personas en el mismo sitio.
+     */
     private String direccion;
 
     private String ciudad;

@@ -12,6 +12,20 @@ public class UsuarioPerfilDTO {
     private Long gimnasioId; // El ID del gimnasio que ha elegido del desplegable
 
     /**
+     * El gimnasio que no estaba en la lista, escrito a mano.
+     *
+     * <p>El formulario ofrecia "Añadir uno nuevo" desde el principio y mandaba
+     * esto, pero el campo no existia aqui: Jackson lo descartaba en silencio y
+     * la pantalla decia "Perfil actualizado" sin haber cambiado nada. Quien no
+     * encontrara su gimnasio se quedaba sin el para siempre, y no es un dato
+     * decorativo: vale 8 puntos y ademas multiplica por 0,25 el solape de
+     * horario con quien no lo comparte, o sea que lastra el factor que mas pesa.
+     *
+     * <p>Manda sobre {@code gimnasioId} si llegan los dos.
+     */
+    private String nuevoGimnasioNombre;
+
+    /**
      * Existia en la entidad y se enviaba en las tarjetas, pero no habia forma de
      * escribirla: faltaba justo aqui. Era el unico campo libre del perfil, o sea
      * lo unico que distingue a dos personas con el mismo nivel y el mismo
@@ -87,6 +101,10 @@ public class UsuarioPerfilDTO {
     public void setObjetivos(String objetivos) { this.objetivos = objetivos; }
     public Long getGimnasioId() { return gimnasioId; }
     public void setGimnasioId(Long gimnasioId) { this.gimnasioId = gimnasioId; }
+    public String getNuevoGimnasioNombre() { return nuevoGimnasioNombre; }
+    public void setNuevoGimnasioNombre(String nuevoGimnasioNombre) {
+        this.nuevoGimnasioNombre = nuevoGimnasioNombre;
+    }
     public String getBiografia() { return biografia; }
     public void setBiografia(String biografia) { this.biografia = biografia; }
     public Integer getMetaSemanal() { return metaSemanal; }

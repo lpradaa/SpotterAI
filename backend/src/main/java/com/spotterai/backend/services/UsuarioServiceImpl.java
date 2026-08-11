@@ -216,7 +216,13 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setMetaSemanal(Math.clamp(dto.getMetaSemanal(), 1, 14));
         }
 
-        if (dto.getGimnasioId() != null) {
+        // El que se escribe a mano manda sobre el del desplegable: si llegan los
+        // dos es porque la pantalla dejo el id anterior puesto al abrir "añadir
+        // uno nuevo", y lo que la persona acaba de escribir es lo mas reciente.
+        if (dto.getNuevoGimnasioNombre() != null && !dto.getNuevoGimnasioNombre().isBlank()) {
+            usuario.setGimnasio(gimnasioRepository.buscarOCrear(dto.getNuevoGimnasioNombre()));
+
+        } else if (dto.getGimnasioId() != null) {
             Gimnasio gimnasio = gimnasioRepository.findById(dto.getGimnasioId())
                     .orElseThrow(() -> new IllegalArgumentException("El gimnasio seleccionado no existe."));
             usuario.setGimnasio(gimnasio);
