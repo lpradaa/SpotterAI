@@ -25,7 +25,7 @@
                (ngModelChange)="actualizarFiltros('busqueda', $event)">
       </label>
 
-      <button class="btn btn--pequeno" (click)="toggleFiltros()">
+      <button class="btn btn--neutro btn--pequeno" (click)="toggleFiltros()">
         Filtros
         @if (hayFiltrosActivos()) { <span class="btn__punto" aria-label="Hay filtros activos"></span> }
       </button>

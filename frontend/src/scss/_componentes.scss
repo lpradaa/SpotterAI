@@ -70,14 +70,24 @@
     }
   }
 
-  &--pequeno {
-    padding: 6px 12px;
-    font-size: $text-xs;
+  /* Accion de tercer nivel: presente, sin color y sin pedir nada.
+     Estaba dentro de --pequeno, que es de donde venia el problema: al declararse
+     despues de --primario y --fantasma con la misma especificidad, les ganaba el
+     fondo. O sea que cualquier boton pequeño acababa gris hiciera lo que hiciera,
+     y "Aceptar" y "Rechazar" se pintaban identicos en tres pantallas. El tamaño
+     y el color son cosas distintas y ahora se piden por separado. */
+  &--neutro {
     background: var(--sa-superficie-alt);
     color: var(--sa-texto);
     border-color: var(--sa-borde);
 
     &:hover:not(:disabled) { border-color: var(--sa-acento); }
+  }
+
+  /* Solo tamaño: no toca el color, para no pisar al modificador que lo decide. */
+  &--pequeno {
+    padding: 6px 12px;
+    font-size: $text-xs;
   }
 
   &--ancho { width: 100%; }

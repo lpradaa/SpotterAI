@@ -76,7 +76,7 @@
           <button class="btn btn--primario btn--pequeno"
                   (click)="responderSesion(sesion, true)">Aceptar</button>
         } @else {
-          <button class="btn btn--pequeno" (click)="irAlChat(sesion.conId)">Abrir chat</button>
+          <button class="btn btn--neutro btn--pequeno" (click)="irAlChat(sesion.conId)">Abrir chat</button>
         }
       </div>
     </aside>
@@ -121,7 +121,7 @@
       <section class="tarjeta">
         <div class="seccion__cabecera">
           <h2 class="tarjeta__titulo">Tu gente</h2>
-          <a class="btn btn--pequeno" routerLink="/explorar">Buscar más</a>
+          <a class="btn btn--neutro btn--pequeno" routerLink="/explorar">Buscar más</a>
         </div>
 
         @if (actividad().length === 0) {
@@ -183,7 +183,7 @@
       <section class="tarjeta">
         <div class="seccion__cabecera">
           <h2 class="tarjeta__titulo">Mi actividad</h2>
-          <button class="btn btn--pequeno" (click)="abrirModalEntrenamiento()">Registrar</button>
+          <button class="btn btn--neutro btn--pequeno" (click)="abrirModalEntrenamiento()">Registrar</button>
         </div>
 
         @if (historialEntrenamientos.length === 0) {
