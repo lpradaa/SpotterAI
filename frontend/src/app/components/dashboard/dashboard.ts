@@ -90,6 +90,29 @@ export class DashboardComponent implements OnInit {
   // --- Modal de entrenamiento ---
   isEntrenamientoModalOpen = false;
   historialEntrenamientos: any[] = [];
+
+  /**
+   * Cual esta esperando confirmacion para borrarse, o null.
+   *
+   * Se confirma en la propia fila y no con un dialogo: borrar un entrenamiento
+   * no es grave —se vuelve a apuntar— pero si mueve la constancia, asi que
+   * tampoco puede pasar de un clic despistado.
+   */
+  borrandoEntreno = signal<number | null>(null);
+
+  borrarEntrenamiento(id: number): void {
+    this.usuarioService.borrarEntrenamiento(id).subscribe({
+      next: () => {
+        this.borrandoEntreno.set(null);
+        // La barra de la semana sale de esta lista, asi que se recarga entera:
+        // quitarlo solo del array de aqui dejaria el contador contando lo
+        // borrado hasta la siguiente visita.
+        this.cargarHistorialEntrenamientos();
+        this.cdr.detectChanges();
+      },
+      error: () => this.borrandoEntreno.set(null),
+    });
+  }
   nuevoEntrenamiento: any = { fecha: '', tipo: '', duracionMinutos: null, lugarONotas: '' };
 
   // --- Avisos ---

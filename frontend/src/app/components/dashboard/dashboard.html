@@ -191,11 +191,25 @@
           <p class="vacio">Aún no has registrado entrenamientos.</p>
         } @else {
           <ul class="linea-tiempo">
-            @for (ent of historialEntrenamientos; track $index) {
+            @for (ent of historialEntrenamientos; track ent.id) {
               <li class="entreno">
                 <div class="entreno__cuerpo">
                   <strong>{{ ent.tipo }}</strong>
                   <span class="entreno__duracion cifra">{{ ent.duracionMinutos }} min</span>
+
+                  <!-- Se puede borrar porque esto no es decoracion: mueve la
+                       constancia, que puntua con todo el mundo. Un duplicado o
+                       un dedazo en la fecha se quedaban para siempre. -->
+                  @if (borrandoEntreno() === ent.id) {
+                    <span class="entreno__confirmar">
+                      ¿Seguro?
+                      <button class="btn-icono btn-icono--no" (click)="borrandoEntreno.set(null)">No</button>
+                      <button class="btn-icono btn-icono--si" (click)="borrarEntrenamiento(ent.id)">Sí</button>
+                    </span>
+                  } @else {
+                    <button class="entreno__borrar" (click)="borrandoEntreno.set(ent.id)"
+                            [attr.aria-label]="'Borrar ' + ent.tipo + ' del ' + ent.fecha">✕</button>
+                  }
                 </div>
                 <span class="entreno__fecha">{{ ent.fecha }}{{ ent.lugarONotas ? ' · ' + ent.lugarONotas : '' }}</span>
               </li>

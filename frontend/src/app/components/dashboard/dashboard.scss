@@ -419,3 +419,40 @@
   border-radius: $radius-sm;
   flex-shrink: 0;
 }
+
+/* Borrar un entrenamiento. Discreto hasta que se pasa por encima: es una accion
+   de mantenimiento, no algo que se venga a hacer al tablero. */
+.entreno__borrar {
+  margin-left: auto;
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  color: var(--sa-texto-tenue);
+  font-size: $text-xs;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--sa-transicion), color var(--sa-transicion);
+
+  .entreno:hover &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:hover { color: var(--sa-error); }
+}
+
+/* Siempre visible en tactil: sin raton no hay hover, y un boton que solo
+   aparece al pasar por encima ahi no existe. */
+@media (hover: none) {
+  .entreno__borrar { opacity: 1; }
+}
+
+.entreno__confirmar {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+  white-space: nowrap;
+}

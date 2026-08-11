@@ -60,6 +60,7 @@ public class EntrenamientoController {
             // 🔥 LA SOLUCIÓN: Convertimos a DTO para cortar el bucle infinito del Usuario
             List<EntrenamientoDTO> historialDTO = historial.stream().map(ent -> {
                 EntrenamientoDTO dto = new EntrenamientoDTO();
+                dto.setId(ent.getId());
                 dto.setFecha(ent.getFecha().toString());
                 dto.setTipo(ent.getTipo());
                 dto.setDuracionMinutos(ent.getDuracionMinutos());
@@ -72,5 +73,33 @@ public class EntrenamientoController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al obtener historial.");
         }
+    }
+
+    /**
+     * 3. Borrar uno.
+     *
+     * <p>Faltaba: solo se podia crear y listar, asi que un dedazo en la fecha o
+     * un duplicado se quedaban para siempre. Y estos registros no son
+     * decorativos —son el unico dato medido del motor y mueven la constancia,
+     * que puntua con todo el mundo— asi que poder corregirlos importa mas que
+     * en cualquier campo declarado del perfil.
+     *
+     * <p>404 y no 403 cuando el entrenamiento es de otra persona: decir "existe
+     * pero no es tuyo" confirmaria que hay algo ahi. Desde fuera, el
+     * entrenamiento de otro y uno que no existe son lo mismo.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> borrar(@PathVariable Long id) {
+        String emailLogueado = SecurityContextHolder.getContext().getAuthentication().getName();
+        Usuario usuario = usuarioService.buscarPorEmail(emailLogueado)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        return entrenamientoRepository.findById(id)
+                .filter(e -> e.getUsuario().getId().equals(usuario.getId()))
+                .map(e -> {
+                    entrenamientoRepository.delete(e);
+                    return ResponseEntity.noContent().build();
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
