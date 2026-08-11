@@ -27,7 +27,8 @@
     <ul class="peticiones">
       @for (sesion of sesionesPropuestas(); track sesion.id) {
         <li class="peticion peticion--sesion">
-          <app-avatar [nombre]="sesion.conNombre" [valor]="sesion.conAvatar ?? ''" [tamano]="44" />
+          <app-avatar [nombre]="sesion.conNombre" [valor]="sesion.conAvatar ?? ''"
+                      [foto]="foto(sesion.conFotoUrl)" [tamano]="44" />
 
           <div class="peticion__texto">
             <h2 class="peticion__nombre">{{ sesion.conNombre }}</h2>

@@ -10,7 +10,8 @@
 
     @if (actual(); as candidato) {
       <div class="sugerencia">
-        <app-avatar [nombre]="candidato.nombre" [valor]="candidato.avatar" [tamano]="84" />
+        <app-avatar [nombre]="candidato.nombre" [valor]="candidato.avatar"
+                    [foto]="foto(candidato.fotoUrl)" [tamano]="84" />
 
         <h2 class="sugerencia__nombre" id="titulo-sugerencia">{{ candidato.nombre }}</h2>
 

@@ -167,7 +167,8 @@
            sitios. La campana lleva allí. -->
       <section class="tarjeta perfil">
         <div class="perfil__cabecera">
-          <app-avatar [nombre]="userName()" [valor]="perfilCargado()?.avatar ?? ''" [tamano]="68" />
+          <app-avatar [nombre]="userName()" [valor]="perfilCargado()?.avatar ?? ''"
+                      [foto]="urlFoto()" [tamano]="68" />
           <h2 class="perfil__nombre">{{ userName() }}</h2>
           <span class="chip chip--objetivo">{{ perfilCargado()?.objetivos || 'Sin objetivo' }}</span>
         </div>

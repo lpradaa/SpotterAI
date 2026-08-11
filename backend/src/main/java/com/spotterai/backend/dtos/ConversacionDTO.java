@@ -21,6 +21,16 @@ public record ConversacionDTO(
         Long usuarioId,
         String nombre,
         String avatar,
+
+        /**
+         * Su foto, si la tiene.
+         *
+         * <p>Faltaba, asi que la lista de conversaciones y la cabecera del chat
+         * pintaban la inicial de color a gente que si tiene foto. Es la sexta
+         * vez que este mismo campo se olvida al escribir un DTO: existia en la
+         * entidad, el avatar sabia pintarla y el perfil publico la devolvia.
+         */
+        String fotoUrl,
         String ultimoMensaje,
         LocalDateTime ultimaFecha,
         boolean mioElUltimo,

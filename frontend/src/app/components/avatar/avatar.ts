@@ -38,7 +38,18 @@ export class Avatar {
   nombre = input<string | null | undefined>('');
   /** Color elegido por la persona. Puede venir vacío o con datos antiguos. */
   valor = input<string | null | undefined>('');
-  /** Ruta absoluta de la foto, si la tiene. */
+  /**
+   * Ruta absoluta de la foto, si la tiene.
+   *
+   * <p>Es opcional, y ahí está la trampa: al no serlo, cada pantalla nueva
+   * pinta iniciales de color sin que nada falle, y el fallo solo se ve mirando
+   * a una persona que sí tiene foto. Ha pasado seis veces —tres por olvidar el
+   * campo en un DTO y tres por no pasarlo aquí— en `mis-conexiones` (lista y
+   * cabecera del chat), `ficha-sugerencia`, `solicitudes` y el tablero.
+   *
+   * <p>Antes de añadir un `<app-avatar>` nuevo: comprueba que el DTO del que
+   * sale esa persona trae su foto, no solo su color.
+   */
   foto = input<string | null | undefined>(null);
   tamano = input<number>(36);
 

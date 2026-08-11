@@ -13,6 +13,7 @@ import { UsuarioService } from '../../services/usuario.service';
 import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
 import { Avatar } from '../avatar/avatar';
+import { PerfilesService } from '../../services/perfiles.service';
 
 /**
  * Una fila del historial: o un mensaje, o la marca del día en que empieza.
@@ -33,6 +34,13 @@ export type LineaDelChat =
 })
 export class MisConexionesComponent implements OnInit, AfterViewChecked {
   private cdr = inject(ChangeDetectorRef);
+  private perfiles = inject(PerfilesService);
+
+  /** La foto de alguien, resuelta a URL servible. */
+  foto(ruta: string | null | undefined): string | null {
+    return this.perfiles.urlDeMedio(ruta ?? null);
+  }
+
   private route = inject(ActivatedRoute);
   private eventos = inject(EventosService);
   private mensajes = inject(MensajesService);

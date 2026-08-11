@@ -7,6 +7,7 @@ import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { ModalAccesible } from '../../directivas/modal-accesible';
 import { tramoDe } from '../../utils/compatibilidad';
+import { PerfilesService } from '../../services/perfiles.service';
 import { Desglose } from '../desglose/desglose';
 
 /**
@@ -30,7 +31,13 @@ import { Desglose } from '../desglose/desglose';
 export class FichaSugerenciaComponent {
 
   private usuarioService = inject(UsuarioService);
+  private perfiles = inject(PerfilesService);
   private cdr = inject(ChangeDetectorRef);
+
+  /** La foto de alguien, resuelta a URL servible. */
+  foto(ruta: string | null | undefined): string | null {
+    return this.perfiles.urlDeMedio(ruta ?? null);
+  }
 
   candidatos = input<Match[]>([]);
   misFranjas = input<any[]>([]);

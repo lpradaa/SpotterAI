@@ -115,6 +115,7 @@ public class MensajeServiceImpl implements MensajeService {
                     companero.getId(),
                     companero.getNombre(),
                     companero.getAvatar(),
+                    companero.getFotoUrl(),
                     ultimo == null ? null : ultimo.getContenido(),
                     ultimo == null ? null : ultimo.getFechaEnvio(),
                     ultimo != null && ultimo.getEmisor().getId().equals(yo.getId()),

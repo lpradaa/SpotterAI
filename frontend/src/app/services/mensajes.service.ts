@@ -24,6 +24,8 @@ export interface Conversacion {
   usuarioId: number;
   nombre: string;
   avatar: string | null;
+  /** Su foto, si la tiene. Sin esto la lista pintaba iniciales a todo el mundo. */
+  fotoUrl: string | null;
   ultimoMensaje: string | null;
   ultimaFecha: string | null;
   mioElUltimo: boolean;
