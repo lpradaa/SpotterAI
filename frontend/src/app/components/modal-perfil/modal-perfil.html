@@ -254,6 +254,22 @@
             <input type="text" [(ngModel)]="nuevoGimnasioNombre" placeholder="Ej: McFit Centro">
           </label>
         }
+
+        <!-- Lo único del emparejamiento que la aplicación no puede deducir de
+             ningún otro dato: solo lo sabe quien lo decide. Entrenar en
+             gimnasios distintos hunde el factor que más pesa, y hasta ahora no
+             había forma de decir que eso no es un problema para ti. -->
+        <label class="campo campo--ancho casilla">
+          <input type="checkbox" [(ngModel)]="perfilForm.puedoDesplazarme">
+          <span>
+            Puedo entrenar en otro gimnasio
+            <small class="campo__pista">
+              Si te viene bien desplazarte de vez en cuando, saldrá gente que
+              entrena cerca pero no en tu sala. Cuenta menos que compartir
+              gimnasio, porque moverse cuesta.
+            </small>
+          </span>
+        </label>
       </fieldset>
 
       <fieldset class="bloque">

@@ -48,3 +48,65 @@
   gap: $space-xs;
   margin-top: $space-xs;
 }
+
+/* ===================== Donde quedar =====================
+   Solo aparece cuando cada uno entrena en un sitio, que es el unico caso en el
+   que hay algo que preguntar. Dos botones y no un desplegable: son dos opciones
+   con nombre propio, y un <select> las escondería detrás de un clic. */
+.donde {
+  border: 1px solid var(--sa-borde);
+  border-radius: $radius-md;
+  padding: $space-xs;
+  background: var(--sa-superficie-alt);
+
+  legend { padding: 0 4px; }
+}
+
+.donde__pista {
+  margin: 0 0 $space-xs;
+  font-size: $text-xs;
+  line-height: $leading-normal;
+  color: var(--sa-texto-suave);
+}
+
+.donde__opciones {
+  display: flex;
+  gap: $space-xs;
+  flex-wrap: wrap;
+}
+
+.donde__opcion {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--sa-borde);
+  border-radius: $radius-sm;
+  background: var(--sa-superficie);
+  color: var(--sa-texto);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--sa-transicion), background-color var(--sa-transicion);
+
+  &:hover { border-color: var(--sa-borde-fuerte); }
+
+  &--activa {
+    border-color: var(--sa-acento);
+    background: var(--sa-acento-suave);
+  }
+}
+
+.donde__dequien {
+  font-family: $font-display;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  color: var(--sa-texto-tenue);
+
+  .donde__opcion--activa & { color: var(--sa-acento-texto); }
+}
+
+.donde__nombre {
+  font-size: $text-sm;
+}

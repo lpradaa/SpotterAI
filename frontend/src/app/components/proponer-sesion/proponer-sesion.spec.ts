@@ -26,7 +26,19 @@ describe('ProponerSesionComponent', () => {
     horaInicio: '18:00:00',
     horaFin: '20:00:00',
     ambosFijos: true,
-    gimnasioNombre: 'McFit'
+    gimnasioNombre: 'McFit',
+    // Comparten gimnasio: no hay nada que preguntar.
+    donde: [] as { id: number; nombre: string; dequien: 'mio' | 'suyo' }[]
+  };
+
+  /** Cada uno en un sitio: entonces si hay que elegir donde quedar. */
+  const EN_SITIOS_DISTINTOS = {
+    ...CON_HUECO,
+    gimnasioNombre: null,
+    donde: [
+      { id: 1, nombre: 'McFit', dequien: 'mio' as const },
+      { id: 2, nombre: 'Basic-Fit', dequien: 'suyo' as const }
+    ]
   };
 
   beforeEach(async () => {
@@ -61,7 +73,7 @@ describe('ProponerSesionComponent', () => {
   it('sin franjas en común no se inventa una hora', () => {
     sugerencia().flush({
       hayFranjas: false, fecha: null, horaInicio: null, horaFin: null,
-      ambosFijos: false, gimnasioNombre: null
+      ambosFijos: false, gimnasioNombre: null, donde: []
     });
 
     // Se deja vacío y la pista de arriba explica por qué. Poner una hora al azar
@@ -79,7 +91,10 @@ describe('ProponerSesionComponent', () => {
     const peticion = http.expectOne(api('/api/sesiones/proponer/7'));
     expect(peticion.request.method).toBe('POST');
     expect(peticion.request.body).toEqual({
-      fecha: '2026-08-03', horaInicio: '18:00', horaFin: '20:00', nota: 'Empiezo por pierna'
+      fecha: '2026-08-03', horaInicio: '18:00', horaFin: '20:00', nota: 'Empiezo por pierna',
+      // Sin elegir sitio: el backend deja la sesion sin gimnasio en vez de
+      // suponer el de quien propone.
+      gimnasioId: null
     });
     peticion.flush({ id: 1, estado: 'PROPUESTA' });
   });
@@ -152,5 +167,24 @@ describe('ProponerSesionComponent', () => {
       fecha: '2026-08-05', horaInicio: '19:00', horaFin: '20:30', nota: ''
     };
     expect(componente.completo).toBe(true);
+  });
+
+  it('con gimnasios distintos, el sitio elegido viaja con la propuesta', () => {
+    sugerencia().flush(EN_SITIOS_DISTINTOS);
+
+    // Lo que haria alguien al pulsar "El suyo"
+    componente.gimnasioElegido.set(2);
+    componente.enviar();
+
+    const peticion = http.expectOne(api('/api/sesiones/proponer/7'));
+    expect(peticion.request.body.gimnasioId).toBe(2);
+    peticion.flush({ id: 1, estado: 'PROPUESTA' });
+  });
+
+  it('no se elige sitio por defecto: uno de los dos tiene que moverse', () => {
+    sugerencia().flush(EN_SITIOS_DISTINTOS);
+
+    // Dar por hecho cual seria decidir por ellos, que es lo que se evita.
+    expect(componente.gimnasioElegido()).toBeNull();
   });
 });

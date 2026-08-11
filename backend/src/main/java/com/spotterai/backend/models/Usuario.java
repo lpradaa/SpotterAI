@@ -140,6 +140,19 @@ public class Usuario {
     @JoinColumn(name = "gimnasio_id")
     private Gimnasio gimnasio;
 
+    /**
+     * Si se desplazaria a otro gimnasio para entrenar acompañado.
+     *
+     * <p>Es el unico dato del emparejamiento que no se puede deducir de ningun
+     * otro: ni del horario, ni del gimnasio, ni del historial. Solo lo sabe
+     * quien lo decide, y por eso se pregunta en vez de inferirlo.
+     *
+     * <p>Falso por defecto. Suponer que si seria suponer que todo el mundo se
+     * mueve, que es justo lo contrario de lo que pasa.
+     */
+    @Column(name = "puedo_desplazarme", nullable = false)
+    private boolean puedoDesplazarme = false;
+
     @OneToMany(mappedBy = "usuario")
     private List<Disponibilidad> disponibilidades;
 
@@ -171,6 +184,9 @@ public class Usuario {
 
     public Float getPeso() { return peso; }
     public void setPeso(Float peso) { this.peso = peso; }
+
+    public boolean isPuedoDesplazarme() { return puedoDesplazarme; }
+    public void setPuedoDesplazarme(boolean puedoDesplazarme) { this.puedoDesplazarme = puedoDesplazarme; }
 
     public Gimnasio getGimnasio() { return gimnasio; }
     public void setGimnasio(Gimnasio gimnasio) { this.gimnasio = gimnasio; }

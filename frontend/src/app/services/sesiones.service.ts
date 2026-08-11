@@ -29,6 +29,14 @@ export interface Sesion {
   yaConfirmada: boolean;
 }
 
+/** Un sitio posible para quedar, cuando cada uno entrena en uno. */
+export interface OpcionDeGimnasio {
+  id: number;
+  nombre: string;
+  /** 'mio' o 'suyo': sin esto son dos nombres propios entre los que no se puede elegir. */
+  dequien: 'mio' | 'suyo';
+}
+
 /** Lo que el formulario trae ya puesto, sacado del solape real. */
 export interface SugerenciaSesion {
   hayFranjas: boolean;
@@ -37,6 +45,8 @@ export interface SugerenciaSesion {
   horaFin: string | null;
   ambosFijos: boolean;
   gimnasioNombre: string | null;
+  /** Vacia cuando comparten gimnasio: entonces no hay nada que preguntar. */
+  donde: OpcionDeGimnasio[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -79,6 +89,7 @@ export class SesionesService {
 
   proponer(otroId: number, datos: {
     fecha: string; horaInicio: string; horaFin: string; nota?: string | null;
+    gimnasioId?: number | null;
   }): Observable<Sesion> {
     return this.http.post<Sesion>(`${this.url}/proponer/${otroId}`, datos);
   }

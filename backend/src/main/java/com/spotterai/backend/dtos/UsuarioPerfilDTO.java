@@ -26,6 +26,15 @@ public class UsuarioPerfilDTO {
     private String nuevoGimnasioNombre;
 
     /**
+     * Si se desplazaria a otro gimnasio para entrenar acompañado.
+     *
+     * <p>Boolean y no boolean por lo mismo que avisosPorCorreo: null significa
+     * "no se ha tocado". El perfil se parchea campo a campo, y con un primitivo
+     * cualquier guardado parcial que no lo incluyera lo pondria en false.
+     */
+    private Boolean puedoDesplazarme;
+
+    /**
      * Existia en la entidad y se enviaba en las tarjetas, pero no habia forma de
      * escribirla: faltaba justo aqui. Era el unico campo libre del perfil, o sea
      * lo unico que distingue a dos personas con el mismo nivel y el mismo
@@ -101,6 +110,8 @@ public class UsuarioPerfilDTO {
     public void setObjetivos(String objetivos) { this.objetivos = objetivos; }
     public Long getGimnasioId() { return gimnasioId; }
     public void setGimnasioId(Long gimnasioId) { this.gimnasioId = gimnasioId; }
+    public Boolean getPuedoDesplazarme() { return puedoDesplazarme; }
+    public void setPuedoDesplazarme(Boolean puedoDesplazarme) { this.puedoDesplazarme = puedoDesplazarme; }
     public String getNuevoGimnasioNombre() { return nuevoGimnasioNombre; }
     public void setNuevoGimnasioNombre(String nuevoGimnasioNombre) {
         this.nuevoGimnasioNombre = nuevoGimnasioNombre;

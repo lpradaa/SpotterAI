@@ -12,6 +12,7 @@ import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.DisponibilidadRepository;
 import com.spotterai.backend.repositories.EntrenamientoRepository;
+import com.spotterai.backend.repositories.GimnasioRepository;
 import com.spotterai.backend.repositories.SesionRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
@@ -50,6 +51,7 @@ class SesionServiceTest {
     private SolicitudRepository solicitudRepository;
     private DisponibilidadRepository disponibilidadRepository;
     private EntrenamientoRepository entrenamientoRepository;
+    private GimnasioRepository gimnasioRepository;
     private SesionServiceImpl servicio;
 
     private final Gimnasio gimnasio = gimnasio(1L, "McFit");
@@ -79,12 +81,14 @@ class SesionServiceTest {
         solicitudRepository = Mockito.mock(SolicitudRepository.class);
         disponibilidadRepository = Mockito.mock(DisponibilidadRepository.class);
         entrenamientoRepository = Mockito.mock(EntrenamientoRepository.class);
+        gimnasioRepository = Mockito.mock(GimnasioRepository.class);
 
         Clock congelado = Clock.fixed(AHORA.atZone(ZoneId.systemDefault()).toInstant(),
                 ZoneId.systemDefault());
 
         servicio = new SesionServiceImpl(sesionRepository, usuarioRepository, solicitudRepository,
-                disponibilidadRepository, entrenamientoRepository, new CanalEventos(), congelado);
+                disponibilidadRepository, entrenamientoRepository, gimnasioRepository,
+                new CanalEventos(), congelado);
 
         for (Usuario u : List.of(yo, otro, desconocido)) {
             Mockito.when(usuarioRepository.findByEmail(u.getEmail())).thenReturn(Optional.of(u));
@@ -107,7 +111,12 @@ class SesionServiceTest {
     }
 
     private NuevaSesionDTO datos(String fecha, String inicio, String fin) {
-        return new NuevaSesionDTO(fecha, inicio, fin, null);
+        return new NuevaSesionDTO(fecha, inicio, fin, null, null);
+    }
+
+    /** Igual, pero eligiendo donde quedar. */
+    private NuevaSesionDTO datosEn(String fecha, String inicio, String fin, Long gimnasioId) {
+        return new NuevaSesionDTO(fecha, inicio, fin, null, gimnasioId);
     }
 
     private Sesion sesionGuardada(String fecha, String inicio, String fin, String estado) {
@@ -404,5 +413,91 @@ class SesionServiceTest {
         assertEquals(LocalTime.of(19, 0), s.horaInicio());
         assertEquals(LocalTime.of(20, 0), s.horaFin());
         assertTrue(s.ambosFijos());
+    }
+
+    // ===================== Donde se queda =====================
+    // Dos personas de gimnasios distintos pueden entrenar juntas, pero alguien
+    // tiene que decir donde. Antes la sesion se guardaba sin sitio: quedaban a
+    // una hora y en ninguna parte.
+
+    @Test
+    @DisplayName("Con gimnasios distintos se ofrecen los dos para elegir")
+    void conGimnasiosDistintosHayQueElegir() {
+        yo.setGimnasio(gimnasio(1L, "McFit"));
+        otro.setGimnasio(gimnasio(2L, "Basic-Fit"));
+
+        SugerenciaSesionDTO s = servicio.sugerir(yo.getEmail(), otro.getId());
+
+        assertEquals(2, s.donde().size());
+        assertEquals("mio", s.donde().get(0).dequien());
+        assertEquals("McFit", s.donde().get(0).nombre());
+        assertEquals("suyo", s.donde().get(1).dequien());
+        assertEquals("Basic-Fit", s.donde().get(1).nombre());
+        // Y no se da por hecho ninguno
+        assertNull(s.gimnasioNombre());
+    }
+
+    @Test
+    @DisplayName("Compartiendo gimnasio no se pregunta nada")
+    void compartiendoGimnasioNoSePregunta() {
+        yo.setGimnasio(gimnasio);
+        otro.setGimnasio(gimnasio);
+
+        SugerenciaSesionDTO s = servicio.sugerir(yo.getEmail(), otro.getId());
+
+        assertTrue(s.donde().isEmpty());
+        assertEquals("McFit", s.gimnasioNombre());
+    }
+
+    @Test
+    @DisplayName("Sin gimnasio en alguno de los dos tampoco hay nada que elegir")
+    void sinGimnasioNoHayOpciones() {
+        yo.setGimnasio(gimnasio);
+        otro.setGimnasio(null);
+
+        SugerenciaSesionDTO s = servicio.sugerir(yo.getEmail(), otro.getId());
+
+        assertTrue(s.donde().isEmpty());
+    }
+
+    @Test
+    @DisplayName("El gimnasio elegido se guarda en la sesion")
+    void elGimnasioElegidoSeGuarda() {
+        Gimnasio suyo = gimnasio(2L, "Basic-Fit");
+        yo.setGimnasio(gimnasio);
+        otro.setGimnasio(suyo);
+        Mockito.when(gimnasioRepository.findById(2L)).thenReturn(Optional.of(suyo));
+
+        servicio.proponer(yo.getEmail(), otro.getId(), datosEn("2026-07-03", "19:00", "20:30", 2L));
+
+        ArgumentCaptor<Sesion> capturada = ArgumentCaptor.forClass(Sesion.class);
+        Mockito.verify(sesionRepository).save(capturada.capture());
+        assertEquals("Basic-Fit", capturada.getValue().getGimnasio().getNombre());
+    }
+
+    @Test
+    @DisplayName("Un gimnasio que no existe se rechaza, no se guarda a medias")
+    void gimnasioInventadoSeRechaza() {
+        yo.setGimnasio(gimnasio);
+        otro.setGimnasio(gimnasio(2L, "Basic-Fit"));
+        Mockito.when(gimnasioRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () ->
+                servicio.proponer(yo.getEmail(), otro.getId(),
+                        datosEn("2026-07-03", "19:00", "20:30", 99L)));
+    }
+
+    @Test
+    @DisplayName("Sin elegir y con gimnasios distintos, la sesion sigue sin sitio")
+    void sinElegirYSinCompartirNoSeInventaSitio() {
+        yo.setGimnasio(gimnasio);
+        otro.setGimnasio(gimnasio(2L, "Basic-Fit"));
+
+        servicio.proponer(yo.getEmail(), otro.getId(), datos("2026-07-03", "19:00", "20:30"));
+
+        ArgumentCaptor<Sesion> capturada = ArgumentCaptor.forClass(Sesion.class);
+        Mockito.verify(sesionRepository).save(capturada.capture());
+        // Ponerle uno por defecto seria decidir por ellos, que es lo que se evita.
+        assertNull(capturada.getValue().getGimnasio());
     }
 }

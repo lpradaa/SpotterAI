@@ -216,6 +216,11 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setMetaSemanal(Math.clamp(dto.getMetaSemanal(), 1, 14));
         }
 
+        // Solo si llega: null significa "no se ha tocado".
+        if (dto.getPuedoDesplazarme() != null) {
+            usuario.setPuedoDesplazarme(dto.getPuedoDesplazarme());
+        }
+
         // El que se escribe a mano manda sobre el del desplegable: si llegan los
         // dos es porque la pantalla dejo el id anterior puesto al abrir "añadir
         // uno nuevo", y lo que la persona acaba de escribir es lo mas reciente.
@@ -310,6 +315,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         perfil.put("fotoUrl", usuario.getFotoUrl());
         perfil.put("biografia", usuario.getBiografia());
         perfil.put("avisosPorCorreo", usuario.isAvisosPorCorreo());
+        perfil.put("puedoDesplazarme", usuario.isPuedoDesplazarme());
         perfil.put("rutina", Rutina.desde(usuario.getRutina()).map(Enum::name).orElse(null));
         perfil.put("rutinasDisponibles", Arrays.stream(Rutina.values())
                 .map(r -> Map.of("clave", r.name(), "nombre", r.getNombre())).toList());

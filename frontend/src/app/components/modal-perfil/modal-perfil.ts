@@ -170,7 +170,7 @@ export class ModalPerfilComponent {
     avatar: '', edad: null, genero: '', peso: null, nivel: '',
     objetivos: '', gimnasioId: null, nuevoGimnasioNombre: '', biografia: '',
     horarios: [], levantamientos: [], metaSemanal: 4, rutina: '', fotoUrl: null,
-    avisosPorCorreo: true
+    avisosPorCorreo: true, puedoDesplazarme: false
   };
 
   /** Los catálogos los manda el backend: duplicarlos aquí es que diverjan. */
@@ -236,7 +236,8 @@ export class ModalPerfilComponent {
       fotoUrl: data.fotoUrl ?? null,
       // ?? y no ||: con || un false del servidor se convertiria en true y la
       // pantalla diria que recibes avisos justo despues de que te dieras de baja.
-      avisosPorCorreo: data.avisosPorCorreo ?? true
+      avisosPorCorreo: data.avisosPorCorreo ?? true,
+      puedoDesplazarme: data.puedoDesplazarme ?? false
     };
 
     this.ejerciciosDisponibles.set(data.ejerciciosDisponibles || []);

@@ -9,11 +9,13 @@ import com.spotterai.backend.matching.CalculadoraSolape;
 import com.spotterai.backend.matching.ProximaOcasion;
 import com.spotterai.backend.matching.SolapeHorario;
 import com.spotterai.backend.models.Entrenamiento;
+import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Sesion;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.DisponibilidadRepository;
 import com.spotterai.backend.repositories.EntrenamientoRepository;
+import com.spotterai.backend.repositories.GimnasioRepository;
 import com.spotterai.backend.repositories.SesionRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
@@ -46,6 +48,7 @@ public class SesionServiceImpl implements SesionService {
     private final SolicitudRepository solicitudRepository;
     private final DisponibilidadRepository disponibilidadRepository;
     private final EntrenamientoRepository entrenamientoRepository;
+    private final GimnasioRepository gimnasioRepository;
     private final CanalEventos canalEventos;
 
     /**
@@ -61,6 +64,7 @@ public class SesionServiceImpl implements SesionService {
                              SolicitudRepository solicitudRepository,
                              DisponibilidadRepository disponibilidadRepository,
                              EntrenamientoRepository entrenamientoRepository,
+                             GimnasioRepository gimnasioRepository,
                              CanalEventos canalEventos,
                              Clock reloj) {
         this.sesionRepository = sesionRepository;
@@ -68,6 +72,7 @@ public class SesionServiceImpl implements SesionService {
         this.solicitudRepository = solicitudRepository;
         this.disponibilidadRepository = disponibilidadRepository;
         this.entrenamientoRepository = entrenamientoRepository;
+        this.gimnasioRepository = gimnasioRepository;
         this.canalEventos = canalEventos;
         this.reloj = reloj;
     }
@@ -83,11 +88,12 @@ public class SesionServiceImpl implements SesionService {
                 disponibilidadRepository.findByUsuarioId(otro.getId()));
 
         String donde = dondeEntrenariais(yo, otro);
+        List<SugerenciaSesionDTO.OpcionDeGimnasio> opciones = dondePodriaisQuedar(yo, otro);
 
         return ProximaOcasion.primera(solape.franjas(), ahora())
                 .map(ocasion -> new SugerenciaSesionDTO(true, ocasion.fecha(),
-                        ocasion.inicio(), ocasion.fin(), ocasion.ambosFijos(), donde))
-                .orElseGet(() -> SugerenciaSesionDTO.sinFranjas(donde));
+                        ocasion.inicio(), ocasion.fin(), ocasion.ambosFijos(), donde, opciones))
+                .orElseGet(() -> SugerenciaSesionDTO.sinFranjas(donde, opciones));
     }
 
     @Override
@@ -134,18 +140,39 @@ public class SesionServiceImpl implements SesionService {
         sesion.setNota(recortar(datos.nota()));
         sesion.setCreadaEn(ahora());
 
-        // El gimnasio no se pregunta: si los dos entrenan en el mismo, ya se sabe;
-        // y si no coinciden, ponerle uno seria decidir por ellos.
-        if (yo.getGimnasio() != null && otro.getGimnasio() != null
-                && yo.getGimnasio().getId().equals(otro.getGimnasio().getId())) {
-            sesion.setGimnasio(yo.getGimnasio());
-        }
+        sesion.setGimnasio(donde(yo, otro, datos.gimnasioId()));
 
         Sesion guardada = sesionRepository.save(sesion);
 
         canalEventos.publicar(otro.getId(), TipoEvento.SESION, aDTO(guardada, otro.getId()));
 
         return aDTO(guardada, yo.getId());
+    }
+
+    /**
+     * Donde se queda.
+     *
+     * <p>Aqui habia un comentario que decia: "el gimnasio no se pregunta: si los
+     * dos entrenan en el mismo, ya se sabe; y si no coinciden, ponerle uno seria
+     * decidir por ellos". Lo primero sigue valiendo. Lo segundo era verdad a
+     * medias: no ponerlo tampoco lo resolvia, solo dejaba la sesion sin sitio, y
+     * dos personas quedaban a una hora y en ninguna parte. La salida de "no
+     * decidas por ellos" no es callarse, es preguntar.
+     *
+     * <p>Se acepta cualquier gimnasio del catalogo y no solo los dos de la
+     * pareja: quedar en un tercero que le pille cerca a los dos es una respuesta
+     * legitima, y rechazarla seria volver a decidir por ellos.
+     */
+    private Gimnasio donde(Usuario yo, Usuario otro, Long gimnasioId) {
+        if (gimnasioId != null) {
+            return gimnasioRepository.findById(gimnasioId)
+                    .orElseThrow(() -> new IllegalArgumentException("Ese gimnasio no existe."));
+        }
+
+        // Sin elegir: si comparten gimnasio no hacia falta preguntarlo.
+        boolean mismoGimnasio = yo.getGimnasio() != null && otro.getGimnasio() != null
+                && yo.getGimnasio().getId().equals(otro.getGimnasio().getId());
+        return mismoGimnasio ? yo.getGimnasio() : null;
     }
 
     @Override
@@ -329,6 +356,32 @@ public class SesionServiceImpl implements SesionService {
             return yo.getGimnasio().getNombre();
         }
         return null;
+    }
+
+    /**
+     * Entre que sitios hay que elegir.
+     *
+     * <p>Vacia salvo cuando cada uno entrena en uno distinto, que es el unico
+     * caso en el que hay algo que preguntar. Es la parte del problema que la
+     * aplicacion si puede resolver: emparejar a dos personas de gimnasios
+     * distintos sigue puntuando bajo —y debe, porque desplazarse cuesta— pero
+     * una vez que han decidido quedar, no tener donde decirlo dejaba la sesion a
+     * una hora y en ninguna parte.
+     *
+     * <p>Solo los dos suyos. Un tercero cerca de los dos es una respuesta
+     * legitima y el servicio la acepta, pero ofrecer el catalogo entero en un
+     * desplegable convierte una pregunta de dos opciones en una busqueda.
+     */
+    private List<SugerenciaSesionDTO.OpcionDeGimnasio> dondePodriaisQuedar(Usuario yo, Usuario otro) {
+        Gimnasio mio = yo.getGimnasio();
+        Gimnasio suyo = otro.getGimnasio();
+
+        boolean hayQuePreguntar = mio != null && suyo != null && !mio.getId().equals(suyo.getId());
+        if (!hayQuePreguntar) return List.of();
+
+        return List.of(
+                new SugerenciaSesionDTO.OpcionDeGimnasio(mio.getId(), mio.getNombre(), "mio"),
+                new SugerenciaSesionDTO.OpcionDeGimnasio(suyo.getId(), suyo.getNombre(), "suyo"));
     }
 
     private static LocalDate aFecha(String valor) {

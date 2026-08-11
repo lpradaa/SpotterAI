@@ -37,6 +37,32 @@
     </label>
   </div>
 
+  <!-- Dónde, solo cuando cada uno entrena en un sitio. Compartiendo gimnasio no
+       se pregunta: ya se sabe. Y sin esto, la sesión se guardaba sin sitio y
+       quedabais a una hora y en ninguna parte. -->
+  @if (sugerencia()?.donde?.length) {
+    <fieldset class="campo campo--ancho donde">
+      <legend><span>¿Dónde quedáis?</span></legend>
+      <p class="donde__pista">
+        Entrenáis en sitios distintos, así que uno de los dos se desplaza.
+        Miradlo entre vosotros: muchos gimnasios venden entrada suelta o dejan
+        traer invitado.
+      </p>
+
+      <div class="donde__opciones">
+        @for (g of sugerencia()!.donde; track g.id) {
+          <button type="button" class="donde__opcion"
+                  [class.donde__opcion--activa]="gimnasioElegido() === g.id"
+                  [attr.aria-pressed]="gimnasioElegido() === g.id"
+                  (click)="gimnasioElegido.set(g.id)">
+            <span class="donde__dequien">{{ g.dequien === 'mio' ? 'El tuyo' : 'El suyo' }}</span>
+            <span class="donde__nombre">{{ g.nombre }}</span>
+          </button>
+        }
+      </div>
+    </fieldset>
+  }
+
   <label class="campo campo--ancho">
     <span>Nota (opcional)</span>
     <input type="text" [(ngModel)]="formulario.nota" maxlength="140"

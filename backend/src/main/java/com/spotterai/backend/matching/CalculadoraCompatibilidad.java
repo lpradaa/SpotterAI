@@ -138,6 +138,29 @@ public final class CalculadoraCompatibilidad {
     static final double SOLAPE_EN_OTRO_GIMNASIO = 0.25;
 
     /**
+     * Lo mismo, cuando alguno de los dos ha dicho que se desplazaria.
+     *
+     * <p>"La mayoria de las parejas no lo hacen" seguia siendo verdad, pero era
+     * una media aplicada a todo el mundo por igual: quien esta dispuesto a coger
+     * el metro tres paradas puntuaba exactamente igual que quien no piensa
+     * moverse, y la aplicacion no tenia forma de saber la diferencia porque
+     * nunca lo preguntaba.
+     *
+     * <p><b>Basta con que lo diga uno.</b> Para que la pareja funcione solo hace
+     * falta que se mueva una persona, y exigirlo a los dos dejaria fuera al caso
+     * mas normal: uno con el gimnasio al lado de casa y otro dispuesto a ir.
+     *
+     * <p>Muy por encima de 0,25 pero claramente por debajo de 1: desplazarse
+     * sigue costando tiempo y a menudo una entrada, asi que una pareja de
+     * gimnasios distintos no puede empatar nunca con una que comparte sala y
+     * tiene el mismo solape. Y el factor gimnasio sigue dando cero: no comparten
+     * gimnasio, eso no lo cambia estar dispuesto a viajar. Lo que cambia es lo
+     * que significa coincidir en horario, que es exactamente lo que este numero
+     * pondera.
+     */
+    static final double SOLAPE_CON_DESPLAZAMIENTO = 0.60;
+
+    /**
      * Cuanto se descuenta a una puntuacion calculada con datos incompletos.
      *
      * <p>Repartir el peso de los factores ausentes evita penalizar a quien no ha
@@ -291,14 +314,25 @@ public final class CalculadoraCompatibilidad {
      * gimnasio no es un merito que suma aparte, es la condicion bajo la cual
      * coincidir en horario significa algo.
      */
-    private enum Gimnasios { MISMO, DISTINTOS, SIN_SABER }
+    private enum Gimnasios {
+        MISMO,
+        DISTINTOS,
+        /** Distintos, pero al menos uno de los dos ha dicho que se desplazaria. */
+        DISTINTOS_PERO_ALGUIEN_SE_MUEVE,
+        SIN_SABER
+    }
 
     private static Gimnasios gimnasiosDe(Usuario yo, Usuario otro) {
         Long mio = yo.getGimnasio() != null ? yo.getGimnasio().getId() : null;
         Long suyo = otro.getGimnasio() != null ? otro.getGimnasio().getId() : null;
 
         if (mio == null || suyo == null) return Gimnasios.SIN_SABER;
-        return mio.equals(suyo) ? Gimnasios.MISMO : Gimnasios.DISTINTOS;
+        if (mio.equals(suyo)) return Gimnasios.MISMO;
+
+        // Uno basta: para que la pareja funcione solo hace falta que se mueva
+        // una persona, no las dos.
+        boolean algunoSeMueve = yo.isPuedoDesplazarme() || otro.isPuedoDesplazarme();
+        return algunoSeMueve ? Gimnasios.DISTINTOS_PERO_ALGUIEN_SE_MUEVE : Gimnasios.DISTINTOS;
     }
 
     private static FactorCompatibilidad factorHorario(
@@ -336,6 +370,8 @@ public final class CalculadoraCompatibilidad {
         // mismo hora no es un ancla si es a sitios distintos.
         if (gimnasios == Gimnasios.DISTINTOS) {
             ratio *= SOLAPE_EN_OTRO_GIMNASIO;
+        } else if (gimnasios == Gimnasios.DISTINTOS_PERO_ALGUIEN_SE_MUEVE) {
+            ratio *= SOLAPE_CON_DESPLAZAMIENTO;
         }
 
         return FactorCompatibilidad.evaluado("horario", ratio * PESO_HORARIO, PESO_HORARIO,
@@ -353,6 +389,14 @@ public final class CalculadoraCompatibilidad {
         // porque cambia el significado de todo lo demas.
         if (gimnasios == Gimnasios.DISTINTOS) {
             return "Coincidiriais %s a la semana, pero entrenais en gimnasios distintos"
+                    .formatted(formatearDuracion(solape.minutosSemanales()));
+        }
+
+        // La misma frase, pero con la salida: el dato que la cambia lo ha puesto
+        // una persona, no lo ha deducido nadie.
+        if (gimnasios == Gimnasios.DISTINTOS_PERO_ALGUIEN_SE_MUEVE) {
+            return ("Coincidiriais %s a la semana en gimnasios distintos, "
+                    + "pero alguno de los dos puede desplazarse")
                     .formatted(formatearDuracion(solape.minutosSemanales()));
         }
 
@@ -492,8 +536,14 @@ public final class CalculadoraCompatibilidad {
             return FactorCompatibilidad.evaluado("gimnasio", PESO_GIMNASIO, PESO_GIMNASIO,
                     "Entrenáis en el mismo gimnasio: " + otro.getGimnasio().getNombre());
         }
+        // Sigue siendo cero aunque alguien se desplace: no comparten gimnasio, y
+        // estar dispuesto a viajar no cambia ese hecho. Lo que cambia es lo que
+        // significa coincidir en horario, y eso se pondera en el factor horario.
+        boolean algunoSeMueve = yo.isPuedoDesplazarme() || otro.isPuedoDesplazarme();
         return FactorCompatibilidad.evaluado("gimnasio", 0, PESO_GIMNASIO,
-                "Entrenáis en gimnasios distintos");
+                algunoSeMueve
+                        ? "Entrenáis en gimnasios distintos, aunque alguno de los dos puede desplazarse"
+                        : "Entrenáis en gimnasios distintos");
     }
 
     private static FactorCompatibilidad factorEdad(Integer miEdad, Integer suEdad) {

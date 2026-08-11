@@ -41,6 +41,18 @@ export class ProponerSesionComponent implements OnInit {
 
   formulario = { fecha: '', horaInicio: '', horaFin: '', nota: '' };
 
+  /**
+   * Dónde quedar, cuando cada uno entrena en un sitio.
+   *
+   * <p>Es la pregunta que el formulario no hacía. La sesión ya tenía sitio en la
+   * base de datos, pero solo se rellenaba cuando los dos compartían gimnasio; si
+   * no, quedaba vacío y dos personas quedaban a una hora y en ninguna parte.
+   *
+   * <p>Empieza sin elegir a propósito: uno de los dos tiene que desplazarse, y
+   * dar por hecho cuál sería decidir por ellos.
+   */
+  gimnasioElegido = signal<number | null>(null);
+
   ngOnInit(): void {
     this.sesiones.sugerencia(this.paraId()).subscribe({
       next: s => {
@@ -78,7 +90,8 @@ export class ProponerSesionComponent implements OnInit {
       fecha: this.formulario.fecha,
       horaInicio: this.formulario.horaInicio,
       horaFin: this.formulario.horaFin,
-      nota: this.formulario.nota || null
+      nota: this.formulario.nota || null,
+      gimnasioId: this.gimnasioElegido()
     }).subscribe({
       next: sesion => this.propuesta.emit(sesion),
       error: err => {
