@@ -15,6 +15,15 @@ import { Carga } from '../carga/carga';
 import { tramoDe } from '../../utils/compatibilidad';
 import { Desglose } from '../desglose/desglose';
 
+/** Un hueco del perfil propio, tal y como lo manda /api/usuarios/perfil. */
+export interface HuecoDelPerfil {
+  campo: string;
+  nombre: string;
+  /** Lo que cuesta tenerlo vacío, en puntos de compatibilidad. */
+  puntos: number;
+  motivo: string;
+}
+
 /**
  * La página de una persona.
  *
@@ -77,6 +86,19 @@ export class PerfilPublicoComponent {
   /** Mis franjas, para dibujar el solape. Se piden aquí porque ya no las hereda. */
   misFranjas = signal<any[]>([]);
 
+  /**
+   * Lo que le falta a tu perfil, con lo que cuesta cada hueco.
+   *
+   * <p>Ya venía en la misma respuesta que las franjas y se tiraba entero: el
+   * tablero se queda con el primer hueco y esta página no lo miraba. Aquí es
+   * donde tiene sentido verlo completo, porque es la página que existe para
+   * verte como te ven, y lo que te falta es justo lo que los demás no ven.
+   */
+  miRendimiento = signal<{ puntosEnJuego: number; huecos: HuecoDelPerfil[] } | null>(null);
+
+  /** Tu meta semanal, para que tu propia página diga a qué te has comprometido. */
+  miMeta = signal<number | null>(null);
+
   perfil = signal<PerfilPublico | null>(null);
   cargando = signal(true);
   error = signal<string | null>(null);
@@ -134,7 +156,13 @@ export class PerfilPublicoComponent {
     // Para dibujar el solape hace falta tu semana. Antes se la pasaba la
     // pantalla que lo incrustaba; siendo una página, se pide aquí.
     this.usuarios.getMiPerfil().subscribe({
-      next: perfil => this.misFranjas.set(perfil?.horarios ?? []),
+      next: perfil => {
+        this.misFranjas.set(perfil?.horarios ?? []);
+        // Venían en la misma respuesta desde siempre; lo que faltaba era
+        // quedárselos.
+        this.miRendimiento.set(perfil?.rendimiento ?? null);
+        this.miMeta.set(perfil?.metaSemanal ?? null);
+      },
       error: () => {}
     });
   }

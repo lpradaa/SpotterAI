@@ -56,6 +56,60 @@
       <p class="ficha__bio">{{ p.biografia }}</p>
     }
 
+    <!-- ================= Lo tuyo =================
+         Solo en tu propia página. Era la que existía para "verte como te ven" y
+         no enseñaba ninguno de los tres datos que te definen —tu semana, tu meta
+         y lo que te falta— pese a que los tres ya venían cargados. -->
+    @if (p.esMio) {
+      <section class="ficha__bloque">
+        <div class="ficha__cabecera-bloque">
+          <h3 class="ficha__subtitulo">Tu semana</h3>
+          @if (miMeta()) {
+            <span class="ficha__meta">{{ miMeta() }} {{ miMeta() === 1 ? 'día' : 'días' }} por semana</span>
+          }
+        </div>
+
+        @if (misFranjas().length > 0) {
+          <!-- Sin solape: contigo mismo no hay nada que cruzar. Es tu semana a
+               secas, que es lo que los demás miran de ti. -->
+          <app-rejilla-semana [misFranjas]="misFranjas()" [solape]="[]" />
+        } @else {
+          <p class="ficha__motivo">
+            Todavía no has puesto tus horarios, y es el dato que más pesa:
+            sin ellos no hay con quién cruzarte.
+          </p>
+        }
+      </section>
+
+      @if (miRendimiento(); as r) {
+        @if (r.huecos.length > 0) {
+          <section class="ficha__bloque">
+            <h3 class="ficha__subtitulo">Lo que te falta</h3>
+            <p class="ficha__motivo">
+              Son <strong>{{ r.puntosEnJuego }} puntos</strong> de compatibilidad
+              que ahora mismo no puedes ganar con nadie. No restan: se reparten
+              entre lo demás, y eso hace que tu número diga menos de lo que
+              podría.
+            </p>
+
+            <ul class="huecos">
+              @for (h of r.huecos; track h.campo) {
+                <li class="hueco">
+                  <span class="hueco__nombre">{{ h.nombre }}</span>
+                  <span class="hueco__motivo">{{ h.motivo }}</span>
+                  <span class="hueco__puntos">{{ h.puntos }}</span>
+                </li>
+              }
+            </ul>
+
+            <button class="btn btn--contorno btn--pequeno" (click)="abrirEdicion()">
+              Completar mi perfil
+            </button>
+          </section>
+        }
+      }
+    }
+
     <!-- ================= Cómo encajáis =================
          No en el tuyo: la compatibilidad de alguien consigo mismo no significa
          nada, y un 0 % en tu propia ficha se leeria como un juicio. -->
