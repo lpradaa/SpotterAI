@@ -134,6 +134,18 @@
         <app-rejilla-semana [misFranjas]="misFranjas()" [solape]="p.franjasEnComun" />
       }
 
+      <!-- Un día concreto, no una regla semanal. Es lo que convierte "encajáis
+           un 78 %" en algo que se puede hacer, y hasta ahora solo se calculaba
+           dentro del formulario de proponer sesión, que exige ser compañeros:
+           en la ficha de alguien con quien todavía no has conectado —justo
+           donde se decide si conectar— no se decía nunca. -->
+      @if (p.proximaOcasion; as ocasion) {
+        <p class="ficha__ocasion" [class.ficha__ocasion--fija]="ocasion.ambosFijos">
+          Podríais entrenar <strong>{{ cuandoLargo(ocasion.fecha) }}</strong>,
+          de {{ hhmm(ocasion.inicio) }} a {{ hhmm(ocasion.fin) }}@if (ocasion.ambosFijos) {, y los dos vais siempre}.
+        </p>
+      }
+
       <!-- De dónde sale el número. Se pide al desplegarlo y no al cargar la
            página: es un cálculo aparte y la mayoría de las visitas no lo abren. -->
       @if (desglose(); as d) {

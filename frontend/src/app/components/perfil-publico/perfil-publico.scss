@@ -439,3 +439,26 @@
     opacity: 0.7;
   }
 }
+
+/* Un dia concreto en vez de una regla semanal. Va con canto de color porque no
+   es un dato mas de la ficha: es la frase que convierte un porcentaje en algo
+   que se puede hacer el lunes. */
+.ficha__ocasion {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--sa-acero);
+  border-radius: $radius-sm;
+  background: var(--sa-acero-suave);
+  font-size: $text-sm;
+  line-height: $leading-normal;
+  color: var(--sa-texto);
+
+  strong { font-weight: $font-semibold; }
+
+  /* Con anclas por medio no es "podriais", es que los dos vais seguro: es la
+     señal mas fuerte que da el motor y se pinta con el verde de compromiso. */
+  &--fija {
+    border-left-color: var(--sa-exito);
+    background: var(--sa-exito-suave);
+  }
+}

@@ -46,6 +46,21 @@ export interface PerfilPublico {
   solicitudPendiente: boolean;
   /** Si es tu propio perfil: /yo lleva a la misma página. */
   esMio: boolean;
+  /**
+   * El primer día concreto en el que podríais entrenar juntos, o null.
+   *
+   * Es solo lectura: baja la regla semanal a una fecha, no reserva nada.
+   */
+  proximaOcasion: ProximaOcasion | null;
+}
+
+/** Un día concreto en el que los dos podríais ir. */
+export interface ProximaOcasion {
+  fecha: string;
+  inicio: string;
+  fin: string;
+  /** Si los dos vais siempre a esa franja, no solo podríais. */
+  ambosFijos: boolean;
 }
 
 /**

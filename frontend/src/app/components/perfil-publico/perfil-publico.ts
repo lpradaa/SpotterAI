@@ -142,6 +142,17 @@ export class PerfilPublicoComponent {
     });
   }
 
+  /** "el lunes 3 de agosto", que es como se dice un día cuando se queda. */
+  cuandoLargo(fecha: string): string {
+    return new Date(`${fecha}T00:00:00`)
+      .toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  /** Las horas llegan con segundos; un plan no los necesita. */
+  hhmm(hora: string): string {
+    return (hora ?? '').slice(0, 5);
+  }
+
   /** Índice del medio abierto a tamaño grande, o null. */
   medioAmpliado = signal<string | null>(null);
 

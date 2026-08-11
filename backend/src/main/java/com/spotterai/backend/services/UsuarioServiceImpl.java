@@ -16,6 +16,7 @@ import com.spotterai.backend.matching.PuntuacionCompatibilidad;
 import com.spotterai.backend.matching.Constancia;
 import com.spotterai.backend.matching.PerfilDeMatch;
 import com.spotterai.backend.matching.PerfilMinimo;
+import com.spotterai.backend.matching.ProximaOcasion;
 import com.spotterai.backend.matching.RendimientoDelPerfil;
 import com.spotterai.backend.matching.Rutina;
 import com.spotterai.backend.models.Disponibilidad;
@@ -23,6 +24,7 @@ import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.spotterai.backend.dtos.HitoDTO;
 import com.spotterai.backend.dtos.LevantamientoDTO;
@@ -493,7 +495,14 @@ public class UsuarioServiceImpl implements UsuarioService {
                         LocalDate.now(reloj), LocalTime.now(reloj)),
                 "ACEPTADA".equals(estado),
                 "PENDIENTE".equals(estado),
-                esMio);
+                esMio,
+
+                // Solo lectura, y sin exigir ser compañeros: baja la regla
+                // semanal a un dia concreto, que es lo que convierte "encajais
+                // un 78 %" en algo que se puede hacer el lunes. No crea nada.
+                esMio ? null
+                      : ProximaOcasion.primera(puntuacion.solape().franjas(),
+                                               LocalDateTime.now(reloj)).orElse(null));
     }
 
     /**

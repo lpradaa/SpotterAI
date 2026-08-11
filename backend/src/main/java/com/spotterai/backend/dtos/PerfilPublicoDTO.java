@@ -1,6 +1,7 @@
 package com.spotterai.backend.dtos;
 
 import com.spotterai.backend.matching.FranjaComun;
+import com.spotterai.backend.matching.ProximaOcasion;
 
 import java.util.List;
 
@@ -56,5 +57,20 @@ public record PerfilPublicoDTO(
          * aqui, y la compatibilidad de alguien consigo mismo no significa nada,
          * asi que ese bloque no se calcula ni se pinta.
          */
-        boolean esMio
+        boolean esMio,
+
+        /**
+         * El primer dia concreto en el que podriais entrenar juntos, o null.
+         *
+         * <p>Es el calculo mas accionable del proyecto y estaba encerrado detras
+         * de ser compañeros: solo lo pedia el formulario de proponer sesion, que
+         * exige solicitud aceptada. O sea que en la ficha de alguien con quien
+         * todavia no has conectado —justo donde se decide si conectar— se veia
+         * una rejilla de solape pero nunca la frase que la convierte en un plan.
+         *
+         * <p>Es solo lectura: baja la regla semanal a un dia del calendario, no
+         * crea ni reserva nada. Null si no hay ninguna franja en comun, y
+         * entonces la pantalla se calla en vez de inventar una fecha.
+         */
+        ProximaOcasion proximaOcasion
 ) {}
