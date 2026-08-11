@@ -12,6 +12,7 @@ import { UsuarioService } from '../../services/usuario.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { Carga } from '../carga/carga';
+import { tramoDe } from '../../utils/compatibilidad';
 
 /**
  * La página de una persona.
@@ -78,6 +79,17 @@ export class PerfilPublicoComponent {
   cargando = signal(true);
   error = signal<string | null>(null);
   enviando = signal(false);
+
+  /**
+   * Tramo de compatibilidad.
+   *
+   * Faltaba justo aquí, y esto es la página donde se decide: sin él la nota iba
+   * fija en el color del acento y los discos no encontraban el `data-tramo` que
+   * buscan con `:host-context`, así que un 30 % y un 87 % se pintaban idénticos
+   * —el mismo naranja y los mismos cinco discos naranjas— en la única pantalla
+   * donde de verdad hace falta distinguirlos.
+   */
+  tramo = tramoDe;
 
   /** Índice del medio abierto a tamaño grande, o null. */
   medioAmpliado = signal<string | null>(null);

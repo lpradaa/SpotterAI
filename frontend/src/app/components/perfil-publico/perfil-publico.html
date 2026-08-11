@@ -62,7 +62,11 @@
     @if (!p.esMio) {
     <section class="ficha__bloque">
       <div class="ficha__encaje">
-        <span class="ficha__marcador">
+        <!-- data-tramo aqui y no mas arriba: es el ancestro que <app-carga>
+             busca con :host-context para teñir sus discos, y ademas tiñe la
+             cifra. Sin el, la escala de compatibilidad no llegaba a esta
+             pagina. -->
+        <span class="ficha__marcador" [attr.data-tramo]="tramo(p.compatibilidad)">
           <span class="ficha__nota">{{ p.compatibilidad }}<small>%</small></span>
           <app-carga [puntuacion]="p.compatibilidad" />
         </span>

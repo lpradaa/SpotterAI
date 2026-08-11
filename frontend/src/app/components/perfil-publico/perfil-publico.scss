@@ -148,11 +148,17 @@
 
 /* El número sigue estando, pero de apoyo: es una prueba de por qué encajáis, no
    el titular de la persona. */
+/* Con la escala secuencial, no con el acento: la compatibilidad es una
+   magnitud y se pinta igual en todas partes. Con el acento fijo, esta pagina
+   —la unica donde se decide— era la que menos distinguia un 30 de un 87. */
+.ficha__marcador[data-tramo='media'] .ficha__nota { color: var(--sa-comp-media); }
+.ficha__marcador[data-tramo='alta'] .ficha__nota { color: var(--sa-comp-alta); }
+
 .ficha__nota {
   font-family: $font-display;
   font-size: $text-2xl;
   font-weight: $font-bold;
-  color: var(--sa-acento);
+  color: var(--sa-comp-baja);
   font-variant-numeric: tabular-nums;
   line-height: 1;
   flex-shrink: 0;
