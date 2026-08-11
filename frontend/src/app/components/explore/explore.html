@@ -107,7 +107,7 @@
           }
 
           <div class="ficha__etiquetas">
-            <span class="chip chip--nivel">{{ usuario.nivel || 'Sin nivel' }}</span>
+            <span class="chip">{{ usuario.nivel || 'Sin nivel' }}</span>
             @if (usuario.objetivos) { <span class="chip chip--objetivo">{{ usuario.objetivos }}</span> }
             @if (usuario.rutina) { <span class="chip">{{ usuario.rutina }}</span> }
             <!-- Que podáis cubriros con la barra es lo que da sentido al nombre

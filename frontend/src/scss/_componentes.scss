@@ -172,16 +172,23 @@
   border-radius: $radius-full;
   white-space: nowrap;
 
-  &--nivel {
-    background: var(--sa-superficie-alt);
-    color: var(--sa-texto-suave);
-    border: 1px solid var(--sa-borde);
-  }
+  /* El aspecto neutro va en la base y no en un modificador --nivel, que es
+     donde estaba. Sin fondo ni borde aqui, un `class="chip"` a secas salia como
+     texto suelto con padding al lado de dos pildoras: le pasaba a la rutina en
+     las tarjetas de Explorar. Un chip sin modificador tiene que seguir
+     pareciendo un chip; los modificadores son para lo que dice algo mas. */
+  background: var(--sa-superficie-alt);
+  color: var(--sa-texto-suave);
+  border: 1px solid var(--sa-borde);
 
+  /* Los teñidos se quedan sin borde, como estaban antes de que la base tuviera
+     uno: el fondo de color ya define la pieza, y añadirles una linea alrededor
+     de rebote habria restilado media aplicacion al arreglar otra cosa. */
   &--dia,
   &--objetivo {
     background: var(--sa-acento-suave);
     color: var(--sa-acento-texto);
+    border-color: transparent;
   }
 
   // Compromiso mutuo: el dato mas fiable, lo unico que usa el color de exito
@@ -189,6 +196,7 @@
     background: var(--sa-exito-suave);
     color: var(--sa-exito);
     font-weight: $font-semibold;
+    border-color: transparent;
   }
 
   // Aviso honesto: la puntuacion se calculo sin algun factor
