@@ -325,6 +325,50 @@
         }
       </fieldset>
 
+      <!-- ================= Contraseña =================
+           No estaba: hasta ahora la única forma de cambiarla era "la he
+           olvidado" desde fuera de la aplicación, con el correo de por medio. -->
+      <fieldset class="bloque">
+        <legend class="bloque__titulo">Contraseña</legend>
+
+        @if (!cambiandoContrasena()) {
+          <p class="bloque__pista">
+            Al cambiarla se cierran todas las sesiones abiertas, incluida esta.
+          </p>
+          <button type="button" class="btn btn--fantasma" (click)="cambiandoContrasena.set(true)">
+            Cambiar mi contraseña
+          </button>
+        } @else {
+          <label class="campo campo--ancho">
+            <span>Contraseña actual</span>
+            <input type="password" [(ngModel)]="contrasenaActual"
+                   autocomplete="current-password" placeholder="Tu contraseña de ahora">
+          </label>
+
+          <label class="campo campo--ancho">
+            <span>Contraseña nueva</span>
+            <input type="password" [(ngModel)]="contrasenaNueva"
+                   autocomplete="new-password" placeholder="Al menos {{ minimoContrasena }} caracteres">
+            @if (nuevaContrasenaCorta) {
+              <small class="campo__pista">Faltan {{ minimoContrasena - contrasenaNueva.length }} caracteres</small>
+            }
+          </label>
+
+          @if (errorContrasena()) { <p class="aviso-inline" role="alert">{{ errorContrasena() }}</p> }
+
+          <div class="bloque__acciones">
+            <button type="button" class="btn btn--fantasma" (click)="cambiandoContrasena.set(false)">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn--primario"
+                    [disabled]="!contrasenaActual || nuevaContrasenaCorta || !contrasenaNueva || cambioEnCurso()"
+                    (click)="cambiarContrasena()">
+              @if (cambioEnCurso()) { Cambiando… } @else { Cambiar contraseña }
+            </button>
+          </div>
+        }
+      </fieldset>
+
       <!-- ================= Irse =================
            Abajo del todo y detras de dos pasos: no es una accion que nadie haga
            por error, y no tiene vuelta atras. -->
@@ -349,7 +393,7 @@
                    autocomplete="current-password" placeholder="Tu contraseña">
           </label>
 
-          @if (errorBorrado()) { <p class="aviso" role="alert">{{ errorBorrado() }}</p> }
+          @if (errorBorrado()) { <p class="aviso-inline" role="alert">{{ errorBorrado() }}</p> }
 
           <div class="bloque__acciones">
             <button type="button" class="btn btn--fantasma" (click)="borrando.set(false)">

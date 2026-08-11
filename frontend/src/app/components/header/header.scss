@@ -64,7 +64,7 @@
 
     &:hover {
       background-color: var(--sa-superficie-alt);
-      color: $accent;
+      color: var(--sa-acento);
       transform: scale(1.05);
     }
 
@@ -100,17 +100,6 @@
     border: 2px solid var(--sa-superficie);
   }
 
-  &__logo {
-    font-size: $text-2xl;
-    font-weight: $font-extrabold;
-    margin: 0;
-    color: var(--sa-texto);
-    letter-spacing: -0.5px;
-  }
-
-  &__logo-accent {
-    color: $accent;
-  }
 }
 
 /* --- BLOQUE: backdrop --- */
@@ -167,7 +156,7 @@
     transition: color 0.2s ease, transform 0.2s ease;
 
     &:hover {
-      color: $accent;
+      color: var(--sa-acento);
       transform: scale(1.1);
     }
   }
@@ -183,8 +172,11 @@
     width: 48px;
     height: 48px;
     border-radius: $radius-full;
-    background-color: rgba($accent, 0.15);
-    color: darken($accent, 10%);
+    // rgba($accent, ...) no puede leer un token CSS: se sustituye por el par
+    // acento-suave/acento-texto, que ya siguen el tema (mismo par que usan
+    // los chips de .chip--dia/.chip--objetivo).
+    background-color: var(--sa-acento-suave);
+    color: var(--sa-acento-texto);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -205,7 +197,7 @@
 
   &__user-email {
     font-size: $text-sm;
-    color: $accent;
+    color: var(--sa-acento-texto);
     font-weight: $font-semibold;
   }
 
@@ -239,8 +231,8 @@
     }
 
     &--active {
-      background-color: rgba($accent, 0.1);
-      color: $accent;
+      background-color: var(--sa-acento-suave);
+      color: var(--sa-acento-texto);
     }
   }
 
@@ -284,7 +276,7 @@
     transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: darken($input-bg, 5%);
+      background-color: var(--sa-superficie-elevada);
     }
   }
 }

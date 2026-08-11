@@ -9,6 +9,7 @@ import { Avatar, COLORES_AVATAR } from '../avatar/avatar';
 import { ModalAccesible } from '../../directivas/modal-accesible';
 import { HttpClient } from '@angular/common/http';
 import { api } from '../../config/api';
+import { MINIMO_CONTRASENA } from '../restablecer/restablecer';
 
 /** Lo que sale hacia el tablero para que enseñe un aviso. */
 export interface AvisoPerfil {
@@ -89,6 +90,49 @@ export class ModalPerfilComponent {
       next: () => this.bloqueados.update(l => l.filter(b => b.usuarioId !== otroId)),
       error: () => {},
     });
+  }
+
+  // --- CAMBIAR LA CONTRASEÑA ---
+  protected cambiandoContrasena = signal(false);
+  protected cambioEnCurso = signal(false);
+  protected errorContrasena = signal<string | null>(null);
+  protected contrasenaActual = '';
+  protected contrasenaNueva = '';
+  protected readonly minimoContrasena = MINIMO_CONTRASENA;
+
+  protected get nuevaContrasenaCorta(): boolean {
+    return this.contrasenaNueva.length > 0 && this.contrasenaNueva.length < MINIMO_CONTRASENA;
+  }
+
+  /**
+   * Cambia la contraseña sin pasar por "la he olvidado".
+   *
+   * <p>Se pide la actual aunque haya sesión abierta: una sesión abierta en un
+   * ordenador prestado no debería bastar para quedarse con la cuenta.
+   *
+   * <p>El backend invalida todas las sesiones al cambiarla, incluida esta, así
+   * que se sale igual que al borrar la cuenta: `location.href` y no el router,
+   * para dejar el navegador limpio del todo y no arrastrar servicios que
+   * seguirían pidiendo datos de una sesión que ya no vale.
+   */
+  protected cambiarContrasena(): void {
+    if (this.nuevaContrasenaCorta || !this.contrasenaActual) return;
+
+    this.cambioEnCurso.set(true);
+    this.errorContrasena.set(null);
+
+    this.http.post(api('/api/auth/contrasena'),
+      { actual: this.contrasenaActual, nueva: this.contrasenaNueva })
+      .subscribe({
+        next: () => {
+          localStorage.clear();
+          location.href = '/login';
+        },
+        error: (e) => {
+          this.cambioEnCurso.set(false);
+          this.errorContrasena.set(e?.error?.error ?? 'No se ha podido cambiar la contraseña.');
+        },
+      });
   }
 
   // --- BORRAR LA CUENTA ---
