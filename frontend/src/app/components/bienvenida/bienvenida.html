@@ -39,7 +39,7 @@
       </p>
     </div>
 
-    @if (error()) { <p class="aviso" role="alert">{{ error() }}</p> }
+    @if (error()) { <p class="aviso-inline" role="alert">{{ error() }}</p> }
 
     <footer class="bienvenida__pie">
       <button class="btn btn--primario"
@@ -122,7 +122,7 @@
       </p>
     </div>
 
-    @if (error()) { <p class="aviso" role="alert">{{ error() }}</p> }
+    @if (error()) { <p class="aviso-inline" role="alert">{{ error() }}</p> }
 
     <footer class="bienvenida__pie">
       <button class="btn btn--fantasma" (click)="paso.set('horario')">Atrás</button>

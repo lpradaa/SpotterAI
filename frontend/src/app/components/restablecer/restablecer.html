@@ -35,7 +35,7 @@
       </small>
     </label>
 
-    @if (error()) { <p class="aviso" role="alert">{{ error() }}</p> }
+    @if (error()) { <p class="aviso-inline" role="alert">{{ error() }}</p> }
 
     <button class="btn btn--primario"
             [disabled]="contrasena.length < minimo || enviando()"

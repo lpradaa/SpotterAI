@@ -429,6 +429,28 @@
   }
 }
 
+/* ===================== Aviso en flujo ===================== */
+/* Mismo lenguaje visual que .aviso, pero para mensajes que viven en el
+   documento (errores de formulario, banners de acceso denegado) en vez de
+   flotar como un toast: sin position:fixed ni opacity:0 por defecto. */
+.aviso-inline {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 20px;
+  border-radius: $radius-full;
+  background: var(--sa-superficie-elevada);
+  border: 1px solid var(--sa-borde-fuerte);
+  color: var(--sa-texto);
+  font-size: $text-sm;
+
+  &--error {
+    border-color: var(--sa-error);
+    color: var(--sa-error);
+  }
+}
+
 /* Solo para lectores de pantalla */
 .visually-hidden {
   position: absolute;

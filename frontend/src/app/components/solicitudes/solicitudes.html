@@ -10,7 +10,7 @@
   </header>
 
   @if (aviso(); as a) {
-    <p class="aviso" [class.aviso--error]="a.tipo === 'error'" role="status">
+    <p class="aviso-inline" [class.aviso-inline--error]="a.tipo === 'error'" role="status">
       {{ a.texto }}
       @if (a.tipo === 'exito') {
         <button class="aviso__enlace" (click)="irAConversacion()">Ir a Compañeros</button>

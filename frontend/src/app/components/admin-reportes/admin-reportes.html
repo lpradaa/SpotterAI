@@ -9,9 +9,9 @@
   </header>
 
   @if (sinAcceso()) {
-    <p class="aviso" role="alert">No tienes acceso a esta pantalla.</p>
+    <p class="aviso-inline" role="alert">No tienes acceso a esta pantalla.</p>
   } @else if (error()) {
-    <p class="aviso aviso--error" role="alert">No se han podido cargar los reportes.</p>
+    <p class="aviso-inline aviso-inline--error" role="alert">No se han podido cargar los reportes.</p>
   } @else if (reportes(); as lista) {
 
     @if (lista.length === 0) {

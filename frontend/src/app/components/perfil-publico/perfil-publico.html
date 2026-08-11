@@ -12,7 +12,7 @@
   @if (cargando()) {
     <p class="ficha__cargando">Cargando…</p>
   } @else if (error()) {
-    <p class="aviso aviso--error" role="alert">{{ error() }}</p>
+    <p class="aviso-inline aviso-inline--error" role="alert">{{ error() }}</p>
   } @else if (perfil(); as p) {
 
     <!-- ================= Quién es =================
@@ -255,5 +255,5 @@
 }
 
 @if (avisoDelFormulario(); as texto) {
-  <p class="aviso" role="status">{{ texto }}</p>
+  <p class="aviso-inline" role="status">{{ texto }}</p>
 }
