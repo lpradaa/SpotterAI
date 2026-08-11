@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { TemaService } from '../../services/tema.service';
@@ -14,17 +14,17 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './header.html',
   styleUrl: './header.scss'
 })
-export class Header implements OnInit {
+export class Header {
   isSidebarOpen = signal(false);
-  isLoggedIn = signal(true);
-  
+
   // Inyectamos el router para poder redirigir al login
   private router = inject(Router);
   private tema = inject(TemaService);
   private eventos = inject(EventosService);
   private perfilEstado = inject(PerfilEstadoService);
   private avisos = inject(AvisosService);
-  private auth = inject(AuthService);
+  /** protected: el sidebar lee auth.usuario() directamente en la plantilla. */
+  protected auth = inject(AuthService);
 
   solicitudesPendientes = this.avisos.solicitudesPendientes;
   mensajesSinLeer = this.avisos.mensajesSinLeer;
@@ -57,25 +57,6 @@ export class Header implements OnInit {
     this.tema.alternar();
   }
 
-  // Variables dinámicas para el usuario
-  currentUser = signal({
-    name: 'Usuario',
-    email: '',
-    initial: 'U'
-  });
-
-  ngOnInit() {
-    // 🔥 Leemos los datos reales del usuario logueado
-    const nombre = localStorage.getItem('usuario_nombre') || 'Usuario';
-    const email = localStorage.getItem('usuario_email') || '';
-    
-    this.currentUser.set({
-      name: nombre,
-      email: email,
-      initial: nombre.charAt(0).toUpperCase()
-    });
-  }
-
   toggleSidebar() {
     this.isSidebarOpen.update(isOpen => !isOpen);
   }
@@ -103,7 +84,6 @@ export class Header implements OnInit {
   }
 
   private salir(): void {
-    this.isLoggedIn.set(false);
     this.isSidebarOpen.set(false);
     this.router.navigate(['/login']); 
   }

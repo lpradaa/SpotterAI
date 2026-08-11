@@ -4,6 +4,7 @@ import { Header } from './components/header/header';
 import { Footer } from './components/footer/footer';
 import { EventosService } from './services/eventos.service';
 import { AvisosService } from './services/avisos.service';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,8 @@ export class App implements OnInit {
 
   private eventos = inject(EventosService);
   private avisos = inject(AvisosService);
+  /** La cabecera y el pie son de la aplicación ya abierta, no del acceso. */
+  protected auth = inject(AuthService);
 
   ngOnInit(): void {
     // El canal se abre aquí y no en cada pantalla: es uno por sesión, no uno por

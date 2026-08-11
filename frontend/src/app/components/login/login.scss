@@ -14,7 +14,13 @@
 
 /* Manchas difuminadas de fondo.
    Estaban en verde, turquesa y azul, restos de la paleta del TFG que teñían de
-   verde toda la pantalla de acceso. Ahora siguen la gama de ascua y ámbar. */
+   verde toda la pantalla de acceso. Ahora siguen la gama de ascua y ámbar.
+
+   Color solido en vez de rgba(#hex, alpha): rgba() no admite un token CSS
+   como argumento, y la opacidad ya la pone la propia clase .blob (0.45) junto
+   con el blur. Con var(--sa-acento)/var(--sa-acero) el fondo del login por fin
+   cambia con el interruptor de tema, cosa que $accent —fijo en compilacion, y
+   por casualidad el acento del tema claro— nunca hacia. */
 .blob {
   position: absolute;
   filter: blur(80px);
@@ -23,9 +29,9 @@
   animation: float 10s infinite ease-in-out alternate;
   opacity: 0.45;
 
-  &-1 { width: 400px; height: 400px; background: rgba(#c2410c, 0.35); top: -100px; left: -100px; animation-delay: 0s; }
-  &-2 { width: 500px; height: 500px; background: rgba(#f59e0b, 0.25); bottom: -150px; right: -100px; animation-delay: 2s; }
-  &-3 { width: 300px; height: 300px; background: rgba(#9a3412, 0.18); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: 4s; }
+  &-1 { width: 400px; height: 400px; background: var(--sa-acento); top: -100px; left: -100px; animation-delay: 0s; }
+  &-2 { width: 500px; height: 500px; background: var(--sa-acero); bottom: -150px; right: -100px; animation-delay: 2s; }
+  &-3 { width: 300px; height: 300px; background: var(--sa-acento-hover); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: 4s; }
 }
 
 @keyframes float {
@@ -53,7 +59,10 @@
 /* --- Panel Izquierdo (Branding) --- */
 .login-branding {
   width: 45%;
-  background: linear-gradient(135deg, $accent 0%, darken($accent, 15%) 100%);
+  // var(--sa-acento)/var(--sa-acento-hover), no $accent: ese era el naranja
+  // fijo del tema claro, y este panel es la pieza mas grande de la pantalla de
+  // acceso — no tenia sentido que fuera la unica que nunca cambiaba de tema.
+  background: linear-gradient(135deg, var(--sa-acento) 0%, var(--sa-acento-hover) 100%);
   color: white;
   padding: $space-xl;
   display: flex;
@@ -136,40 +145,14 @@
   .subtitle { color: var(--sa-texto-suave); font-size: $text-base; margin: 0; }
 }
 
-/* --- Inputs y Formularios --- */
+/* --- Inputs y Formularios ---
+   Los campos usan .campo, compartida con /restablecer, /baja y el modal de
+   perfil (definida en scss/_componentes.scss): antes cada uno se reescribia
+   aqui con su propio input-container e icono, la unica pantalla que lo hacia
+   asi de las cinco que tienen formularios. */
 .login-form { display: flex; flex-direction: column; gap: $space-md; }
 .form-row { display: flex; gap: $space-md; }
 .half-width { flex: 1; }
-
-.form-group {
-  label { display: block; font-size: 13px; font-weight: 700; color: var(--sa-texto-suave); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-}
-
-.campo-pista { display: block; margin-top: 6px; font-size: 12px; color: var(--sa-texto-tenue); }
-
-.input-container {
-  position: relative;
-
-  .icon {
-    position: absolute; top: 50%; transform: translateY(-50%); left: 16px; display: flex; align-items: center; color: var(--sa-texto-tenue); transition: color 0.2s;
-  }
-
-  input, select {
-    width: 100%; padding: 14px 16px 14px 45px; background-color: var(--sa-superficie-alt); border: 1px solid var(--sa-borde); border-radius: 12px; font-size: 15px; color: var(--sa-texto); font-weight: 500; transition: all 0.3s ease; outline: none; appearance: none;
-
-    &::placeholder { color: var(--sa-texto-tenue); font-weight: 400; }
-
-    &:focus {
-      border-color: var(--sa-acento);
-      + .icon, ~ .icon { color: var(--sa-acento); } /* Ilumina el icono al hacer focus */
-    }
-  }
-
-  /* Flecha personalizada para el select */
-  &.select-container::after {
-    content: "▼"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--sa-texto-tenue); pointer-events: none;
-  }
-}
 
 /* --- Banner de Error --- */
 .error-banner {
@@ -180,32 +163,25 @@
   0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); }
 }
 
-/* --- Botón de Submit --- */
-.submit-btn {
-  width: 100%; margin-top: 10px; background: var(--sa-acento); color: var(--sa-sobre-acento); border: none; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s ease;
-
-  .arrow { transition: transform 0.2s ease; }
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px); background: var(--sa-acento-hover);
-    .arrow { transform: translateX(5px); }
-  }
-
-  &:disabled { background: var(--sa-superficie-alt); color: var(--sa-texto-tenue); cursor: not-allowed; transform: none; }
-}
-
-/* Spinner CSS */
-.spinner { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* El botón de envío usa .btn.btn--primario.btn--ancho (scss/_componentes.scss):
+   la flecha es el único detalle propio de esta pantalla que queda. */
+.arrow { transition: transform 0.2s ease; }
+.btn--primario:hover:not(:disabled) .arrow { transform: translateX(5px); }
 
 /* --- Footer --- */
 .login-footer {
   text-align: center; margin-top: 30px; border-top: 1px solid var(--sa-borde); padding-top: 20px;
 
   p { color: var(--sa-texto-suave); font-size: 15px; margin: 0; }
+}
 
-  .toggle-btn {
-    background: none; border: none; color: var(--sa-acento-texto); font-weight: 700; font-size: 15px; cursor: pointer; padding: 0 5px; transition: color 0.2s;
-    &:hover { color: var(--sa-acento); text-decoration: underline; }
-  }
+/* Enlace discreto, compartido por "Regístrate aquí" (en .login-footer) y "He
+   olvidado mi contraseña" (en .olvide, fuera de .login-footer). Antes vivía
+   anidada solo bajo .login-footer .toggle-btn, así que fuera de ahí caía al
+   botón nativo del navegador: gris, sin relación con el resto de la pantalla —
+   exactamente el caso de "olvidé mi contraseña". */
+.toggle-btn {
+  background: none; border: none; color: var(--sa-acento-texto); font-weight: 700; font-size: 15px; cursor: pointer; padding: 0 5px; transition: color 0.2s;
+  &:hover:not(:disabled) { color: var(--sa-acento); text-decoration: underline; }
+  &:disabled { color: var(--sa-texto-tenue); cursor: not-allowed; }
 }

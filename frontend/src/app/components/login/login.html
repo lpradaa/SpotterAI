@@ -38,70 +38,52 @@
       <form class="login-form" (ngSubmit)="onSubmit()">
         
         @if (!isLoginMode) {
-          <div class="form-group">
-            <label for="nombre">Nombre completo</label>
-            <div class="input-container">
-              <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
-              <input type="text" id="nombre" name="nombre" [(ngModel)]="nombre" placeholder="Ej. Carlos Pérez" required>
-            </div>
-          </div>
+          <label class="campo" for="nombre">
+            <span>Nombre completo</span>
+            <input type="text" id="nombre" name="nombre" [(ngModel)]="nombre" placeholder="Ej. Carlos Pérez" required>
+          </label>
 
           <div class="form-row">
-            <div class="form-group half-width">
-              <label for="edad">Edad</label>
-              <div class="input-container">
-                <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
-                <input type="number" id="edad" name="edad" [(ngModel)]="edad" placeholder="Ej. 25" required>
-              </div>
-            </div>
+            <label class="campo half-width" for="edad">
+              <span>Edad</span>
+              <input type="number" id="edad" name="edad" [(ngModel)]="edad" placeholder="Ej. 25" required>
+            </label>
 
-            <div class="form-group half-width">
-              <label for="peso">Peso (kg)</label>
-              <div class="input-container">
-                <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a4 4 0 0 1-4 4v0a4 4 0 0 1-4-4V8"></path><path d="M12 3v5"></path></svg></span>
-                <input type="number" id="peso" name="peso" [(ngModel)]="peso" placeholder="Ej. 75.5" required>
-              </div>
-            </div>
+            <label class="campo half-width" for="peso">
+              <span>Peso (kg)</span>
+              <input type="number" id="peso" name="peso" [(ngModel)]="peso" placeholder="Ej. 75.5" required>
+            </label>
           </div>
 
-          <div class="form-group">
-            <label for="genero">Género</label>
-            <div class="input-container select-container">
-              <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 1 0 0 8 4 4 0 1 0 0-8z"></path><path d="M12 10v12"></path><path d="M8 16h8"></path></svg></span>
-              <select id="genero" name="genero" [(ngModel)]="genero" required>
-                <option value="" disabled selected>Selecciona una opción</option>
-                <option value="Masculino">Masculino</option>
-                <option value="Femenino">Femenino</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </div>
-          </div>
+          <label class="campo" for="genero">
+            <span>Género</span>
+            <select id="genero" name="genero" [(ngModel)]="genero" required>
+              <option value="" disabled selected>Selecciona una opción</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </label>
         }
 
-        <div class="form-group">
-          <label for="email">Email</label>
-          <div class="input-container">
-            <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></span>
-            <input type="email" id="email" name="email" [(ngModel)]="email" placeholder="ejemplo@correo.com" required>
-          </div>
-        </div>
+        <label class="campo" for="email">
+          <span>Email</span>
+          <input type="email" id="email" name="email" [(ngModel)]="email" placeholder="ejemplo@correo.com" required>
+        </label>
 
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <div class="input-container">
-            <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>
-            <!-- El marcador de posición ya lo decía en /restablecer desde que se
-                 escribió esa pantalla; aquí, la más antigua del formulario,
-                 nadie lo puso al añadir la regla de los 12 caracteres al
-                 backend. Se descubría fallando, no leyendo. -->
-            <input type="password" id="password" name="password" [(ngModel)]="password"
-                   [placeholder]="isLoginMode ? '••••••••' : 'Al menos ' + minimoContrasena + ' caracteres'"
-                   required>
-          </div>
-          @if (!isLoginMode && password.length > 0 && password.length < minimoContrasena) {
-            <small class="campo-pista">Faltan {{ minimoContrasena - password.length }} caracteres</small>
+        <label class="campo" for="password">
+          <span>Contraseña</span>
+          <!-- El marcador de posición ya lo decía en /restablecer desde que se
+               escribió esa pantalla; aquí, la más antigua del formulario,
+               nadie lo puso al añadir la regla de los 12 caracteres al
+               backend. Se descubría fallando, no leyendo. -->
+          <input type="password" id="password" name="password" [(ngModel)]="password"
+                 [placeholder]="isLoginMode ? '••••••••' : 'Al menos ' + minimoContrasena + ' caracteres'"
+                 required>
+          @if (!isLoginMode && contrasenaCorta) {
+            <small class="campo__pista">Faltan {{ minimoContrasena - password.length }} caracteres</small>
           }
-        </div>
+        </label>
 
         @if (errorMessage()) {
           <div class="error-banner">
@@ -109,9 +91,9 @@
           </div>
         }
 
-        <button type="submit" class="submit-btn" [disabled]="!email || !password || isLoading()">
+        <button type="submit" class="btn btn--primario btn--ancho" [disabled]="!email || !password || isLoading()">
           @if (isLoading()) {
-            <span class="spinner"></span> Procesando...
+            Procesando…
           } @else {
             {{ isLoginMode ? 'Entrar a SpotterAI' : 'Crear Cuenta' }} <span class="arrow">→</span>
           }

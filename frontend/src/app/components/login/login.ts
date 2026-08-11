@@ -40,6 +40,10 @@ export class LoginComponent implements OnInit {
   /** La misma regla que exige el backend, para poder decirla antes de fallar. */
   protected minimoContrasena = MINIMO_CONTRASENA;
 
+  protected get contrasenaCorta(): boolean {
+    return this.password.length > 0 && this.password.length < this.minimoContrasena;
+  }
+
   // ⏳ Estado de carga para dar feedback visual al botón
   isLoading = signal(false);
 

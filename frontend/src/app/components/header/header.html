@@ -97,11 +97,11 @@
     </button>
   </div>
 
-  <div class="sidebar__user-profile" *ngIf="isLoggedIn()">
-    <div class="sidebar__avatar">{{ currentUser().initial }}</div>
+  <div class="sidebar__user-profile" *ngIf="auth.usuario() as u">
+    <div class="sidebar__avatar">{{ u.nombre.charAt(0).toUpperCase() }}</div>
     <div class="sidebar__user-info">
-      <span class="sidebar__user-name">{{ currentUser().name }}</span>
-      <span class="sidebar__user-email">{{ currentUser().email }}</span>
+      <span class="sidebar__user-name">{{ u.nombre }}</span>
+      <span class="sidebar__user-email">{{ u.email }}</span>
     </div>
   </div>
 
