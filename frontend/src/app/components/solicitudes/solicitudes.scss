@@ -39,6 +39,24 @@
   color: var(--sa-texto-suave);
 }
 
+/* Cuantas cosas esperan respuesta. Lleva el acento porque es justo eso: lo que
+   te reclama. Es el mismo lenguaje que el globo de la campana en la cabecera. */
+.solicitudes__contador {
+  flex-shrink: 0;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-full;
+  background: var(--sa-acento);
+  color: var(--sa-sobre-acento);
+  font-family: $font-display;
+  font-size: $text-xs;
+  font-weight: $font-bold;
+  font-variant-numeric: tabular-nums;
+}
+
 .peticiones {
   list-style: none;
   margin: 0;
@@ -80,6 +98,57 @@
   margin: 2px 0 0;
   font-size: $text-xs;
   color: var(--sa-texto-suave);
+}
+
+/* Poder mirar quien es antes de decidir. Discreto: la accion sigue siendo
+   aceptar o rechazar, esto es el apoyo para hacerlo con criterio. */
+.peticion__enlace {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: $text-xs;
+  font-weight: $font-medium;
+  color: var(--sa-acento-texto);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+/* El numero que se veia al mandarla, con la misma escala secuencial que
+   Explorar: la compatibilidad es una magnitud y se pinta igual en todas
+   partes, nunca con el color del acento. */
+.peticion__marcador {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--sa-comp-baja);
+
+  &[data-tramo='media'] { color: var(--sa-comp-media); }
+  &[data-tramo='alta'] { color: var(--sa-comp-alta); }
+}
+
+/* __cifra y no __nota: __nota ya es el recado de una propuesta de sesion, unas
+   lineas mas abajo en este mismo fichero. */
+.peticion__cifra {
+  font-family: $font-display;
+  font-size: $text-xl;
+  font-weight: $font-bold;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: $tracking-tight;
+
+  small {
+    font-size: 0.5em;
+    margin-left: 1px;
+  }
+}
+
+.peticion__etiqueta {
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--sa-texto-tenue);
+  text-transform: uppercase;
+  letter-spacing: $tracking-wide;
 }
 
 .peticion__acciones {

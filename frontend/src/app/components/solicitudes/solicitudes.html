@@ -5,7 +5,10 @@
       <p class="solicitudes__subtitulo">Lo que espera tu respuesta.</p>
     </div>
     @if (pendientes() > 0) {
-      <span class="marcador">{{ pendientes() }}</span>
+      <!-- Un contador de bandeja, no una compatibilidad: antes usaba .marcador,
+           que es la pieza de la escala de compatibilidad, y salia pintado con
+           el marron de "compatibilidad baja". -->
+      <span class="solicitudes__contador">{{ pendientes() }}</span>
     }
   </header>
 
@@ -62,12 +65,28 @@
     <ul class="peticiones">
       @for (solicitud of solicitudesPendientes(); track solicitud.id) {
         <li class="peticion">
-          <app-avatar [nombre]="solicitud.emisorNombre" [tamano]="44" />
+          <app-avatar [nombre]="solicitud.emisorNombre"
+                      [valor]="solicitud.emisorAvatar ?? ''"
+                      [foto]="foto(solicitud.emisorFotoUrl)" [tamano]="44" />
 
           <div class="peticion__texto">
             <h2 class="peticion__nombre">{{ solicitud.emisorNombre }}</h2>
             <p class="peticion__detalle">Quiere conectar contigo para entrenar.</p>
+            <!-- Antes de decidir hace falta poder mirar quién es. -->
+            <a class="peticion__enlace" [routerLink]="['/u', solicitud.emisorId]">
+              Ver su perfil
+            </a>
           </div>
+
+          <!-- La compatibilidad que se veía cuando la mandó, no la de hoy: es la
+               que explica por qué te escribió. En las anteriores a que se
+               guardara no hay número, y entonces no se enseña nada. -->
+          @if (solicitud.compatibilidad != null) {
+            <span class="peticion__marcador" [attr.data-tramo]="tramo(solicitud.compatibilidad)">
+              <span class="peticion__cifra">{{ solicitud.compatibilidad }}<small>%</small></span>
+              <span class="peticion__etiqueta">compatibles</span>
+            </span>
+          }
 
           <div class="peticion__acciones">
             <button class="btn btn--fantasma btn--pequeno"

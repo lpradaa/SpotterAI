@@ -6,6 +6,7 @@ import { UsuarioService, Match, ExplicacionMatch } from '../../services/usuario.
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { ModalAccesible } from '../../directivas/modal-accesible';
+import { tramoDe } from '../../utils/compatibilidad';
 
 /**
  * Los candidatos de uno en uno, en ficha grande.
@@ -82,11 +83,7 @@ export class FichaSugerenciaComponent {
   }
 
   /** Tramo de compatibilidad, para no repetir umbrales por la plantilla. */
-  tramo(puntuacion: number): 'alta' | 'media' | 'baja' {
-    if (puntuacion >= 70) return 'alta';
-    if (puntuacion >= 40) return 'media';
-    return 'baja';
-  }
+  tramo = tramoDe;
 
   private cargarExplicacion(candidatoId: number): void {
     this.explicacion.set(null);

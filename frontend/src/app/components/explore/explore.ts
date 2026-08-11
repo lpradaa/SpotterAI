@@ -10,6 +10,7 @@ import { FichaSugerenciaComponent } from '../ficha-sugerencia/ficha-sugerencia';
 import { PerfilesService } from '../../services/perfiles.service';
 import { ModalAccesible } from '../../directivas/modal-accesible';
 import { mensajeDeError } from '../../utils/errores';
+import { tramoDe } from '../../utils/compatibilidad';
 
 @Component({
   selector: 'app-explore',
@@ -229,11 +230,7 @@ export class Explore implements OnInit {
   }
 
   /** Tramo de compatibilidad, para no repetir umbrales en la plantilla. */
-  tramo(puntuacion: number): 'alta' | 'media' | 'baja' {
-    if (puntuacion >= 70) return 'alta';
-    if (puntuacion >= 40) return 'media';
-    return 'baja';
-  }
+  tramo = tramoDe;
 
   conectarConUsuario(id: number): void {
     this.usuarioService.enviarSolicitudConexion(id).subscribe({

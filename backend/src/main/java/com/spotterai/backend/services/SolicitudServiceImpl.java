@@ -179,7 +179,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     }
 
     private SolicitudDTO mapearADTO(Solicitud s) {
-        return new SolicitudDTO(
+        SolicitudDTO dto = new SolicitudDTO(
                 s.getId(),
                 s.getEmisor().getId(),
                 s.getEmisor().getNombre(),
@@ -187,6 +187,13 @@ public class SolicitudServiceImpl implements SolicitudService {
                 s.getReceptor().getNombre(),
                 s.getEstado()
         );
+
+        // La compatibilidad ya estaba guardada; lo que faltaba era sacarla, para
+        // que quien responde vea lo mismo que vio quien la mando.
+        dto.setCompatibilidad(s.getCompatibilidad());
+        dto.setEmisorAvatar(s.getEmisor().getAvatar());
+        dto.setEmisorFotoUrl(s.getEmisor().getFotoUrl());
+        return dto;
     }
 
     @Override

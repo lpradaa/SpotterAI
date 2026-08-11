@@ -1,17 +1,19 @@
 import { Component, OnInit, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { UsuarioService } from '../../services/usuario.service';
 import { EventosService } from '../../services/eventos.service';
 import { AvisosService } from '../../services/avisos.service';
 import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { Avatar } from '../avatar/avatar';
+import { PerfilesService } from '../../services/perfiles.service';
+import { tramoDe } from '../../utils/compatibilidad';
 
 @Component({
   selector: 'app-solicitudes',
   standalone: true,
-  imports: [CommonModule, Avatar],
+  imports: [CommonModule, Avatar, RouterLink],
   templateUrl: './solicitudes.html',
   styleUrl: './solicitudes.scss'
 })
@@ -20,8 +22,17 @@ export class SolicitudesComponent implements OnInit {
   private eventos = inject(EventosService);
   private avisos = inject(AvisosService);
   private sesiones = inject(SesionesService);
+  private perfiles = inject(PerfilesService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+
+  /** Tramo de compatibilidad, para colorear el número con la escala de siempre. */
+  tramo = tramoDe;
+
+  /** La foto de quien manda la solicitud, resuelta a URL servible. */
+  foto(ruta: string | null | undefined): string | null {
+    return this.perfiles.urlDeMedio(ruta ?? null);
+  }
 
   solicitudesPendientes = signal<any[]>([]);
 
