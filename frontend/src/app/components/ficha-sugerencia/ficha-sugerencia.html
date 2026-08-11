@@ -19,16 +19,28 @@
           <span class="sugerencia__etiqueta">{{ candidato.etiquetaCompatibilidad }}</span>
         </div>
 
-        <!-- Explicación redactada, pedida al abrir cada ficha -->
+        <!-- De dónde sale el número, pedido al abrir cada ficha.
+             Antes aquí había unos puntos animados y un "Analizando vuestra
+             compatibilidad…" que esperaban a un endpoint que hace aritmética
+             sobre datos ya en memoria: un resto de cuando esto pasaba por un
+             modelo. Con la IA aparcada y el logo cambiado a "Spotter" para no
+             prometer lo que no se hace, era la última promesa incumplida que
+             quedaba en pantalla. -->
         <div class="explicacion" aria-live="polite">
-          @if (cargandoExplicacion()) {
-            <div class="explicacion__cargando">
-              <span class="puntos" aria-hidden="true"><i></i><i></i><i></i></span>
-              <span>Analizando vuestra compatibilidad…</span>
-            </div>
-          } @else if (explicacion(); as texto) {
-            <p class="explicacion__titular">{{ texto.titular }}</p>
-            <p class="explicacion__motivo">{{ texto.motivo }}</p>
+          @if (explicacion(); as texto) {
+            <!-- El motivo es el desglose hilado en un parrafo, asi que con el
+                 desglose abierto se estarian leyendo las mismas frases dos
+                 veces. O el resumen o el detalle, no los dos. -->
+            @if (verDesglose()) {
+              <app-desglose [factores]="texto.factores" />
+            } @else {
+              <p class="explicacion__motivo">{{ texto.motivo }}</p>
+            }
+
+            <button class="explicacion__mas" (click)="verDesglose.set(!verDesglose())"
+                    [attr.aria-expanded]="verDesglose()">
+              {{ verDesglose() ? 'Ocultar el desglose' : 'Ver de dónde sale' }}
+            </button>
           } @else {
             <p class="explicacion__motivo">{{ candidato.resumenCompatibilidad }}</p>
           }

@@ -8,11 +8,12 @@ import { ModalPerfilComponent } from '../modal-perfil/modal-perfil';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PerfilesService, PerfilPublico } from '../../services/perfiles.service';
-import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioService, ExplicacionMatch } from '../../services/usuario.service';
 import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { Carga } from '../carga/carga';
 import { tramoDe } from '../../utils/compatibilidad';
+import { Desglose } from '../desglose/desglose';
 
 /**
  * La página de una persona.
@@ -34,7 +35,8 @@ import { tramoDe } from '../../utils/compatibilidad';
 @Component({
   selector: 'app-perfil-publico',
   standalone: true,
-  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, Carga, ProponerSesionComponent, ModalPerfilComponent],
+  imports: [CommonModule, FormsModule, RejillaSemana, Avatar, Carga, Desglose,
+            ProponerSesionComponent, ModalPerfilComponent],
   templateUrl: './perfil-publico.html',
   styleUrl: './perfil-publico.scss'
 })
@@ -90,6 +92,33 @@ export class PerfilPublicoComponent {
    * donde de verdad hace falta distinguirlos.
    */
   tramo = tramoDe;
+
+  /**
+   * El desglose por factores, cuando se pide.
+   *
+   * <p>Bajo demanda y no al cargar la ficha: es un cálculo aparte del perfil y
+   * la mayoría de las visitas se resuelven con el número y la semana. Se guarda
+   * una vez pedido, así que plegar y desplegar no vuelve a llamar.
+   */
+  desglose = signal<ExplicacionMatch | null>(null);
+  cargandoDesglose = signal(false);
+  private desgloseGuardado: ExplicacionMatch | null = null;
+
+  alternarDesglose(otroId: number): void {
+    if (this.desglose()) { this.desglose.set(null); return; }
+    if (this.desgloseGuardado) { this.desglose.set(this.desgloseGuardado); return; }
+    if (this.cargandoDesglose()) return;
+
+    this.cargandoDesglose.set(true);
+    this.usuarios.getExplicacionMatch(otroId).subscribe({
+      next: d => {
+        this.desgloseGuardado = d;
+        this.desglose.set(d);
+        this.cargandoDesglose.set(false);
+      },
+      error: () => this.cargandoDesglose.set(false),
+    });
+  }
 
   /** Índice del medio abierto a tamaño grande, o null. */
   medioAmpliado = signal<string | null>(null);

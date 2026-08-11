@@ -2,6 +2,7 @@ package com.spotterai.backend.matching;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -34,8 +35,19 @@ public class ExplicadorCompatibilidad {
             motivo += ".";
         }
 
+        // El desglose entero, en el orden en que lo dejo la calculadora: primero
+        // lo que mas pesa. Se mandan tambien los no aplicables, que es justo lo
+        // que permite decir "esto no lo sabemos" en vez de enseñar un cero que
+        // se leeria como mal encaje.
+        List<FactorDelDesglose> factores = puntuacion.factores().stream()
+                .map(FactorDelDesglose::de)
+                .toList();
+
         return new ExplicacionMatch(
                 "%s - %d%% de compatibilidad".formatted(nombreOtro, puntuacion.total()),
-                motivo);
+                motivo,
+                puntuacion.total(),
+                puntuacion.etiqueta(),
+                factores);
     }
 }

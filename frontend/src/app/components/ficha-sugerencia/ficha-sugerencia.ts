@@ -7,6 +7,7 @@ import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { ModalAccesible } from '../../directivas/modal-accesible';
 import { tramoDe } from '../../utils/compatibilidad';
+import { Desglose } from '../desglose/desglose';
 
 /**
  * Los candidatos de uno en uno, en ficha grande.
@@ -22,7 +23,7 @@ import { tramoDe } from '../../utils/compatibilidad';
 @Component({
   selector: 'app-ficha-sugerencia',
   standalone: true,
-  imports: [CommonModule, RejillaSemana, Avatar, ModalAccesible],
+  imports: [CommonModule, RejillaSemana, Avatar, ModalAccesible, Desglose],
   templateUrl: './ficha-sugerencia.html',
   styleUrl: './ficha-sugerencia.scss'
 })
@@ -41,6 +42,15 @@ export class FichaSugerenciaComponent {
   indiceActual = signal(0);
   explicacion = signal<ExplicacionMatch | null>(null);
   cargandoExplicacion = signal(false);
+
+  /**
+   * Si el desglose está desplegado.
+   *
+   * <p>Plegado por defecto: quien pasa fichas quiere decidir, y ocho barras
+   * delante del botón de conectar convierten una ojeada en un informe. Quien
+   * quiera saber de dónde sale el número lo pide.
+   */
+  verDesglose = signal(false);
 
   /** El candidato que se está mostrando ahora mismo. */
   actual = computed(() => this.candidatos()[this.indiceActual()] ?? null);
@@ -87,6 +97,9 @@ export class FichaSugerenciaComponent {
 
   private cargarExplicacion(candidatoId: number): void {
     this.explicacion.set(null);
+    // Al cambiar de persona el desglose se pliega: dejarlo abierto enseñaría el
+    // de la anterior durante el instante que tarda la nueva respuesta.
+    this.verDesglose.set(false);
     this.cargandoExplicacion.set(true);
 
     this.usuarioService.getExplicacionMatch(candidatoId).subscribe({

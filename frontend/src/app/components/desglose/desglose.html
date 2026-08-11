@@ -1,0 +1,58 @@
+<!-- Una fila por factor. El peso máximo va escrito porque no es fijo: cuando
+     algún factor no se puede evaluar, su peso se reparte entre los demás, y sin
+     verlo un "Nivel 13/13" donde la tabla dice 10 parecería un error. -->
+<div class="desglose">
+
+  <ul class="desglose__lista">
+    @for (f of evaluados(); track f.nombre) {
+      <li class="desglose__factor">
+        <div class="desglose__fila">
+          <span class="desglose__etiqueta">{{ f.etiqueta }}</span>
+          <span class="desglose__puntos">
+            <strong>{{ f.puntos }}</strong><span class="desglose__max">/{{ f.puntosMax }}</span>
+          </span>
+        </div>
+
+        <!-- La barra es decorativa: los puntos van escritos justo encima, así
+             que quien use un lector de pantalla ya tiene el dato. -->
+        <div class="desglose__barra" aria-hidden="true">
+          <div class="desglose__relleno" [attr.data-tramo]="tramo(f)"
+               [style.width.%]="proporcion(f)"></div>
+        </div>
+
+        <p class="desglose__detalle">{{ f.detalle }}</p>
+      </li>
+    }
+  </ul>
+
+  <!-- Lo que no se ha podido evaluar, aparte y sin barra: una barra vacía se
+       lee como "cero puntos", y es justo lo contrario de lo que pasa. -->
+  @if (sinDatos().length > 0) {
+    <div class="desglose__huecos">
+      <p class="desglose__aviso">
+        Esto no se ha podido mirar, así que <strong>no resta</strong>: su peso se
+        reparte entre lo demás.
+      </p>
+
+      <ul class="desglose__lista">
+        @for (f of sinDatos(); track f.nombre) {
+          <li class="desglose__factor desglose__factor--sin-datos">
+            <div class="desglose__fila">
+              <span class="desglose__etiqueta">{{ f.etiqueta }}</span>
+              <span class="desglose__puntos desglose__puntos--vacio">sin datos</span>
+            </div>
+            <p class="desglose__detalle">{{ f.detalle }}</p>
+          </li>
+        }
+      </ul>
+
+      <!-- No se dice cuál de los dos perfiles es el que falta por completar: la
+           calculadora escribe "de alguno de los dos" a propósito, y señalar a
+           uno sería afirmar algo que no se sabe. -->
+      <p class="desglose__nota">
+        Con el perfil completo el número se parece más a lo que de verdad
+        encajáis.
+      </p>
+    </div>
+  }
+</div>

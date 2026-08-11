@@ -65,10 +65,33 @@ export interface Match {
   solicitudPendiente: boolean;
 }
 
-/** Explicación redactada de un match concreto. */
+/** Un factor del desglose, tal y como lo manda el backend. */
+export interface FactorDelDesglose {
+  /** Identificador estable: 'horario', 'nivel', 'fuerza'… */
+  nombre: string;
+  /** Cómo se llama en pantalla. */
+  etiqueta: string;
+  puntos: number;
+  /** Peso efectivo del factor, ya repartido el de los no aplicables. */
+  puntosMax: number;
+  /** Si había datos en los dos perfiles para evaluarlo. */
+  aplicable: boolean;
+  /**
+   * La frase que redactó la calculadora.
+   *
+   * Cuando el factor no es aplicable dice "de alguno de los dos" sin señalar a
+   * nadie, y es a propósito: este lado no sabe de quién falta el dato.
+   */
+  detalle: string;
+}
+
+/** De dónde sale el número: la explicación y el desglose por factores. */
 export interface ExplicacionMatch {
   titular: string;
   motivo: string;
+  total: number;
+  etiqueta: string;
+  factores: FactorDelDesglose[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -89,8 +112,10 @@ export class UsuarioService {
 
   /**
    * Explicación redactada de un match concreto.
-   * Va aparte de la lista porque cuesta una llamada al modelo: se pide solo
-   * cuando el usuario abre una ficha.
+   * Va aparte de la lista porque solo hace falta cuando alguien pregunta por una
+   * persona concreta: calcularlo para los cien de Explorar en cada carga sería
+   * pagarlo noventa y nueve veces de más. (Decía "cuesta una llamada al modelo",
+   * que dejó de ser cierto cuando la IA se aparcó.)
    */
   getExplicacionMatch(usuarioId: number): Observable<ExplicacionMatch> {
     return this.http.get<ExplicacionMatch>(`${this.usuarios}/matches/${usuarioId}/explicacion`);

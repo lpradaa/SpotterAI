@@ -79,6 +79,23 @@
       @if (p.franjasEnComun.length > 0) {
         <app-rejilla-semana [misFranjas]="misFranjas()" [solape]="p.franjasEnComun" />
       }
+
+      <!-- De dónde sale el número. Se pide al desplegarlo y no al cargar la
+           página: es un cálculo aparte y la mayoría de las visitas no lo abren. -->
+      @if (desglose(); as d) {
+        <app-desglose [factores]="d.factores" />
+      }
+
+      <button class="ficha__mas" (click)="alternarDesglose(p.id)"
+              [attr.aria-expanded]="desglose() !== null">
+        @if (cargandoDesglose()) {
+          Un momento…
+        } @else if (desglose()) {
+          Ocultar el desglose
+        } @else {
+          Ver de dónde sale este {{ p.compatibilidad }} %
+        }
+      </button>
     </section>
     }
 

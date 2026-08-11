@@ -176,6 +176,22 @@
   color: var(--sa-texto-suave);
 }
 
+/* Abrir el desglose: discreto, porque la accion de esta pagina sigue siendo
+   conectar. Es para quien se pregunte de donde sale el numero. */
+.ficha__mas {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-family: inherit;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  color: var(--sa-acento-texto);
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}
+
 /* ===================== Lo que mueve ===================== */
 .levantamientos-vista {
   list-style: none;

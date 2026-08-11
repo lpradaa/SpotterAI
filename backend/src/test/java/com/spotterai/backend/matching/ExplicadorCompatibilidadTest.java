@@ -100,4 +100,80 @@ class ExplicadorCompatibilidadTest {
     private static String etiquetaDe(int total) {
         return new PuntuacionCompatibilidad(total, List.of(), SolapeHorario.NINGUNO).etiqueta();
     }
+
+    // ===================== El desglose =====================
+    // El motivo redactado se queda con lo que suma; el desglose tiene que
+    // llevarlo TODO, que es justo lo contrario. Son dos cosas distintas y la
+    // tentacion es que la segunda herede los filtros de la primera.
+
+    @Test
+    @DisplayName("El desglose lleva los ocho factores, tambien los que no suman")
+    void elDesgloseNoFiltraNada() {
+        ExplicacionMatch e = explicador.explicar("Marta", puntuacionConSolape());
+
+        assertEquals(5, e.factores().size());
+        // "edad" aporto 0 puntos: no sale en el motivo pero si en el desglose,
+        // porque un cero explicado es informacion y en el resumen era ruido.
+        assertTrue(e.factores().stream().anyMatch(f -> f.nombre().equals("edad")));
+    }
+
+    @Test
+    @DisplayName("Un factor sin datos viaja marcado, no como un cero")
+    void loSinDatosSeDistingueDeUnCero() {
+        PuntuacionCompatibilidad incompleta = new PuntuacionCompatibilidad(
+                100,
+                List.of(FactorCompatibilidad.evaluado("nivel", 100, 100, "Los dos entrenáis a nivel intermedio"),
+                        FactorCompatibilidad.sinDatos("fuerza", "Faltan los levantamientos de alguno de los dos")),
+                SolapeHorario.NINGUNO);
+
+        ExplicacionMatch e = explicador.explicar("Marta", incompleta);
+
+        FactorDelDesglose fuerza = e.factores().stream()
+                .filter(f -> f.nombre().equals("fuerza")).findFirst().orElseThrow();
+
+        assertFalse(fuerza.aplicable());
+        // Sin puntos y sin maximo: es lo que permite pintarlo como "no lo
+        // sabemos" en vez de como una barra vacia, que se leeria como un cero.
+        assertEquals(0, fuerza.puntos());
+        assertEquals(0, fuerza.puntosMax());
+        // Y conserva la frase, que dice "alguno de los dos" sin señalar a nadie:
+        // este lado no sabe de quien falta el dato y no lo finge.
+        assertTrue(fuerza.detalle().contains("alguno de los dos"));
+    }
+
+    @Test
+    @DisplayName("Cada factor sale con su nombre de pantalla")
+    void cadaFactorTraeSuEtiqueta() {
+        ExplicacionMatch e = explicador.explicar("Marta", puntuacionConSolape());
+
+        FactorDelDesglose horario = e.factores().stream()
+                .filter(f -> f.nombre().equals("horario")).findFirst().orElseThrow();
+
+        assertEquals("Cuándo entrenáis", horario.etiqueta());
+    }
+
+    @Test
+    @DisplayName("El total del desglose es el mismo numero que el del titular")
+    void elTotalNoSeSeparaDelTitular() {
+        ExplicacionMatch e = explicador.explicar("Marta", puntuacionConSolape());
+
+        assertEquals(88, e.total());
+        assertTrue(e.titular().contains("88"));
+        assertEquals("Compatibilidad excelente", e.etiqueta());
+    }
+
+    @Test
+    @DisplayName("Los puntos se redondean sin que el desglose se despegue del total")
+    void losPuntosVanRedondeados() {
+        // Pesos con decimales, que es lo que deja el reparto de los no aplicables
+        PuntuacionCompatibilidad conDecimales = new PuntuacionCompatibilidad(
+                50,
+                List.of(FactorCompatibilidad.evaluado("horario", 28.4, 45.7, "Coincidís algo")),
+                SolapeHorario.NINGUNO);
+
+        FactorDelDesglose f = explicador.explicar("Marta", conDecimales).factores().get(0);
+
+        assertEquals(28, f.puntos());
+        assertEquals(46, f.puntosMax());
+    }
 }

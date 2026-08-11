@@ -107,12 +107,15 @@ public class UsuarioController {
     }
 
     /**
-     * Explicacion redactada de por que encajas con un usuario concreto.
+     * De donde sale el numero: el desglose por factores, con su explicacion.
      * GET /api/usuarios/matches/{id}/explicacion
      *
-     * <p>Va aparte de la lista a proposito: redactar cuesta una llamada al modelo,
-     * asi que se paga solo cuando el usuario abre una ficha, no en cada carga del
-     * dashboard.
+     * <p>Va aparte de la lista porque solo hace falta cuando alguien pregunta por
+     * una persona concreta, y calcularlo para los cien de Explorar en cada carga
+     * seria pagarlo noventa y nueve veces de mas. (El comentario de antes decia
+     * que "redactar cuesta una llamada al modelo": eso dejo de ser cierto cuando
+     * la IA se aparco, y desde entonces esto es aritmetica sobre datos que ya
+     * estan en memoria.)
      */
     @GetMapping("/matches/{id}/explicacion")
     public ResponseEntity<?> explicarMatch(@PathVariable Long id) {

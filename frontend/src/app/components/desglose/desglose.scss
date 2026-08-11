@@ -1,0 +1,115 @@
+@use '../../../scss/index' as *;
+
+:host {
+  display: block;
+  // A la izquierda pase lo que pase: el modal de sugerencia centra su contenido,
+  // y una lista de barras con el texto centrado no se puede leer en columna.
+  text-align: left;
+}
+
+.desglose {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.desglose__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.desglose__fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-xs;
+}
+
+.desglose__etiqueta {
+  font-size: $text-sm;
+  color: var(--sa-texto);
+}
+
+.desglose__puntos {
+  font-family: $font-display;
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  strong {
+    font-size: $text-base;
+    font-weight: $font-bold;
+    color: var(--sa-texto);
+  }
+}
+
+.desglose__max {
+  // El maximo, mas apagado: lo que se lee de un vistazo es lo obtenido
+  opacity: 0.7;
+}
+
+.desglose__puntos--vacio {
+  font-style: italic;
+}
+
+/* La barra sigue la misma escala secuencial que el numero grande: la
+   compatibilidad es una magnitud y se pinta igual en toda la aplicacion. */
+.desglose__barra {
+  height: 6px;
+  margin-top: 5px;
+  border-radius: $radius-full;
+  background: var(--sa-superficie-alt);
+  overflow: hidden;
+}
+
+.desglose__relleno {
+  height: 100%;
+  border-radius: $radius-full;
+  background: var(--sa-comp-baja);
+  transition: width var(--sa-transicion-lenta);
+
+  &[data-tramo='media'] { background: var(--sa-comp-media); }
+  &[data-tramo='alta'] { background: var(--sa-comp-alta); }
+}
+
+.desglose__detalle {
+  margin: 5px 0 0;
+  font-size: $text-xs;
+  line-height: $leading-normal;
+  color: var(--sa-texto-suave);
+}
+
+/* Lo que no se ha podido evaluar: separado por una linea, sin barra y en gris.
+   Que se lea como "esto no lo sabemos" y no como "esto puntuo bajo". */
+.desglose__huecos {
+  padding-top: $space-sm;
+  border-top: 1px solid var(--sa-borde);
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+.desglose__factor--sin-datos {
+  .desglose__etiqueta { color: var(--sa-texto-tenue); }
+}
+
+.desglose__aviso {
+  margin: 0;
+  font-size: $text-xs;
+  line-height: $leading-normal;
+  color: var(--sa-texto-suave);
+
+  strong { color: var(--sa-texto); }
+}
+
+.desglose__nota {
+  margin: 0;
+  font-size: $text-xs;
+  line-height: $leading-normal;
+  color: var(--sa-texto-tenue);
+}
