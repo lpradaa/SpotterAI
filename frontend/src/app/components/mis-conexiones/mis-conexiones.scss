@@ -588,3 +588,14 @@
   flex-shrink: 0;
   margin-left: auto;
 }
+
+/* El estado vacio, aqui dentro, no lleva superficie propia.
+   .vacio-grande la trae porque en Solicitudes y en Explorar va suelto sobre el
+   fondo de la pagina y necesita ser algo. Aqui vive dentro de .lista, que ya es
+   una tarjeta: con las dos, queda una caja del mismo color dentro de otra y el
+   borde interior no separa nada, solo ensucia. */
+.lista .vacio-grande {
+  background: none;
+  border: none;
+  box-shadow: none;
+}
