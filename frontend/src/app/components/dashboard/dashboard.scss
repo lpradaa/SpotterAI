@@ -266,42 +266,10 @@
   background: var(--sa-superficie-alt);
 }
 
-/* ===================== Perfil lateral ===================== */
-.perfil__cabecera {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: $space-sm;
-  border-bottom: 1px solid var(--sa-borde);
-}
-
-.perfil__nombre {
-  font-size: $text-lg;
-  font-weight: $font-semibold;
-}
-
-.perfil__datos {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $space-xs;
-  margin: $space-sm 0 0;
-  text-align: center;
-
-  dt {
-    font-size: $text-xs;
-    color: var(--sa-texto-tenue);
-    text-transform: uppercase;
-    letter-spacing: $tracking-wide;
-  }
-
-  dd {
-    margin: 2px 0 0;
-    font-family: $font-display;
-    font-weight: $font-semibold;
-    color: var(--sa-texto);
-  }
-}
+// .perfil__cabecera, .perfil__nombre y .perfil__datos vivian aqui, para la
+// tarjeta de perfil del lateral. Esa tarjeta era verte por segunda vez en la
+// misma pantalla —ver el comentario en dashboard.html— y se ha ido; sus estilos
+// no los usaba nadie mas.
 
 /* ===================== Historial ===================== */
 .linea-tiempo {

@@ -162,25 +162,22 @@
     <!-- ================= Lateral ================= -->
     <aside class="columna-lateral">
 
-      <!-- Las solicitudes ya no se responden aquí: viven en /solicitudes, que
-           es la bandeja de lo que espera tu respuesta, y estaban en los dos
-           sitios. La campana lleva allí. -->
-      <section class="tarjeta perfil">
-        <div class="perfil__cabecera">
-          <app-avatar [nombre]="userName()" [valor]="perfilCargado()?.avatar ?? ''"
-                      [foto]="urlFoto()" medida="cabecera" />
-          <h2 class="perfil__nombre">{{ userName() }}</h2>
-          <span class="chip chip--objetivo">{{ perfilCargado()?.objetivos || 'Sin objetivo' }}</span>
-        </div>
-        <dl class="perfil__datos">
-          <div><dt>Nivel</dt><dd>{{ perfilCargado()?.nivel || '—' }}</dd></div>
-          <div><dt>Peso</dt><dd class="cifra">{{ perfilCargado()?.peso ? perfilCargado()?.peso + ' kg' : '—' }}</dd></div>
-          <div><dt>Edad</dt><dd class="cifra">{{ perfilCargado()?.edad || '—' }}</dd></div>
-        </dl>
-        <!-- Verte como te ven, que es distinto de editarte. -->
-        <a class="btn btn--fantasma btn--ancho" routerLink="/yo">Ver mi perfil</a>
-      </section>
+      <!-- Aqui habia una tarjeta de perfil, y era verte por segunda vez en la
+           misma pantalla: avatar de 64 px, tu nombre, tu nivel y tu objetivo,
+           exactamente lo que ya dice la barra de arriba con el mismo avatar del
+           mismo tamaño. Y por tercera vez si abrias el menu lateral, que tambien
+           te enseña avatar, nombre y correo.
 
+           Lo unico que no estaba repetido eran dos campos, peso y edad, que ni
+           puntuan en el motor ni los ve nadie mas: no justifican una tarjeta
+           entera en la pantalla de entrada. Se siguen viendo y cambiando en el
+           formulario del perfil, y a /yo se llega desde la propia barra.
+
+           Tenia sentido cuando se escribio, porque entonces no existia /yo. Hoy
+           tu perfil es una pagina con URL propia.
+
+           Las solicitudes tampoco se responden aqui: viven en /solicitudes, que
+           es la bandeja de lo que espera tu respuesta. La campana lleva alli. -->
       <section class="tarjeta">
         <div class="seccion__cabecera">
           <h2 class="tarjeta__titulo">Mi actividad</h2>
