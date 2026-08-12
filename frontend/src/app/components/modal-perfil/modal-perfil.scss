@@ -9,19 +9,34 @@
    =========================================================================== */
 
 /* ===================== Formularios ===================== */
+/* Un bloque del formulario.
+   ---------------------------------------------------------------------------
+   Son diez, en un scroll de unos dos mil pixeles y con nada entre ellos salvo
+   el hueco del contenedor: al bajar no habia forma de saber si seguias en el
+   mismo apartado o llevabas dos. Ahora cada uno cierra con una linea, que es lo
+   minimo para que el formulario se lea como una sucesion de apartados y no como
+   una tira de campos.
+
+   El ultimo no la lleva: una linea al final del scroll no separa nada de nada,
+   solo cuelga.
+
+   Estaba declarado dos veces, una debajo de la otra. */
 .bloque {
   border: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0 $space-md;
   display: flex;
   flex-direction: column;
   gap: $space-xs;
-}
-
-/* Un fieldset no encoge por debajo de su contenido si no se le dice, y basta
-   con que uno se pase para que el modal entero saque scroll horizontal. */
-.bloque {
+  // Un fieldset no encoge por debajo de su contenido si no se le dice, y basta
+  // con que uno se pase para que el modal entero saque scroll horizontal.
   min-width: 0;
+  border-bottom: 1px solid var(--sa-borde);
+
+  &:last-of-type {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
 }
 
 .bloque__nota {
@@ -401,7 +416,12 @@
 
 /* Separado del resto y en rojo: es lo unico del formulario que no se deshace. */
 .bloque--peligro {
-  border-color: var(--sa-error);
+  // Mas aire por delante: separarlo es parte de lo que evita que alguien llegue
+  // aqui de seguido bajando por el formulario.
+  margin-top: $space-sm;
+  padding: $space-sm;
+  border: 1px solid var(--sa-error);
+  border-radius: $radius-md;
 
   .bloque__titulo { color: var(--sa-error); }
 }
