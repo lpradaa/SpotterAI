@@ -83,7 +83,10 @@
 
       @if (miRendimiento(); as r) {
         @if (r.huecos.length > 0) {
-          <section class="ficha__bloque">
+          <!-- El bloque principal de tu propia pagina: es el unico que te pide
+               algo. Los demas te cuentan como te ven, este te dice que hacer,
+               y con la misma caja que el resto se leia como un apartado mas. -->
+          <section class="ficha__bloque ficha__bloque--principal ficha__bloque--pendiente">
             <h3 class="ficha__subtitulo">Lo que te falta</h3>
             <p class="ficha__motivo">
               Son <strong>{{ r.puntosEnJuego }} puntos</strong> de compatibilidad
@@ -114,7 +117,15 @@
          No en el tuyo: la compatibilidad de alguien consigo mismo no significa
          nada, y un 0 % en tu propia ficha se leeria como un juicio. -->
     @if (!p.esMio) {
-    <section class="ficha__bloque">
+    <!-- El bloque principal de la pagina, y se nota: es la unica razon por la
+         que existe esta pantalla. Antes pesaba exactamente lo mismo que la
+         tabla de kilos y que la lista de logros —las tres con la misma
+         superficie, el mismo borde y la misma sombra—, asi que la pagina donde
+         se decide no señalaba en ninguna direccion.
+         El data-tramo tambien aqui: tiñe el canto superior del bloque, para que
+         el color de la escala se vea antes de leer el numero. -->
+    <section class="ficha__bloque ficha__bloque--principal"
+             [attr.data-tramo]="tramo(p.compatibilidad)">
       <div class="ficha__encaje">
         <!-- data-tramo aqui y no mas arriba: es el ancestro que <app-carga>
              busca con :host-context para teñir sus discos, y ademas tiñe la
@@ -241,13 +252,20 @@
          calcula el motor, y eso es lo que hacía que la aplicación se leyera
          como una herramienta. -->
     @if (p.hitos.length > 0) {
-      <section class="ficha__bloque">
+      <!-- Sin superficie propia: cada logro es su propia pieza, y una caja
+           alrededor de todos los convertia en un apartado mas de un informe.
+           Es lo unico de esta pagina que ha escrito una persona; meterlo en el
+           mismo gris que la tabla de kilos era decir que valen lo mismo. -->
+      <section class="ficha__bloque ficha__bloque--llano">
         <h3 class="ficha__subtitulo">{{ p.esMio ? 'Mis marcas' : 'Sus marcas' }}</h3>
 
         <ul class="hitos">
           @for (hito of p.hitos; track hito.id) {
             <li class="hito">
               @if (hito.medioUrl) {
+                <!-- A sangre y arriba: la foto es el logro, no una miniatura
+                     que lo acompaña. Antes iba dentro del acolchado, a media
+                     anchura de la columna. -->
                 <div class="hito__medio">
                   @if (hito.medioTipo === 'video') {
                     <video [src]="url(hito.medioUrl)" controls preload="metadata"
@@ -259,11 +277,13 @@
               }
 
               <div class="hito__texto">
+                <!-- La fecha por delante del titulo: un logro es un dia
+                     concreto, y leerla despues lo dejaba en pie de foto. -->
+                <time class="hito__cuando">{{ cuando(hito.fecha) }}</time>
                 <h4 class="hito__titulo">{{ hito.titulo }}</h4>
                 @if (hito.descripcion) {
                   <p class="hito__descripcion">{{ hito.descripcion }}</p>
                 }
-                <time class="hito__cuando">{{ cuando(hito.fecha) }}</time>
               </div>
             </li>
           }
@@ -282,38 +302,28 @@
       </section>
     }
 
-    <!-- ================= Qué puedes hacer ================= -->
-    <footer class="ficha__acciones">
-      @if (p.esMio) {
-        <button class="btn btn--primario btn--ancho" (click)="abrirEdicion()">
-          Editar mi perfil
-        </button>
-      } @else if (p.yaConectado) {
-        @if (!proponiendo()) {
-          <button class="btn btn--primario btn--ancho" (click)="proponiendo.set(true)">
-            Proponer sesión
+    <!-- ================= Las salidas =================
+         Antes vivian dentro del pie, debajo de "Conectar". El pie ahora se
+         queda pegado al borde inferior mientras se lee la pagina, y bloquear a
+         alguien no es una accion que deba estar siempre a un dedo de
+         distancia: se queda donde termina el contenido, que es donde se llega
+         cuando ya has decidido que no.
+
+         Fuera del grupo de accion y siempre visible salvo en tu propia pagina:
+         quitarte a alguien de encima no puede depender de que exista relacion.
+         Quien te incomoda no tiene por que ser tu companero. -->
+    @if (!p.esMio) {
+      <section class="ficha__salidas">
+        <!-- Deshacer la relacion es una salida, no una accion del dia a dia:
+             estaba en el grupo de "Proponer sesion" / "Escribir a", y con el pie
+             pegado abajo eso significaba tener "Dejar de ser companeros" a la
+             vista todo el rato, ocupando un tercio de la pantalla en un movil. -->
+        @if (p.yaConectado) {
+          <button class="btn btn--enlace" [disabled]="enviando()" (click)="retirar()">
+            Dejar de ser compañeros
           </button>
         }
-        <button class="btn btn--fantasma btn--ancho" (click)="escribirA(p.id)">
-          Escribir a {{ p.nombre.split(' ')[0] }}
-        </button>
-        <button class="btn btn--fantasma" [disabled]="enviando()" (click)="retirar()">
-          Dejar de ser compañeros
-        </button>
-      } @else if (p.solicitudPendiente) {
-        <button class="btn btn--fantasma btn--ancho" [disabled]="enviando()" (click)="retirar()">
-          Retirar solicitud
-        </button>
-      } @else {
-        <button class="btn btn--primario btn--ancho" [disabled]="enviando()" (click)="conectar()">
-          Conectar con {{ p.nombre.split(' ')[0] }}
-        </button>
-      }
 
-      <!-- Fuera del grupo de arriba y siempre visible salvo en tu propia
-           pagina: quitarte a alguien de encima no puede depender de que exista
-           relacion. Quien te incomoda no tiene por que ser tu companero. -->
-      @if (!p.esMio) {
         @if (!confirmandoBloqueo()) {
           <button class="btn btn--enlace" (click)="confirmandoBloqueo.set(true)">
             Bloquear a {{ p.nombre.split(' ')[0] }}
@@ -373,6 +383,40 @@
             </div>
           </div>
         }
+      </section>
+    }
+
+    <!-- ================= Qué puedes hacer =================
+         Pegado al borde inferior. La pagina mide 1686 px con un viewport de
+         730: para conectar con alguien habia que bajar 1344 px, es decir, casi
+         dos pantallas enteras despues de haber decidido. La accion de una
+         pantalla que existe para decidir no puede estar fuera de la vista
+         mientras se decide. -->
+    <footer class="ficha__acciones">
+      <!-- Sin btn--ancho: la barra reparte el ancho entre lo que haya. Con una
+           sola accion el boton sigue ocupandolo todo, y con dos van en fila en
+           vez de apilarse. -->
+      @if (p.esMio) {
+        <button class="btn btn--primario" (click)="abrirEdicion()">
+          Editar mi perfil
+        </button>
+      } @else if (p.yaConectado) {
+        @if (!proponiendo()) {
+          <button class="btn btn--primario" (click)="proponiendo.set(true)">
+            Proponer sesión
+          </button>
+        }
+        <button class="btn btn--fantasma" (click)="escribirA(p.id)">
+          Escribir a {{ p.nombre.split(' ')[0] }}
+        </button>
+      } @else if (p.solicitudPendiente) {
+        <button class="btn btn--fantasma" [disabled]="enviando()" (click)="retirar()">
+          Retirar solicitud
+        </button>
+      } @else {
+        <button class="btn btn--primario" [disabled]="enviando()" (click)="conectar()">
+          Conectar con {{ p.nombre.split(' ')[0] }}
+        </button>
       }
     </footer>
   }

@@ -56,10 +56,14 @@
   min-width: 0;
 }
 
+/* Mas grande que cualquier otra cosa de la pagina, incluido el porcentaje.
+   Los dos median 24 px, asi que el nombre de la persona y la cifra que la
+   puntua pesaban lo mismo — que es exactamente lo que esta ficha lleva desde
+   el principio intentando no decir. */
 .ficha__nombre {
   margin: 0;
   font-family: $font-display;
-  font-size: $text-2xl;
+  font-size: $text-3xl;
   font-weight: $font-bold;
   letter-spacing: -0.02em;
   color: var(--sa-texto);
@@ -113,13 +117,56 @@
   color: var(--sa-texto);
 }
 
-/* ===================== Bloques ===================== */
+/* ===================== Bloques =====================
+   Tres pesos, no uno. Los tres apartados de la ficha —como encajais, lo que
+   moveis y lo que ha conseguido— tenian la misma superficie, el mismo borde y
+   la misma sombra, asi que la pantalla en la que se decide sobre una persona no
+   señalaba en ninguna direccion: un cuadro de compatibilidad, una tabla de
+   kilos y la vida de alguien, los tres en la misma caja gris.
+
+   Ahora hay un descenso: la decision manda, los datos apoyan, y lo que ha
+   escrito una persona sale de la caja. */
 .ficha__bloque {
   display: flex;
   flex-direction: column;
   gap: $space-sm;
   padding: $space-sm;
   @include superficie;
+}
+
+/* El bloque principal: es la unica razon por la que existe esta pagina. */
+.ficha__bloque--principal {
+  padding: $space-md $space-sm;
+  box-shadow: var(--sa-sombra-md);
+
+  /* El canto tiñe el bloque con el color de la escala secuencial, de modo que
+     el orden de magnitud de la compatibilidad se ve antes de leer el numero.
+     Es el mismo dato que ya pintaba la cifra, no un color nuevo. */
+  border-top: 3px solid var(--sa-comp-baja);
+
+  &[data-tramo='media'] { border-top-color: var(--sa-comp-media); }
+  &[data-tramo='alta']  { border-top-color: var(--sa-comp-alta); }
+
+  /* «Compatibilidad excelente» es el titular de la pagina, no un encabezado
+     de apartado como «Lo que moveis». */
+  .ficha__subtitulo { font-size: $text-lg; }
+}
+
+/* Lo que te falta en tu propia pagina. Mismo peso que el encaje, porque cumple
+   el mismo papel: es lo que pide una decision. El canto va en el tono medio de
+   la escala y no en el bajo —que es el que sale por defecto— por lo mismo que
+   ya hacia .hueco__puntos: no es un fallo, es margen sin usar. */
+.ficha__bloque--pendiente {
+  border-top-color: var(--sa-comp-media);
+}
+
+/* Sin superficie: el apartado no pinta nada y deja que lo pinte su contenido.
+   Se usa para los logros, donde cada uno es su propia pieza. */
+.ficha__bloque--llano {
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
 }
 
 .ficha__subtitulo {
@@ -231,7 +278,11 @@
   }
 }
 
-/* ===================== Hitos ===================== */
+/* ===================== Hitos =====================
+   Lo unico de esta ficha que no lo ha calculado el motor: lo escribio una
+   persona, y a veces trae una foto. Estaba tratado como el resto —texto de
+   12 px dentro de la misma caja que la tabla de kilos, con la foto reducida a
+   miniatura dentro del acolchado—. Ahora cada logro es una pieza propia. */
 .hitos {
   list-style: none;
   margin: 0;
@@ -244,14 +295,17 @@
 .hito {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  // Recorta la foto contra el radio de la tarjeta: es lo que permite que vaya
+  // a sangre sin esquinas cuadradas asomando por las del contenedor.
+  overflow: hidden;
+  @include superficie;
 }
 
 .hito__medio {
-  border-radius: $radius-md;
-  overflow: hidden;
   background: var(--sa-superficie-alt);
-  // Relación fija para que la lista no salte mientras cargan las imágenes
+  // Relación fija para que la lista no salte mientras cargan las imágenes. La
+  // de una foto: a 4/3 y a la anchura completa de la columna, un solo logro se
+  // comia mas de media pantalla.
   aspect-ratio: 3 / 2;
 
   img, video {
@@ -262,35 +316,87 @@
   }
 }
 
-.hito__titulo {
-  margin: 0;
-  font-family: $font-display;
-  font-size: $text-base;
-  font-weight: $font-semibold;
-  color: var(--sa-texto);
+.hito__texto {
+  padding: $space-sm;
 }
 
-.hito__descripcion {
-  margin: 2px 0 0;
-  font-size: $text-xs;
-  line-height: 1.5;
-  color: var(--sa-texto-suave);
-}
-
+/* La fecha por delante y en versalitas: un logro es un dia concreto. Iba
+   debajo del todo y en gris, de pie de foto. */
 .hito__cuando {
   display: block;
-  margin-top: 4px;
+  font-family: $font-display;
   font-size: $text-2xs;
+  font-weight: $font-semibold;
+  letter-spacing: $tracking-wide;
+  text-transform: uppercase;
   color: var(--sa-texto-tenue);
 }
 
-/* ===================== Acciones ===================== */
+.hito__titulo {
+  margin: 3px 0 0;
+  font-family: $font-display;
+  font-size: $text-lg;
+  font-weight: $font-semibold;
+  letter-spacing: $tracking-tight;
+  color: var(--sa-texto);
+  line-height: $leading-snug;
+}
+
+/* Al tamaño del cuerpo de texto, no al de un pie: es lo que la persona quiso
+   contar. */
+.hito__descripcion {
+  margin: 4px 0 0;
+  font-size: $text-sm;
+  line-height: $leading-normal;
+  color: var(--sa-texto-suave);
+}
+
+/* ===================== Acciones =====================
+   Pegadas al borde inferior mientras se lee. La pagina mide 1686 px con un
+   viewport de 730, y «Conectar» empezaba en el 1344: para actuar sobre lo que
+   acabas de leer habia que bajar casi dos pantallas mas, con lo cual la unica
+   accion de una pantalla hecha para decidir estaba fuera de la vista durante
+   todo el rato en que se decide.
+
+   El margin-top:auto que habia era resto de cuando .ficha era un panel fijo de
+   alto completo; en una pagina de alto automatico no empuja nada. */
 .ficha__acciones {
+  position: sticky;
+  bottom: 0;
+  // Por encima del contenido que le pasa por debajo, y muy por debajo del
+  // modal de edicion (1000) para no taparle los botones.
+  z-index: 3;
+
+  // En fila y no apiladas: apiladas eran 156 px de pantalla ocupados de forma
+  // permanente —un tercio de un movil— para tres botones de los que solo uno
+  // se usa a menudo.
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+  margin-top: $space-sm;
+  padding: $space-sm 0 $space-xs;
+
+  .btn {
+    // Se reparten el ancho. Con una sola accion, esa accion ocupa la barra.
+    flex: 1 1 150px;
+  }
+
+  // Difuminado hacia el fondo: sin el, lo que pasa por debajo se corta contra
+  // un canto duro a mitad de una linea de texto.
+  background: linear-gradient(to top, var(--sa-fondo) 65%, transparent);
+}
+
+/* Las salidas: bloquear y reportar. Debajo del contenido y encima de la barra
+   de accion, en texto tenue. Estaban dentro del pie, y con el pie pegado abajo
+   habrian quedado a un dedo de distancia permanentemente — que no es el trato
+   que merece una accion que no se deshace. */
+.ficha__salidas {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: auto;
+  align-items: flex-start;
+  gap: 2px;
   padding-top: $space-xs;
+  border-top: 1px solid var(--sa-borde);
 }
 
 @media (max-width: 520px) {
@@ -316,8 +422,18 @@
   max-width: 720px;
   height: auto;
   min-height: 0;
+  // Resto del panel fijo: con overflow-y:auto el articulo sigue siendo un
+  // contenedor de scroll propio, y un position:sticky se pega al borde de su
+  // contenedor de scroll mas cercano. Como este no desplaza nada (su alto es
+  // automatico), el pie se quedaba clavado en su sitio de siempre y el sticky
+  // no hacia absolutamente nada.
+  overflow: visible;
+  overscroll-behavior: auto;
   margin: 0 auto;
-  padding: $space-md $space-sm $space-lg;
+  // Sin el respiro de abajo que tenia: ahora lo trae el pie pegajoso en su
+  // propio acolchado, y dejar los 40 px aqui hacia que la barra pegara un salto
+  // hacia arriba al llegar al final del scroll.
+  padding: $space-md $space-sm $space-xs;
   box-shadow: none;
   border: none;
   background: transparent;
