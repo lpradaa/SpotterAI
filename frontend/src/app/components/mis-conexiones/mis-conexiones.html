@@ -46,7 +46,7 @@
                     [class.contacto--sin-leer]="conversacion.sinLeer > 0"
                     (click)="abrirChat(conversacion)">
               <app-avatar [nombre]="conversacion.nombre" [valor]="conversacion.avatar ?? ''"
-                          [foto]="foto(conversacion.fotoUrl)" [tamano]="40" />
+                          [foto]="foto(conversacion.fotoUrl)" medida="fila" />
 
               <span class="contacto__texto">
                 <span class="contacto__linea">
@@ -92,7 +92,7 @@
       <header class="conversacion__cabecera">
         <button class="volver" (click)="cerrarChat()" aria-label="Volver a la lista">←</button>
         <app-avatar [nombre]="chatActivo()!.nombre" [valor]="chatActivo()!.avatar ?? ''"
-                    [foto]="foto(chatActivo()!.fotoUrl)" [tamano]="34" />
+                    [foto]="foto(chatActivo()!.fotoUrl)" medida="fila" />
         <div class="conversacion__quien">
           <h2 class="conversacion__nombre">{{ chatActivo()!.nombre }}</h2>
           <span class="conversacion__estado">Compañero de entrenamiento</span>

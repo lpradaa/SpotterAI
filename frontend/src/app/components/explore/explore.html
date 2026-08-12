@@ -81,7 +81,7 @@
           <button class="ficha__cabecera" (click)="verPerfil(usuario.id)"
                   [attr.aria-label]="'Ver el perfil de ' + usuario.nombre">
             <app-avatar [nombre]="usuario.nombre" [valor]="usuario.avatar"
-                         [foto]="urlMedio(usuario.fotoUrl)" [tamano]="48" />
+                         [foto]="urlMedio(usuario.fotoUrl)" medida="ficha" />
             <span class="ficha__quien">
               <span class="ficha__nombre">{{ usuario.nombre }}</span>
               <span class="ficha__gimnasio">{{ usuario.gimnasioNombre || 'Sin gimnasio' }}</span>

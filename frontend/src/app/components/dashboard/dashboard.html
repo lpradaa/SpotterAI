@@ -13,7 +13,7 @@
   <header class="barra">
     <div class="barra__identidad">
       <app-avatar [nombre]="userName()" [valor]="perfilCargado()?.avatar ?? ''"
-                  [foto]="urlFoto()" [tamano]="64" />
+                  [foto]="urlFoto()" medida="cabecera" />
       <div class="barra__quien">
         <h1 class="barra__nombre">{{ userName() }}</h1>
         <p class="barra__rasgos">
@@ -136,7 +136,7 @@
                 <a class="actividad__quien" [routerLink]="['/u', a.usuarioId]"
                    [attr.aria-label]="'Ver el perfil de ' + a.usuarioNombre">
                   <app-avatar [nombre]="a.usuarioNombre" [valor]="a.usuarioAvatar ?? ''"
-                              [foto]="urlMedio(a.usuarioFotoUrl)" [tamano]="36" />
+                              [foto]="urlMedio(a.usuarioFotoUrl)" medida="fila" />
                 </a>
 
                 <div class="actividad__texto">
@@ -168,7 +168,7 @@
       <section class="tarjeta perfil">
         <div class="perfil__cabecera">
           <app-avatar [nombre]="userName()" [valor]="perfilCargado()?.avatar ?? ''"
-                      [foto]="urlFoto()" [tamano]="68" />
+                      [foto]="urlFoto()" medida="cabecera" />
           <h2 class="perfil__nombre">{{ userName() }}</h2>
           <span class="chip chip--objetivo">{{ perfilCargado()?.objetivos || 'Sin objetivo' }}</span>
         </div>
