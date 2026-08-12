@@ -16,6 +16,8 @@ Encuentra a la persona con la que entrenar. No a cualquiera: a la que coincide c
 2. **Match** — SpotterAI puntúa de 0 a 100 y te enseña **en qué franjas concretas** coincidís, distinguiendo las que los dos tenéis fijas.
 3. **Conexión** — solicitud, aceptación y chat cuando hay match mutuo. Todo en tiempo real por SSE: mensajes, solicitudes y sesiones llegan sin recargar.
 4. **Sesión** — el paso que convierte un porcentaje en un plan: propones un día y una hora concretos desde el chat o desde su ficha, y el formulario ya viene relleno con el próximo hueco que compartís, sacado del mismo solape con el que se calcula la compatibilidad. El otro acepta o rechaza, y la ficha de cada persona lleva la cuenta de las veces que ya habéis quedado.
+
+   Si cada uno entrena en un sitio, el formulario pregunta **dónde**: el tuyo o el suyo. Antes no lo preguntaba y la sesión se guardaba sin sitio, o sea que dos personas quedaban a una hora y en ninguna parte. Ninguno viene marcado por defecto — uno de los dos tiene que desplazarse y darlo por hecho sería decidir por ellos.
 5. **Diario** — registro de entrenamientos con meta semanal y progreso. Una sesión que ya ha pasado se apunta con un clic, y cada uno apunta la suya: que el otro diga que entrenasteis no prueba que tú fueras.
 
 Si al perfil le falta algo, la aplicación no dice "completo al 60 %": dice cuántos de los 100 puntos de compatibilidad quedan fuera de juego y por qué. Eso se puede decidir; un porcentaje de relleno, no.
@@ -89,6 +91,8 @@ Cinco decisiones del motor que no son obvias:
 
 **Coincidir en horario en gimnasios distintos no es coincidir.** El gimnasio no es un mérito que suma aparte: es la condición bajo la cual el solape significa algo. Tú a las seis en McFit y ella a las seis en Basic-Fit no estáis juntos, estáis en dos edificios de la ciudad a la misma hora — y la aplicación llegó a decir *«los dos vais siempre un día a la misma hora»* de una pareja así. Ahora el solape en otro gimnasio vale una cuarta parte, y la frase lo dice.
 
+**...salvo que alguien esté dispuesto a moverse.** Esa cuarta parte era una media aplicada a todo el mundo por igual, y hay una diferencia real entre quien coge el metro tres paradas y quien no piensa moverse — que la aplicación no podía conocer porque nunca lo preguntaba. Es el único dato del emparejamiento que no se deduce de ningún otro: ni del horario, ni del gimnasio, ni del historial. Ahora se pregunta en el perfil, y basta con que lo diga **uno** de los dos, porque para que la pareja funcione solo hace falta que se mueva una persona. Sube el solape a 0,60, no a 1: desplazarse cuesta tiempo y a menudo una entrada, así que nunca empata con compartir sala. Y el factor gimnasio sigue dando cero — no comparten gimnasio, y estar dispuesto a viajar no cambia ese hecho; lo que cambia es lo que *significa* coincidir en horario.
+
 **Un rato compartido no es una sesión.** Cualquier solape positivo contaba: quien estuviera libre de 19:55 a 21:00 compartía cinco minutos contigo y —si los dos lo teníais marcado como fijo— eso valía por «día ancla», o sea el 75 % del factor horario. Ahora hay un mínimo de 45 minutos, que es lo que dura la sesión más corta que sigue siendo una sesión.
 
 **La constancia es el único dato que no se declara.** Todo lo demás sale de lo que alguien dice de sí mismo; esto sale de lo que ha hecho. Alguien puede encajar contigo al noventa por ciento y llevar mes y medio sin pisar el gimnasio: eso no es un buen compañero, es un buen compañero hipotético. Cuenta la del que menos aparece de los dos, porque una pareja entrena tan a menudo como su miembro menos constante. Y sin historial no se juzga: quien acaba de registrarse no ha hecho nada mal.
@@ -100,6 +104,13 @@ Cinco decisiones del motor que no son obvias:
 **Menos datos no puede dar mejor nota.** Al repartir el peso de los factores que faltan, un perfil vacío llegó a puntuar 100 y colocarse por encima de gente con seis horas reales de solape. Se corrigió con un descuento por evidencia, y hay una prueba (`masDatosNuncaPuntuanPeorQueMenos`) que impide que vuelva.
 
 **2. Explicación** (`matching/ExplicadorCompatibilidad`) — hila los textos que ya trae cada factor, sin inventar nada. Solo menciona factores que sumaron puntos, así que la explicación nunca puede contradecir a la nota que acompaña.
+
+**3. El desglose** — y debajo, si se pide, los ocho factores uno a uno: lo que aportó cada uno, sobre cuánto podía aportar y por qué. La apuesta de todo esto es que un porcentaje sin explicación no vale nada, y durante un tiempo se servía exactamente eso: un porcentaje y una frase, porque el desglose se calculaba entero y se aplastaba a una cadena antes de salir del backend. Enseñarlo es lo que hace visibles las dos decisiones más caras del motor:
+
+- Un factor **sin datos** aparece aparte y sin barra, diciendo que no resta. Una barra vacía se leería como «puntuó cero», que es lo contrario de lo que pasa.
+- Su peso **se reparte** entre los demás. Por eso puede salir «Edad 13/13» donde la tabla de arriba dice 5 — y sin decirlo, ese 13 parecería un error.
+
+Lo que el desglose **no** dice es cuál de los dos perfiles está incompleto. La calculadora tiene los dos delante y aun así escribe «de alguno de los dos» sin señalar: afirmar que es el tuyo cuando puede ser el del otro sería inventar, que es justo lo que se evita al distinguir «no aplicable» de «cero puntos».
 
 > Hubo una versión que pasaba este desglose por la API de Claude para darle mejor prosa. Está aparcada en [`docs/ia-aparcada/`](docs/ia-aparcada/) con el motivo y las instrucciones para devolverla.
 
@@ -289,7 +300,9 @@ Lo que hay, y por qué:
 
 - **Se puede bloquear a alguien.** No se podía. «Deshacer relación» solo borraba la fila de la solicitud, así que la otra persona podía mandarte otra al segundo siguiente y te seguía viendo en Explorar — con tu gimnasio y tu horario delante. En una aplicación que le enseña eso a un desconocido, no tener forma de cortar no es un hueco de comodidad.
 
-  Se bloquea, no se denuncia: una denuncia necesita a alguien que la lea, aquí no hay nadie, y un botón de denunciar sin moderación detrás es teatro —uno peligroso, porque quien lo pulsa se queda creyendo que ha hecho algo—.
+  **Y también se puede reportar**, que es otra cosa. Bloquear te protege a ti; reportar es lo que permite enterarse de que la misma persona se ha portado mal con varias, algo que bloqueando por tu cuenta no se sabe nunca. Durante un tiempo aquí ponía que no habría botón de denunciar, porque *«una denuncia necesita a alguien que la lea y un botón sin moderación detrás es teatro —uno peligroso, porque quien lo pulsa se queda creyendo que ha hecho algo—»*. El argumento sigue en pie: por eso el reporte no llega solo hasta la base de datos, sino hasta una pantalla donde se lee (`/admin/reportes`), y quien puede entrar se decide con la variable `ADMIN_EMAILS`. Vacía significa nadie, y entonces el botón sí sería teatro: si despliegas esto y quieres moderar, hay que poner un correo ahí.
+
+  Reportar **no bloquea** por su cuenta: quien reporta puede querer seguir viendo la conversación, por ejemplo como prueba de lo que está contando.
 
   El bloqueo cierra **las tres puertas**: la lista de gente, la ficha de la persona y la solicitud. Una que se escape basta para volver a tener delante a quien te querías quitar de encima. Y es **silencioso**: al bloqueado no se le avisa, y ni la ficha ni la solicitud dicen que hay un bloqueo, porque enterarse es justo lo que convierte un bloqueo en un motivo.
 
@@ -305,7 +318,7 @@ Lo que hay, y por qué:
 
 ## Lo que falta
 
-- **No hay moderación.** Bloquear te quita a alguien de encima, pero nadie revisa nada: si alguien se comporta mal con varias personas, la aplicación no se entera. Eso pide gente, no código.
+- **La moderación se lee, pero no se gestiona.** Se puede reportar y los reportes se leen en `/admin/reportes`, así que la aplicación ya se entera de que alguien se ha portado mal con varias personas. Lo que no hay es qué hacer después: no se pueden marcar como revisados, ni suspender a nadie. Un panel que solo acumula deja de ser legible a los diez reportes. Y `ADMIN_EMAILS` es una lista de correos en una variable de entorno, no un sistema de permisos: es la única decisión de autorización de toda la API y está puesta ahí a sabiendas de que es temporal.
 
 
 - **Chat sin indicador de escritura.** Los mensajes llegan al instante y se ve si el otro los ha leído, pero no si está escribiendo.

@@ -175,9 +175,15 @@ public class SembradorDemo implements CommandLineRunner {
         // --- Encajan poco: otro gimnasio, u horas que no cruzan ---
         Usuario carmen = persona("Carmen Vidal", "carmen@spotterai.test", CLAVE_DEMO, 31, "Intermedio",
                 "Hipertrofia", chamberi, Rutina.TORSO_PIERNA, "ciruela",
-                "En Chamberí, casi siempre por la tarde.");
+                "En Chamberí, casi siempre por la tarde. Me muevo si hace falta.");
         franjas(carmen, fija("Lunes", "18:00", "20:00"), fija("Jueves", "18:00", "20:00"));
         marcas(carmen, marca(Ejercicio.HIP_THRUST, 120, 8), marca(Ejercicio.SENTADILLA, 90, 5));
+        // El caso que existe para que se vea funcionar: coincide con la cuenta
+        // demo el lunes de 18 a 20 y los dos van siempre, pero en otro gimnasio.
+        // Sin esto puntuaria bajo y no habria forma de saber por que; marcandolo
+        // sube, y la explicacion dice "alguno de los dos puede desplazarse".
+        // Sin nadie con esto puesto, la funcion estaba viva y era invisible.
+        sePuedeDesplazar(carmen);
 
         Usuario ruben = persona("Rubén Casas", "ruben@spotterai.test", CLAVE_DEMO, 26, "Principiante",
                 "Hipertrofia", retiro, Rutina.FULL_BODY, "acero",
@@ -317,6 +323,18 @@ public class SembradorDemo implements CommandLineRunner {
         u.setBiografia(biografia);
         u.setMetaSemanal(4);
         return usuarios.save(u);
+    }
+
+    /**
+     * Marca que esta persona se desplazaría a otro gimnasio.
+     *
+     * <p>Aparte de {@code persona(...)} y no un parámetro más: esa firma ya
+     * tiene diez y añadirle un booleano suelto al final significaría escribir
+     * {@code false} catorce veces para el único caso que lo usa.
+     */
+    private void sePuedeDesplazar(Usuario u) {
+        u.setPuedoDesplazarme(true);
+        usuarios.save(u);
     }
 
     /** Franja a la que se va siempre. Es la señal más fuerte del motor. */
