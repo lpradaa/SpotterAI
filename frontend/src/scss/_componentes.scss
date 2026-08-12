@@ -387,6 +387,36 @@
   }
 }
 
+/* ===================== Banda con canto de color =====================
+   Un aviso que ocupa el ancho y lleva el asunto codificado en el canto
+   izquierdo. Estaba escrita tres veces: en el tablero (.banda), en Explorar
+   (.banda-aviso, copia literal salvo el tamaño de letra) y en el embudo
+   (.embudo__veredicto, la misma pieza con otro color y otro radio).
+
+   El canto es lo que hace el trabajo: dice de que va el aviso antes de leerlo.
+   Por eso los modificadores solo cambian ese color y nada mas — si cambiaran
+   tambien el fondo, dejarian de ser variantes de una pieza para ser tres
+   piezas parecidas, que es de donde se venia. */
+.banda {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  flex-wrap: wrap;
+  padding: 12px $space-md;
+  border: 1px solid var(--sa-borde);
+  border-left: 3px solid var(--sa-acento);
+  border-radius: $radius-md;
+  background: var(--sa-superficie);
+  font-size: $text-sm;
+  line-height: $leading-normal;
+
+  /* Hecho: deja de reclamar y pasa a ser un dato. */
+  &--exito { border-left-color: var(--sa-exito); }
+
+  /* Ni bien ni mal: informacion en espera. */
+  &--acero { border-left-color: var(--sa-acero); }
+}
+
 /* ===================== Estados vacios ===================== */
 .vacio {
   color: var(--sa-texto-suave);

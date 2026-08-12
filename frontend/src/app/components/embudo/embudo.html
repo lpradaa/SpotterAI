@@ -52,14 +52,14 @@
     <!-- Lo más honesto que puede decir esta pantalla hoy, y por eso va aquí
          arriba del todo y no en una nota al pie. -->
     @if (!e.sePuedeComparar) {
-      <p class="embudo__veredicto embudo__veredicto--pronto">
+      <p class="banda banda--acero">
         <strong>Todavía no se puede concluir nada.</strong>
         Hacen falta al menos 20 solicitudes en cada tramo para que la diferencia
         entre unos y otros no se explique por quién pulsó el botón esa semana.
         Ahora mismo hay {{ totalMedibles() }} medibles en total.
       </p>
     } @else {
-      <p class="embudo__veredicto">
+      <p class="banda banda--exito">
         Hay muestra suficiente en los tres tramos: la comparación entre ellos ya
         significa algo.
       </p>

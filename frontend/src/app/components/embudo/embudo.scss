@@ -72,19 +72,9 @@
   color: var(--sa-acento);
 }
 
-.embudo__veredicto {
-  margin: 0;
-  padding: 12px $space-md;
-  border-left: 3px solid var(--sa-exito);
-  border-radius: $radius-sm;
-  background: var(--sa-superficie);
-  font-size: $text-sm;
-  line-height: $leading-normal;
-}
+// El veredicto usa .banda con el canto de exito o de acero: era la misma pieza
+// escrita otra vez, con otro radio por descuido.
 
-.embudo__veredicto--pronto {
-  border-left-color: var(--sa-acero);
-}
 
 .embudo__nota {
   margin: 0;

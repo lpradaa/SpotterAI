@@ -45,8 +45,8 @@
        esperan algo de ti, y buscar compañeros nuevos puede esperar. -->
   @for (sesion of sesiones(); track sesion.id) {
     <aside class="banda"
-           [class.banda--hecha]="sesion.estado === 'ACEPTADA' && !sesion.puedoConfirmar"
-           [class.banda--pasada]="sesion.puedoConfirmar">
+           [class.banda--exito]="sesion.estado === 'ACEPTADA' && !sesion.puedoConfirmar"
+           [class.banda--acero]="sesion.puedoConfirmar">
       <div class="banda__texto">
         <p class="banda__titular">
           @if (sesion.puedoConfirmar) {

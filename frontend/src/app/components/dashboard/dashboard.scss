@@ -58,17 +58,8 @@
    que son lo que de verdad hay que mirar en esta pantalla. */
 /* Banda de aviso: una linea que pide algo, con su boton al final. La usan el
    hueco del perfil y las sesiones, que son dos casos del mismo patron. */
-.banda {
-  display: flex;
-  align-items: center;
-  gap: $space-sm;
-  flex-wrap: wrap;
-  padding: 12px $space-md;
-  border: 1px solid var(--sa-borde);
-  border-left: 3px solid var(--sa-acento);
-  border-radius: $radius-md;
-  background: var(--sa-superficie);
-}
+// .banda vive en scss/_componentes.scss: estaba escrita igual aqui y en
+// explore.scss, y una tercera vez con otro color en embudo.scss.
 
 /* Base de 220 px y no 0: con `flex: 1` el texto se quedaba con lo que
    sobrara despues de unos botones que no encogen, y a 375 px eso era media
@@ -89,10 +80,10 @@
 }
 
 /* Aceptada: deja de pedir atencion y pasa a ser un dato. */
-.banda--hecha { border-left-color: var(--sa-exito); }
+
 
 /* Ya paso y falta decir si fuisteis: vuelve a pedir una respuesta. */
-.banda--pasada { border-left-color: var(--sa-acero); }
+
 
 .banda__acciones {
   display: flex;
