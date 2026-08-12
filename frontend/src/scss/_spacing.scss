@@ -9,3 +9,9 @@ $radius-sm: 8px;
 $radius-md: 12px;    
 $radius-lg: 24px;     
 $radius-full: 9999px; 
+/* Alto de la cabecera fija.
+   Estaba escrito a mano en tres sitios —la propia cabecera, el hueco que le deja
+   el body y el alto del chat, que resta la cabecera para caber en la pantalla—.
+   Tres copias de un numero que tienen que coincidir siempre: si se separan, o el
+   chat sobresale o queda un hueco. */
+$alto-cabecera: 70px;

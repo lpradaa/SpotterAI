@@ -16,7 +16,12 @@
           <path d="M 12 34 Q 30 44 48 34" fill="none" stroke="rgba(255,255,255,0.55)"
                 stroke-width="4" stroke-linecap="round"/>
         </svg>
-        <h2>SpotterAI</h2>
+        <!-- "Spotter" y no "SpotterAI": es la misma decision que se tomo en el
+             isotipo de la cabecera —la IA esta aparcada y una marca que anuncia lo
+             que la aplicacion no hace se lee como promesa incumplida—. Este h2 va
+             justo debajo de una version gigante de ese isotipo, asi que era el
+             sitio donde mas cantaba que dijeran cosas distintas. -->
+        <h2>Spotter</h2>
         <p>Encuentra a la persona con la que entrenar, no a cualquiera.</p>
 
         <ul class="features-list">
@@ -95,7 +100,7 @@
           @if (isLoading()) {
             Procesando…
           } @else {
-            {{ isLoginMode ? 'Entrar a SpotterAI' : 'Crear Cuenta' }} <span class="arrow">→</span>
+            {{ isLoginMode ? 'Entrar a Spotter' : 'Crear Cuenta' }} <span class="arrow">→</span>
           }
         </button>
 

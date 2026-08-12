@@ -13,7 +13,13 @@ package com.spotterai.backend.dtos;
  * lo mismo que antes sacaba leyendo el token —no montar la aplicacion entera con
  * una sesion ya muerta y dejarte mirando pantallas vacias sin explicacion—.
  *
+ * <p>El {@code avatar} tampoco es una credencial: es el color de identidad, y
+ * viaja para que el menu lateral pinte a la persona del mismo color que el resto
+ * de la aplicacion. Sin el, la cabecera lo derivaba del nombre y una misma
+ * persona salia de un color en el menu y de otro en las nueve pantallas
+ * restantes.
+ *
  * @param expiraEn milisegundos desde 1970, igual que Date.now() en el navegador
  */
-public record AuthResponseDTO(Long id, String email, String nombre, long expiraEn) {
+public record AuthResponseDTO(Long id, String email, String nombre, String avatar, long expiraEn) {
 }

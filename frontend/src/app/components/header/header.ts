@@ -6,11 +6,12 @@ import { EventosService } from '../../services/eventos.service';
 import { PerfilEstadoService } from '../../services/perfil-estado.service';
 import { AvisosService } from '../../services/avisos.service';
 import { AuthService } from '../../services/auth.service';
+import { Avatar } from '../avatar/avatar';
 
 @Component({
   selector: 'app-header',
   standalone: true, // Asegúrate de que sea standalone si lo estabas usando así
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, Avatar],
   templateUrl: './header.html',
   styleUrl: './header.scss'
 })

@@ -11,15 +11,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 $space-md;
-  height: 70px;  
+  height: $alto-cabecera;
   box-sizing: border-box;
   
-  /* Efecto Glassmorphism */
+  /* Ni blur ni sombra: el comentario decia "efecto glassmorphism" y no habia
+     ninguno. backdrop-filter difumina lo que hay DETRAS, y detras no se ve nada
+     porque --sa-superficie es opaca; y una sombra negra al 3 % sobre un fondo
+     de #0e0c0b es invisible. Dos declaraciones que costaban repintado y no
+     pintaban nada. La cabecera se separa con su linea, que si se ve. */
   background-color: var(--sa-superficie);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--sa-borde);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
 
   &__left {
     display: flex;
@@ -60,7 +61,7 @@
     padding: 10px;
     color: var(--sa-texto);
     border-radius: $radius-md;
-    transition: all 0.2s ease;
+    transition: background-color var(--sa-transicion), color var(--sa-transicion), transform var(--sa-transicion);
 
     &:hover {
       background-color: var(--sa-superficie-alt);
@@ -113,7 +114,7 @@
   z-index: 40;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity var(--sa-transicion-lenta), visibility var(--sa-transicion-lenta);
 
   &--show {
     opacity: 1;
@@ -134,7 +135,7 @@
   display: flex;
   flex-direction: column;
   transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
+  transition: transform var(--sa-transicion-lenta);
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 
   &--open {
@@ -153,7 +154,7 @@
     cursor: pointer;
     padding: $space-xs;
     color: var(--sa-texto-suave);
-    transition: color 0.2s ease, transform 0.2s ease;
+    transition: color var(--sa-transicion), transform var(--sa-transicion);
 
     &:hover {
       color: var(--sa-acento);
@@ -168,21 +169,9 @@
     gap: $space-sm;
   }
 
-  &__avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: $radius-full;
-    // rgba($accent, ...) no puede leer un token CSS: se sustituye por el par
-    // acento-suave/acento-texto, que ya siguen el tema (mismo par que usan
-    // los chips de .chip--dia/.chip--objetivo).
-    background-color: var(--sa-acento-suave);
-    color: var(--sa-acento-texto);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: $font-bold;
-    font-size: $text-lg;
-  }
+  // El avatar lo pinta <app-avatar>: aqui habia una copia local que usaba el
+  // acento en vez de la paleta de identidad, asi que la misma persona salia de
+  // dos colores distintos segun la pantalla.
 
   &__user-info {
     display: flex;
@@ -223,7 +212,7 @@
     color: var(--sa-texto-suave);
     font-weight: $font-semibold;
     border-radius: $radius-md;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color var(--sa-transicion), color var(--sa-transicion);
 
     &:hover {
       background-color: var(--sa-superficie-alt);
@@ -263,20 +252,7 @@
     padding: $space-md;
   }
 
-  &__auth-button {
-    width: 100%;
-    padding: $space-sm;
-    border: none;
-    background-color: var(--sa-superficie-alt);
-    color: var(--sa-texto);
-    font-weight: $font-bold;
-    font-size: $text-base;
-    border-radius: $radius-md;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: var(--sa-superficie-elevada);
-    }
-  }
+  // "Cerrar sesion" usa .btn.btn--fantasma.btn--ancho: era un boton entero
+  // reescrito a mano, con su propio radio, su propio peso y su propia
+  // transicion, para acabar pareciendose al de al lado sin serlo.
 }

@@ -98,7 +98,11 @@
   </div>
 
   <div class="sidebar__user-profile" *ngIf="auth.usuario() as u">
-    <div class="sidebar__avatar">{{ u.nombre.charAt(0).toUpperCase() }}</div>
+    <!-- El componente compartido, no una inicial pintada a mano. Con la copia
+         local, tu propia cara salía de un color aquí y de otro en las nueve
+         pantallas restantes: app-avatar usa la paleta de identidad y esto usaba
+         el acento. La misma persona tiene que ser del mismo color en todas. -->
+    <app-avatar [nombre]="u.nombre" [valor]="u.avatar" [tamano]="48" />
     <div class="sidebar__user-info">
       <span class="sidebar__user-name">{{ u.nombre }}</span>
       <span class="sidebar__user-email">{{ u.email }}</span>
@@ -166,7 +170,7 @@
   </nav>
 
   <div class="sidebar__footer">
-    <button class="sidebar__auth-button" (click)="cerrarSesion()">
+    <button class="btn btn--fantasma btn--ancho" (click)="cerrarSesion()">
       Cerrar Sesión
     </button>
   </div>

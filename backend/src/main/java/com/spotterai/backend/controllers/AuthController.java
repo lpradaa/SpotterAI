@@ -243,6 +243,7 @@ public class AuthController {
                 return ResponseEntity.ok()
                         .body(new AuthResponseDTO(
                                 usuario.getId(), usuario.getEmail(), usuario.getNombre(),
+                                usuario.getAvatar(),
                                 System.currentTimeMillis() + jwtUtil.duracion().toMillis()));
             }
         }

@@ -8,6 +8,8 @@ interface RespuestaLogin {
   id: number;
   email: string;
   nombre: string;
+  /** Color de identidad: para que el menú lateral pinte a la persona como el resto de la app. */
+  avatar: string | null;
   /** Milisegundos desde 1970, comparable con Date.now(). */
   expiraEn: number;
 }
@@ -38,7 +40,7 @@ export class AuthService {
   private URL_AUTH = api('/api/auth');
 
   /** Quién está dentro, o null. Reactivo para que la cabecera se entere. */
-  usuario = signal<{ id: number; nombre: string; email: string } | null>(this.leerGuardado());
+  usuario = signal<{ id: number; nombre: string; email: string; avatar: string } | null>(this.leerGuardado());
 
   login(credenciales: { email: string; password: string }): Observable<RespuestaLogin> {
     return this.http.post<RespuestaLogin>(`${this.URL_AUTH}/login`, credenciales).pipe(
@@ -47,10 +49,12 @@ export class AuthService {
 
         localStorage.setItem('usuario_nombre', respuesta.nombre ?? '');
         localStorage.setItem('usuario_email', respuesta.email ?? '');
+        localStorage.setItem('usuario_avatar', respuesta.avatar ?? '');
         localStorage.setItem('userId', String(respuesta.id));
         localStorage.setItem('sesion_expira', String(respuesta.expiraEn));
 
-        this.usuario.set({ id: respuesta.id, nombre: respuesta.nombre, email: respuesta.email });
+        this.usuario.set({ id: respuesta.id, nombre: respuesta.nombre, email: respuesta.email,
+                          avatar: respuesta.avatar ?? '' });
       })
     );
   }
@@ -81,6 +85,7 @@ export class AuthService {
   olvidarSesion(): void {
     localStorage.removeItem('usuario_nombre');
     localStorage.removeItem('usuario_email');
+    localStorage.removeItem('usuario_avatar');
     localStorage.removeItem('userId');
     localStorage.removeItem('sesion_expira');
     this.usuario.set(null);
@@ -109,7 +114,7 @@ export class AuthService {
     return true;
   }
 
-  private leerGuardado(): { id: number; nombre: string; email: string } | null {
+  private leerGuardado(): { id: number; nombre: string; email: string; avatar: string } | null {
     const id = Number(localStorage.getItem('userId'));
     if (!id) return null;
 
@@ -117,6 +122,7 @@ export class AuthService {
       id,
       nombre: localStorage.getItem('usuario_nombre') ?? '',
       email: localStorage.getItem('usuario_email') ?? '',
+      avatar: localStorage.getItem('usuario_avatar') ?? '',
     };
   }
 }

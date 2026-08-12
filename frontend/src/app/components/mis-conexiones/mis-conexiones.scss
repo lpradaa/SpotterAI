@@ -22,7 +22,7 @@
   // estiraba la columna a 480 px dentro de una pantalla de 375.
   grid-template-columns: minmax(0, 1fr);
   gap: $space-sm;
-  height: calc(100vh - 70px - #{$space-md} * 2);
+  height: calc(100vh - #{$alto-cabecera} - #{$space-md} * 2);
 
   @include tablet {
     grid-template-columns: 280px minmax(0, 1fr);

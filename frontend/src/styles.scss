@@ -27,7 +27,6 @@ html {
 
 body {
   margin: 0;
-  padding-top: 70px;
   font-family: $font-primary;
   font-size: $text-base;
   line-height: $leading-normal;
@@ -37,6 +36,18 @@ body {
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* El hueco de la cabecera, solo cuando hay cabecera.
+   Estaba puesto en body a secas, pero la cabecera solo se renderiza con sesion
+   iniciada: en /login, /baja y /restablecer dejaba 70 px muertos arriba y una
+   barra de desplazamiento en una pantalla que cabe justa. Y la pantalla de
+   acceso es la que mas gente ve.
+
+   :has() en vez de una clase en el <body> porque la condicion ya esta escrita
+   en app.html; duplicarla en TypeScript seria un segundo sitio que mantener. */
+body:has(app-header) {
+  padding-top: $alto-cabecera;
 }
 
 h1,
