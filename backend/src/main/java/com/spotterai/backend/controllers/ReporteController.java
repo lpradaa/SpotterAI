@@ -70,9 +70,31 @@ public class ReporteController {
                         "reportadoEmail", r.getReportado().getEmail(),
                         "motivo", r.getMotivo(),
                         "detalle", r.getDetalle() == null ? "" : r.getDetalle(),
-                        "creadoEn", r.getCreadoEn()))
+                        "creadoEn", r.getCreadoEn(),
+                        "revisado", r.estaRevisado()))
                 .toList();
 
         return ResponseEntity.ok(lista);
+    }
+
+    /**
+     * Dar un reporte por visto.
+     *
+     * <p>Mismo 404 que el listado para quien no es admin, y por lo mismo: un 403
+     * confirmaria que el recurso existe a alguien que no deberia estar
+     * preguntando.
+     */
+    @PostMapping("/{reporteId}/revisado")
+    public ResponseEntity<?> marcarRevisado(@PathVariable Long reporteId) {
+        if (!admins.esAdmin(emailAutenticado())) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            reportes.marcarRevisado(reporteId, emailAutenticado());
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

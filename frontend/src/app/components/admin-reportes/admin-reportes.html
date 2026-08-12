@@ -26,11 +26,12 @@
             <th scope="col">A quién</th>
             <th scope="col">Motivo</th>
             <th scope="col">Detalle</th>
+            <th scope="col">Visto</th>
           </tr>
         </thead>
         <tbody>
           @for (r of lista; track r.id) {
-            <tr>
+            <tr [class.tabla__fila--revisada]="estaRevisado(r)">
               <td>{{ cuando(r.creadoEn) }}</td>
               <td>
                 {{ r.reportadorNombre }}
@@ -42,6 +43,15 @@
               </td>
               <td>{{ r.motivo }}</td>
               <td>{{ r.detalle || '—' }}</td>
+              <td>
+                @if (estaRevisado(r)) {
+                  <span class="tabla__visto">Visto</span>
+                } @else {
+                  <button class="btn btn--neutro btn--pequeno" (click)="marcarVisto(r)">
+                    Marcar visto
+                  </button>
+                }
+              </td>
             </tr>
           }
         </tbody>

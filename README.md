@@ -318,7 +318,7 @@ Lo que hay, y por qué:
 
 ## Lo que falta
 
-- **La moderación se lee, pero no se gestiona.** Se puede reportar y los reportes se leen en `/admin/reportes`, así que la aplicación ya se entera de que alguien se ha portado mal con varias personas. Lo que no hay es qué hacer después: no se pueden marcar como revisados, ni suspender a nadie. Un panel que solo acumula deja de ser legible a los diez reportes. Y `ADMIN_EMAILS` es una lista de correos en una variable de entorno, no un sistema de permisos: es la única decisión de autorización de toda la API y está puesta ahí a sabiendas de que es temporal.
+- **La moderación llega hasta mirar, no hasta actuar.** Se puede reportar, los reportes se leen en `/admin/reportes` y se pueden dar por vistos —con quién y cuándo, para que una lista que crece no se vuelva ilegible—. Lo que no hay es qué pasa después: no se puede suspender a nadie ni avisar a quien reportó. Eso pide gente y decisiones, no código, y montar aquí un flujo de sanciones que nadie va a ejecutar sería el mismo teatro que se evitó al no poner un botón de denunciar sin nadie detrás. Y `ADMIN_EMAILS` es una lista de correos en una variable de entorno, no un sistema de permisos: es la única decisión de autorización de toda la API y está puesta ahí a sabiendas de que es temporal.
 
 
 - **Chat sin indicador de escritura.** Los mensajes llegan al instante y se ve si el otro los ha leído, pero no si está escribiendo.

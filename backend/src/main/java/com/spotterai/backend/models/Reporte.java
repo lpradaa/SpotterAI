@@ -45,6 +45,24 @@ public class Reporte {
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
 
+    /**
+     * Cuando alguien con acceso lo dio por visto, o null si sigue sin mirar.
+     *
+     * <p>Una fecha y no un booleano: "revisado" a secas no dice cuando, y en una
+     * lista que crece lo que hace falta saber es si lo miro alguien despues del
+     * ultimo reporte de esa persona.
+     *
+     * <p>No significa "resuelto" ni "sancionado". Lo que se haga despues pasa
+     * fuera de la aplicacion, y fingir aqui un flujo que no existe seria el mismo
+     * teatro que se evito al no poner un boton de denunciar sin nadie detras.
+     */
+    @Column(name = "revisado_en")
+    private LocalDateTime revisadoEn;
+
+    /** Quien lo marco. Con varias personas moderando, "lo vio alguien" no basta. */
+    @Column(name = "revisado_por", length = 255)
+    private String revisadoPor;
+
     public Reporte() {}
 
     public Reporte(Usuario reportador, Usuario reportado, String motivo, String detalle, LocalDateTime creadoEn) {
@@ -61,4 +79,15 @@ public class Reporte {
     public String getMotivo() { return motivo; }
     public String getDetalle() { return detalle; }
     public LocalDateTime getCreadoEn() { return creadoEn; }
+    public LocalDateTime getRevisadoEn() { return revisadoEn; }
+    public String getRevisadoPor() { return revisadoPor; }
+
+    /** Dar por visto. Idempotente: volver a marcarlo no cambia quien fue el primero. */
+    public void marcarRevisado(String porQuien, LocalDateTime cuando) {
+        if (revisadoEn != null) return;
+        this.revisadoEn = cuando;
+        this.revisadoPor = porQuien;
+    }
+
+    public boolean estaRevisado() { return revisadoEn != null; }
 }

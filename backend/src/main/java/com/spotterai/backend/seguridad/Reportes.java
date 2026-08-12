@@ -72,4 +72,23 @@ public class Reportes {
     public List<Reporte> todos() {
         return reportes.findAllByOrderByCreadoEnDesc();
     }
+
+    /**
+     * Dar un reporte por visto.
+     *
+     * <p>Es lo unico que le faltaba al panel para dejar de ser una lista que
+     * crece y nadie sabe por donde iba. No resuelve nada ni sanciona a nadie:
+     * eso pasa fuera de la aplicacion, y montar aqui un flujo de sanciones que
+     * no existe seria fingir.
+     *
+     * <p>Quien llama ya ha comprobado que es admin, igual que en {@link #todos()}.
+     */
+    @Transactional
+    public void marcarRevisado(Long reporteId, String porQuien) {
+        Reporte reporte = reportes.findById(reporteId)
+                .orElseThrow(() -> new IllegalArgumentException("Ese reporte no existe."));
+
+        reporte.marcarRevisado(porQuien, LocalDateTime.now(reloj));
+        reportes.save(reporte);
+    }
 }

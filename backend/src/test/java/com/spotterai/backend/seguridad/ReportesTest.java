@@ -11,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -131,5 +132,52 @@ class ReportesTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> servicio.reportar("yo@test.com", 99L, "SPAM", null));
+    }
+
+    // ===================== Dar por visto =====================
+    // Es lo unico que le faltaba al panel para dejar de ser una lista que crece
+    // y nadie sabe por donde iba.
+
+    @Test
+    @DisplayName("Marcar un reporte deja constancia de quien y cuando")
+    void marcarDejaConstancia() {
+        Reporte r = new Reporte(yo, otro, "ACOSO", null, LocalDateTime.ofInstant(AHORA, ZoneId.systemDefault()));
+        when(reportes.findById(5L)).thenReturn(Optional.of(r));
+
+        servicio.marcarRevisado(5L, "admin@test.com");
+
+        assertTrue(r.estaRevisado());
+        assertEquals("admin@test.com", r.getRevisadoPor());
+        assertEquals(LocalDateTime.ofInstant(AHORA, ZoneId.systemDefault()), r.getRevisadoEn());
+    }
+
+    @Test
+    @DisplayName("Volver a marcarlo no reescribe quien lo vio primero")
+    void marcarDosVecesNoPisaAlPrimero() {
+        Reporte r = new Reporte(yo, otro, "ACOSO", null, LocalDateTime.ofInstant(AHORA, ZoneId.systemDefault()));
+        when(reportes.findById(5L)).thenReturn(Optional.of(r));
+
+        servicio.marcarRevisado(5L, "primera@test.com");
+        servicio.marcarRevisado(5L, "segunda@test.com");
+
+        // Con varias personas moderando, saber quien lo miro importa mas que
+        // saber quien pulso el boton por ultima vez.
+        assertEquals("primera@test.com", r.getRevisadoPor());
+    }
+
+    @Test
+    @DisplayName("Un reporte que no existe se rechaza")
+    void reporteInventado() {
+        when(reportes.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> servicio.marcarRevisado(99L, "admin@test.com"));
+    }
+
+    @Test
+    @DisplayName("Un reporte nuevo nace sin revisar")
+    void naceSinRevisar() {
+        Reporte r = new Reporte(yo, otro, "SPAM", null, LocalDateTime.ofInstant(AHORA, ZoneId.systemDefault()));
+        assertFalse(r.estaRevisado());
     }
 }

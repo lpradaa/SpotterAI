@@ -63,3 +63,20 @@
   font-size: $text-xs;
   color: var(--sa-texto-tenue);
 }
+
+/* Lo ya mirado se apaga en vez de desaparecer: un reporte revisado sigue siendo
+   informacion —sobre todo si la misma persona acumula varios— y esconderlo
+   convertiria la lista en una bandeja de tareas, que es otra cosa. */
+.tabla__fila--revisada {
+  color: var(--sa-texto-tenue);
+
+  .tabla__email { opacity: 0.6; }
+}
+
+.tabla__visto {
+  font-size: $text-2xs;
+  text-transform: uppercase;
+  letter-spacing: $tracking-wide;
+  color: var(--sa-exito);
+  white-space: nowrap;
+}

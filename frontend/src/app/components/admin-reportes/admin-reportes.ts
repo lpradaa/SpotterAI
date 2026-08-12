@@ -15,6 +15,8 @@ export interface Reporte {
   motivo: string;
   detalle: string;
   creadoEn: string;
+  /** Si alguien con acceso ya lo dio por visto. */
+  revisado: boolean;
 }
 
 /**
@@ -52,6 +54,30 @@ export class AdminReportesComponent {
     ),
     { initialValue: null },
   );
+
+  /** Marcados por mí en esta sesión, para que la fila cambie sin recargar. */
+  private vistosAhora = signal<Set<number>>(new Set());
+
+  protected estaRevisado(r: Reporte): boolean {
+    return r.revisado || this.vistosAhora().has(r.id);
+  }
+
+  /**
+   * Dar por visto.
+   *
+   * <p>No resuelve nada ni sanciona a nadie: lo que se haga después pasa fuera
+   * de la aplicación. Sirve para que una lista que crece no se vuelva ilegible
+   * — que es lo que la convertía en teatro, porque quien reporta sigue creyendo
+   * que alguien lo lee.
+   */
+  protected marcarVisto(r: Reporte): void {
+    if (this.estaRevisado(r)) return;
+
+    this.http.post(api(`/api/reportes/${r.id}/revisado`), {}).subscribe({
+      next: () => this.vistosAhora.update(s => new Set(s).add(r.id)),
+      error: () => {},
+    });
+  }
 
   protected cuando(fecha: string): string {
     return new Date(fecha).toLocaleString('es-ES', {
