@@ -40,6 +40,14 @@ public record PerfilPublicoDTO(
         List<HitoDTO> hitos,
         /** Sus marcas principales, para poder ver de donde sale la nota de fuerza. */
         List<LevantamientoDTO> levantamientos,
+        /**
+         * Las tuyas, para poder comparar sin salir de aqui.
+         *
+         * <p>La pantalla enseñaba sus marcas sueltas, y una lista de kilos ajenos
+         * no dice nada: lo que decide si podeis cubriros es la diferencia con los
+         * tuyos. Vacia en tu propio perfil, donde no hay nada que comparar.
+         */
+        List<LevantamientoDTO> misLevantamientos,
         long entrenosUltimaSemana,
         /**
          * Veces que habeis quedado y el dia ya ha pasado.

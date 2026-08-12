@@ -491,6 +491,11 @@ public class UsuarioServiceImpl implements UsuarioService {
                 hitos,
                 levantamientoRepository.findByUsuarioId(otro.getId()).stream()
                         .map(UsuarioServiceImpl::aLevantamientoDTO).toList(),
+                // Las tuyas, salvo en tu propio perfil: alli las de al lado ya
+                // son las tuyas y la columna se compararia consigo misma.
+                esMio ? List.of()
+                      : levantamientoRepository.findByUsuarioId(yo.getId()).stream()
+                                .map(UsuarioServiceImpl::aLevantamientoDTO).toList(),
                 entrenos,
                 sesionRepository.contarQuedadasEntre(yo.getId(), otro.getId(),
                         LocalDate.now(reloj), LocalTime.now(reloj)),
@@ -551,9 +556,16 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     private static LevantamientoDTO aLevantamientoDTO(Levantamiento l) {
+        // El maximo estimado se calcula aqui y no en el navegador para que solo
+        // haya una formula: la misma que usa el motor para puntuar la fuerza. Con
+        // dos, la pantalla podria decir que levantais lo mismo mientras el factor
+        // dice lo contrario.
+        Integer maximo = (l.getPeso() == null || l.getRepeticiones() == null) ? null
+                : (int) Math.round(CalculadoraFuerza.maximoEstimado(l.getPeso(), l.getRepeticiones()));
+
         return new LevantamientoDTO(
                 l.getEjercicio().name(), l.getEjercicio().getNombre(),
-                l.getPeso(), l.getRepeticiones());
+                l.getPeso(), l.getRepeticiones(), maximo);
     }
 
     /** La razon principal por la que encajais, en una frase. */

@@ -153,6 +153,56 @@ export class PerfilPublicoComponent {
     return (hora ?? '').slice(0, 5);
   }
 
+  /**
+   * Las marcas de los dos, emparejadas por ejercicio.
+   *
+   * <p>La pantalla enseñaba una lista de kilos ajenos, y eso no dice nada: lo
+   * que decide si podéis cubriros no es cuánto levanta, es la diferencia con lo
+   * que levantas tú. Y comparar los pesos en bruto engaña —100 kg a una
+   * repetición y 100 kg a diez son fuerzas muy distintas—, por eso se compara el
+   * máximo estimado, que es exactamente lo que cruza el motor.
+   *
+   * <p>Primero los ejercicios que hacéis los dos, que son los únicos donde hay
+   * algo que comparar; después los suyos sueltos. Los tuyos que él no hace no
+   * salen: esta es su página.
+   */
+  comparativa = computed(() => {
+    const p = this.perfil();
+    if (!p || p.esMio) return [];
+
+    const mios = new Map(p.misLevantamientos.map(l => [l.ejercicio, l]));
+
+    return p.levantamientos
+      .map(suyo => ({
+        nombre: suyo.nombre,
+        suyo,
+        mio: mios.get(suyo.ejercicio) ?? null,
+      }))
+      .sort((a, b) => Number(!!b.mio) - Number(!!a.mio));
+  });
+
+  /** Cuántos ejercicios podéis comparar de verdad. */
+  ejerciciosEnComun = computed(() => this.comparativa().filter(f => f.mio).length);
+
+  /**
+   * Quién levanta más en una fila, para poder destacarlo sin decirlo dos veces.
+   *
+   * <p>Devuelve null cuando la diferencia es menor del 10 %: por debajo de eso
+   * no hay un "más fuerte", hay dos personas que levantan lo mismo — que es
+   * justo el caso bueno para cubrirse con la barra cargada.
+   */
+  quienMas(fila: { mio: { maximoEstimado: number | null } | null; suyo: { maximoEstimado: number | null } }):
+      'mio' | 'suyo' | null {
+    const a = fila.mio?.maximoEstimado ?? null;
+    const b = fila.suyo.maximoEstimado;
+    if (a == null || b == null) return null;
+
+    const mayor = Math.max(a, b);
+    if (mayor === 0) return null;
+    if (Math.min(a, b) / mayor >= 0.9) return null;
+    return a > b ? 'mio' : 'suyo';
+  }
+
   /** Índice del medio abierto a tamaño grande, o null. */
   medioAmpliado = signal<string | null>(null);
 

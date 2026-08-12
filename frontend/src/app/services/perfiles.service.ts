@@ -19,6 +19,14 @@ export interface Levantamiento {
   nombre: string;
   peso: number | null;
   repeticiones: number | null;
+  /**
+   * Máximo a una repetición estimado (Epley), redondeado.
+   *
+   * Lo calcula el backend con la misma fórmula que usa el motor para puntuar la
+   * fuerza: con dos, la pantalla podría decir que levantáis lo mismo mientras el
+   * factor dice lo contrario.
+   */
+  maximoEstimado: number | null;
 }
 
 export interface PerfilPublico {
@@ -39,6 +47,8 @@ export interface PerfilPublico {
   franjasEnComun: any[];
   hitos: Hito[];
   levantamientos: Levantamiento[];
+  /** Las tuyas, para poder comparar. Vacía en tu propio perfil. */
+  misLevantamientos: Levantamiento[];
   entrenosUltimaSemana: number;
   /** Veces que ya habéis quedado y el día ha pasado. */
   sesionesJuntos: number;

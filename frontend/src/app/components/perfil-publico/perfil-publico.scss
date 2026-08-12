@@ -460,3 +460,83 @@
     background: var(--sa-exito-suave);
   }
 }
+
+/* ===================== Marcas, lado a lado =====================
+   Una tabla y no dos listas: lo que decide si podeis cubriros con la barra
+   cargada no es cuanto levanta cada uno, es la diferencia — y eso solo se lee
+   si los numeros estan uno al lado del otro, en la misma fila. */
+.marcas {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+
+  thead th {
+    padding-bottom: 6px;
+    font-family: $font-display;
+    font-size: $text-2xs;
+    font-weight: $font-semibold;
+    letter-spacing: $tracking-wide;
+    text-transform: uppercase;
+    color: var(--sa-texto-tenue);
+    text-align: right;
+
+    &:first-child { text-align: left; }
+  }
+
+  tbody tr + tr .marcas__ejercicio,
+  tbody tr + tr .marcas__celda {
+    border-top: 1px solid var(--sa-borde);
+  }
+}
+
+.marcas__ejercicio {
+  padding: 8px 0;
+  font-size: $text-sm;
+  font-weight: $font-regular;
+  color: var(--sa-texto-suave);
+  text-align: left;
+}
+
+.marcas__celda {
+  padding: 8px 0 8px $space-xs;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* El maximo estimado manda, porque es lo que de verdad se compara. */
+.marcas__maximo {
+  display: block;
+  font-family: $font-display;
+  font-size: $text-lg;
+  font-weight: $font-bold;
+  color: var(--sa-texto-tenue);
+  letter-spacing: $tracking-tight;
+
+  small {
+    font-size: 0.55em;
+    font-weight: $font-medium;
+    margin-left: 1px;
+  }
+}
+
+/* Quien levanta mas en esa fila. Solo se marca cuando la diferencia pasa del
+   10 %: por debajo no hay un mas fuerte, hay dos personas que levantan lo
+   mismo, que es justo el caso bueno para cubrirse. */
+.marcas__celda--mas .marcas__maximo {
+  color: var(--sa-texto);
+}
+
+/* La marca tal cual la apuntaron: de apoyo, para poder comprobar de donde sale
+   el numero de arriba sin tener que fiarse. */
+.marcas__bruto {
+  display: block;
+  margin-top: 1px;
+  font-size: $text-2xs;
+  color: var(--sa-texto-tenue);
+}
+
+/* Ese ejercicio no lo tienes puesto: no hay comparacion posible, y decirlo con
+   una raya es mas honesto que dejar la celda vacia. */
+.marcas__falta {
+  color: var(--sa-borde-fuerte);
+}
