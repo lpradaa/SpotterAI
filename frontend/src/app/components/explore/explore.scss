@@ -4,13 +4,16 @@
   display: block;
 }
 
+/* El aire de arriba, medido: entre la cabecera fija y la primera persona habia
+   271 px de un movil de 812, un tercio de la pantalla gastado en cromo antes de
+   ver a nadie. Menos acolchado por arriba y menos hueco hasta la lista. */
 .explorar {
   max-width: 1180px;
   margin: 0 auto;
-  padding: $space-md $space-sm $space-xl;
+  padding: $space-sm $space-sm $space-xl;
   display: flex;
   flex-direction: column;
-  gap: $space-md;
+  gap: $space-sm;
 
   @include tablet {
     padding: $space-lg $space-md $space-xl;
@@ -52,7 +55,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1 1 180px;
+  // 140 y no 180: con 180 los tres controles no cabian en una linea a 375 px y
+  // el modo se caia a una fila propia, que costaba 48 px de cabecera en todas
+  // las cargas. Sigue siendo ancho de sobra para un nombre.
+  flex: 1 1 140px;
   min-width: 0;
   padding: 0 12px;
   border-radius: $radius-full;

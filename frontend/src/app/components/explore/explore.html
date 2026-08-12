@@ -10,17 +10,17 @@
     </div>
 
     <div class="explorar__controles">
-      <!-- Venia del tablero. Es un modo de descubrimiento —de uno en uno, con la
-           explicacion redactada— y el descubrimiento es esta pantalla. -->
-      <button class="btn btn--primario" (click)="abrirSugerencias()">Ver de una en una</button>
-
       <label class="buscador">
         <span class="visually-hidden">Buscar por nombre</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2" stroke-linecap="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
         </svg>
-        <input type="text" placeholder="Buscar por nombre"
+        <!-- "Buscar" a secas: con los tres controles en una linea, a 375 px el
+             hueco corta "Buscar por nombre" en "Buscar por nom", y media palabra
+             recortada se lee peor que una entera. El texto completo sigue estando
+             en la etiqueta de arriba, que es la que oye un lector de pantalla. -->
+        <input type="text" placeholder="Buscar"
                [ngModel]="filtrosActivos().busqueda"
                (ngModelChange)="actualizarFiltros('busqueda', $event)">
       </label>
@@ -28,6 +28,19 @@
       <button class="btn btn--neutro btn--pequeno" (click)="toggleFiltros()">
         Filtros
         @if (hayFiltrosActivos()) { <span class="btn__punto" aria-label="Hay filtros activos"></span> }
+      </button>
+
+      <!-- Venia del tablero. Es un modo de descubrimiento —de uno en uno, con la
+           explicacion redactada— y el descubrimiento es esta pantalla.
+
+           Neutro y pequeño, junto a Filtros: iba primero, en acento solido y a
+           40 px, y eso le daba dos problemas. Se llevaba una linea entera de la
+           cabecera para el, y era el unico acento relleno de la pagina — justo
+           lo que la propia tarjeta evita a proposito ("el acento se queda donde
+           si distingue a una persona de otra, que es la compatibilidad"). Un
+           conmutador de modo no puede pesar mas que aquello sobre lo que decide. -->
+      <button class="btn btn--neutro btn--pequeno" (click)="abrirSugerencias()">
+        De una en una
       </button>
     </div>
   </header>
@@ -128,10 +141,13 @@
 
           <!-- Tres estados, porque la lista ya trae a todo el mundo: antes
                excluia a quien tuviera solicitud y por eso bastaba "Conectar". -->
+          <!-- Pequeño: es el mismo boton en las catorce tarjetas, asi que cada
+               pixel que mide lo paga la lista entera catorce veces. Por el mismo
+               motivo por el que ya iba en contorno y no en relleno. -->
           @if (usuario.yaConectado) {
-            <button class="btn btn--exito-contorno btn--ancho" (click)="irAlChat(usuario.id)">Escribir</button>
+            <button class="btn btn--exito-contorno btn--ancho btn--pequeno" (click)="irAlChat(usuario.id)">Escribir</button>
           } @else if (usuario.solicitudPendiente) {
-            <button class="btn btn--fantasma btn--ancho" (click)="retirarSolicitud(usuario)"
+            <button class="btn btn--fantasma btn--ancho btn--pequeno" (click)="retirarSolicitud(usuario)"
                     [title]="'Retirar la solicitud enviada a ' + usuario.nombre">Retirar</button>
           } @else {
             <!-- Contorno y no relleno. Con seis tarjetas en pantalla, seis
@@ -139,7 +155,7 @@
                  el boton es identico en todas: no aporta nada para comparar.
                  El acento se queda donde si distingue a una persona de otra,
                  que es la compatibilidad. -->
-            <button class="btn btn--contorno btn--ancho" (click)="conectarConUsuario(usuario.id)">
+            <button class="btn btn--contorno btn--ancho btn--pequeno" (click)="conectarConUsuario(usuario.id)">
               Conectar
             </button>
           }
