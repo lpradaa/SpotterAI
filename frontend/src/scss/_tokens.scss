@@ -103,6 +103,20 @@
   --sa-sombra-md: 0 6px 20px rgba(0, 0, 0, 0.45);
   --sa-sombra-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
 
+  /* El canto de luz: una linea de un pixel en el borde de arriba, como la que
+     coge una pieza de metal puesta bajo una lampara. Es lo que separa una
+     superficie de un rectangulo de color, y ya estaba inventado dentro de esta
+     aplicacion —la rejilla lo usa en los bloques de solape y de ancla, con el
+     comentario "es lo que separa una pieza de una mancha"— pero solo lo usaba
+     la rejilla. Sale de ahi para que lo tenga cualquier superficie. */
+  --sa-canto-luz: rgba(255, 255, 255, 0.055);
+
+  /* El grano del metal cepillado. Por encima de un 3 % ya ensucia el texto que
+     va encima. Es token y no un valor dentro del mixin porque la capa de tema
+     es global: metido en el mixin, la variante de tema claro no llegaba nunca a
+     los componentes —ver el comentario en _material.scss—. */
+  --sa-grano: rgba(255, 255, 255, 0.022);
+
   /* --- Movimiento --- */
   --sa-transicion: 160ms cubic-bezier(0.2, 0, 0.2, 1);
   --sa-transicion-lenta: 420ms cubic-bezier(0.2, 0, 0.2, 1);
@@ -169,6 +183,15 @@
   --sa-sombra-sm: 0 1px 2px rgba(41, 26, 16, 0.06);
   --sa-sombra-md: 0 4px 12px rgba(41, 26, 16, 0.08);
   --sa-sombra-lg: 0 16px 40px rgba(41, 26, 16, 0.12);
+
+  /* En claro la superficie ya es blanca: una linea blanca encima no se ve, y
+     una gris se leeria como suciedad. Aqui la luz que da volumen es la sombra,
+     asi que el canto se apaga del todo. */
+  --sa-canto-luz: transparent;
+
+  /* Sobre fondo claro el grano en blanco no se ve: hay que restar luz, no
+     sumarla. */
+  --sa-grano: rgba(41, 26, 16, 0.018);
 
   color-scheme: light;
 }

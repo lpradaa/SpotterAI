@@ -13,10 +13,11 @@
    Estas reglas de aqui abajo, en cambio, son CSS hecho y se cargan una sola vez
    desde styles.scss. */
 
-/* Grano de metal, para quien lo quiera como clase */
-.cepillado {
-  @include cepillado;
-}
+// Aqui vivia una clase .cepillado que envolvia al mixin del mismo nombre y que
+// no usaba ni un solo HTML de la aplicacion. El mixin se importa por componente
+// sin coste; una clase global es CSS que se descarga siempre y no se aplica
+// nunca. El grano se pone ahora donde toca: en las superficies grandes y
+// vacias, que son las que se leen como un rectangulo de color plano.
 
 /* ===================== Botones ===================== */
 .btn {
@@ -322,7 +323,10 @@
   background: var(--sa-superficie-elevada);
   border: 1px solid var(--sa-borde);
   border-radius: $radius-lg;
-  box-shadow: var(--sa-sombra-lg);
+  // El canto de luz tambien aqui: es la superficie mas grande que llega a haber
+  // en pantalla, y flotando sobre el velo es donde mas se nota que una pieza
+  // este puesta encima y no recortada del fondo.
+  box-shadow: inset 0 1px 0 var(--sa-canto-luz), var(--sa-sombra-lg);
   animation: sa-subir 200ms cubic-bezier(0.2, 0, 0.2, 1);
 
   &--estrecho { max-width: 420px; }
@@ -445,7 +449,13 @@
   background: var(--sa-superficie);
   border: 1px solid var(--sa-borde);
   border-radius: $radius-lg;
-  box-shadow: var(--sa-sombra-sm);
+  box-shadow: inset 0 1px 0 var(--sa-canto-luz), var(--sa-sombra-sm);
+
+  /* Grano de metal. Es la superficie mas grande y mas vacia que tiene la
+     aplicacion —por definicion: aqui no hay nada que enseñar— y sin textura es
+     literalmente un rectangulo de color con una frase dentro. Despues del
+     background, que si va antes lo borra el atajo. */
+  @include cepillado;
 
   &::before {
     content: '';

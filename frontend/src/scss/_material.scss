@@ -9,26 +9,36 @@
 
 /* Textura de metal cepillado: lineas de un pixel a opacidad muy baja. No se ve
    como textura, se nota como que la superficie tiene grano en vez de ser un
-   rectangulo de color plano. Por encima de un 3 % ya ensucia el texto encima. */
+   rectangulo de color plano. Por encima de un 3 % ya ensucia el texto encima.
+
+   El color sale de --sa-grano y el mixin es una sola regla sin anidar. Antes
+   llevaba dentro un `:root[data-tema='claro'] &` para restar luz en vez de
+   sumarla, porque sobre fondo claro el grano blanco no se ve. Ese bloque no ha
+   funcionado nunca dentro de un componente: la encapsulacion de Angular reescribe
+   el selector pegando el atributo de contenido al primer compuesto, y
+
+       :root[data-tema='claro'] .barra
+
+   sale del compilador como
+
+       [_ngcontent-ng-cXXX]:root[data-tema='claro'] .barra[_ngcontent-ng-cXXX]
+
+   que exige que <html> lleve un atributo de contenido de Angular. No lo lleva
+   nunca, asi que la regla no casaba jamas y en tema claro se quedaba el grano
+   blanco sobre superficie blanca: invisible. Se veia como "el grano no se nota
+   en claro", que era justo lo que el comentario decia que arreglaba.
+
+   Con el color en un token, la capa de tema —que es global y no pasa por la
+   encapsulacion— hace el trabajo, y esto vale para cualquiera que use el mixin
+   hoy o mañana. */
 @mixin cepillado {
   background-image: repeating-linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.022) 0,
-    rgba(255, 255, 255, 0.022) 1px,
+    var(--sa-grano) 0,
+    var(--sa-grano) 1px,
     transparent 1px,
     transparent 3px
   );
-
-  // Sobre fondo claro el mismo grano en blanco no se ve: hay que restar luz
-  :root[data-tema='claro'] & {
-    background-image: repeating-linear-gradient(
-      180deg,
-      rgba(41, 26, 16, 0.018) 0,
-      rgba(41, 26, 16, 0.018) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-  }
 }
 
 /* La superficie de una tarjeta.
@@ -48,7 +58,13 @@
   background: var(--sa-superficie);
   border: 1px solid var(--sa-borde);
   border-radius: $radio;
-  box-shadow: var(--sa-sombra-sm);
+  /* El canto de luz por delante de la sombra: una pieza de metal coge la luz
+     por el borde de arriba, y eso es lo que la lee como pieza y no como color.
+     El recurso ya estaba en esta aplicacion —la rejilla lo usa en el solape y
+     en el ancla, "es lo que separa una pieza de una mancha"— pero solo lo tenia
+     la rejilla. En el tema claro el token vale transparent y esto no pinta
+     nada: alli el volumen lo da la sombra. */
+  box-shadow: inset 0 1px 0 var(--sa-canto-luz), var(--sa-sombra-sm);
 }
 
 /* La misma, para lo que se puede pulsar.
@@ -62,7 +78,9 @@
   &:hover {
     border-color: var(--sa-borde-fuerte);
     background: var(--sa-superficie-alt);
-    box-shadow: var(--sa-sombra-md);
+    // El canto se repite: box-shadow no se acumula entre reglas, y sin esto
+    // levantar la tarjeta le apagaba el borde iluminado justo al levantarla.
+    box-shadow: inset 0 1px 0 var(--sa-canto-luz), var(--sa-sombra-md);
     transform: translateY(-1px);
   }
 }

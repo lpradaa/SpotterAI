@@ -51,7 +51,9 @@
   background: var(--sa-superficie);
   border: 1px solid var(--sa-borde);
   border-radius: $radius-lg;
-  box-shadow: var(--sa-sombra-lg);
+  // Canto de luz, como el resto de superficies grandes de la aplicacion: es lo
+  // primero que ve alguien y no puede ser la unica pieza que se lea plana.
+  box-shadow: inset 0 1px 0 var(--sa-canto-luz), var(--sa-sombra-lg);
   overflow: hidden; /* Corta los bordes para el panel izquierdo */
   min-height: 600px;
 }

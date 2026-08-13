@@ -123,9 +123,22 @@
   &[data-tramo='media']::before { background: var(--sa-comp-media); }
   &[data-tramo='alta']::before { background: var(--sa-comp-alta); }
 
-  /* La escala llega al número, que es donde de verdad se lee. */
-  &[data-tramo='media'] .ficha__nota { color: var(--sa-comp-media); }
-  &[data-tramo='alta'] .ficha__nota { color: var(--sa-comp-alta); }
+  /* La escala llega al número, que es donde de verdad se lee.
+
+     Y el ascua: el numero se calienta con el tramo, con el mismo resplandor del
+     propio color que la rejilla usa para marcar el solape. En una lista de
+     catorce, recorrerla con el rabillo del ojo ya distingue quien esta caliente
+     sin leer un digito. En el tramo bajo no hay resplandor a proposito: un
+     30 % no esta caliente. */
+  &[data-tramo='media'] .ficha__nota {
+    color: var(--sa-comp-media);
+    text-shadow: 0 0 14px color-mix(in srgb, var(--sa-comp-media) 40%, transparent);
+  }
+
+  &[data-tramo='alta'] .ficha__nota {
+    color: var(--sa-comp-alta);
+    text-shadow: 0 0 20px color-mix(in srgb, var(--sa-comp-alta) 55%, transparent);
+  }
 
   // El hover lo pone superficie-interactiva, con el mismo borde y el mismo
   // fondo que habia aqui mas la elevacion. Dejar la copia local significaba dos
@@ -283,7 +296,7 @@
   transform: translateX(calc(100% + 24px));
   visibility: hidden;
   transition: transform 240ms cubic-bezier(0.2, 0, 0.2, 1), visibility 240ms;
-  box-shadow: var(--sa-sombra-lg);
+  box-shadow: inset 0 1px 0 var(--sa-canto-luz), var(--sa-sombra-lg);
 
   &--abierto {
     transform: translateX(0);

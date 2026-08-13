@@ -38,9 +38,12 @@
   min-height: 0;
   min-width: 0;
   padding: $space-sm;
-  border-radius: $radius-md;
-  background: var(--sa-superficie);
-  border: 1px solid var(--sa-borde);
+  // Con el mixin y no a mano. Compañeros es la unica pantalla principal que no
+  // usaba ninguna de las dos superficies del sistema, asi que sus dos paneles
+  // —los mas grandes de la pantalla— salian sin sombra y sin canto de luz: dos
+  // rectangulos con un borde de un pixel mientras el resto de la aplicacion
+  // tiene piezas. El radio se mantiene en el mediano, que es el que llevaban.
+  @include superficie($radius-md);
 
   // En móvil no caben las dos vistas: al abrir un chat, la lista se retira
   @media (max-width: #{$screen-md - 1px}) {
@@ -239,9 +242,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-radius: $radius-md;
-  background: var(--sa-superficie);
-  border: 1px solid var(--sa-borde);
+  @include superficie($radius-md);
   overflow: hidden;
 
   @media (max-width: #{$screen-md - 1px}) {
