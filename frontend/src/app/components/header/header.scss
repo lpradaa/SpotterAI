@@ -22,6 +22,14 @@
   background-color: var(--sa-superficie);
   border-bottom: 1px solid var(--sa-borde);
 
+  /* Grano de metal. Es la pieza mas ancha de la aplicacion y la unica que sale
+     en todas las pantallas, asi que era la que mas se notaba plana: setenta
+     pixeles de color liso de lado a lado. No lleva canto de luz a proposito
+     —el borde iluminado de una pieza es el de arriba, y el de arriba aqui es
+     el pixel cero de la ventana— pero si la separacion de abajo, que ya
+     estaba. */
+  @include cepillado;
+
   &__left {
     display: flex;
     align-items: center;
@@ -136,7 +144,23 @@
   flex-direction: column;
   transform: translateX(-100%);
   transition: transform var(--sa-transicion-lenta);
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+
+  /* Grano, por lo mismo que la cabecera: 300 px de ancho por toda la altura de
+     la ventana con dos filas de enlaces dentro es la superficie mas vacia que
+     llega a haber en pantalla. */
+  @include cepillado;
+
+  /* La sombra, con la misma direccion que tenia y la fuerza que le faltaba.
+     Estaba en rgba(0,0,0,0.1) con 10 px de difuminado, que sobre el #0e0c0b del
+     fondo oscuro no se ve: es el mismo fallo que este fichero ya documenta unas
+     lineas mas arriba para la cabecera —"una sombra negra al 3 % sobre un fondo
+     de #0e0c0b es invisible"—, detectado alli y no aqui.
+
+     No vale --sa-sombra-lg, aunque sea el token de "pieza que flota": lleva el
+     desplazamiento en vertical (0 24px) porque esta pensado para modales, y un
+     cajon de altura completa proyecta hacia el lado, no hacia abajo. Con el
+     token la sombra caia fuera de la pantalla y seguia sin verse. */
+  box-shadow: 16px 0 48px rgba(0, 0, 0, 0.55);
 
   &--open {
     transform: translateX(0);

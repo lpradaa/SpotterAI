@@ -123,6 +123,15 @@
 
   &[data-tramo='media'] { color: var(--sa-comp-media); }
   &[data-tramo='alta'] { color: var(--sa-comp-alta); }
+
+  /* Sin el resplandor del ascua, y es a proposito: es el unico de los cuatro
+     sitios donde sale este numero que no es la compatibilidad de ahora, sino la
+     que se veia cuando esta persona te escribio. El ascua dice "esto esta
+     caliente"; encenderla sobre un dato historico seria decir que sigue vivo.
+     El color de la escala si se queda, porque la magnitud no ha cambiado.
+
+     Uniformar esto borraria una distincion que la propia aplicacion ya hace con
+     palabras dos lineas mas arriba. */
 }
 
 /* __cifra y no __nota: __nota ya es el recado de una propuesta de sesion, unas

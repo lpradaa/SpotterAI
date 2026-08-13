@@ -32,10 +32,12 @@
   strong { color: var(--sa-texto); }
 }
 
+/* Con el mixin. Estaba escrito a mano con exactamente el fondo, el borde y el
+   radio de `superficie` —la copia entera menos la sombra y el canto de luz—, y
+   esta es la primera pantalla que ve alguien que acaba de registrarse: de 117
+   elementos con color de superficie, cero tenian material. */
 .bienvenida__panel {
-  background: var(--sa-superficie);
-  border: 1px solid var(--sa-borde);
-  border-radius: $radius-lg;
+  @include superficie;
   padding: $space-md;
 }
 

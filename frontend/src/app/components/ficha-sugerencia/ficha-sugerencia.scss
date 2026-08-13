@@ -46,8 +46,21 @@
   line-height: 1;
   color: var(--sa-comp-baja);
 
-  .sugerencia__puntuacion[data-tramo='media'] & { color: var(--sa-comp-media); }
-  .sugerencia__puntuacion[data-tramo='alta'] & { color: var(--sa-comp-alta); }
+  /* El ascua, como en la ficha y en las tarjetas de Explorar: el numero no solo
+     cambia de color con el tramo, se calienta. Este es el tercer sitio donde
+     sale el mismo dato y era el unico que se quedaba frio, que es como una
+     escala deja de ser una escala: la misma cifra con dos tratamientos segun
+     por que pantalla hayas entrado. En el tramo bajo no hay resplandor a
+     proposito. */
+  .sugerencia__puntuacion[data-tramo='media'] & {
+    color: var(--sa-comp-media);
+    text-shadow: 0 0 14px color-mix(in srgb, var(--sa-comp-media) 40%, transparent);
+  }
+
+  .sugerencia__puntuacion[data-tramo='alta'] & {
+    color: var(--sa-comp-alta);
+    text-shadow: 0 0 20px color-mix(in srgb, var(--sa-comp-alta) 55%, transparent);
+  }
 }
 
 .sugerencia__etiqueta {
