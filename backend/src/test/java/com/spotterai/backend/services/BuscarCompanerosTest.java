@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.semantica.VectorDeBiografia;
 import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.dtos.EstadoConCompanero;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
@@ -67,6 +68,7 @@ class BuscarCompanerosTest {
                 Mockito.mock(com.spotterai.backend.repositories.SesionRepository.class),
                 Mockito.mock(com.spotterai.backend.repositories.BloqueoRepository.class),
                 TextosDePrueba.nuevo(),
+                new VectorDeBiografia(new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
                 java.time.Clock.systemDefaultZone());
 
         gimnasio = new Gimnasio();

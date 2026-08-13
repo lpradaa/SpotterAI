@@ -14,6 +14,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * viven ahora en {@code demo.SembradorDemo}, que solo actúa con el perfil
  * {@code demo} puesto a mano.
  */
+// @EnableAsync por el repaso de vectores del arranque: sin esto, @Async se
+// ignora en silencio y el repaso correria en el hilo de arranque, que es
+// exactamente lo que no debe hacer.
+@org.springframework.scheduling.annotation.EnableAsync
 @SpringBootApplication
 @EnableScheduling // latido del canal de eventos
 public class BackendApplication {

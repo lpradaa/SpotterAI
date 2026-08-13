@@ -1,5 +1,7 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.semantica.VectorDePrueba;
+import com.spotterai.backend.semantica.VectorDeBiografia;
 import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.dtos.ConteoPorUsuario;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
@@ -102,6 +104,7 @@ class LaListaDeGenteTest {
                 Mockito.mock(SesionRepository.class),
                 bloqueoRepository,
                 TextosDePrueba.nuevo(),
+                new VectorDeBiografia(new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
                 Clock.systemDefaultZone());
 
         gimnasio.setId(1L);
@@ -109,6 +112,11 @@ class LaListaDeGenteTest {
 
         persona(yo, 1L, "Luis", "luis@test.com").setGimnasio(gimnasio);
         persona(otro, 2L, "Ana", "ana@test.com").setGimnasio(gimnasio);
+
+        // Con biografia los dos: sin ella el noveno factor se queda sin datos y
+        // la puntuacion sale marcada como incompleta, que es justo lo que la
+        // prueba de las marcas comprueba que NO pasa cuando hay datos de sobra.
+        VectorDePrueba.aLosDos(yo, otro);
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));
         when(usuarioRepository.candidatosPara(1L)).thenReturn(List.of(otro));

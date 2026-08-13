@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.semantica.VectorDePrueba;
 import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
@@ -63,13 +64,25 @@ class CalculadoraCompatibilidadTest {
         return new Constancia(12, true);
     }
 
-    /** Dos perfiles completos, con todo lo que el motor sabe mirar. */
+    /**
+     * Dos perfiles completos, con todo lo que el motor sabe mirar.
+     *
+     * <p>Incluida la biografia. Desde que la afinidad de lo escrito es el
+     * noveno factor, un perfil sin ella no esta completo y arrastra el descuento
+     * por evidencia — que es lo que este ayudante existe para evitar. Se pone
+     * aqui, en el unico sitio que dice "completos", y no repetido en cada
+     * prueba.
+     *
+     * <p>Vectores distintos para cada uno a proposito: dos personas completas no
+     * tienen por que describirse igual, y darles el mismo vector inflaria la
+     * puntuacion de todas las pruebas que usan este ayudante.
+     */
     private static PuntuacionCompatibilidad puntuar(
             Usuario a, List<Disponibilidad> horariosA, List<Levantamiento> pesosA,
             Usuario b, List<Disponibilidad> horariosB, List<Levantamiento> pesosB) {
         return CalculadoraCompatibilidad.calcular(
-                new PerfilDeMatch(a, horariosA, pesosA, constante()),
-                new PerfilDeMatch(b, horariosB, pesosB, constante()));
+                new PerfilDeMatch(VectorDePrueba.con(a, 1.0), horariosA, pesosA, constante()),
+                new PerfilDeMatch(VectorDePrueba.con(b, 1.0), horariosB, pesosB, constante()));
     }
 
 /**
@@ -249,7 +262,8 @@ class CalculadoraCompatibilidadTest {
         assertEquals("Poca compatibilidad", TextosDePrueba.nuevo().de(p.etiqueta()));
         // Un factor por cada dimension que evalua el motor. Se comprueba que
         // ninguna se pierda por el camino, no un numero concreto de memoria.
-        assertEquals(8, p.factores().size());
+        // Nueve desde que la afinidad de lo escrito entro como factor.
+        assertEquals(9, p.factores().size());
     }
 
     @Test

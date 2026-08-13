@@ -49,6 +49,34 @@ public class Usuario {
     private String biografia;
 
     /**
+     * La biografia convertida en numeros, para poder compararla con la de otra
+     * persona.
+     *
+     * <p>Se calcula al guardar el perfil, no al emparejar: emparejar es un
+     * producto escalar sobre esto, y por eso el noveno factor del motor no
+     * cuesta ni una llamada de red. El formato lo define {@code VectorDeTexto},
+     * que es lo unico que lo escribe y lo lee.
+     *
+     * <p>Puede ser nulo, y es un estado normal: alguien sin biografia, o alguien
+     * que la guardo mientras el servicio de embeddings estaba caido. La
+     * calculadora lo trata como cualquier otro dato que falta.
+     */
+    @Column(name = "biografia_vector")
+    private byte[] biografiaVector;
+
+    /**
+     * De que texto salio el vector.
+     *
+     * <p>Sin esto no hay forma de saber si el vector guardado describe la
+     * biografia actual o una anterior: alguien edita su bio con el servicio de
+     * embeddings caido y el vector viejo se queda hablando de quien esa persona
+     * ya no dice ser. Con la huella, un vector desfasado se detecta al comparar
+     * y se recalcula.
+     */
+    @Column(name = "biografia_vector_de", length = 64)
+    private String biografiaVectorDe;
+
+    /**
      * Entrenamientos que se propone hacer a la semana.
      *
      * Estaba en localStorage con la clave meta_semanal_<nombre>, asi que se
@@ -230,6 +258,12 @@ public class Usuario {
     public String getBiografia() {
         return biografia;
     }
+
+    public byte[] getBiografiaVector() { return biografiaVector; }
+    public void setBiografiaVector(byte[] biografiaVector) { this.biografiaVector = biografiaVector; }
+
+    public String getBiografiaVectorDe() { return biografiaVectorDe; }
+    public void setBiografiaVectorDe(String biografiaVectorDe) { this.biografiaVectorDe = biografiaVectorDe; }
 
     public void setBiografia(String biografia) {
         this.biografia = biografia;

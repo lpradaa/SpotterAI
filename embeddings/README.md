@@ -1,0 +1,44 @@
+# Servicio de embeddings
+
+Convierte una biografía en un vector de 384 números. Es lo único del proyecto
+que ejecuta un modelo.
+
+## Por qué está aparte del backend
+
+El embedding se calcula **al guardar un perfil**, no al emparejar. Emparejar es
+un producto escalar sobre vectores ya guardados, así que este servicio no está
+en el camino crítico de nada: si se cae, el motor sigue calculando
+compatibilidades a la misma velocidad y solo deja de recalcular las biografías
+que cambien mientras tanto. La calculadora trata esa ausencia como cualquier
+otro dato que falta —igual que un perfil sin gimnasio— y reparte el peso del
+factor entre los demás.
+
+Meter el modelo dentro del Spring Boot habría obligado a dimensionar el backend
+entero por los ~500 MB del transformer, para una operación que ocurre cuando
+alguien edita su perfil.
+
+## Arrancarlo
+
+```bash
+python -m venv .venv && .venv/Scripts/activate   # Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn servidor:app --port 8000
+```
+
+La primera arrancada descarga el modelo (~470 MB) y tarda. Las siguientes leen
+la caché de `~/.cache/huggingface`.
+
+## Probarlo
+
+```bash
+curl -s localhost:8000/salud
+curl -s localhost:8000/vector -H "Content-Type: application/json" \
+  -d '{"texto":"Todavía me da respeto la zona de peso libre"}'
+```
+
+## Qué espera el backend
+
+`EMBEDDINGS_URL` apuntando aquí (por defecto `http://localhost:8000`). Si la
+variable está vacía el backend no llama a nadie y el factor semántico queda
+permanentemente sin datos — que es el comportamiento correcto en un entorno
+donde este servicio no está desplegado.

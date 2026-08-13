@@ -1,6 +1,7 @@
 package com.spotterai.backend.services;
 
 import com.spotterai.backend.textos.Textos;
+import com.spotterai.backend.semantica.VectorDeBiografia;
 import com.spotterai.backend.textos.Mensaje;
 import com.spotterai.backend.dtos.ActividadDTO;
 import com.spotterai.backend.dtos.ConteoPorUsuario;
@@ -103,6 +104,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     /** Quien redacta las claves del motor, con el idioma de la peticion en curso. */
     private final Textos textos;
 
+    /** Mantiene al dia el vector de la biografia, para el factor semantico. */
+    private final VectorDeBiografia vectorDeBiografia;
+
     /**
      * Tope de marcas por persona.
      *
@@ -122,6 +126,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                               SesionRepository sesionRepository,
                               BloqueoRepository bloqueoRepository,
                               Textos textos,
+                              VectorDeBiografia vectorDeBiografia,
                               Clock reloj) {
         this.levantamientoRepository = levantamientoRepository;
         this.sesionRepository = sesionRepository;
@@ -136,6 +141,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.entrenamientoRepository = entrenamientoRepository;
         this.bloqueoRepository = bloqueoRepository;
         this.textos = textos;
+        this.vectorDeBiografia = vectorDeBiografia;
     }
 
     @Override
@@ -242,6 +248,13 @@ public class UsuarioServiceImpl implements UsuarioService {
                     .orElseThrow(() -> new IllegalArgumentException("El gimnasio seleccionado no existe."));
             usuario.setGimnasio(gimnasio);
         }
+
+        // Antes de guardar y dentro de la misma transaccion: si el texto ha
+        // cambiado, el vector se recalcula ahora y se escribe con el resto del
+        // perfil. Si el servicio de embeddings no responde, esto no lanza nada —
+        // el perfil se guarda igual y la biografia se queda sin vector hasta la
+        // siguiente edicion.
+        vectorDeBiografia.actualizar(usuario);
 
         Usuario guardado = usuarioRepository.save(usuario);
 

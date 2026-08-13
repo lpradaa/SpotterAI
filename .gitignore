@@ -22,3 +22,6 @@ Thumbs.db
 # Editores
 .idea/
 *.iml
+
+.venv/
+__pycache__/

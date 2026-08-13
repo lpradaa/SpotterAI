@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.semantica.VectorDeBiografia;
 import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.dtos.UsuarioPerfilDTO;
@@ -52,6 +53,7 @@ class PerfilCompletoTest {
                 Mockito.mock(SesionRepository.class),
                 Mockito.mock(BloqueoRepository.class),
                 TextosDePrueba.nuevo(),
+                new VectorDeBiografia(new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
                 Clock.systemDefaultZone());
 
         Mockito.when(disponibilidadRepository.findByUsuarioId(Mockito.any())).thenReturn(List.of());

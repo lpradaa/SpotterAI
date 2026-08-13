@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.semantica.VectorDeBiografia;
 import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.dtos.ConteoPorUsuario;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
@@ -101,6 +102,7 @@ class ElMismoNumeroPorTodosLosCaminosTest {
                 Mockito.mock(SesionRepository.class),
                 Mockito.mock(BloqueoRepository.class),
                 TextosDePrueba.nuevo(),
+                new VectorDeBiografia(new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
                 Clock.systemDefaultZone());
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));

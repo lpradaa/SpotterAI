@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.semantica.VectorDeTexto;
 import com.spotterai.backend.textos.Mensaje;
 
 import com.spotterai.backend.models.Disponibilidad;
@@ -92,6 +93,56 @@ public final class CalculadoraCompatibilidad {
      * algo: de todos los que encajan sobre el papel, quien va a aparecer.
      */
     static double PESO_CONSTANCIA = 10;
+
+    /*
+     * Afinidad de lo que cada uno escribe sobre si mismo: 6 puntos.
+     *
+     * Los otros ocho factores puntuan campos de un formulario. Este es el unico
+     * que mira lo unico que una persona escribe con sus palabras, y ahi hay
+     * cosas que ninguna casilla recoge: "todavia me da respeto la zona de peso
+     * libre" no es un nivel, "me amoldo a lo que haga falta" no es una rutina, y
+     * "necesito a alguien que pueda ayudarme en banca pesada" es una peticion
+     * explicita que no cabe en un desplegable.
+     *
+     * Seis puntos y no mas, por dos razones. Es una señal blanda —un modelo
+     * midiendo parecido entre dos frases cortas— y no puede pesar como el
+     * horario, que es una restriccion dura: si no coincidis, no entrenais
+     * juntos, y ningun texto arregla eso. Y seis puntos bastan para mover una
+     * decision en el margen: es lo que separa un 68 de un 74, que es la
+     * frontera entre "buena compatibilidad" y "muy compatibles".
+     *
+     * Los pesos no tienen que sumar 100 —PesosDelMotor lo dice y la
+     * redistribucion reescala en proporcion— asi que este factor no le quita
+     * peso a nadie: cambia el reparto relativo, que es exactamente lo que debe
+     * hacer un factor nuevo.
+     */
+    static double PESO_AFINIDAD = 6;
+
+    /*
+     * El suelo y el techo de la afinidad, MEDIDOS y no supuestos.
+     *
+     * Dos textos cualesquiera del mismo dominio —gente hablando de entrenar— ya
+     * se parecen solo por el vocabulario compartido. Sin un suelo, el factor
+     * daria medio punto a todo el mundo. Lo que puntua es cuanto se parecen por
+     * encima de ese fondo comun.
+     *
+     * La primera version llevaba 0,30 y 0,75, elegidos a ojo. Al pasar las trece
+     * biografias reales por el modelo, el rango observado entre las 21 parejas
+     * resulto ser 0,085 - 0,544:
+     *
+     *     0,544  Alex + Marta      (los dos: constancia, acompanado, basicos)
+     *     0,493  Diego + Noa
+     *     0,472  Javi + Alex       (los dos vienen de fuerza)
+     *     0,226  Javi + Lucia      (powerlifter contra principiante)
+     *     0,085  Javi + Diego      (el mas bajo)
+     *
+     * Con 0,30-0,75 la mejor pareja real se habria quedado en la mitad del
+     * factor y la mayoria en cero: un factor practicamente inerte. Con
+     * 0,15-0,55 el reparto usa el rango entero. Estos numeros son de este modelo
+     * y de este dominio; cambiar de modelo obliga a volver a medirlos.
+     */
+    private static final double AFINIDAD_MINIMA = 0.15;
+    private static final double AFINIDAD_DE_SOBRA = 0.55;
 
     /** Minutos efectivos semanales a partir de los cuales el solape es de sobra. */
     private static final double MINUTOS_SOLAPE_IDEAL = 300; // 5 h/semana
@@ -249,7 +300,8 @@ public final class CalculadoraCompatibilidad {
                 factorConstancia(mio.constancia(), suyo.constancia()),
                 factorRutina(yo.getRutina(), otro.getRutina()),
                 factorGimnasio(yo, otro),
-                factorEdad(yo.getEdad(), otro.getEdad()));
+                factorEdad(yo.getEdad(), otro.getEdad()),
+                factorAfinidad(yo, otro));
 
         List<FactorCompatibilidad> factores = repartirPesoDeLosNoAplicables(brutos);
 
@@ -269,8 +321,16 @@ public final class CalculadoraCompatibilidad {
      * seis horas de solape.
      */
     private static double confianzaPorEvidencia(List<FactorCompatibilidad> brutos) {
+        // Los NUEVE pesos. Esta suma se escribio a mano cuando eran ocho, y al
+        // entrar la afinidad se quedo corta: el peso evaluado incluia los 6 del
+        // factor nuevo y el total no, asi que el cociente pasaba de 1 y la
+        // confianza multiplicaba por mas de uno. Puntuaciones infladas, sin
+        // error y sin nada que lo delatara salvo numeros que ya no cuadraban.
+        //
+        // Enumerar pesos a mano es la clase de sitio donde esto vuelve a pasar
+        // al decimo factor.
         double pesoTotal = PESO_HORARIO + PESO_NIVEL + PESO_FUERZA + PESO_OBJETIVO
-                + PESO_CONSTANCIA + PESO_RUTINA + PESO_GIMNASIO + PESO_EDAD;
+                + PESO_CONSTANCIA + PESO_RUTINA + PESO_GIMNASIO + PESO_EDAD + PESO_AFINIDAD;
         double pesoEvaluado = brutos.stream()
                 .filter(FactorCompatibilidad::aplicable)
                 .mapToDouble(FactorCompatibilidad::puntosMax)
@@ -568,6 +628,55 @@ public final class CalculadoraCompatibilidad {
                 ? Mensaje.de("factor.edad.misma")
                 : Mensaje.de("factor.edad.diferencia", diferencia);
         return FactorCompatibilidad.evaluado("edad", puntos, PESO_EDAD, detalle);
+    }
+
+    /**
+     * Cuanto se parece lo que cada uno ha escrito sobre si mismo.
+     *
+     * <p>El unico factor que no sale de un desplegable. Compara los vectores de
+     * las dos biografias — que se calcularon al guardar cada perfil, no aqui:
+     * esto es un producto escalar sobre datos ya en memoria y no cuesta ni una
+     * llamada de red, que es lo que permite añadir un noveno factor sin tocar
+     * los 44 ms de la consulta.
+     *
+     * <p><b>El modelo no decide el orden.</b> Aporta una señal que el motor
+     * pondera junto a las otras ocho, igual que cualquier otra. Una puntuacion
+     * que ordena a la gente tiene que ser instantanea, identica entre
+     * ejecuciones y explicable; un modelo puntuando da un producto que no se
+     * puede depurar ni defender.
+     *
+     * <p>Sin vector en alguno de los dos no es incompatibilidad, es falta de
+     * datos: alguien que no ha escrito biografia no debe salir penalizado frente
+     * a quien si, del mismo modo que no rellenar el gimnasio no significa
+     * entrenar en otro sitio.
+     */
+    private static FactorCompatibilidad factorAfinidad(Usuario yo, Usuario otro) {
+        VectorDeTexto mio = VectorDeTexto.desdeBytes(yo.getBiografiaVector());
+        VectorDeTexto suyo = VectorDeTexto.desdeBytes(otro.getBiografiaVector());
+
+        if (mio == null || suyo == null) {
+            return FactorCompatibilidad.sinDatos("afinidad",
+                    Mensaje.de("factor.afinidad.sinDatos"));
+        }
+
+        double similitud = mio.similitudCon(suyo);
+
+        // Reescalado desde el suelo: lo que puntua es cuanto se parecen por
+        // encima del fondo comun que comparten dos textos cualesquiera sobre
+        // entrenar, no ese fondo.
+        double sobreElSuelo = (similitud - AFINIDAD_MINIMA) / (AFINIDAD_DE_SOBRA - AFINIDAD_MINIMA);
+        double ratio = Math.clamp(sobreElSuelo, 0.0, 1.0);
+
+        Mensaje detalle;
+        if (ratio >= 0.75) {
+            detalle = Mensaje.de("factor.afinidad.mucha");
+        } else if (ratio >= 0.4) {
+            detalle = Mensaje.de("factor.afinidad.algo");
+        } else {
+            detalle = Mensaje.de("factor.afinidad.poca");
+        }
+
+        return FactorCompatibilidad.evaluado("afinidad", ratio * PESO_AFINIDAD, PESO_AFINIDAD, detalle);
     }
 
     private static String normalizar(String valor) {

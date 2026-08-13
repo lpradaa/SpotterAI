@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.semantica.VectorDePrueba;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Levantamiento;
@@ -179,9 +180,14 @@ class RepartoDePesoTest {
         // a estarlo.
         List<Levantamiento> pesos = List.of(levantamiento(Ejercicio.PRESS_BANCA, 90, 5));
 
-        PuntuacionCompatibilidad p = puntuar(
-                conRutina(usuario("Intermedio", "Hipertrofia", 30, g), Rutina.TORSO_PIERNA), h, pesos,
-                conRutina(usuario("Intermedio", "Hipertrofia", 30, g), Rutina.TORSO_PIERNA), h, pesos);
+        // Con biografia: desde que la afinidad de lo escrito es un factor,
+        // "perfil completo" incluye haber escrito algo sobre uno mismo.
+        Usuario unoCompleto = VectorDePrueba.con(
+                conRutina(usuario("Intermedio", "Hipertrofia", 30, g), Rutina.TORSO_PIERNA), 1.0);
+        Usuario otroCompleto = VectorDePrueba.con(
+                conRutina(usuario("Intermedio", "Hipertrofia", 30, g), Rutina.TORSO_PIERNA), 1.0);
+
+        PuntuacionCompatibilidad p = puntuar(unoCompleto, h, pesos, otroCompleto, h, pesos);
 
         assertTrue(p.esCompleta());
         assertTrue(p.factoresSinDatos().isEmpty());
@@ -235,7 +241,7 @@ class RepartoDePesoTest {
 
         assertEquals(0, p.total());
         assertFalse(p.esCompleta());
-        assertEquals(8, p.factoresSinDatos().size());
+        assertEquals(9, p.factoresSinDatos().size());
     }
 
     @Test
