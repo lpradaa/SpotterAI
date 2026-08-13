@@ -6,6 +6,7 @@ import { EventosService } from '../../services/eventos.service';
 import { PerfilEstadoService } from '../../services/perfil-estado.service';
 import { AvisosService } from '../../services/avisos.service';
 import { AuthService } from '../../services/auth.service';
+import { IdiomaService } from '../../services/idioma.service';
 import { Avatar } from '../avatar/avatar';
 
 @Component({
@@ -26,6 +27,8 @@ export class Header {
   private avisos = inject(AvisosService);
   /** protected: el sidebar lee auth.usuario() directamente en la plantilla. */
   protected auth = inject(AuthService);
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
 
   solicitudesPendientes = this.avisos.solicitudesPendientes;
   mensajesSinLeer = this.avisos.mensajesSinLeer;
@@ -48,14 +51,21 @@ export class Header {
 
   etiquetaAvisos = computed(() => {
     const pendientes = this.porResponder();
-    if (pendientes === 0) return 'No hay nada pendiente';
-    return `${pendientes} ${pendientes === 1 ? 'cosa pendiente' : 'cosas pendientes'} por responder`;
+    return pendientes === 0
+      ? this.i18n.t('cabecera.sinAvisos')
+      : this.i18n.t('cabecera.avisos', { cuenta: pendientes });
   });
 
   temaActual = this.tema.tema;
 
   alternarTema(): void {
     this.tema.alternar();
+  }
+
+  idiomaActual = this.i18n.idioma;
+
+  alternarIdioma(): void {
+    this.i18n.alternar();
   }
 
   toggleSidebar() {

@@ -77,6 +77,20 @@
       transform: scale(1.05);
     }
 
+    /* El de idioma lleva dos letras donde los demas llevan un icono de 20 px.
+       Sin esto salia con la altura del texto y quedaba mas bajo que la campana
+       y que el sol, que es lo que rompe una fila de botones: no se nota cual
+       esta mal, se nota que la fila esta torcida. */
+    &.header__idioma {
+      min-width: 40px;
+      height: 40px;
+      padding: 0;
+      font-family: $font-display;
+      font-size: $text-xs;
+      font-weight: $font-bold;
+      letter-spacing: $tracking-wide;
+    }
+
     &:active {
       transform: scale(0.95);
     }

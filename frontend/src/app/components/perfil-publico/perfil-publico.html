@@ -361,7 +361,7 @@
               <span>Motivo</span>
               <select [ngModel]="motivoReporte()" (ngModelChange)="motivoReporte.set($event)">
                 <option [ngValue]="null" disabled>Elige un motivo</option>
-                @for (m of motivosDeReporte; track m.valor) {
+                @for (m of motivosDeReporte(); track m.valor) {
                   <option [ngValue]="m.valor">{{ m.etiqueta }}</option>
                 }
               </select>

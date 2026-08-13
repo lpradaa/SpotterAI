@@ -13,7 +13,8 @@ import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { Carga } from '../carga/carga';
 import { tramoDe } from '../../utils/compatibilidad';
-import { MOTIVOS_DE_REPORTE } from '../../utils/motivos-de-reporte';
+import { VALORES_DE_MOTIVO, claveDeMotivo } from '../../utils/motivos-de-reporte';
+import { IdiomaService } from '../../services/idioma.service';
 import { Desglose } from '../desglose/desglose';
 
 /** Un hueco del perfil propio, tal y como lo manda /api/usuarios/perfil. */
@@ -57,6 +58,8 @@ export class PerfilPublicoComponent {
   private ruta = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
 
   /**
    * A quién se mira, sacado de la URL.
@@ -324,10 +327,16 @@ export class PerfilPublicoComponent {
   detalleReporte = '';
   reporteEnviado = signal(false);
 
-  /* La lista se ha ido a utils/motivos-de-reporte: la pantalla de moderación
-     necesita las mismas etiquetas para no enseñar el valor crudo del enum, y
-     dos copias de lo mismo divergen a la primera corrección. */
-  protected readonly motivosDeReporte = MOTIVOS_DE_REPORTE;
+  /* Los valores viven en utils/motivos-de-reporte y sus etiquetas en los
+     catálogos de idioma: un valor de enum no se traduce, la etiqueta sí. Es
+     computed y no una constante porque tiene que rehacerse al cambiar de
+     idioma con el desplegable abierto. */
+  protected readonly motivosDeReporte = computed(() =>
+    VALORES_DE_MOTIVO.map(valor => ({
+      valor,
+      etiqueta: this.i18n.t(claveDeMotivo(valor)),
+    })),
+  );
 
   reportar(otroId: number): void {
     const motivo = this.motivoReporte();

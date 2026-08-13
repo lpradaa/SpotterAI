@@ -1,6 +1,6 @@
 <header class="header">
   <div class="header__left">
-    <button class="header__button" (click)="toggleSidebar()" aria-label="Abrir menú">
+    <button class="header__button" (click)="toggleSidebar()" [attr.aria-label]="i18n.t('cabecera.abrirMenu')">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="3" y1="12" x2="21" y2="12"></line>
         <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -8,7 +8,7 @@
       </svg>
     </button>
     
-    <a routerLink="/dashboard" class="header__logo-container" aria-label="Spotter, ir al inicio">
+    <a routerLink="/dashboard" class="header__logo-container" [attr.aria-label]="i18n.t('cabecera.inicio')">
       <!--
         El isotipo es una barra con discos y, debajo, el arco de la mano que
         asiste: eso es literalmente un spotter.
@@ -63,9 +63,19 @@
       }
     </a>
 
+    <!-- El idioma, al lado del tema: son las dos cosas que cambian cómo se ve la
+         aplicación entera y no pertenecen a ninguna pantalla en concreto. Con
+         las dos letras y no con una bandera: una bandera es un país, y el
+         español no es de un país. -->
+    <button class="header__button header__idioma" (click)="alternarIdioma()"
+            [attr.aria-label]="i18n.t('cabecera.idiomaA')"
+            [title]="i18n.t('cabecera.idiomaA')">
+      {{ idiomaActual() === 'es' ? 'EN' : 'ES' }}
+    </button>
+
     <button class="header__button" (click)="alternarTema()"
-            [attr.aria-label]="'Cambiar a tema ' + (temaActual() === 'oscuro' ? 'claro' : 'oscuro')"
-            [title]="'Cambiar a tema ' + (temaActual() === 'oscuro' ? 'claro' : 'oscuro')">
+            [attr.aria-label]="temaActual() === 'oscuro' ? i18n.t('cabecera.temaClaro') : i18n.t('cabecera.temaOscuro')"
+            [title]="temaActual() === 'oscuro' ? i18n.t('cabecera.temaClaro') : i18n.t('cabecera.temaOscuro')">
       @if (temaActual() === 'oscuro') {
         <!-- Sol: pasar a claro -->
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -89,7 +99,7 @@
 <aside class="sidebar" [class.sidebar--open]="isSidebarOpen()">
   
   <div class="sidebar__header">
-    <button class="sidebar__close-btn" (click)="toggleSidebar()" aria-label="Cerrar menú">
+    <button class="sidebar__close-btn" (click)="toggleSidebar()" [attr.aria-label]="i18n.t('cabecera.cerrarMenu')">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -120,7 +130,7 @@
         <rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect>
         <rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect>
       </svg>
-      Tablero
+      {{ i18n.t('menu.tablero') }}
     </a>
 
     <a routerLink="/conexiones" class="sidebar__nav-item" routerLinkActive="sidebar__nav-item--active" (click)="toggleSidebar()">
@@ -128,7 +138,7 @@
            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
       </svg>
-      Compañeros
+      {{ i18n.t('menu.companeros') }}
       @if (mensajesSinLeer() > 0) {
         <span class="sidebar__nav-globo">{{ mensajesSinLeer() }}</span>
       }
@@ -139,7 +149,7 @@
            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
       </svg>
-      Explorar
+      {{ i18n.t('menu.explorar') }}
     </a>
 
     <!-- La ruta existía desde siempre, pero no había forma de llegar a ella
@@ -150,7 +160,7 @@
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
         <circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path>
       </svg>
-      Solicitudes
+      {{ i18n.t('menu.solicitudes') }}
       @if (porResponder() > 0) {
         <span class="sidebar__nav-globo">{{ porResponder() }}</span>
       }
@@ -165,13 +175,13 @@
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
       </svg>
-      Mi perfil
+      {{ i18n.t('menu.miPerfil') }}
     </a>
   </nav>
 
   <div class="sidebar__footer">
     <button class="btn btn--fantasma btn--ancho" (click)="cerrarSesion()">
-      Cerrar Sesión
+      {{ i18n.t('menu.cerrarSesion') }}
     </button>
   </div>
 </aside>

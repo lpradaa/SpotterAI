@@ -6,6 +6,7 @@ import { catchError, of } from 'rxjs';
 import { api } from '../../config/api';
 import { etiquetaDeMotivo } from '../../utils/motivos-de-reporte';
 import { agruparEnCasos, Reporte } from '../../utils/casos-de-moderacion';
+import { IdiomaService } from '../../services/idioma.service';
 
 export type { Reporte, CasoDeModeracion } from '../../utils/casos-de-moderacion';
 
@@ -42,6 +43,8 @@ export type { Reporte, CasoDeModeracion } from '../../utils/casos-de-moderacion'
 })
 export class AdminReportesComponent {
   private http = inject(HttpClient);
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
 
   protected sinAcceso = signal(false);
   protected error = signal(false);
@@ -85,7 +88,7 @@ export class AdminReportesComponent {
 
   /** El motivo como lo lee una persona, no como viaja al backend. */
   protected etiqueta(motivo: string): string {
-    return etiquetaDeMotivo(motivo);
+    return etiquetaDeMotivo(motivo, c => this.i18n.t(c));
   }
 
   /**
@@ -105,8 +108,9 @@ export class AdminReportesComponent {
     });
   }
 
+  /** La fecha en el idioma elegido, no en es-ES fijo. */
   protected cuando(fecha: string): string {
-    return new Date(fecha).toLocaleString('es-ES', {
+    return this.i18n.fecha(fecha, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

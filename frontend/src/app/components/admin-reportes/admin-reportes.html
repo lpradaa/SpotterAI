@@ -2,29 +2,25 @@
 
   <header class="reportes__cabecera">
     <div>
-      <h1 class="reportes__titulo">Reportes</h1>
-      <p class="reportes__texto">
-        Lo que la gente ha reportado sobre otras personas, agrupado por quién ha
-        sido reportado. Reportar no bloquea por sí solo: quien reporta puede
-        seguir viendo la conversación.
-      </p>
+      <h1 class="reportes__titulo">{{ i18n.t('reportes.titulo') }}</h1>
+      <p class="reportes__texto">{{ i18n.t('reportes.texto') }}</p>
     </div>
 
     <!-- Cuántos esperan que alguien los mire. Es el único número de la pantalla
          que dice si queda trabajo. -->
     @if (sinRevisar() > 0) {
-      <span class="reportes__pendientes">{{ sinRevisar() }} sin revisar</span>
+      <span class="reportes__pendientes">{{ i18n.t('reportes.pendientes', { cuenta: sinRevisar() }) }}</span>
     }
   </header>
 
   @if (sinAcceso()) {
-    <p class="aviso-inline" role="alert">No tienes acceso a esta pantalla.</p>
+    <p class="aviso-inline" role="alert">{{ i18n.t('reportes.sinAcceso') }}</p>
   } @else if (error()) {
-    <p class="aviso-inline aviso-inline--error" role="alert">No se han podido cargar los reportes.</p>
+    <p class="aviso-inline aviso-inline--error" role="alert">{{ i18n.t('reportes.errorCarga') }}</p>
   } @else if (reportes()) {
 
     @if (casos().length === 0) {
-      <p class="reportes__nota">No hay ningún reporte todavía.</p>
+      <p class="reportes__nota">{{ i18n.t('reportes.vacio') }}</p>
     } @else {
       @for (caso of casos(); track caso.id) {
         <!-- Un caso, no una fila: todo lo que ha recibido la misma persona. -->
@@ -44,14 +40,13 @@
                  personas son un patrón. -->
             <p class="caso__resumen">
               @if (caso.denunciantes > 1) {
-                <strong class="caso__patron">{{ caso.denunciantes }} personas distintas</strong>
-                lo han reportado
+                <strong class="caso__patron">{{ i18n.t('reportes.patron', { cuenta: caso.denunciantes }) }}</strong>
+                {{ i18n.t('reportes.loHanReportado') }}
               } @else {
-                <span>{{ caso.reportes.length === 1 ? 'Un reporte' : caso.reportes.length + ' reportes' }}</span>
-                de una sola persona
+                <span>{{ i18n.t('reportes.deUnaSola', { cuenta: caso.reportes.length }) }}</span>
               }
               @if (caso.sinRevisar > 0) {
-                · <span class="caso__pendiente">{{ caso.sinRevisar }} sin revisar</span>
+                · <span class="caso__pendiente">{{ i18n.t('reportes.sinRevisar', { cuenta: caso.sinRevisar }) }}</span>
               }
             </p>
           </header>
@@ -63,7 +58,7 @@
                   <!-- La etiqueta, no la clave del enum: aquí salía
                        "COMPORTAMIENTO_INAPROPIADO". -->
                   <span class="parte__motivo">{{ etiqueta(r.motivo) }}</span>
-                  <span class="parte__de">de {{ r.reportadorNombre }}</span>
+                  <span class="parte__de">{{ i18n.t('reportes.de', { nombre: r.reportadorNombre }) }}</span>
                   <time class="parte__cuando">{{ cuando(r.creadoEn) }}</time>
                 </div>
 
@@ -73,10 +68,10 @@
 
                 <div class="parte__accion">
                   @if (estaRevisado(r)) {
-                    <span class="parte__visto">Visto</span>
+                    <span class="parte__visto">{{ i18n.t('reportes.visto') }}</span>
                   } @else {
                     <button class="btn btn--neutro btn--pequeno" (click)="marcarVisto(r)">
-                      Marcar visto
+                      {{ i18n.t('reportes.marcarVisto') }}
                     </button>
                   }
                 </div>
@@ -88,6 +83,6 @@
     }
 
   } @else {
-    <p class="reportes__nota">Cargando…</p>
+    <p class="reportes__nota">{{ i18n.t('comun.cargando') }}</p>
   }
 </div>

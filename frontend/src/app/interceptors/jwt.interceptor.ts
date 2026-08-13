@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { PerfilEstadoService } from '../services/perfil-estado.service';
+import { IdiomaService } from '../services/idioma.service';
 
 /**
  * Rutas donde un 401 o un 403 significan "esa contraseña no es", no "se te ha
@@ -59,8 +60,19 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(AuthService);
   const perfilEstado = inject(PerfilEstadoService);
+  const idioma = inject(IdiomaService);
 
-  const cabeceras: Record<string, string> = {};
+  /*
+   * El idioma elegido viaja en cada peticion. Buena parte de la prosa de esta
+   * aplicacion la escribe el backend —por que encajais, que te falta, cuanto
+   * levantais— y sin decirle en que idioma se le pregunta, la mitad de la
+   * pantalla se quedaria en español con la interfaz en ingles.
+   *
+   * Se manda la eleccion explicita y no la del navegador: si alguien con el
+   * sistema en ingles ha pulsado "español", eso es lo que quiere leer, y
+   * Accept-Language por defecto diria lo contrario.
+   */
+  const cabeceras: Record<string, string> = { 'Accept-Language': idioma.idioma() };
 
   const csrf = galleta('XSRF-TOKEN');
   if (csrf && !SOLO_LEEN.includes(req.method)) {
