@@ -1,61 +1,90 @@
 <div class="reportes">
 
   <header class="reportes__cabecera">
-    <h1 class="reportes__titulo">Reportes</h1>
-    <p class="reportes__texto">
-      Lo que la gente ha reportado sobre otras personas. Reportar no bloquea
-      por sí solo: quien reporta puede seguir viendo la conversación.
-    </p>
+    <div>
+      <h1 class="reportes__titulo">Reportes</h1>
+      <p class="reportes__texto">
+        Lo que la gente ha reportado sobre otras personas, agrupado por quién ha
+        sido reportado. Reportar no bloquea por sí solo: quien reporta puede
+        seguir viendo la conversación.
+      </p>
+    </div>
+
+    <!-- Cuántos esperan que alguien los mire. Es el único número de la pantalla
+         que dice si queda trabajo. -->
+    @if (sinRevisar() > 0) {
+      <span class="reportes__pendientes">{{ sinRevisar() }} sin revisar</span>
+    }
   </header>
 
   @if (sinAcceso()) {
     <p class="aviso-inline" role="alert">No tienes acceso a esta pantalla.</p>
   } @else if (error()) {
     <p class="aviso-inline aviso-inline--error" role="alert">No se han podido cargar los reportes.</p>
-  } @else if (reportes(); as lista) {
+  } @else if (reportes()) {
 
-    @if (lista.length === 0) {
+    @if (casos().length === 0) {
       <p class="reportes__nota">No hay ningún reporte todavía.</p>
     } @else {
-      <table class="tabla">
-        <caption class="visually-hidden">Reportes enviados por las personas usuarias</caption>
-        <thead>
-          <tr>
-            <th scope="col">Cuándo</th>
-            <th scope="col">Quién reporta</th>
-            <th scope="col">A quién</th>
-            <th scope="col">Motivo</th>
-            <th scope="col">Detalle</th>
-            <th scope="col">Visto</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (r of lista; track r.id) {
-            <tr [class.tabla__fila--revisada]="estaRevisado(r)">
-              <td>{{ cuando(r.creadoEn) }}</td>
-              <td>
-                {{ r.reportadorNombre }}
-                <span class="tabla__email">{{ r.reportadorEmail }}</span>
-              </td>
-              <td>
-                {{ r.reportadoNombre }}
-                <span class="tabla__email">{{ r.reportadoEmail }}</span>
-              </td>
-              <td>{{ r.motivo }}</td>
-              <td>{{ r.detalle || '—' }}</td>
-              <td>
-                @if (estaRevisado(r)) {
-                  <span class="tabla__visto">Visto</span>
-                } @else {
-                  <button class="btn btn--neutro btn--pequeno" (click)="marcarVisto(r)">
-                    Marcar visto
-                  </button>
+      @for (caso of casos(); track caso.id) {
+        <!-- Un caso, no una fila: todo lo que ha recibido la misma persona. -->
+        <section class="caso" [class.caso--revisado]="caso.sinRevisar === 0">
+
+          <header class="caso__cabecera">
+            <div class="caso__quien">
+              <!-- Enlace al perfil: antes de decidir nada sobre alguien hay que
+                   poder mirar quién es, y estaba solo el nombre en texto. -->
+              <a class="caso__nombre" [routerLink]="['/u', caso.id]">{{ caso.nombre }}</a>
+              <span class="caso__email">{{ caso.email }}</span>
+            </div>
+
+            <!-- La cifra que importa no es cuántos reportes hay, es cuánta
+                 gente distinta los ha puesto: tres quejas de la misma persona
+                 pueden ser un conflicto entre dos, y tres quejas de tres
+                 personas son un patrón. -->
+            <p class="caso__resumen">
+              @if (caso.denunciantes > 1) {
+                <strong class="caso__patron">{{ caso.denunciantes }} personas distintas</strong>
+                lo han reportado
+              } @else {
+                <span>{{ caso.reportes.length === 1 ? 'Un reporte' : caso.reportes.length + ' reportes' }}</span>
+                de una sola persona
+              }
+              @if (caso.sinRevisar > 0) {
+                · <span class="caso__pendiente">{{ caso.sinRevisar }} sin revisar</span>
+              }
+            </p>
+          </header>
+
+          <ul class="casos">
+            @for (r of caso.reportes; track r.id) {
+              <li class="parte" [class.parte--revisada]="estaRevisado(r)">
+                <div class="parte__meta">
+                  <!-- La etiqueta, no la clave del enum: aquí salía
+                       "COMPORTAMIENTO_INAPROPIADO". -->
+                  <span class="parte__motivo">{{ etiqueta(r.motivo) }}</span>
+                  <span class="parte__de">de {{ r.reportadorNombre }}</span>
+                  <time class="parte__cuando">{{ cuando(r.creadoEn) }}</time>
+                </div>
+
+                @if (r.detalle) {
+                  <p class="parte__detalle">«{{ r.detalle }}»</p>
                 }
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+
+                <div class="parte__accion">
+                  @if (estaRevisado(r)) {
+                    <span class="parte__visto">Visto</span>
+                  } @else {
+                    <button class="btn btn--neutro btn--pequeno" (click)="marcarVisto(r)">
+                      Marcar visto
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
     }
 
   } @else {

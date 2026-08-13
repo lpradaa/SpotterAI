@@ -13,6 +13,7 @@ import { RejillaSemana } from '../rejilla-semana/rejilla-semana';
 import { Avatar } from '../avatar/avatar';
 import { Carga } from '../carga/carga';
 import { tramoDe } from '../../utils/compatibilidad';
+import { MOTIVOS_DE_REPORTE } from '../../utils/motivos-de-reporte';
 import { Desglose } from '../desglose/desglose';
 
 /** Un hueco del perfil propio, tal y como lo manda /api/usuarios/perfil. */
@@ -323,13 +324,10 @@ export class PerfilPublicoComponent {
   detalleReporte = '';
   reporteEnviado = signal(false);
 
-  protected readonly motivosDeReporte: { valor: string; etiqueta: string }[] = [
-    { valor: 'COMPORTAMIENTO_INAPROPIADO', etiqueta: 'Comportamiento inapropiado' },
-    { valor: 'PERFIL_FALSO', etiqueta: 'Perfil falso o suplantación' },
-    { valor: 'ACOSO', etiqueta: 'Acoso o mensajes no deseados' },
-    { valor: 'SPAM', etiqueta: 'Spam o publicidad' },
-    { valor: 'OTRO', etiqueta: 'Otro motivo' },
-  ];
+  /* La lista se ha ido a utils/motivos-de-reporte: la pantalla de moderación
+     necesita las mismas etiquetas para no enseñar el valor crudo del enum, y
+     dos copias de lo mismo divergen a la primera corrección. */
+  protected readonly motivosDeReporte = MOTIVOS_DE_REPORTE;
 
   reportar(otroId: number): void {
     const motivo = this.motivoReporte();

@@ -10,7 +10,15 @@
   padding: $space-md $space-sm;
   display: flex;
   flex-direction: column;
-  gap: $space-md;
+  gap: $space-sm;
+}
+
+.reportes__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-sm;
+  flex-wrap: wrap;
 }
 
 .reportes__titulo {
@@ -24,6 +32,21 @@
   font-size: $text-sm;
   color: var(--sa-texto-suave);
   line-height: $leading-normal;
+  max-width: 60ch;
+}
+
+/* Cuanto trabajo queda. Es un contador de bandeja, no una magnitud de la escala
+   de compatibilidad, asi que no usa .marcador ni sus tramos. */
+.reportes__pendientes {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: $radius-full;
+  background: var(--sa-acento-suave);
+  color: var(--sa-acento-texto);
+  font-family: $font-display;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  white-space: nowrap;
 }
 
 .reportes__nota {
@@ -32,48 +55,141 @@
   color: var(--sa-texto-tenue);
 }
 
-/* Scroll propio, no de la página: cinco columnas no caben a 375 px. */
-.tabla {
-  display: block;
-  overflow-x: auto;
-  width: 100%;
-  border-collapse: collapse;
-  font-size: $text-sm;
-
-  th,
-  td {
-    padding: 10px 12px;
-    text-align: left;
-    vertical-align: top;
-    border-bottom: 1px solid var(--sa-borde);
-  }
-
-  thead th {
-    font-family: $font-display;
-    font-size: $text-xs;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--sa-texto-suave);
-    white-space: nowrap;
-  }
+/* ===================== Un caso =====================
+   Todo lo que ha recibido la misma persona. La pantalla era una tabla plana
+   ordenada por fecha, y con siete reportes ya se veia el problema: los tres de
+   la misma persona salian en filas separadas por otras dos, asi que quien
+   modera tenia que leer una columna y contar de memoria. */
+.caso {
+  padding: $space-sm;
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+  @include superficie;
 }
 
-.tabla__email {
-  display: block;
+/* Ya mirado del todo: se apaga, no desaparece. Un reporte revisado sigue siendo
+   informacion —sobre todo si la misma persona acumula varios— y esconderlo
+   convertiria esto en una bandeja de tareas, que es otra cosa. */
+.caso--revisado {
+  opacity: 0.62;
+}
+
+.caso__cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-xs;
+  flex-wrap: wrap;
+  padding-bottom: $space-xs;
+  border-bottom: 1px solid var(--sa-borde);
+}
+
+.caso__quien {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.caso__nombre {
+  font-family: $font-display;
+  font-size: $text-lg;
+  font-weight: $font-semibold;
+  color: var(--sa-texto);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+.caso__email {
   font-size: $text-xs;
   color: var(--sa-texto-tenue);
 }
 
-/* Lo ya mirado se apaga en vez de desaparecer: un reporte revisado sigue siendo
-   informacion —sobre todo si la misma persona acumula varios— y esconderlo
-   convertiria la lista en una bandeja de tareas, que es otra cosa. */
-.tabla__fila--revisada {
-  color: var(--sa-texto-tenue);
-
-  .tabla__email { opacity: 0.6; }
+.caso__resumen {
+  margin: 0;
+  font-size: $text-xs;
+  color: var(--sa-texto-suave);
+  text-align: right;
 }
 
-.tabla__visto {
+/* Varias personas distintas. Es la unica cosa de esta pantalla que separa un
+   conflicto entre dos de un patron, asi que es lo unico que va marcado. */
+.caso__patron {
+  color: var(--sa-error);
+  font-weight: $font-semibold;
+}
+
+.caso__pendiente {
+  color: var(--sa-acento-texto);
+  font-weight: $font-semibold;
+}
+
+/* ===================== Un reporte suelto ===================== */
+.casos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.parte {
+  display: grid;
+  // El texto a la izquierda y la accion a la derecha, con el detalle debajo
+  // ocupando las dos columnas: en una sola fila un detalle de 500 caracteres
+  // empujaba el boton fuera. Es el mismo reparto que .hueco en la ficha.
+  grid-template-columns: 1fr auto;
+  gap: 2px $space-xs;
+  padding: $space-xs 0;
+
+  & + & { border-top: 1px solid var(--sa-borde); }
+}
+
+.parte--revisada {
+  color: var(--sa-texto-tenue);
+}
+
+.parte__meta {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.parte__motivo {
+  font-family: $font-display;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  color: inherit;
+}
+
+.parte__de,
+.parte__cuando {
+  font-size: $text-xs;
+  color: var(--sa-texto-tenue);
+}
+
+/* Lo que escribio quien reporta. Iba en una columna de 105 px mientras "Motivo"
+   —una palabra— se llevaba 263, con lo que un detalle de dos frases se partia en
+   ocho lineas y estiraba la fila a 223 px de alto. Aqui ocupa el ancho entero. */
+.parte__detalle {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: $text-sm;
+  line-height: $leading-normal;
+  color: var(--sa-texto-suave);
+  max-width: 70ch;
+}
+
+.parte__accion {
+  grid-row: 1;
+  grid-column: 2;
+  align-self: start;
+}
+
+.parte__visto {
   font-size: $text-2xs;
   text-transform: uppercase;
   letter-spacing: $tracking-wide;
