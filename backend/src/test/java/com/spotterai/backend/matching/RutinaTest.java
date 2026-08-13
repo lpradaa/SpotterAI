@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -70,7 +71,7 @@ class RutinaTest {
     void todasTienenExplicacion() {
         for (Rutina mia : Rutina.values()) {
             for (Rutina suya : Rutina.values()) {
-                String frase = Rutina.describir(mia, suya);
+                String frase = TextosDePrueba.nuevo().de(Rutina.describir(mia, suya));
                 assertNotNull(frase);
                 assertFalse(frase.isBlank(), "%s contra %s se queda sin frase".formatted(mia, suya));
             }

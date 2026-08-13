@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Usuario;
@@ -118,7 +119,7 @@ class DesplazarseAOtroGimnasioTest {
         // es lo que significa coincidir en horario, y eso se pondera en el otro.
         assertEquals(0, g.puntos());
         assertTrue(g.aplicable());
-        assertTrue(g.detalle().contains("puede desplazarse"));
+        assertTrue(TextosDePrueba.nuevo().de(g.detalle()).contains("puede desplazarse"));
     }
 
     @Test
@@ -136,7 +137,7 @@ class DesplazarseAOtroGimnasioTest {
     void laExplicacionLoCuenta() {
         FactorCompatibilidad h = factor(perfil(mcfit, true), perfil(basicFit, false), "horario");
 
-        assertTrue(h.detalle().contains("gimnasios distintos"));
-        assertTrue(h.detalle().contains("desplazarse"));
+        assertTrue(TextosDePrueba.nuevo().de(h.detalle()).contains("gimnasios distintos"));
+        assertTrue(TextosDePrueba.nuevo().de(h.detalle()).contains("desplazarse"));
     }
 }

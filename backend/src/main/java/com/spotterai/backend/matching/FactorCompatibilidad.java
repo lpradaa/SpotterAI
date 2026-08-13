@@ -1,5 +1,7 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.Mensaje;
+
 /**
  * Un factor individual del calculo de compatibilidad.
  *
@@ -17,18 +19,22 @@ package com.spotterai.backend.matching;
  * @param puntos    puntos obtenidos, ya sobre el peso efectivo
  * @param puntosMax peso efectivo de este factor tras el reparto
  * @param aplicable si habia datos suficientes en ambos perfiles para evaluarlo
- * @param detalle   explicacion en lenguaje natural
+ * @param detalle   la explicacion, sin redactar todavia: clave de catalogo y sus
+ *                  argumentos. Era una cadena en español escrita aqui mismo, y
+ *                  esa es la razon por la que la mitad de la pantalla no podia
+ *                  cambiar de idioma. La frase se compone en el borde, con el
+ *                  idioma de quien pregunta.
  */
 public record FactorCompatibilidad(
-        String nombre, double puntos, double puntosMax, boolean aplicable, String detalle) {
+        String nombre, double puntos, double puntosMax, boolean aplicable, Mensaje detalle) {
 
     /** Factor evaluado con normalidad. */
-    public static FactorCompatibilidad evaluado(String nombre, double puntos, double puntosMax, String detalle) {
+    public static FactorCompatibilidad evaluado(String nombre, double puntos, double puntosMax, Mensaje detalle) {
         return new FactorCompatibilidad(nombre, puntos, puntosMax, true, detalle);
     }
 
     /** Factor que no se ha podido evaluar por falta de datos. No resta. */
-    public static FactorCompatibilidad sinDatos(String nombre, String detalle) {
+    public static FactorCompatibilidad sinDatos(String nombre, Mensaje detalle) {
         return new FactorCompatibilidad(nombre, 0, 0, false, detalle);
     }
 

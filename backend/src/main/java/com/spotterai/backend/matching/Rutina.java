@@ -1,5 +1,7 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.Mensaje;
+
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
@@ -72,21 +74,31 @@ public enum Rutina {
     }
 
     /** Frase para la explicacion del match. */
-    public static String describir(Rutina mia, Rutina suya) {
+    public static Mensaje describir(Rutina mia, Rutina suya) {
         if (mia == suya) {
             return mia == LIBRE
-                    ? "Ninguno de los dos sigue una rutina fija: os podéis amoldar"
-                    : "Seguís la misma rutina (" + mia.getNombre().toLowerCase(Locale.ROOT) + ")";
+                    ? Mensaje.de("rutina.ambosLibres")
+                    : Mensaje.de("rutina.misma", mia.nombre());
         }
         if (mia == LIBRE || suya == LIBRE) {
             Rutina laFija = mia == LIBRE ? suya : mia;
-            return "Uno sigue " + laFija.getNombre().toLowerCase(Locale.ROOT)
-                    + " y el otro se adapta";
+            return Mensaje.de("rutina.unoSeAdapta", laFija.nombre());
         }
         if (mia.esDividida() && suya.esDividida()) {
-            return "Rutinas distintas (%s y %s), pero varios días coinciden"
-                    .formatted(mia.getNombre(), suya.getNombre());
+            return Mensaje.de("rutina.distintasPeroCoinciden", mia.nombre(), suya.nombre());
         }
-        return "Rutinas difíciles de compartir: %s y %s".formatted(mia.getNombre(), suya.getNombre());
+        return Mensaje.de("rutina.dificiles", mia.nombre(), suya.nombre());
+    }
+
+    /**
+     * El nombre de la rutina, sin redactar.
+     *
+     * <p>{@code getNombre()} sigue existiendo y sigue devolviendo el español: lo
+     * usan el DTO del perfil y el sembrador. Lo que cambia es que las frases del
+     * motor ya no lo meten dentro tal cual, porque entonces la frase se traducia
+     * y la rutina de dentro no.
+     */
+    public Mensaje nombre() {
+        return Mensaje.de("rutina." + name());
     }
 }

@@ -1,5 +1,7 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.Mensaje;
+
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Levantamiento;
 import com.spotterai.backend.models.Usuario;
@@ -344,12 +346,12 @@ public final class CalculadoraCompatibilidad {
         boolean faltanDatos = mios == null || mios.isEmpty() || suyos == null || suyos.isEmpty();
         if (faltanDatos) {
             return FactorCompatibilidad.sinDatos("horario",
-                    "Faltan los horarios de alguno de los dos perfiles");
+                    Mensaje.de("factor.horario.sinDatos"));
         }
 
         if (!solape.hayCoincidencia()) {
             return FactorCompatibilidad.evaluado("horario", 0, PESO_HORARIO,
-                    "Vuestros horarios no coinciden en ningún momento de la semana");
+                    Mensaje.de("factor.horario.sinSolape"));
         }
 
         double ratioTiempo = Math.min(1.0, solape.minutosEfectivos() / MINUTOS_SOLAPE_IDEAL);
@@ -384,32 +386,32 @@ public final class CalculadoraCompatibilidad {
         return 0;
     }
 
-    private static String describirSolape(SolapeHorario solape, Gimnasios gimnasios) {
+    private static Mensaje describirSolape(SolapeHorario solape, Gimnasios gimnasios) {
         // Lo primero que hay que decir cuando los gimnasios no son el mismo,
         // porque cambia el significado de todo lo demas.
         if (gimnasios == Gimnasios.DISTINTOS) {
-            return "Coincidiriais %s a la semana, pero entrenais en gimnasios distintos"
-                    .formatted(formatearDuracion(solape.minutosSemanales()));
+            return Mensaje.de("factor.horario.gimnasiosDistintos",
+                    duracion(solape.minutosSemanales()));
         }
 
         // La misma frase, pero con la salida: el dato que la cambia lo ha puesto
         // una persona, no lo ha deducido nadie.
         if (gimnasios == Gimnasios.DISTINTOS_PERO_ALGUIEN_SE_MUEVE) {
-            return ("Coincidiriais %s a la semana en gimnasios distintos, "
-                    + "pero alguno de los dos puede desplazarse")
-                    .formatted(formatearDuracion(solape.minutosSemanales()));
+            return Mensaje.de("factor.horario.alguienSeMueve",
+                    duracion(solape.minutosSemanales()));
         }
 
         if (solape.hayAncla()) {
-            String dias = solape.diasAncla() == 1 ? "un día" : solape.diasAncla() + " días";
+            Mensaje dias = solape.diasAncla() == 1
+                    ? Mensaje.de("comun.dias.uno")
+                    : Mensaje.de("comun.dias.varios", solape.diasAncla());
             // Los dias de ancla, no todos: enumerar aqui solape.dias() hacia que
             // la frase se contradijera sola ("vais siempre 2 dias" y detras tres
             // dias entre parentesis).
-            return "Los dos vais siempre %s a la misma hora (%s)".formatted(
-                    dias, enumerar(solape.diasDeAncla()));
+            return Mensaje.de("factor.horario.ambosFijos", dias, enumerar(solape.diasDeAncla()));
         }
-        return "Coincidís %s a la semana en %s".formatted(
-                formatearDuracion(solape.minutosSemanales()), enumerar(solape.dias()));
+        return Mensaje.de("factor.horario.solape",
+                duracion(solape.minutosSemanales()), enumerar(solape.dias()));
     }
 
     /**
@@ -426,7 +428,7 @@ public final class CalculadoraCompatibilidad {
             // Sin ejercicios en comun no es que seais incompatibles: es que no
             // hay nada que comparar, y eso no debe restar.
             return FactorCompatibilidad.sinDatos("fuerza",
-                    "No hay levantamientos en común que comparar");
+                    Mensaje.de("factor.fuerza.sinDatos"));
         }
 
         return FactorCompatibilidad.evaluado("fuerza",
@@ -447,7 +449,7 @@ public final class CalculadoraCompatibilidad {
     private static FactorCompatibilidad factorConstancia(Constancia mia, Constancia suya) {
         if (!mia.tieneHistorial() || !suya.tieneHistorial()) {
             return FactorCompatibilidad.sinDatos("constancia",
-                    "Alguno de los dos no ha registrado entrenamientos todavía");
+                    Mensaje.de("factor.constancia.sinDatos"));
         }
 
         double ritmo = Constancia.deLaPareja(mia, suya);
@@ -469,7 +471,7 @@ public final class CalculadoraCompatibilidad {
 
         if (mia.isEmpty() || suya.isEmpty()) {
             return FactorCompatibilidad.sinDatos("rutina",
-                    "Falta la rutina de alguno de los dos perfiles");
+                    Mensaje.de("factor.rutina.sinDatos"));
         }
 
         double afinidad = Rutina.afinidad(mia.get(), suya.get());
@@ -488,18 +490,19 @@ public final class CalculadoraCompatibilidad {
 
         if (a == null || b == null) {
             return FactorCompatibilidad.sinDatos("nivel",
-                    "Falta el nivel de alguno de los dos perfiles");
+                    Mensaje.de("factor.nivel.sinDatos"));
         }
 
         int distancia = Math.abs(a - b);
         return switch (distancia) {
             case 0 -> FactorCompatibilidad.evaluado("nivel", PESO_NIVEL, PESO_NIVEL,
-                    "Los dos entrenáis a nivel " + suNivel.toLowerCase(Locale.ROOT));
+                    Mensaje.de("factor.nivel.igual", nombreDeNivel(claveB)));
             case 1 -> FactorCompatibilidad.evaluado("nivel", PESO_NIVEL / 2, PESO_NIVEL,
-                    "Estáis en niveles contiguos (%s y %s), asumible ajustando las cargas"
-                            .formatted(miNivel, suNivel));
+                    Mensaje.de("factor.nivel.contiguos",
+                            nombreDeNivel(claveA), nombreDeNivel(claveB)));
             default -> FactorCompatibilidad.evaluado("nivel", 0, PESO_NIVEL,
-                    "Hay dos escalones de diferencia entre %s y %s".formatted(miNivel, suNivel));
+                    Mensaje.de("factor.nivel.lejanos",
+                            nombreDeNivel(claveA), nombreDeNivel(claveB)));
         };
     }
 
@@ -509,19 +512,21 @@ public final class CalculadoraCompatibilidad {
 
         if (a == null || b == null) {
             return FactorCompatibilidad.sinDatos("objetivo",
-                    "Falta el objetivo de alguno de los dos perfiles");
+                    Mensaje.de("factor.objetivo.sinDatos"));
         }
         if (a.equals(b)) {
             return FactorCompatibilidad.evaluado("objetivo", PESO_OBJETIVO, PESO_OBJETIVO,
-                    "Buscáis lo mismo: " + suObjetivo.toLowerCase(Locale.ROOT));
+                    Mensaje.de("factor.objetivo.igual", nombreDeObjetivo(b)));
         }
         boolean afines = OBJETIVOS_AFINES.stream().anyMatch(g -> g.contains(a) && g.contains(b));
         if (afines) {
             return FactorCompatibilidad.evaluado("objetivo", PESO_OBJETIVO / 2, PESO_OBJETIVO,
-                    "Objetivos distintos pero compatibles: %s y %s".formatted(miObjetivo, suObjetivo));
+                    Mensaje.de("factor.objetivo.compatibles",
+                            nombreDeObjetivo(a), nombreDeObjetivo(b)));
         }
         return FactorCompatibilidad.evaluado("objetivo", 0, PESO_OBJETIVO,
-                "Entrenáis para cosas distintas: %s frente a %s".formatted(miObjetivo, suObjetivo));
+                Mensaje.de("factor.objetivo.distintos",
+                        nombreDeObjetivo(a), nombreDeObjetivo(b)));
     }
 
     private static FactorCompatibilidad factorGimnasio(Usuario yo, Usuario otro) {
@@ -530,26 +535,26 @@ public final class CalculadoraCompatibilidad {
 
         if (mio == null || suyo == null) {
             return FactorCompatibilidad.sinDatos("gimnasio",
-                    "Falta el gimnasio de alguno de los dos perfiles");
+                    Mensaje.de("factor.gimnasio.sinDatos"));
         }
         if (mio.equals(suyo)) {
             return FactorCompatibilidad.evaluado("gimnasio", PESO_GIMNASIO, PESO_GIMNASIO,
-                    "Entrenáis en el mismo gimnasio: " + otro.getGimnasio().getNombre());
+                    Mensaje.de("factor.gimnasio.mismo", otro.getGimnasio().getNombre()));
         }
         // Sigue siendo cero aunque alguien se desplace: no comparten gimnasio, y
         // estar dispuesto a viajar no cambia ese hecho. Lo que cambia es lo que
         // significa coincidir en horario, y eso se pondera en el factor horario.
         boolean algunoSeMueve = yo.isPuedoDesplazarme() || otro.isPuedoDesplazarme();
         return FactorCompatibilidad.evaluado("gimnasio", 0, PESO_GIMNASIO,
-                algunoSeMueve
-                        ? "Entrenáis en gimnasios distintos, aunque alguno de los dos puede desplazarse"
-                        : "Entrenáis en gimnasios distintos");
+                Mensaje.de(algunoSeMueve
+                        ? "factor.gimnasio.distintosSeMueve"
+                        : "factor.gimnasio.distintos"));
     }
 
     private static FactorCompatibilidad factorEdad(Integer miEdad, Integer suEdad) {
         if (miEdad == null || suEdad == null) {
             return FactorCompatibilidad.sinDatos("edad",
-                    "Falta la edad de alguno de los dos perfiles");
+                    Mensaje.de("factor.edad.sinDatos"));
         }
 
         int diferencia = Math.abs(miEdad - suEdad);
@@ -559,9 +564,9 @@ public final class CalculadoraCompatibilidad {
         else if (diferencia <= 12) puntos = PESO_EDAD * 0.2;
         else puntos = 0;
 
-        String detalle = diferencia <= 3
-                ? "Tenéis prácticamente la misma edad"
-                : "Os lleváis %d años".formatted(diferencia);
+        Mensaje detalle = diferencia <= 3
+                ? Mensaje.de("factor.edad.misma")
+                : Mensaje.de("factor.edad.diferencia", diferencia);
         return FactorCompatibilidad.evaluado("edad", puntos, PESO_EDAD, detalle);
     }
 
@@ -569,19 +574,83 @@ public final class CalculadoraCompatibilidad {
         return valor == null || valor.isBlank() ? null : valor.trim().toLowerCase(Locale.ROOT);
     }
 
-    static String formatearDuracion(int minutos) {
+    /**
+     * Una duracion, sin redactar.
+     *
+     * <p>Devolvia una cadena —"2 horas", "1h 30min"— y esa cadena se metia dentro
+     * de otra frase. Traducir solo la frase de fuera dejaba "You would overlap
+     * 2 horas a week", que es el fallo tipico al traducir texto compuesto.
+     */
+    static Mensaje duracion(int minutos) {
         int horas = minutos / 60;
         int resto = minutos % 60;
-        if (horas == 0) return resto + " min";
-        if (resto == 0) return horas == 1 ? "1 hora" : horas + " horas";
-        return "%dh %dmin".formatted(horas, resto);
+        if (horas == 0) return Mensaje.de("duracion.minutos", resto);
+        if (resto == 0) return horas == 1 ? Mensaje.de("duracion.hora") : Mensaje.de("duracion.horas", horas);
+        return Mensaje.de("duracion.horasYMinutos", horas, resto);
     }
 
-    static String enumerar(List<String> elementos) {
-        if (elementos.isEmpty()) return "";
-        if (elementos.size() == 1) return elementos.get(0);
-        String ultimo = elementos.get(elementos.size() - 1);
-        String previos = String.join(", ", elementos.subList(0, elementos.size() - 1));
-        return previos + " y " + ultimo;
+    /**
+     * Los dias, enumerados y traducidos.
+     *
+     * <p>Se encadenan mensajes en vez de unir cadenas con ", " y " y ": la
+     * conjuncion final tambien cambia de idioma, y aqui no sabemos en cual se va
+     * a leer esto. Tres dias salen como coma(coma?no: coma(d1, d2) mas dos(.., d3)),
+     * es decir "Lunes, Martes y Miercoles" y "Monday, Tuesday and Wednesday" con
+     * la misma construccion.
+     */
+    static Mensaje enumerar(List<String> elementos) {
+        if (elementos.isEmpty()) return Mensaje.de("lista.vacia");
+        if (elementos.size() == 1) return nombreDeDia(elementos.get(0));
+
+        Mensaje acumulado = nombreDeDia(elementos.get(0));
+        for (int i = 1; i < elementos.size() - 1; i++) {
+            acumulado = Mensaje.de("lista.coma", acumulado, nombreDeDia(elementos.get(i)));
+        }
+        return Mensaje.de("lista.dos", acumulado, nombreDeDia(elementos.get(elementos.size() - 1)));
+    }
+
+    /**
+     * El nombre de un dia, que en la base esta guardado en español.
+     *
+     * <p>Los horarios se guardaron con "Lunes", "Miercoles"… de cuando no habia
+     * mas que un idioma. Se normaliza a la clave del catalogo en vez de migrar la
+     * columna: cambiar el dato guardado obligaria a tocar tambien todo lo que lo
+     * compara, y lo que hace falta traducir es como se lee, no como se guarda.
+     */
+    private static Mensaje nombreDeDia(String dia) {
+        String clave = sinAcentos(dia);
+        return CLAVES_DE_DIA.contains(clave) ? Mensaje.de("dia." + clave) : Mensaje.de("lista.tal_cual", dia);
+    }
+
+    /** Igual que los dias: guardado en español, se normaliza para buscarlo. */
+    private static Mensaje nombreDeNivel(String claveNormalizada) {
+        return claveNormalizada != null && NIVELES_CONOCIDOS.contains(claveNormalizada)
+                ? Mensaje.de("nivel." + claveNormalizada)
+                : Mensaje.de("lista.tal_cual", claveNormalizada);
+    }
+
+    /** El espacio de "perdida de peso" pasa a guion bajo: en un .properties parte la clave. */
+    private static Mensaje nombreDeObjetivo(String claveNormalizada) {
+        if (claveNormalizada == null) return Mensaje.de("lista.tal_cual", "");
+        String clave = claveNormalizada.replace(' ', '_');
+        return OBJETIVOS_CONOCIDOS.contains(clave)
+                ? Mensaje.de("objetivo." + clave)
+                : Mensaje.de("lista.tal_cual", claveNormalizada);
+    }
+
+    private static final Set<String> CLAVES_DE_DIA = Set.of(
+            "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO");
+
+    private static final Set<String> NIVELES_CONOCIDOS =
+            Set.of("principiante", "intermedio", "avanzado");
+
+    private static final Set<String> OBJETIVOS_CONOCIDOS =
+            Set.of("hipertrofia", "fuerza", "perdida_de_peso", "resistencia");
+
+    /** "Miercoles" y "Miercoles" tienen que dar la misma clave. */
+    private static String sinAcentos(String valor) {
+        if (valor == null) return "";
+        String descompuesto = java.text.Normalizer.normalize(valor.trim(), java.text.Normalizer.Form.NFD);
+        return descompuesto.replaceAll("\\p{M}", "").toUpperCase(Locale.ROOT);
     }
 }

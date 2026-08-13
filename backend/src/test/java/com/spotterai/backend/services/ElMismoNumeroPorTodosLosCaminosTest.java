@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.dtos.ConteoPorUsuario;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
 import com.spotterai.backend.matching.Ejercicio;
@@ -93,12 +94,13 @@ class ElMismoNumeroPorTodosLosCaminosTest {
                 Mockito.mock(GimnasioRepository.class),
                 solicitudes,
                 disponibilidades,
-                new ExplicadorCompatibilidad(),
+                new ExplicadorCompatibilidad(TextosDePrueba.nuevo()),
                 Mockito.mock(HitoRepository.class),
                 entrenamientos,
                 levantamientos,
                 Mockito.mock(SesionRepository.class),
                 Mockito.mock(BloqueoRepository.class),
+                TextosDePrueba.nuevo(),
                 Clock.systemDefaultZone());
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));

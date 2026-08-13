@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.dtos.ActividadDTO;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.models.Entrenamiento;
@@ -86,12 +87,13 @@ class ActividadDeCompanerosTest {
                 Mockito.mock(GimnasioRepository.class),
                 solicitudRepository,
                 Mockito.mock(DisponibilidadRepository.class),
-                new ExplicadorCompatibilidad(),
+                new ExplicadorCompatibilidad(TextosDePrueba.nuevo()),
                 hitoRepository,
                 entrenamientoRepository,
                 Mockito.mock(LevantamientoRepository.class),
                 Mockito.mock(SesionRepository.class),
                 Mockito.mock(BloqueoRepository.class),
+                TextosDePrueba.nuevo(),
                 congelado);
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));

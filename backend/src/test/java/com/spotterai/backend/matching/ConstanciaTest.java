@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -80,8 +81,8 @@ class ConstanciaTest {
     void todasSeExplican() {
         for (int mios = 0; mios <= 14; mios++) {
             for (int suyos = 0; suyos <= 14; suyos++) {
-                String frase = Constancia.describir(
-                        new Constancia(mios, true), new Constancia(suyos, true));
+                String frase = TextosDePrueba.nuevo().de(Constancia.describir(
+                        new Constancia(mios, true), new Constancia(suyos, true)));
                 assertNotNull(frase);
                 assertFalse(frase.isBlank(), "%d y %d se quedan sin frase".formatted(mios, suyos));
             }
@@ -91,7 +92,7 @@ class ConstanciaTest {
     @Test
     @DisplayName("La frase habla de la pareja, no del que más entrena")
     void laFraseNoAdorna() {
-        String frase = Constancia.describir(new Constancia(12, true), new Constancia(0, true));
+        String frase = TextosDePrueba.nuevo().de(Constancia.describir(new Constancia(12, true), new Constancia(0, true)));
 
         // Uno va tres veces por semana y el otro no va: decir "los dos entrenáis
         // con mucha regularidad" sería quedarse con la mitad buena del dato.

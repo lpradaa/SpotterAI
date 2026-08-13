@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Usuario;
@@ -234,10 +235,10 @@ class SolapeConCompromisoTest {
         assertEquals(List.of("Lunes", "Miércoles"), solape.diasDeAncla());
         assertEquals(3, solape.dias().size(), "El viernes sigue contando como solape");
 
-        String frase = calcularSoloConHorarios(
+        String frase = TextosDePrueba.nuevo().de(calcularSoloConHorarios(
                 usuarioTipo(), mios, usuarioTipo(), suyos).factores().stream()
                 .filter(f -> f.nombre().equals("horario"))
-                .findFirst().orElseThrow().detalle();
+                .findFirst().orElseThrow().detalle());
 
         assertTrue(frase.contains("2 días"), frase);
         assertFalse(frase.contains("Viernes"), "No se va siempre el viernes: " + frase);
@@ -307,10 +308,10 @@ class SolapeConCompromisoTest {
         lejos.setNombre("Basic-Fit Chamberi");
         otroSitio.setGimnasio(lejos);
 
-        String frase = calcularSoloConHorarios(usuarioTipo(), horario, otroSitio, horario)
+        String frase = TextosDePrueba.nuevo().de(calcularSoloConHorarios(usuarioTipo(), horario, otroSitio, horario)
                 .factores().stream()
                 .filter(f -> f.nombre().equals("horario"))
-                .findFirst().orElseThrow().detalle();
+                .findFirst().orElseThrow().detalle());
 
         // Decia "los dos vais siempre un dia a la misma hora (Lunes)", que de una
         // pareja en gimnasios distintos es falso en lo unico que importa.

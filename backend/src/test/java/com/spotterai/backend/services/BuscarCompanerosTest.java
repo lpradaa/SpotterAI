@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.dtos.EstadoConCompanero;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
@@ -59,12 +60,13 @@ class BuscarCompanerosTest {
                 Mockito.mock(GimnasioRepository.class),
                 solicitudRepository,
                 disponibilidadRepository,
-                new ExplicadorCompatibilidad(),
+                new ExplicadorCompatibilidad(TextosDePrueba.nuevo()),
                 Mockito.mock(com.spotterai.backend.repositories.HitoRepository.class),
                 Mockito.mock(com.spotterai.backend.repositories.EntrenamientoRepository.class),
                 Mockito.mock(com.spotterai.backend.repositories.LevantamientoRepository.class),
                 Mockito.mock(com.spotterai.backend.repositories.SesionRepository.class),
                 Mockito.mock(com.spotterai.backend.repositories.BloqueoRepository.class),
+                TextosDePrueba.nuevo(),
                 java.time.Clock.systemDefaultZone());
 
         gimnasio = new Gimnasio();

@@ -1,5 +1,7 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.Textos;
+import com.spotterai.backend.textos.Mensaje;
 import java.util.Map;
 
 /**
@@ -69,13 +71,19 @@ public record FactorDelDesglose(
      * <p>Los puntos se redondean aqui y no en el navegador para que el desglose
      * y el total no puedan discrepar por donde se redondee cada uno.
      */
-    public static FactorDelDesglose de(FactorCompatibilidad factor) {
+    /**
+     * @param textos quien redacta, con el idioma de quien ha preguntado. El
+     *               factor llega con claves; aqui es donde se convierten en
+     *               frases, que es el ultimo momento en que se puede saber el
+     *               idioma sin arrastrarlo por todo el motor.
+     */
+    public static FactorDelDesglose de(FactorCompatibilidad factor, Textos textos) {
         return new FactorDelDesglose(
                 factor.nombre(),
-                etiquetaDe(factor.nombre()),
+                textos.de(Mensaje.de("factor.nombre." + factor.nombre())),
                 (int) Math.round(factor.puntos()),
                 (int) Math.round(factor.puntosMax()),
                 factor.aplicable(),
-                factor.detalle());
+                textos.de(factor.detalle()));
     }
 }

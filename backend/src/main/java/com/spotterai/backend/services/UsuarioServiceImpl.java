@@ -1,5 +1,7 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.Textos;
+import com.spotterai.backend.textos.Mensaje;
 import com.spotterai.backend.dtos.ActividadDTO;
 import com.spotterai.backend.dtos.ConteoPorUsuario;
 import com.spotterai.backend.dtos.EstadoConCompanero;
@@ -98,6 +100,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     /** Inyectado para que las pruebas puedan decidir que dia es hoy. */
     private final Clock reloj;
 
+    /** Quien redacta las claves del motor, con el idioma de la peticion en curso. */
+    private final Textos textos;
+
     /**
      * Tope de marcas por persona.
      *
@@ -116,6 +121,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                               LevantamientoRepository levantamientoRepository,
                               SesionRepository sesionRepository,
                               BloqueoRepository bloqueoRepository,
+                              Textos textos,
                               Clock reloj) {
         this.levantamientoRepository = levantamientoRepository;
         this.sesionRepository = sesionRepository;
@@ -129,6 +135,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.hitoRepository = hitoRepository;
         this.entrenamientoRepository = entrenamientoRepository;
         this.bloqueoRepository = bloqueoRepository;
+        this.textos = textos;
     }
 
     @Override
@@ -485,7 +492,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 otro.getEdad(),
                 otro.getGimnasio() != null ? otro.getGimnasio().getNombre() : null,
                 esMio ? 0 : puntuacion.total(),
-                esMio ? null : puntuacion.etiqueta(),
+                esMio ? null : textos.de(puntuacion.etiqueta()),
                 esMio ? null : resumenDe(puntuacion),
                 esMio ? List.of() : puntuacion.solape().franjas(),
                 hitos,
@@ -569,9 +576,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     /** La razon principal por la que encajais, en una frase. */
-    private static String resumenDe(PuntuacionCompatibilidad puntuacion) {
+    private String resumenDe(PuntuacionCompatibilidad puntuacion) {
         FactorCompatibilidad dominante = puntuacion.factorDominante();
-        return dominante != null ? dominante.detalle() : "Perfil sin datos suficientes";
+        return textos.de(dominante != null ? dominante.detalle() : Mensaje.de("compat.sinDatos"));
     }
 
     static HitoDTO aHitoDTO(Hito h) {
@@ -703,9 +710,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         UsuarioResponseDTO dto = aDTO(u);
 
         dto.setCompatibilidad(puntuacion.total());
-        dto.setEtiquetaCompatibilidad(puntuacion.etiqueta());
+        dto.setEtiquetaCompatibilidad(textos.de(puntuacion.etiqueta()));
         FactorCompatibilidad dominante = puntuacion.factorDominante();
-        dto.setResumenCompatibilidad(dominante != null ? dominante.detalle() : "Perfil sin datos suficientes");
+        dto.setResumenCompatibilidad(resumenDe(puntuacion));
         dto.setDiasEnComun(puntuacion.solape().dias());
         dto.setMinutosEnComun(puntuacion.solape().minutosSemanales());
         dto.setDiasFijosEnComun(puntuacion.solape().diasAncla());

@@ -1,5 +1,7 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.Mensaje;
+
 /**
  * Con que regularidad entrena alguien de verdad.
  *
@@ -56,12 +58,12 @@ public record Constancia(int entrenosRecientes, boolean tieneHistorial) {
     }
 
     /** Frase para la explicacion, dicha del otro y no de la pareja. */
-    public static String describir(Constancia mia, Constancia suya) {
+    public static Mensaje describir(Constancia mia, Constancia suya) {
         double ritmo = deLaPareja(mia, suya);
 
-        if (ritmo >= 0.9) return "Los dos entrenáis con mucha regularidad";
-        if (ritmo >= 0.6) return "Los dos entrenáis de forma bastante constante";
-        if (ritmo >= 0.3) return "Alguno de los dos entrena de forma irregular";
-        return "Alguno de los dos lleva tiempo sin entrenar";
+        if (ritmo >= 0.9) return Mensaje.de("constancia.mucha");
+        if (ritmo >= 0.6) return Mensaje.de("constancia.bastante");
+        if (ritmo >= 0.3) return Mensaje.de("constancia.irregular");
+        return Mensaje.de("constancia.parado");
     }
 }

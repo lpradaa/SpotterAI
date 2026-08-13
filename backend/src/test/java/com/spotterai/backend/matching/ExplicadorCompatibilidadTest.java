@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,22 +18,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ExplicadorCompatibilidadTest {
 
-    private final ExplicadorCompatibilidad explicador = new ExplicadorCompatibilidad();
+    private final ExplicadorCompatibilidad explicador = new ExplicadorCompatibilidad(TextosDePrueba.nuevo());
 
     private static PuntuacionCompatibilidad puntuacionConSolape() {
         return new PuntuacionCompatibilidad(
                 88,
                 List.of(
                         FactorCompatibilidad.evaluado("horario", 36, 40,
-                                "Coincidís 4 horas a la semana en Martes y Jueves"),
+                                TextosDePrueba.literal("Coincidís 4 horas a la semana en Martes y Jueves")),
                         FactorCompatibilidad.evaluado("nivel", 20, 20,
-                                "Los dos entrenáis a nivel intermedio"),
+                                TextosDePrueba.literal("Los dos entrenáis a nivel intermedio")),
                         FactorCompatibilidad.evaluado("objetivo", 20, 20,
-                                "Buscáis lo mismo: hipertrofia"),
+                                TextosDePrueba.literal("Buscáis lo mismo: hipertrofia")),
                         FactorCompatibilidad.evaluado("gimnasio", 15, 15,
-                                "Entrenáis en el mismo gimnasio: McFit"),
+                                TextosDePrueba.literal("Entrenáis en el mismo gimnasio: McFit")),
                         FactorCompatibilidad.evaluado("edad", 0, 5,
-                                "Os lleváis 15 años")),
+                                TextosDePrueba.literal("Os lleváis 15 años"))),
                 new SolapeHorario(240, 240, 2, List.of("Martes", "Jueves"),
                         List.of(
                                 new FranjaComun("Martes", LocalTime.of(19, 0), LocalTime.of(21, 0), true),
@@ -63,7 +64,7 @@ class ExplicadorCompatibilidadTest {
     void sinFactoresPositivos() {
         PuntuacionCompatibilidad cero = new PuntuacionCompatibilidad(
                 0,
-                List.of(FactorCompatibilidad.evaluado("horario", 0, 40, "Vuestros horarios no coinciden")),
+                List.of(FactorCompatibilidad.evaluado("horario", 0, 40, TextosDePrueba.literal("Vuestros horarios no coinciden"))),
                 SolapeHorario.NINGUNO);
 
         ExplicacionMatch e = explicador.explicar("Marta", cero);
@@ -77,8 +78,8 @@ class ExplicadorCompatibilidadTest {
     void ignoraLosFactoresSinDatos() {
         PuntuacionCompatibilidad incompleta = new PuntuacionCompatibilidad(
                 100,
-                List.of(FactorCompatibilidad.evaluado("nivel", 100, 100, "Los dos entrenáis a nivel intermedio"),
-                        FactorCompatibilidad.sinDatos("horario", "Faltan los horarios de alguno de los dos perfiles")),
+                List.of(FactorCompatibilidad.evaluado("nivel", 100, 100, TextosDePrueba.literal("Los dos entrenáis a nivel intermedio")),
+                        FactorCompatibilidad.sinDatos("horario", TextosDePrueba.literal("Faltan los horarios de alguno de los dos perfiles"))),
                 SolapeHorario.NINGUNO);
 
         ExplicacionMatch e = explicador.explicar("Marta", incompleta);
@@ -98,7 +99,8 @@ class ExplicadorCompatibilidadTest {
     }
 
     private static String etiquetaDe(int total) {
-        return new PuntuacionCompatibilidad(total, List.of(), SolapeHorario.NINGUNO).etiqueta();
+        return TextosDePrueba.nuevo().de(
+                new PuntuacionCompatibilidad(total, List.of(), SolapeHorario.NINGUNO).etiqueta());
     }
 
     // ===================== El desglose =====================
@@ -122,8 +124,8 @@ class ExplicadorCompatibilidadTest {
     void loSinDatosSeDistingueDeUnCero() {
         PuntuacionCompatibilidad incompleta = new PuntuacionCompatibilidad(
                 100,
-                List.of(FactorCompatibilidad.evaluado("nivel", 100, 100, "Los dos entrenáis a nivel intermedio"),
-                        FactorCompatibilidad.sinDatos("fuerza", "Faltan los levantamientos de alguno de los dos")),
+                List.of(FactorCompatibilidad.evaluado("nivel", 100, 100, TextosDePrueba.literal("Los dos entrenáis a nivel intermedio")),
+                        FactorCompatibilidad.sinDatos("fuerza", TextosDePrueba.literal("Faltan los levantamientos de alguno de los dos"))),
                 SolapeHorario.NINGUNO);
 
         ExplicacionMatch e = explicador.explicar("Marta", incompleta);
@@ -138,6 +140,8 @@ class ExplicadorCompatibilidadTest {
         assertEquals(0, fuerza.puntosMax());
         // Y conserva la frase, que dice "alguno de los dos" sin señalar a nadie:
         // este lado no sabe de quien falta el dato y no lo finge.
+        // Sin redactar aqui: un FactorDelDesglose ya sale del explicador con la
+        // frase hecha, que es todo el sentido de que exista ese tipo aparte.
         assertTrue(fuerza.detalle().contains("alguno de los dos"));
     }
 
@@ -168,7 +172,7 @@ class ExplicadorCompatibilidadTest {
         // Pesos con decimales, que es lo que deja el reparto de los no aplicables
         PuntuacionCompatibilidad conDecimales = new PuntuacionCompatibilidad(
                 50,
-                List.of(FactorCompatibilidad.evaluado("horario", 28.4, 45.7, "Coincidís algo")),
+                List.of(FactorCompatibilidad.evaluado("horario", 28.4, 45.7, TextosDePrueba.literal("Coincidís algo"))),
                 SolapeHorario.NINGUNO);
 
         FactorDelDesglose f = explicador.explicar("Marta", conDecimales).factores().get(0);

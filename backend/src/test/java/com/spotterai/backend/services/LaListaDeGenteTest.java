@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.dtos.ConteoPorUsuario;
 import com.spotterai.backend.dtos.UsuarioResponseDTO;
 import com.spotterai.backend.matching.Ejercicio;
@@ -94,12 +95,13 @@ class LaListaDeGenteTest {
                 Mockito.mock(GimnasioRepository.class),
                 solicitudRepository,
                 disponibilidadRepository,
-                new ExplicadorCompatibilidad(),
+                new ExplicadorCompatibilidad(TextosDePrueba.nuevo()),
                 Mockito.mock(HitoRepository.class),
                 entrenamientoRepository,
                 levantamientoRepository,
                 Mockito.mock(SesionRepository.class),
                 bloqueoRepository,
+                TextosDePrueba.nuevo(),
                 Clock.systemDefaultZone());
 
         gimnasio.setId(1L);

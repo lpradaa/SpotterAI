@@ -1,5 +1,7 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.Textos;
+import com.spotterai.backend.textos.Mensaje;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,16 +23,22 @@ import java.util.stream.Collectors;
 @Service
 public class ExplicadorCompatibilidad {
 
+    private final Textos textos;
+
+    public ExplicadorCompatibilidad(Textos textos) {
+        this.textos = textos;
+    }
+
     public ExplicacionMatch explicar(String nombreOtro, PuntuacionCompatibilidad puntuacion) {
         String motivo = puntuacion.factores().stream()
                 // Un factor a cero no es un motivo, y uno sin datos tampoco: colar
                 // "faltan los horarios" entre las razones de un match lo empeora.
                 .filter(f -> f.puntos() > 0)
-                .map(FactorCompatibilidad::detalle)
+                .map(f -> textos.de(f.detalle()))
                 .collect(Collectors.joining(". "));
 
         if (motivo.isBlank()) {
-            motivo = "No hemos encontrado puntos en común claros entre vuestros perfiles.";
+            motivo = textos.de(Mensaje.de("compat.sinPuntosEnComun"));
         } else {
             motivo += ".";
         }
@@ -40,14 +48,14 @@ public class ExplicadorCompatibilidad {
         // que permite decir "esto no lo sabemos" en vez de enseñar un cero que
         // se leeria como mal encaje.
         List<FactorDelDesglose> factores = puntuacion.factores().stream()
-                .map(FactorDelDesglose::de)
+                .map(f -> FactorDelDesglose.de(f, textos))
                 .toList();
 
         return new ExplicacionMatch(
-                "%s - %d%% de compatibilidad".formatted(nombreOtro, puntuacion.total()),
+                textos.de(Mensaje.de("compat.titular", nombreOtro, puntuacion.total())),
                 motivo,
                 puntuacion.total(),
-                puntuacion.etiqueta(),
+                textos.de(puntuacion.etiqueta()),
                 factores);
     }
 }

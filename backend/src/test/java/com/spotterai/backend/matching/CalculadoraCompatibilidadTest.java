@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Levantamiento;
@@ -245,7 +246,7 @@ class CalculadoraCompatibilidadTest {
                 vacio, List.of(), vacio, List.of());
 
         assertEquals(0, p.total());
-        assertEquals("Poca compatibilidad", p.etiqueta());
+        assertEquals("Poca compatibilidad", TextosDePrueba.nuevo().de(p.etiqueta()));
         // Un factor por cada dimension que evalua el motor. Se comprueba que
         // ninguna se pierda por el camino, no un numero concreto de memoria.
         assertEquals(8, p.factores().size());

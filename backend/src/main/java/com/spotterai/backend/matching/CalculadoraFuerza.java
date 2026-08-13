@@ -1,5 +1,7 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.Mensaje;
+
 import com.spotterai.backend.models.Levantamiento;
 
 import java.util.EnumMap;
@@ -135,24 +137,37 @@ public final class CalculadoraFuerza {
         return porEjercicio;
     }
 
-    /** Frase para la explicacion del match. */
-    public static String describir(Comparacion comparacion) {
-        if (!comparacion.hayDatos()) return "No hay levantamientos en común para comparar";
+    /**
+     * Frase para la explicacion del match, sin redactar.
+     *
+     * <p>Los nombres de los ejercicios se encadenan como mensajes en vez de
+     * unirse con " y ": esa conjuncion tambien cambia de idioma, y aqui no
+     * sabemos en cual se va a leer.
+     */
+    public static Mensaje describir(Comparacion comparacion) {
+        if (!comparacion.hayDatos()) return Mensaje.de("fuerza.sinDatos");
 
-        String ejercicios = comparacion.comunes().stream()
-                .map(Ejercicio::getNombre)
-                .reduce((a, b) -> a + " y " + b)
-                .orElse("");
+        Mensaje ejercicios = enumerarEjercicios(comparacion);
 
-        if (comparacion.ratio() >= 0.9) {
-            return "Levantáis prácticamente lo mismo en " + ejercicios + ": podéis compartir barra";
+        if (comparacion.ratio() >= 0.9) return Mensaje.de("fuerza.igual", ejercicios);
+        if (comparacion.ratio() >= 0.6) return Mensaje.de("fuerza.parecida", ejercicios);
+        if (comparacion.ratio() >= 0.25) return Mensaje.de("fuerza.diferencia", ejercicios);
+        return Mensaje.de("fuerza.muyDistintos");
+    }
+
+    private static Mensaje enumerarEjercicios(Comparacion comparacion) {
+        var nombres = comparacion.comunes().stream().map(Enum::name).toList();
+        if (nombres.isEmpty()) return Mensaje.de("lista.vacia");
+
+        // Comas hasta el penultimo y la conjuncion solo al final. Encadenando
+        // "lista.dos" en cada vuelta salia "Sentadilla y Press de banca y Peso
+        // muerto", que es como habla un generador, no una persona.
+        Mensaje acumulado = Mensaje.de("ejercicio." + nombres.get(0));
+        for (int i = 1; i < nombres.size() - 1; i++) {
+            acumulado = Mensaje.de("lista.coma", acumulado, Mensaje.de("ejercicio." + nombres.get(i)));
         }
-        if (comparacion.ratio() >= 0.6) {
-            return "Tenéis una fuerza parecida en " + ejercicios + ", os podéis asistir sin problema";
-        }
-        if (comparacion.ratio() >= 0.25) {
-            return "Hay bastante diferencia de fuerza en " + ejercicios;
-        }
-        return "Levantáis pesos muy distintos: cubrirse el uno al otro sería complicado";
+        if (nombres.size() == 1) return acumulado;
+        return Mensaje.de("lista.dos", acumulado,
+                Mensaje.de("ejercicio." + nombres.get(nombres.size() - 1)));
     }
 }

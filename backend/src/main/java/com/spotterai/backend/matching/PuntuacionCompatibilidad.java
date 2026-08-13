@@ -1,5 +1,6 @@
 package com.spotterai.backend.matching;
 
+import com.spotterai.backend.textos.Mensaje;
 import java.util.Comparator;
 import java.util.List;
 
@@ -19,13 +20,13 @@ public record PuntuacionCompatibilidad(int total, List<FactorCompatibilidad> fac
         factores = List.copyOf(factores);
     }
 
-    /** Etiqueta corta para la interfaz. */
-    public String etiqueta() {
-        if (total >= 85) return "Compatibilidad excelente";
-        if (total >= 70) return "Muy compatibles";
-        if (total >= 50) return "Buena compatibilidad";
-        if (total >= 30) return "Compatibilidad parcial";
-        return "Poca compatibilidad";
+    /** Etiqueta corta para la interfaz, sin redactar. */
+    public Mensaje etiqueta() {
+        if (total >= 85) return Mensaje.de("compat.etiqueta.excelente");
+        if (total >= 70) return Mensaje.de("compat.etiqueta.muy");
+        if (total >= 50) return Mensaje.de("compat.etiqueta.buena");
+        if (total >= 30) return Mensaje.de("compat.etiqueta.parcial");
+        return Mensaje.de("compat.etiqueta.poca");
     }
 
     /** El factor que mas ha aportado. Util para titulares. */

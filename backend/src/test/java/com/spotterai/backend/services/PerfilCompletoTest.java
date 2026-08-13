@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.TextosDePrueba;
 import com.spotterai.backend.matching.ExplicadorCompatibilidad;
 import com.spotterai.backend.dtos.UsuarioPerfilDTO;
 import com.spotterai.backend.models.Usuario;
@@ -44,12 +45,13 @@ class PerfilCompletoTest {
                 Mockito.mock(GimnasioRepository.class),
                 Mockito.mock(SolicitudRepository.class),
                 disponibilidadRepository,
-                new ExplicadorCompatibilidad(),
+                new ExplicadorCompatibilidad(TextosDePrueba.nuevo()),
                 Mockito.mock(HitoRepository.class),
                 Mockito.mock(EntrenamientoRepository.class),
                 Mockito.mock(LevantamientoRepository.class),
                 Mockito.mock(SesionRepository.class),
                 Mockito.mock(BloqueoRepository.class),
+                TextosDePrueba.nuevo(),
                 Clock.systemDefaultZone());
 
         Mockito.when(disponibilidadRepository.findByUsuarioId(Mockito.any())).thenReturn(List.of());
