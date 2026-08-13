@@ -48,6 +48,16 @@ services:
       # ya no cruzan orígenes. Se mantiene por si alguien ataca la API directa.
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:4200}
       MEDIOS_DIR: /app/medios
+      # Quién puede ver /api/reportes. Vacío por defecto: sin nadie en la lista,
+      # nadie ve los reportes, ni siquiera con una cuenta válida.
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      # El servicio que convierte una biografía en un vector (ver embeddings/).
+      # Vacío a propósito: ocupa 756 MB y no cabe en una capa gratuita, así que
+      # el despliegue corre sin él. La gente de demostración se siembra con sus
+      # vectores ya calculados, y el factor semántico funciona igual; lo que se
+      # pierde es vectorizar biografías escritas después. Está en
+      # docs/despliegue.md.
+      EMBEDDINGS_URL: ${EMBEDDINGS_URL:-}
       # Siembra gente, horarios que solapan y un par de planes en marcha. Sin
       # esto, quien levanta el proyecto ve una aplicación vacía y no llega a ver
       # el motor de compatibilidad, que es lo único que merece la pena enseñar.

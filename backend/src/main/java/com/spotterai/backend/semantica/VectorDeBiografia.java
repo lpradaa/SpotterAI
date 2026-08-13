@@ -13,9 +13,13 @@ import org.springframework.stereotype.Service;
  *
  * <p>La huella resuelve las dos. Es el resumen del texto del que salio el
  * vector: si coincide con el texto actual, el vector sigue siendo valido y no se
- * llama a nadie; si no coincide —o no hay— se recalcula. Y como la huella la
- * calcula el propio servicio de embeddings, no hay dos implementaciones que
- * puedan discrepar sobre que texto produjo que vector.
+ * llama a nadie; si no coincide —o no hay— se recalcula.
+ *
+ * <p>La calculan los dos lados: el servicio de embeddings al vectorizar, y
+ * {@link #huellaDe} aqui, para poder detectar un vector desfasado sin gastar una
+ * llamada. Son dos implementaciones de la misma especificacion y eso es
+ * exactamente lo que suele divergir, asi que hay una prueba que fija el valor
+ * para un texto conocido y falla si alguno de los dos se mueve.
  */
 @Service
 public class VectorDeBiografia {
@@ -86,7 +90,7 @@ public class VectorDeBiografia {
      * especificacion, que es justo lo que suele divergir: hay una prueba que fija
      * el valor para un texto conocido y falla si alguna de las dos se mueve.
      */
-    static String huellaDe(String texto) {
+    public static String huellaDe(String texto) {
         try {
             byte[] resumen = java.security.MessageDigest.getInstance("SHA-256")
                     .digest(texto.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));

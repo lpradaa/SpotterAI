@@ -47,6 +47,16 @@ public class SembradorDemo implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(SembradorDemo.class);
 
+    /**
+     * Los vectores de las biografias, ya calculados.
+     *
+     * <p>La instancia desplegada corre sin servicio de embeddings —756 MB no
+     * caben en una capa gratuita— asi que sin esto el factor semantico quedaria
+     * "sin datos" para toda la gente de demostracion, que es justo lo que la
+     * demo existe para enseñar.
+     */
+    private final VectoresSembrados vectores = new VectoresSembrados();
+
     /** Con quién se entra. Va en el README y en la pantalla de bienvenida. */
     public static final String EMAIL_DEMO = "demo@spotterai.test";
     public static final String CLAVE_DEMO = "Demo1234";
@@ -322,6 +332,7 @@ public class SembradorDemo implements CommandLineRunner {
         u.setAvatar(avatar);
         u.setBiografia(biografia);
         u.setMetaSemanal(4);
+        vectores.aplicarA(u);
         return usuarios.save(u);
     }
 
