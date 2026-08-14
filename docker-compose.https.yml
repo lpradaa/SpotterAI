@@ -1,0 +1,46 @@
+# HTTPS con Caddy delante.
+#
+#   export DOMINIO=tuapp.duckdns.org
+#   docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+#
+# Caddy pide el certificado a Let's Encrypt al arrancar y lo renueva solo. No
+# hay certbot, ni cron, ni nada que caduque a los tres meses y tumbe la web un
+# martes por la mañana.
+#
+# Va aparte y no dentro de docker-compose.yml porque en local no hace falta: un
+# certificado para localhost no existe, y Caddy se quedaria reintentando contra
+# Let's Encrypt sin conseguirlo nunca.
+#
+# Acuerdate de poner COOKIE_SEGURA=true y CORREO_URL_BASE=https://... en el .env
+# a la vez que esto. Las tres cosas van juntas: la galleta solo por HTTPS solo
+# sirve si hay HTTPS, y los enlaces de los correos tienen que apuntar al dominio
+# y no a la IP.
+
+services:
+  # El frontend deja de publicar el 80 al exterior: ahora el unico que da la
+  # cara es Caddy, y nginx solo le responde a el por la red interna.
+  frontend:
+    ports: !override []
+
+  proxy:
+    image: caddy:2-alpine
+    depends_on:
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Sin valor por defecto a proposito: sin dominio, Caddy no puede pedir
+      # certificado, y es mejor que falle al arrancar diciendolo que quedarse
+      # sirviendo por HTTP como si todo fuera bien.
+      DOMINIO: ${DOMINIO:?Falta DOMINIO. Ejemplo: export DOMINIO=tuapp.duckdns.org}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Los certificados sobreviven a un reinicio. Sin esto, cada `up` pide uno
+      # nuevo y Let's Encrypt limita a cinco por semana y dominio: al sexto
+      # reinicio te quedas sin HTTPS durante dias.
+      - certificados:/data
+    restart: unless-stopped
+
+volumes:
+  certificados:

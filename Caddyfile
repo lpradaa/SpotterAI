@@ -1,0 +1,24 @@
+# Configuración de Caddy. Solo se usa con docker-compose.https.yml.
+#
+# Son cuatro líneas porque Caddy hace por defecto lo que con nginx habría que
+# escribir: pide el certificado a Let's Encrypt, lo renueva, redirige el 80 al
+# 443 y habilita HTTP/2.
+
+{$DOMINIO} {
+	# Todo va a nginx, que ya sabe repartir entre los ficheros estáticos y la
+	# API. Caddy solo pone el TLS por delante.
+	reverse_proxy frontend:80 {
+		# El canal de eventos es una respuesta que no termina. Con el búfer
+		# activado, el proxy la retiene esperando a llenarlo y los avisos llegan
+		# a ráfagas o no llegan. Es el mismo motivo por el que nginx lleva
+		# proxy_buffering off unas capas más adentro.
+		flush_interval -1
+	}
+
+	# Las subidas de vídeo pasan del límite por defecto.
+	request_body {
+		max_size 16MB
+	}
+
+	encode gzip
+}

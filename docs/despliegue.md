@@ -36,6 +36,10 @@ servicios sueltos.
 
 ### Recomendado: Oracle Cloud Always Free
 
+> **Guía paso a paso, con los botones concretos y los sitios donde la gente se
+> atasca: [despliegue-oracle.md](despliegue-oracle.md).** Lo de aquí abajo es el
+> resumen.
+
 4 núcleos ARM y 24 GB de RAM, gratis de forma indefinida. Piden tarjeta para
 verificar, no cobran. Dos avisos honestos: la capacidad ARM se agota a ratos en
 algunas regiones, y conviene no dejar la instancia parada meses.
