@@ -90,6 +90,49 @@ export const es = {
   'login.registrate': 'Regístrate aquí',
   'login.iniciaSesion': 'Inicia sesión',
 
+  // ===================== Bienvenida =====================
+  'bienvenida.tituloConNombre': '{nombre}, ¿cuándo entrenas?',
+  'bienvenida.titulo': '¿Cuándo entrenas?',
+  'bienvenida.porQue': 'Buscamos gente que coincida contigo en el gimnasio, así que sin saber tus horas no hay nada que cruzar.',
+  'bienvenida.porQuePeso': 'Pesa el 40 % de la compatibilidad, más que el nivel y el objetivo juntos.',
+  'bienvenida.marca': 'Marca las horas a las que podrías ir',
+  'bienvenida.horas': { uno: '{cuenta} hora a la semana', otros: '{cuenta} horas a la semana' },
+  'bienvenida.holgura': 'Pinta con holgura: esto es cuándo puedes, no un compromiso. Cuando sepas a qué vas siempre, podrás marcarlo en tu perfil y contará mucho más.',
+  'bienvenida.guardando': 'Guardando…',
+  'bienvenida.continuar': 'Continuar',
+  'bienvenida.marcaUnaHora': 'Marca al menos una hora para continuar',
+
+  'bienvenida.tituloDatos': 'Cinco cosas más y ya está',
+  'bienvenida.porQueDatos': 'Son las que usa el motor para puntuar. Sin ellas tu compatibilidad se calcula con la mitad de los datos y no se puede comparar con la de nadie: ni tú sabrías qué significa tu número ni los demás el suyo.',
+  'bienvenida.donde': '¿Dónde entrenas?',
+  'bienvenida.eligeGimnasio': 'Elige tu gimnasio',
+  'bienvenida.tuNivel': 'Tu nivel',
+  'bienvenida.eligeNivel': 'Elige tu nivel',
+  'bienvenida.queBuscas': 'Qué buscas',
+  'bienvenida.eligeObjetivo': 'Elige tu objetivo',
+  'bienvenida.comoRepartes': 'Cómo repartes la semana',
+  'bienvenida.eligeRutina': 'Elige tu rutina',
+  'bienvenida.edad': 'Edad',
+  'bienvenida.sinRutina': 'Si no sigues ninguna rutina fija, elígelo: es una respuesta, no un hueco, y cuenta como tal.',
+  'bienvenida.atras': 'Atrás',
+  'bienvenida.empezar': 'Empezar',
+  'bienvenida.faltanCampos': 'Faltan campos por elegir',
+
+  /* Las etiquetas de nivel y objetivo, para los desplegables del formulario.
+     El VALOR que se elige viaja al backend en español y no se traduce nunca —es
+     el dato que se guarda—; esto es solo cómo se lee.
+
+     Existen también en messages.properties del backend, que las necesita para
+     redactar sus frases ("Los dos entrenáis a nivel intermedio"). Son dos
+     catálogos y tienen que decir lo mismo: aquí se elige, allí se cuenta. */
+  'nivel.principiante': 'Principiante',
+  'nivel.intermedio': 'Intermedio',
+  'nivel.avanzado': 'Avanzado',
+  'objetivo.hipertrofia': 'Hipertrofia',
+  'objetivo.fuerza': 'Fuerza',
+  'objetivo.perdidaDePeso': 'Pérdida de peso',
+  'objetivo.resistencia': 'Resistencia',
+
   // ===================== Reportes (moderación) =====================
   'reportes.titulo': 'Reportes',
   'reportes.texto': 'Lo que la gente ha reportado sobre otras personas, agrupado por quién ha sido reportado. Reportar no bloquea por sí solo: quien reporta puede seguir viendo la conversación.',

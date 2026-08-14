@@ -1,3 +1,4 @@
+import { IdiomaService } from '../../services/idioma.service';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,6 +26,8 @@ import { Franja } from '../rejilla-semana/rejilla-semana';
 export class BienvenidaComponent implements OnInit {
 
   private usuarioService = inject(UsuarioService);
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
   private perfilEstado = inject(PerfilEstadoService);
   private router = inject(Router);
 

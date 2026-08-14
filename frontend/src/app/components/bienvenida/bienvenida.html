@@ -10,22 +10,19 @@
 
     <header class="bienvenida__cabecera">
       <h1 class="bienvenida__titulo">
-        @if (nombre()) { {{ nombre() }}, ¿cuándo entrenas? } @else { ¿Cuándo entrenas? }
+        @if (nombre()) { {{ i18n.t('bienvenida.tituloConNombre', { nombre: nombre() }) }} } @else { {{ i18n.t('bienvenida.titulo') }} }
       </h1>
       <p class="bienvenida__texto">
-        Buscamos gente que coincida contigo en el gimnasio, así que sin saber tus
-        horas no hay nada que cruzar: pesa el <strong>40&nbsp;%</strong> de la
-        compatibilidad, más que el nivel y el objetivo juntos.
+        {{ i18n.t('bienvenida.porQue') }}
+        <strong>{{ i18n.t('bienvenida.porQuePeso') }}</strong>
       </p>
     </header>
 
     <div class="bienvenida__panel">
       <div class="bienvenida__instruccion">
-        <span>Marca las horas a las que <strong>podrías</strong> ir</span>
+        <span>{{ i18n.t('bienvenida.marca') }}</span>
         @if (horasTotales() > 0) {
-          <span class="bienvenida__cuenta">
-            {{ horasTotales() }} {{ horasTotales() === 1 ? 'hora' : 'horas' }} a la semana
-          </span>
+          <span class="bienvenida__cuenta">{{ i18n.t('bienvenida.horas', { cuenta: horasTotales() }) }}</span>
         }
       </div>
 
@@ -33,10 +30,7 @@
         [franjasIniciales]="franjasIniciales()"
         (cambio)="alCambiar($event)" />
 
-      <p class="bienvenida__nota">
-        Pinta con holgura: esto es cuándo <em>puedes</em>, no un compromiso. Cuando
-        sepas a qué vas siempre, podrás marcarlo en tu perfil y contará mucho más.
-      </p>
+      <p class="bienvenida__nota">{{ i18n.t('bienvenida.holgura') }}</p>
     </div>
 
     @if (error()) { <p class="aviso-inline" role="alert">{{ error() }}</p> }
@@ -45,31 +39,29 @@
       <button class="btn btn--primario"
               [disabled]="!hayHorario() || guardando()"
               (click)="siguiente()">
-        @if (guardando()) { Guardando… } @else { Continuar }
+        @if (guardando()) { {{ i18n.t('bienvenida.guardando') }} } @else { {{ i18n.t('bienvenida.continuar') }} }
       </button>
 
       @if (!hayHorario()) {
-        <span class="bienvenida__pista">Marca al menos una hora para continuar</span>
+        <span class="bienvenida__pista">{{ i18n.t('bienvenida.marcaUnaHora') }}</span>
       }
     </footer>
 
   } @else {
 
     <header class="bienvenida__cabecera">
-      <h1 class="bienvenida__titulo">Cinco cosas más y ya está</h1>
+      <h1 class="bienvenida__titulo">{{ i18n.t('bienvenida.tituloDatos') }}</h1>
       <p class="bienvenida__texto">
-        Son las que usa el motor para puntuar. Sin ellas tu compatibilidad se
-        calcula con la mitad de los datos y no se puede comparar con la de nadie:
-        ni tú sabrías qué significa tu número ni los demás el suyo.
+        {{ i18n.t('bienvenida.porQueDatos') }}
       </p>
     </header>
 
     <div class="bienvenida__panel">
       <div class="bienvenida__campos">
         <label class="campo">
-          <span>¿Dónde entrenas?</span>
+          <span>{{ i18n.t('bienvenida.donde') }}</span>
           <select [(ngModel)]="datos.gimnasioId">
-            <option [ngValue]="null" disabled>Elige tu gimnasio</option>
+            <option [ngValue]="null" disabled>{{ i18n.t('bienvenida.eligeGimnasio') }}</option>
             @for (g of gimnasios(); track g.id) {
               <option [ngValue]="g.id">{{ g.nombre }}</option>
             }
@@ -77,30 +69,30 @@
         </label>
 
         <label class="campo">
-          <span>Tu nivel</span>
+          <span>{{ i18n.t('bienvenida.tuNivel') }}</span>
           <select [(ngModel)]="datos.nivel">
-            <option value="" disabled>Elige tu nivel</option>
-            <option value="Principiante">Principiante</option>
-            <option value="Intermedio">Intermedio</option>
-            <option value="Avanzado">Avanzado</option>
+            <option value="" disabled>{{ i18n.t('bienvenida.eligeNivel') }}</option>
+            <option value="Principiante">{{ i18n.t('nivel.principiante') }}</option>
+            <option value="Intermedio">{{ i18n.t('nivel.intermedio') }}</option>
+            <option value="Avanzado">{{ i18n.t('nivel.avanzado') }}</option>
           </select>
         </label>
 
         <label class="campo">
-          <span>Qué buscas</span>
+          <span>{{ i18n.t('bienvenida.queBuscas') }}</span>
           <select [(ngModel)]="datos.objetivos">
-            <option value="" disabled>Elige tu objetivo</option>
-            <option value="Hipertrofia">Hipertrofia</option>
-            <option value="Fuerza">Fuerza</option>
-            <option value="Pérdida de peso">Pérdida de peso</option>
-            <option value="Resistencia">Resistencia</option>
+            <option value="" disabled>{{ i18n.t('bienvenida.eligeObjetivo') }}</option>
+            <option value="Hipertrofia">{{ i18n.t('objetivo.hipertrofia') }}</option>
+            <option value="Fuerza">{{ i18n.t('objetivo.fuerza') }}</option>
+            <option value="Pérdida de peso">{{ i18n.t('objetivo.perdidaDePeso') }}</option>
+            <option value="Resistencia">{{ i18n.t('objetivo.resistencia') }}</option>
           </select>
         </label>
 
         <label class="campo">
-          <span>Cómo repartes la semana</span>
+          <span>{{ i18n.t('bienvenida.comoRepartes') }}</span>
           <select [(ngModel)]="datos.rutina">
-            <option value="" disabled>Elige tu rutina</option>
+            <option value="" disabled>{{ i18n.t('bienvenida.eligeRutina') }}</option>
             @for (r of rutinas(); track r.clave) {
               <option [value]="r.clave">{{ r.nombre }}</option>
             }
@@ -108,7 +100,7 @@
         </label>
 
         <label class="campo">
-          <span>Edad</span>
+          <span>{{ i18n.t('bienvenida.edad') }}</span>
           <input type="number" min="14" max="99" [(ngModel)]="datos.edad" placeholder="28">
         </label>
       </div>
@@ -116,24 +108,21 @@
       <!-- La salida honesta importa tanto como el campo obligatorio. Sin "sin
            rutina fija", quien no siga ninguna marcará la primera de la lista
            para poder pasar, y el motor tratará esa elección como un hecho. -->
-      <p class="bienvenida__nota">
-        Si no sigues ninguna rutina fija, elígelo: <strong>es una respuesta</strong>,
-        no un hueco, y cuenta como tal.
-      </p>
+      <p class="bienvenida__nota">{{ i18n.t('bienvenida.sinRutina') }}</p>
     </div>
 
     @if (error()) { <p class="aviso-inline" role="alert">{{ error() }}</p> }
 
     <footer class="bienvenida__pie">
-      <button class="btn btn--fantasma" (click)="paso.set('horario')">Atrás</button>
+      <button class="btn btn--fantasma" (click)="paso.set('horario')">{{ i18n.t('bienvenida.atras') }}</button>
       <button class="btn btn--primario"
               [disabled]="!datosCompletos() || guardando()"
               (click)="guardar()">
-        @if (guardando()) { Guardando… } @else { Empezar }
+        @if (guardando()) { {{ i18n.t('bienvenida.guardando') }} } @else { {{ i18n.t('bienvenida.empezar') }} }
       </button>
 
       @if (!datosCompletos()) {
-        <span class="bienvenida__pista">Faltan campos por elegir</span>
+        <span class="bienvenida__pista">{{ i18n.t('bienvenida.faltanCampos') }}</span>
       }
     </footer>
   }
