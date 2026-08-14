@@ -50,8 +50,7 @@ public class SembradorDemo implements CommandLineRunner {
     /**
      * Los vectores de las biografias, ya calculados.
      *
-     * <p>La instancia desplegada corre sin servicio de embeddings —756 MB no
-     * caben en una capa gratuita— asi que sin esto el factor semantico quedaria
+     * <p>Para un despliegue que corra sin el servicio de embeddings asi que sin esto el factor semantico quedaria
      * "sin datos" para toda la gente de demostracion, que es justo lo que la
      * demo existe para enseñar.
      */

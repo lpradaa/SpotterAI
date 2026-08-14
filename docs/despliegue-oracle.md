@@ -210,9 +210,11 @@ CORREO_URL_BASE=http://TU_IP_PUBLICA
 COOKIE_SEGURA=false
 ```
 
-> `EMBEDDINGS_URL` **vacío** es lo correcto: el servicio de modelo ocupa 756 MB y
-> no se despliega. La gente de demostración lleva sus vectores ya calculados, así
-> que el factor semántico funciona igual. El detalle, en [despliegue.md](despliegue.md).
+> `EMBEDDINGS_URL` **vacío** vale perfectamente para empezar: la gente de
+> demostración lleva sus vectores ya calculados y el factor semántico funciona
+> igual. El servicio ocupa 475 MB y cabe de sobra en esta máquina, así que
+> puedes levantarlo después — lo que gana es vectorizar las biografías escritas
+> desde la aplicación. El detalle, en [despliegue.md](despliegue.md).
 >
 > `COOKIE_SEGURA=false` **de momento**, porque todavía no hay HTTPS. Se cambia en
 > la fase 8, junto con `CORREO_URL_BASE`.

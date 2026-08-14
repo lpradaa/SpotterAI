@@ -16,17 +16,20 @@ import java.util.Map;
 /**
  * Los vectores de las biografias de demostracion, ya calculados.
  *
- * <p>Vienen en un fichero en vez de calcularse al arrancar, y el motivo es el
- * despliegue: el servicio de embeddings ocupa 756 MB de memoria —medido— y no
- * cabe en las capas gratuitas, que van de 512. La aplicacion desplegada corre
- * sin el, y sin estos vectores el noveno factor del motor quedaria "sin datos"
- * para toda la gente de demostracion: justo la parte que la demo existe para
- * enseñar.
+ * <p>Vienen en un fichero en vez de calcularse al arrancar para que un
+ * despliegue pueda correr sin levantar el servicio de embeddings. Sin ellos, el
+ * noveno factor del motor quedaria "sin datos" para toda la gente de
+ * demostracion: justo la parte que la demo existe para enseñar.
+ *
+ * <p>Nacieron de una restriccion mas dura: el servicio ocupaba 756 MB y no cabia
+ * en las capas gratuitas de 512. Hoy son 475 —se le quito PyTorch y el modelo va
+ * cuantizado a int8— asi que ya cabe, y esto pasa de ser obligatorio a ser una
+ * opcion: montar la demo sin gastar la memoria de un modelo.
  *
  * <p>Asi que la demo se despliega con sus vectores hechos. Es una decision de
- * despliegue, no un atajo del motor: quien escriba una biografia nueva en esa
- * instancia se quedara sin vector hasta que alguien levante el servicio y corra
- * el repaso, y eso esta dicho en docs/despliegue.md.
+ * despliegue, no un atajo del motor: en un despliegue sin el servicio, quien escriba una
+ * biografia nueva se quedara sin vector hasta que alguien lo levante y corra el
+ * repaso. Esta dicho en docs/despliegue.md.
  *
  * <p>El fichero es {@code demo/vectores-biografia.tsv}: correo, tabulador, y el
  * vector en base64. Se genero desde la base local con el modelo real corriendo.

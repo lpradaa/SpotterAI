@@ -22,21 +22,21 @@
              justo debajo de una version gigante de ese isotipo, asi que era el
              sitio donde mas cantaba que dijeran cosas distintas. -->
         <h2>Spotter</h2>
-        <p>Encuentra a la persona con la que entrenar, no a cualquiera.</p>
+        <p>{{ i18n.t('login.lema') }}</p>
 
         <ul class="features-list">
-          <li class="feature-item">Cruzamos vuestros horarios reales, no solo el perfil</li>
-          <li class="feature-item">Te decimos por qué encajáis, con los días concretos</li>
-          <li class="feature-item">Y llevas el registro de lo que entrenas</li>
+          <li class="feature-item">{{ i18n.t('login.venta1') }}</li>
+          <li class="feature-item">{{ i18n.t('login.venta2') }}</li>
+          <li class="feature-item">{{ i18n.t('login.venta3') }}</li>
         </ul>
       </div>
     </div>
 
     <div class="login-form-section">
       <header class="login-header">
-        <h1 class="title">{{ isLoginMode ? 'Hola de nuevo' : 'Crea tu cuenta' }}</h1>
+        <h1 class="title">{{ isLoginMode ? i18n.t('login.tituloEntrar') : i18n.t('login.tituloRegistro') }}</h1>
         <p class="subtitle">
-          {{ isLoginMode ? 'Inicia sesión para continuar' : 'Crea tu cuenta gratis' }}
+          {{ isLoginMode ? i18n.t('login.subtituloEntrar') : i18n.t('login.subtituloRegistro') }}
         </p>
       </header>
 
@@ -44,49 +44,49 @@
         
         @if (!isLoginMode) {
           <label class="campo" for="nombre">
-            <span>Nombre completo</span>
-            <input type="text" id="nombre" name="nombre" [(ngModel)]="nombre" placeholder="Ej. Carlos Pérez" required>
+            <span>{{ i18n.t('login.nombre') }}</span>
+            <input type="text" id="nombre" name="nombre" [(ngModel)]="nombre" [placeholder]="i18n.t('login.nombreEjemplo')" required>
           </label>
 
           <div class="form-row">
             <label class="campo half-width" for="edad">
-              <span>Edad</span>
-              <input type="number" id="edad" name="edad" [(ngModel)]="edad" placeholder="Ej. 25" required>
+              <span>{{ i18n.t('login.edad') }}</span>
+              <input type="number" id="edad" name="edad" [(ngModel)]="edad" [placeholder]="i18n.t('login.edadEjemplo')" required>
             </label>
 
             <label class="campo half-width" for="peso">
-              <span>Peso (kg)</span>
-              <input type="number" id="peso" name="peso" [(ngModel)]="peso" placeholder="Ej. 75.5" required>
+              <span>{{ i18n.t('login.peso') }}</span>
+              <input type="number" id="peso" name="peso" [(ngModel)]="peso" [placeholder]="i18n.t('login.pesoEjemplo')" required>
             </label>
           </div>
 
           <label class="campo" for="genero">
-            <span>Género</span>
+            <span>{{ i18n.t('login.genero') }}</span>
             <select id="genero" name="genero" [(ngModel)]="genero" required>
-              <option value="" disabled selected>Selecciona una opción</option>
-              <option value="Masculino">Masculino</option>
-              <option value="Femenino">Femenino</option>
-              <option value="Otro">Otro</option>
+              <option value="" disabled selected>{{ i18n.t('login.generoElige') }}</option>
+              <option value="Masculino">{{ i18n.t('login.generoMasculino') }}</option>
+              <option value="Femenino">{{ i18n.t('login.generoFemenino') }}</option>
+              <option value="Otro">{{ i18n.t('login.generoOtro') }}</option>
             </select>
           </label>
         }
 
         <label class="campo" for="email">
-          <span>Email</span>
-          <input type="email" id="email" name="email" [(ngModel)]="email" placeholder="ejemplo@correo.com" required>
+          <span>{{ i18n.t('login.email') }}</span>
+          <input type="email" id="email" name="email" [(ngModel)]="email" [placeholder]="i18n.t('login.emailEjemplo')" required>
         </label>
 
         <label class="campo" for="password">
-          <span>Contraseña</span>
+          <span>{{ i18n.t('login.contrasena') }}</span>
           <!-- El marcador de posición ya lo decía en /restablecer desde que se
                escribió esa pantalla; aquí, la más antigua del formulario,
                nadie lo puso al añadir la regla de los 12 caracteres al
                backend. Se descubría fallando, no leyendo. -->
           <input type="password" id="password" name="password" [(ngModel)]="password"
-                 [placeholder]="isLoginMode ? '••••••••' : 'Al menos ' + minimoContrasena + ' caracteres'"
+                 [placeholder]="isLoginMode ? '••••••••' : i18n.t('login.contrasenaMinimo', { minimo: minimoContrasena })"
                  required>
           @if (!isLoginMode && contrasenaCorta) {
-            <small class="campo__pista">Faltan {{ minimoContrasena - password.length }} caracteres</small>
+            <small class="campo__pista">{{ i18n.t('login.contrasenaFaltan', { cuenta: minimoContrasena - password.length }) }}</small>
           }
         </label>
 
@@ -98,9 +98,9 @@
 
         <button type="submit" class="btn btn--primario btn--ancho" [disabled]="!email || !password || isLoading()">
           @if (isLoading()) {
-            Procesando…
+            {{ i18n.t('login.procesando') }}
           } @else {
-            {{ isLoginMode ? 'Entrar a Spotter' : 'Crear Cuenta' }} <span class="arrow">→</span>
+            {{ isLoginMode ? i18n.t('login.entrar') : i18n.t('login.crearCuenta') }} <span class="arrow">→</span>
           }
         </button>
 
@@ -111,23 +111,20 @@
       @if (isLoginMode) {
         <div class="olvide">
           @if (olvidoPedido()) {
-            <p class="olvide__hecho" role="status">
-              Si ese correo tiene cuenta, te hemos mandado un enlace. Mira también
-              en la carpeta de no deseados.
-            </p>
+            <p class="olvide__hecho" role="status">{{ i18n.t('login.olvidadaHecho') }}</p>
           } @else {
             <button type="button" class="toggle-btn" [disabled]="olvidoEnviando()"
                     (click)="olvideLaContrasena()">
-              @if (olvidoEnviando()) { Enviando… } @else { He olvidado mi contraseña }
+              @if (olvidoEnviando()) { {{ i18n.t('login.olvidadaEnviando') }} } @else { {{ i18n.t('login.olvidada') }} }
             </button>
           }
         </div>
       }
 
       <div class="login-footer">
-        <p>{{ isLoginMode ? '¿No tienes cuenta?' : '¿Ya tienes una cuenta?' }} 
+        <p>{{ isLoginMode ? i18n.t('login.sinCuenta') : i18n.t('login.conCuenta') }} 
           <button type="button" class="toggle-btn" (click)="toggleMode()">
-            {{ isLoginMode ? 'Regístrate aquí' : 'Inicia sesión' }}
+            {{ isLoginMode ? i18n.t('login.registrate') : i18n.t('login.iniciaSesion') }}
           </button>
         </p>
       </div>

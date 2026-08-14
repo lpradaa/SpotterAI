@@ -52,11 +52,12 @@ services:
       # nadie ve los reportes, ni siquiera con una cuenta válida.
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       # El servicio que convierte una biografía en un vector (ver embeddings/).
-      # Vacío a propósito: ocupa 756 MB y no cabe en una capa gratuita, así que
-      # el despliegue corre sin él. La gente de demostración se siembra con sus
-      # vectores ya calculados, y el factor semántico funciona igual; lo que se
-      # pierde es vectorizar biografías escritas después. Está en
-      # docs/despliegue.md.
+      # Vacío a propósito: el despliegue puede correr sin él.  El servicio
+      # ocupa 475 MB —medido, tras quitarle PyTorch y cuantizar el modelo— así
+      # que cabe donde haga falta; ponerlo aquí lo activa. Sin él, la gente de
+      # demostración ya trae sus vectores calculados y el factor semántico
+      # funciona igual: lo que se pierde es vectorizar las biografías escritas
+      # después. Está en docs/despliegue.md.
       EMBEDDINGS_URL: ${EMBEDDINGS_URL:-}
       # Siembra gente, horarios que solapan y un par de planes en marcha. Sin
       # esto, quien levanta el proyecto ve una aplicación vacía y no llega a ver

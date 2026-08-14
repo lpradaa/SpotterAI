@@ -49,6 +49,47 @@ export const es = {
   'comun.dias': { uno: '{cuenta} día', otros: '{cuenta} días' },
   'comun.personas': { uno: '{cuenta} persona', otros: '{cuenta} personas' },
 
+  // ===================== Entrada =====================
+  'login.lema': 'Encuentra a la persona con la que entrenar, no a cualquiera.',
+  'login.venta1': 'Cruzamos vuestros horarios reales, no solo el perfil',
+  'login.venta2': 'Te decimos por qué encajáis, con los días concretos',
+  'login.venta3': 'Y llevas el registro de lo que entrenas',
+
+  'login.tituloEntrar': 'Hola de nuevo',
+  'login.tituloRegistro': 'Crea tu cuenta',
+  'login.subtituloEntrar': 'Inicia sesión para continuar',
+  'login.subtituloRegistro': 'Crea tu cuenta gratis',
+
+  'login.nombre': 'Nombre completo',
+  'login.nombreEjemplo': 'Ej. Carlos Pérez',
+  'login.edad': 'Edad',
+  'login.edadEjemplo': 'Ej. 25',
+  'login.peso': 'Peso (kg)',
+  'login.pesoEjemplo': 'Ej. 75.5',
+  'login.genero': 'Género',
+  'login.generoElige': 'Selecciona una opción',
+  'login.generoMasculino': 'Masculino',
+  'login.generoFemenino': 'Femenino',
+  'login.generoOtro': 'Otro',
+  'login.email': 'Email',
+  'login.emailEjemplo': 'ejemplo@correo.com',
+  'login.contrasena': 'Contraseña',
+  'login.contrasenaMinimo': 'Al menos {minimo} caracteres',
+  'login.contrasenaFaltan': { uno: 'Falta {cuenta} carácter', otros: 'Faltan {cuenta} caracteres' },
+
+  'login.procesando': 'Procesando…',
+  'login.entrar': 'Entrar a Spotter',
+  'login.crearCuenta': 'Crear Cuenta',
+
+  'login.olvidada': 'He olvidado mi contraseña',
+  'login.olvidadaEnviando': 'Enviando…',
+  'login.olvidadaHecho': 'Si ese correo tiene cuenta, te hemos mandado un enlace. Mira también en la carpeta de no deseados.',
+
+  'login.sinCuenta': '¿No tienes cuenta?',
+  'login.conCuenta': '¿Ya tienes una cuenta?',
+  'login.registrate': 'Regístrate aquí',
+  'login.iniciaSesion': 'Inicia sesión',
+
   // ===================== Reportes (moderación) =====================
   'reportes.titulo': 'Reportes',
   'reportes.texto': 'Lo que la gente ha reportado sobre otras personas, agrupado por quién ha sido reportado. Reportar no bloquea por sí solo: quien reporta puede seguir viendo la conversación.',

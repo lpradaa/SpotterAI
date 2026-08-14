@@ -11,11 +11,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Los vectores que van dentro de la demo.
  *
- * <p>Existen por una restriccion de despliegue: el servicio de embeddings ocupa
- * 756 MB —medido— y no cabe en las capas gratuitas. La instancia desplegada
- * corre sin el, asi que las biografias de demostracion llevan su vector ya
- * calculado; sin ellos, el factor semantico saldria "sin datos" para todo el
- * mundo justo en la instancia que existe para enseñarlo.
+ * <p>Existen para que un despliegue pueda correr sin levantar el servicio de
+ * embeddings: las biografias de demostracion llevan su vector ya calculado, y
+ * sin ellos el factor semantico saldria "sin datos" para todo el mundo justo en
+ * la instancia que existe para enseñarlo.
  *
  * <p>Un fichero de datos generado a mano se pudre en silencio: alguien cambia un
  * texto de demostracion, nadie regenera los vectores, y la demo se queda

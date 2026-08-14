@@ -1,3 +1,4 @@
+import { IdiomaService } from '../../services/idioma.service';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +20,8 @@ import { MINIMO_CONTRASENA } from '../restablecer/restablecer';
 })
 export class LoginComponent implements OnInit {
   private authService = inject(AuthService);
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
   private router = inject(Router);
   private eventos = inject(EventosService);
   private avisos = inject(AvisosService);

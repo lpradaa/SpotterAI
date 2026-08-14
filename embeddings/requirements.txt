@@ -1,3 +1,11 @@
+# Sin sentence-transformers ni torch a proposito. Medido en este proyecto:
+# importar sentence-transformers cuesta 405 MB antes de cargar ningun peso, de
+# los cuales 168 son solo PyTorch. Con onnxruntime y tokenizers a secas son 51 MB,
+# y el servicio entero pasa de 740 MB a 461. La inferencia esta escrita a mano en
+# modelo_ligero.py y da numeros identicos: verificar_ligero.py lo comprueba.
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
-sentence-transformers==3.3.1
+onnxruntime==1.20.1
+tokenizers==0.21.0
+huggingface-hub==0.27.0
+numpy==2.2.1

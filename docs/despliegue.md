@@ -9,23 +9,23 @@ El objetivo de este documento es un enlace que alguien pueda abrir, **por 0 €*
 | Frontend (Angular + nginx) | sí | despreciable — 717 KB compilados |
 | Backend (Spring Boot) | sí | **337 MB** |
 | Base de datos (MariaDB) | sí | ~120 MB |
-| **Servicio de embeddings** | **no** | **756 MB** |
+| **Servicio de embeddings** | opcional | **475 MB** |
 
-El servicio de embeddings se queda fuera a propósito: 756 MB no caben en ninguna
-capa gratuita, que van de 512. La aplicación está construida para funcionar sin
-él —`EMBEDDINGS_URL` vacío y el noveno factor del motor queda «sin datos», que la
-calculadora ya sabe repartir— y la gente de demostración se siembra con **sus
-vectores ya calculados** (`backend/src/main/resources/demo/vectores-biografia.tsv`),
-así que el factor semántico se ve funcionando.
+El servicio de embeddings es opcional. Ocupaba 756 MB y no cabía en una capa
+gratuita de 512; hoy son **475 MB**, tras quitarle PyTorch y pasar el modelo a
+int8 (ver `embeddings/README.md`). Cabe, pero sigue sin ser obligatorio.
 
-**La consecuencia, dicha claramente:** en la instancia desplegada, quien escriba
-una biografía *nueva* no tendrá vector. Su factor de afinidad saldrá «sin datos»
-hasta que alguien levante el servicio de embeddings contra esa base y deje que el
-repaso de arranque los calcule.
+La aplicación está construida para funcionar sin él —`EMBEDDINGS_URL` vacío y el
+noveno factor del motor queda «sin datos», que la calculadora ya sabe repartir— y
+la gente de demostración se siembra con **sus vectores ya calculados**
+(`backend/src/main/resources/demo/vectores-biografia.tsv`), así que el factor
+semántico se ve funcionando aunque no lo levantes.
 
-Quitar esa limitación es cuantizar el modelo a ONNX int8 (~120 MB en disco,
-~250-300 MB en memoria), que entonces sí cabe en una capa gratuita. Está sin
-hacer.
+**Lo que se pierde si no lo levantas:** quien escriba una biografía *nueva* no
+tendrá vector, y su factor de afinidad saldrá «sin datos».
+
+Para quitar esa limitación basta con levantarlo: `EMBEDDINGS_URL` apuntando al
+servicio y el repaso de arranque vectoriza lo que falte.
 
 ## Forma del despliegue
 

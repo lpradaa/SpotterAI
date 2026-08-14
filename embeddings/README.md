@@ -14,8 +14,36 @@ otro dato que falta —igual que un perfil sin gimnasio— y reparte el peso del
 factor entre los demás.
 
 Meter el modelo dentro del Spring Boot habría obligado a dimensionar el backend
-entero por los ~500 MB del transformer, para una operación que ocurre cuando
-alguien edita su perfil.
+entero por el transformer, para una operación que ocurre cuando alguien edita su
+perfil.
+
+## Por qué no usa sentence-transformers
+
+Porque arrastra PyTorch, y PyTorch pesa más que el modelo. Medido en este
+proyecto, **antes de cargar ningún peso**:
+
+| | RSS |
+|---|---|
+| python + numpy + onnxruntime + tokenizers | **51 MB** |
+| … + torch | 219 MB |
+| … + transformers | 284 MB |
+| … + sentence-transformers | **405 MB** |
+
+Con el modelo cargado, el servicio se plantaba en **740 MB**.
+
+Cuantizar a int8 por sí solo no lo arreglaba: bajaba los pesos de 470 MB a 113,
+pero el proceso subía a **805 MB**, porque cargaba las dos pilas a la vez. Y
+quitar PyTorch por sí solo tampoco: con el modelo en float32 sobre ONNX Runtime
+son **789 MB**, porque reserva memoria con más holgura.
+
+Solo funciona la combinación: la inferencia escrita a mano en `modelo_ligero.py`
+sobre el modelo int8 deja el servicio en **475 MB**, un 36 % menos, y quita ~2 GB
+de dependencias de la imagen.
+
+`verificar_ligero.py` comprueba que la inferencia manual reproduce
+`sentence-transformers` con **0.000000 de desviación** sobre el mismo modelo. Lo
+que cambia los números es la cuantización, no la implementación — y cuánto,
+lo mide `calibracion/comparar_cuantizado.py`.
 
 ## Arrancarlo
 
