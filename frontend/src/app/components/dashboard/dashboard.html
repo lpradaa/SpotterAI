@@ -19,13 +19,12 @@
         <p class="barra__rasgos">
           @if (perfilCargado()?.nivel) { <span>{{ perfilCargado()?.nivel }}</span> }
           @if (perfilCargado()?.objetivos) { <span>{{ perfilCargado()?.objetivos }}</span> }
-          @if (!perfilCargado()?.nivel && !perfilCargado()?.objetivos) { <span>Perfil sin completar</span> }
+          @if (!perfilCargado()?.nivel && !perfilCargado()?.objetivos) { <span>{{ i18n.t('tablero.perfilSinCompletar') }}</span> }
         </p>
         <!-- Cuantos candidatos hay es un dato de la pantalla de buscar, no de
              la tuya. Aqui queda lo que si es tuyo: como vas esta semana. -->
         <p class="barra__resumen">
-          <strong>{{ completedDays() }}</strong> de {{ totalDays() }}
-          {{ totalDays() === 1 ? 'entrenamiento' : 'entrenamientos' }} esta semana
+          {{ i18n.t('tablero.estaSemana', { hechos: completedDays(), total: totalDays(), cuenta: totalDays() }) }}
         </p>
       </div>
     </div>
@@ -34,8 +33,8 @@
       <!-- Contorno: es navegacion. El acento de esta pantalla se reserva para
            los botones que responden algo pendiente, que es lo unico que de
            verdad reclama tu atencion al entrar. -->
-      <a class="btn btn--contorno" routerLink="/explorar">Buscar compañeros</a>
-      <a class="btn btn--fantasma" routerLink="/yo">Mi perfil</a>
+      <a class="btn btn--contorno" routerLink="/explorar">{{ i18n.t('tablero.buscarCompaneros') }}</a>
+      <a class="btn btn--fantasma" routerLink="/yo">{{ i18n.t('tablero.miPerfil') }}</a>
     </div>
   </header>
 
@@ -50,33 +49,33 @@
       <div class="banda__texto">
         <p class="banda__titular">
           @if (sesion.puedoConfirmar) {
-            ¿Entrenaste con <strong>{{ sesion.conNombre }}</strong>?
+            {{ i18n.t('tablero.entrenaste', { nombre: sesion.conNombre }) }}
           } @else if (sesion.estado === 'ACEPTADA') {
-            Entrenas con <strong>{{ sesion.conNombre }}</strong>
+            {{ i18n.t('tablero.entrenasCon', { nombre: sesion.conNombre }) }}
           } @else if (sesion.mia) {
-            Has propuesto entrenar con <strong>{{ sesion.conNombre }}</strong>
+            {{ i18n.t('tablero.hasPropuesto', { nombre: sesion.conNombre }) }}
           } @else {
-            <strong>{{ sesion.conNombre }}</strong> propone entrenar contigo
+            {{ i18n.t('tablero.teProponen', { nombre: sesion.conNombre }) }}
           }
         </p>
         <p class="banda__motivo">
           {{ diaLargo(sesion.fecha) }} · {{ hhmm(sesion.horaInicio) }}–{{ hhmm(sesion.horaFin) }}
           @if (sesion.gimnasioNombre) { · {{ sesion.gimnasioNombre }} }
-          @if (sesion.estado === 'PROPUESTA' && sesion.mia) { · esperando respuesta }
+          @if (sesion.estado === 'PROPUESTA' && sesion.mia) { · {{ i18n.t('tablero.esperandoRespuesta') }} }
         </p>
       </div>
 
       <div class="banda__acciones">
         @if (sesion.puedoConfirmar) {
           <button class="btn btn--primario btn--pequeno"
-                  (click)="confirmarSesion(sesion)">Sí, entrenamos</button>
+                  (click)="confirmarSesion(sesion)">{{ i18n.t('tablero.siEntrenamos') }}</button>
         } @else if (sesion.puedoResponder) {
           <button class="btn btn--fantasma btn--pequeno"
-                  (click)="responderSesion(sesion, false)">Rechazar</button>
+                  (click)="responderSesion(sesion, false)">{{ i18n.t('tablero.rechazar') }}</button>
           <button class="btn btn--primario btn--pequeno"
-                  (click)="responderSesion(sesion, true)">Aceptar</button>
+                  (click)="responderSesion(sesion, true)">{{ i18n.t('tablero.aceptar') }}</button>
         } @else {
-          <button class="btn btn--neutro btn--pequeno" (click)="irAlChat(sesion.conId)">Abrir chat</button>
+          <button class="btn btn--neutro btn--pequeno" (click)="irAlChat(sesion.conId)">{{ i18n.t('tablero.abrirChat') }}</button>
         }
       </div>
     </aside>
@@ -89,19 +88,19 @@
     <aside class="banda">
       <div class="banda__texto">
         <p class="banda__titular">
-          Te falta <strong>{{ hueco.nombre | lowercase }}</strong>:
-          <span class="banda__puntos">−{{ hueco.puntos }} puntos</span>
-          de compatibilidad con cualquiera.
+          {{ i18n.t('tablero.teFalta', { que: hueco.nombre.toLowerCase() }) }}
+          <span class="banda__puntos">{{ i18n.t('tablero.puntosMenos', { puntos: hueco.puntos }) }}</span>
+          {{ i18n.t('tablero.deCompatibilidad') }}
         </p>
         <p class="banda__motivo">
           {{ hueco.motivo }}
           @if (puntosEnJuego() > hueco.puntos) {
-            Contando todo lo que falta, quedan {{ puntosEnJuego() }} de 100 fuera de juego.
+            {{ i18n.t('tablero.todoLoQueFalta', { puntos: puntosEnJuego() }) }}
           }
         </p>
       </div>
       <!-- La banda ya avisa con su color; el boton no necesita repetirlo. -->
-      <a class="btn btn--contorno btn--pequeno" routerLink="/yo">Completar</a>
+      <a class="btn btn--contorno btn--pequeno" routerLink="/yo">{{ i18n.t('tablero.completar') }}</a>
     </aside>
   }
 
@@ -120,21 +119,18 @@
     <main class="columna-principal">
       <section class="tarjeta">
         <div class="seccion__cabecera">
-          <h2 class="tarjeta__titulo">Tu gente</h2>
-          <a class="btn btn--neutro btn--pequeno" routerLink="/explorar">Buscar más</a>
+          <h2 class="tarjeta__titulo">{{ i18n.t('tablero.tuGente') }}</h2>
+          <a class="btn btn--neutro btn--pequeno" routerLink="/explorar">{{ i18n.t('tablero.buscarMas') }}</a>
         </div>
 
         @if (actividad().length === 0) {
-          <p class="vacio">
-            Cuando tus compañeros registren un entrenamiento o apunten una marca,
-            aparecerá aquí.
-          </p>
+          <p class="vacio">{{ i18n.t('tablero.sinActividad') }}</p>
         } @else {
           <ul class="actividad">
             @for (a of actividad(); track $index) {
               <li class="actividad__fila">
                 <a class="actividad__quien" [routerLink]="['/u', a.usuarioId]"
-                   [attr.aria-label]="'Ver el perfil de ' + a.usuarioNombre">
+                   [attr.aria-label]="i18n.t('tablero.verPerfilDe', { nombre: a.usuarioNombre })">
                   <app-avatar [nombre]="a.usuarioNombre" [valor]="a.usuarioAvatar ?? ''"
                               [foto]="urlMedio(a.usuarioFotoUrl)" medida="fila" />
                 </a>
@@ -142,7 +138,7 @@
                 <div class="actividad__texto">
                   <p class="actividad__titular">
                     <a [routerLink]="['/u', a.usuarioId]">{{ a.usuarioNombre }}</a>
-                    @if (a.tipo === 'HITO') { ha apuntado } @else { ha entrenado }
+                    @if (a.tipo === 'HITO') { {{ i18n.t('tablero.haApuntado') }} } @else { {{ i18n.t('tablero.haEntrenado') }} }
                     <strong>{{ a.titulo }}</strong>
                   </p>
                   @if (a.detalle) { <p class="actividad__detalle">{{ a.detalle }}</p> }
@@ -180,32 +176,32 @@
            es la bandeja de lo que espera tu respuesta. La campana lleva alli. -->
       <section class="tarjeta">
         <div class="seccion__cabecera">
-          <h2 class="tarjeta__titulo">Mi actividad</h2>
-          <button class="btn btn--neutro btn--pequeno" (click)="abrirModalEntrenamiento()">Registrar</button>
+          <h2 class="tarjeta__titulo">{{ i18n.t('tablero.miActividad') }}</h2>
+          <button class="btn btn--neutro btn--pequeno" (click)="abrirModalEntrenamiento()">{{ i18n.t('tablero.registrar') }}</button>
         </div>
 
         @if (historialEntrenamientos.length === 0) {
-          <p class="vacio">Aún no has registrado entrenamientos.</p>
+          <p class="vacio">{{ i18n.t('tablero.sinEntrenamientos') }}</p>
         } @else {
           <ul class="linea-tiempo">
             @for (ent of historialEntrenamientos; track ent.id) {
               <li class="entreno">
                 <div class="entreno__cuerpo">
-                  <strong>{{ ent.tipo }}</strong>
-                  <span class="entreno__duracion cifra">{{ ent.duracionMinutos }} min</span>
+                  <strong>{{ etiquetaDeEntreno(ent.tipo) }}</strong>
+                  <span class="entreno__duracion cifra">{{ i18n.t('tablero.minutos', { cuenta: ent.duracionMinutos }) }}</span>
 
                   <!-- Se puede borrar porque esto no es decoracion: mueve la
                        constancia, que puntua con todo el mundo. Un duplicado o
                        un dedazo en la fecha se quedaban para siempre. -->
                   @if (borrandoEntreno() === ent.id) {
                     <span class="entreno__confirmar">
-                      ¿Seguro?
-                      <button class="btn-icono btn-icono--no" (click)="borrandoEntreno.set(null)">No</button>
-                      <button class="btn-icono btn-icono--si" (click)="borrarEntrenamiento(ent.id)">Sí</button>
+                      {{ i18n.t('tablero.seguro') }}
+                      <button class="btn-icono btn-icono--no" (click)="borrandoEntreno.set(null)">{{ i18n.t('tablero.no') }}</button>
+                      <button class="btn-icono btn-icono--si" (click)="borrarEntrenamiento(ent.id)">{{ i18n.t('tablero.si') }}</button>
                     </span>
                   } @else {
                     <button class="entreno__borrar" (click)="borrandoEntreno.set(ent.id)"
-                            [attr.aria-label]="'Borrar ' + ent.tipo + ' del ' + ent.fecha">✕</button>
+                            [attr.aria-label]="i18n.t('tablero.borrarEntreno', { tipo: etiquetaDeEntreno(ent.tipo), fecha: ent.fecha })">✕</button>
                   }
                 </div>
                 <span class="entreno__fecha">{{ ent.fecha }}{{ ent.lugarONotas ? ' · ' + ent.lugarONotas : '' }}</span>
@@ -225,36 +221,36 @@
          aria-labelledby="titulo-entrenamiento"
          appModalAccesible (cerrarPedido)="cerrarModalEntrenamiento()">
       <header class="modal__cabecera">
-        <h2 id="titulo-entrenamiento">Registrar entrenamiento</h2>
-        <button class="cerrar" (click)="cerrarModalEntrenamiento()" aria-label="Cerrar">✕</button>
+        <h2 id="titulo-entrenamiento">{{ i18n.t('tablero.registrarEntrenamiento') }}</h2>
+        <button class="cerrar" (click)="cerrarModalEntrenamiento()" [attr.aria-label]="i18n.t('tablero.cerrar')">✕</button>
       </header>
 
       <div class="modal__cuerpo">
-        <label class="campo"><span>Fecha</span><input type="date" [(ngModel)]="nuevoEntrenamiento.fecha"></label>
+        <label class="campo"><span>{{ i18n.t('tablero.fecha') }}</span><input type="date" [(ngModel)]="nuevoEntrenamiento.fecha"></label>
         <label class="campo">
-          <span>Tipo</span>
+          <span>{{ i18n.t('tablero.tipo') }}</span>
           <select [(ngModel)]="nuevoEntrenamiento.tipo">
-            <option value="Fuerza (Torso)">Fuerza (Torso)</option>
-            <option value="Fuerza (Pierna)">Fuerza (Pierna)</option>
-            <option value="Fuerza (Fullbody)">Fuerza (Fullbody)</option>
-            <option value="Cardio LISS">Cardio LISS</option>
-            <option value="HIIT">HIIT</option>
-            <option value="Clase dirigida">Clase dirigida</option>
+            <option value="Fuerza (Torso)">{{ i18n.t('entreno.fuerzaTorso') }}</option>
+            <option value="Fuerza (Pierna)">{{ i18n.t('entreno.fuerzaPierna') }}</option>
+            <option value="Fuerza (Fullbody)">{{ i18n.t('entreno.fuerzaFullbody') }}</option>
+            <option value="Cardio LISS">{{ i18n.t('entreno.cardioLiss') }}</option>
+            <option value="HIIT">{{ i18n.t('entreno.hiit') }}</option>
+            <option value="Clase dirigida">{{ i18n.t('entreno.claseDirigida') }}</option>
           </select>
         </label>
         <label class="campo">
-          <span>Duración (minutos)</span>
+          <span>{{ i18n.t('tablero.duracion') }}</span>
           <input type="number" [(ngModel)]="nuevoEntrenamiento.duracionMinutos" placeholder="60">
         </label>
         <label class="campo">
-          <span>Notas</span>
-          <input type="text" [(ngModel)]="nuevoEntrenamiento.lugarONotas" placeholder="Récord en prensa…">
+          <span>{{ i18n.t('tablero.notas') }}</span>
+          <input type="text" [(ngModel)]="nuevoEntrenamiento.lugarONotas" [placeholder]="i18n.t('tablero.notasEjemplo')">
         </label>
       </div>
 
       <footer class="modal__pie">
-        <button class="btn btn--fantasma" (click)="cerrarModalEntrenamiento()">Cancelar</button>
-        <button class="btn btn--primario" (click)="guardarEntrenamiento()">Guardar</button>
+        <button class="btn btn--fantasma" (click)="cerrarModalEntrenamiento()">{{ i18n.t('comun.cancelar') }}</button>
+        <button class="btn btn--primario" (click)="guardarEntrenamiento()">{{ i18n.t('comun.guardar') }}</button>
       </footer>
     </div>
   </div>

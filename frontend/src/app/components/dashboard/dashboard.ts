@@ -1,3 +1,5 @@
+import { IdiomaService } from '../../services/idioma.service';
+import { ClaveDeMensaje } from '../../i18n/es';
 import { Component, signal, computed, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -22,8 +24,34 @@ import { ModalAccesible } from '../../directivas/modal-accesible';
 })
 export class DashboardComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  /**
+   * Los tipos de entrenamiento, tal y como se guardan.
+   *
+   * El valor viaja al backend y se guarda en español —es el dato— y esto es
+   * solo como se lee. Mismo reparto que el nivel, el objetivo y los motivos de
+   * reporte.
+   *
+   * Un tipo que no reconozcamos se enseña tal cual: si alguien tiene guardado
+   * algo de una version anterior, mejor que vea lo que puso a que vea un hueco.
+   */
+  private static readonly ETIQUETAS_DE_ENTRENO: Record<string, ClaveDeMensaje> = {
+    'Fuerza (Torso)': 'entreno.fuerzaTorso',
+    'Fuerza (Pierna)': 'entreno.fuerzaPierna',
+    'Fuerza (Fullbody)': 'entreno.fuerzaFullbody',
+    'Cardio LISS': 'entreno.cardioLiss',
+    'HIIT': 'entreno.hiit',
+    'Clase dirigida': 'entreno.claseDirigida',
+  };
+
+  protected etiquetaDeEntreno(tipo: string): string {
+    const clave = DashboardComponent.ETIQUETAS_DE_ENTRENO[tipo];
+    return clave ? this.i18n.t(clave) : tipo;
+  }
   private eventos = inject(EventosService);
   private perfilEstado = inject(PerfilEstadoService);
   private avisos = inject(AvisosService);

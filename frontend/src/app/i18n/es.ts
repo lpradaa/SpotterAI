@@ -133,6 +133,61 @@ export const es = {
   'objetivo.perdidaDePeso': 'Pérdida de peso',
   'objetivo.resistencia': 'Resistencia',
 
+  // ===================== Tablero =====================
+  'tablero.perfilSinCompletar': 'Perfil sin completar',
+  'tablero.estaSemana': { uno: '{hechos} de {total} entrenamiento esta semana', otros: '{hechos} de {total} entrenamientos esta semana' },
+  'tablero.buscarCompaneros': 'Buscar compañeros',
+  'tablero.miPerfil': 'Mi perfil',
+
+  'tablero.entrenaste': '¿Entrenaste con {nombre}?',
+  'tablero.entrenasCon': 'Entrenas con {nombre}',
+  'tablero.hasPropuesto': 'Has propuesto entrenar con {nombre}',
+  'tablero.teProponen': '{nombre} propone entrenar contigo',
+  'tablero.esperandoRespuesta': 'esperando respuesta',
+  'tablero.siEntrenamos': 'Sí, entrenamos',
+  'tablero.rechazar': 'Rechazar',
+  'tablero.aceptar': 'Aceptar',
+  'tablero.abrirChat': 'Abrir chat',
+
+  'tablero.teFalta': 'Te falta {que}:',
+  'tablero.puntosMenos': '−{puntos} puntos',
+  'tablero.deCompatibilidad': 'de compatibilidad con cualquiera.',
+  'tablero.todoLoQueFalta': 'Contando todo lo que falta, quedan {puntos} de 100 fuera de juego.',
+  'tablero.completar': 'Completar',
+
+  'tablero.tuGente': 'Tu gente',
+  'tablero.buscarMas': 'Buscar más',
+  'tablero.sinActividad': 'Cuando tus compañeros registren un entrenamiento o apunten una marca, aparecerá aquí.',
+  'tablero.haApuntado': 'ha apuntado',
+  'tablero.haEntrenado': 'ha entrenado',
+  'tablero.verPerfilDe': 'Ver el perfil de {nombre}',
+
+  'tablero.miActividad': 'Mi actividad',
+  'tablero.registrar': 'Registrar',
+  'tablero.sinEntrenamientos': 'Aún no has registrado entrenamientos.',
+  'tablero.minutos': '{cuenta} min',
+  'tablero.seguro': '¿Seguro?',
+  'tablero.no': 'No',
+  'tablero.si': 'Sí',
+  'tablero.borrarEntreno': 'Borrar {tipo} del {fecha}',
+
+  'tablero.registrarEntrenamiento': 'Registrar entrenamiento',
+  'tablero.cerrar': 'Cerrar',
+  'tablero.fecha': 'Fecha',
+  'tablero.tipo': 'Tipo',
+  'tablero.duracion': 'Duración (minutos)',
+  'tablero.notas': 'Notas',
+  'tablero.notasEjemplo': 'Récord en prensa…',
+
+  /* Los tipos de entrenamiento. Igual que el nivel y el objetivo: el VALOR se
+     guarda en español y viaja tal cual, la etiqueta es lo único que cambia. */
+  'entreno.fuerzaTorso': 'Fuerza (Torso)',
+  'entreno.fuerzaPierna': 'Fuerza (Pierna)',
+  'entreno.fuerzaFullbody': 'Fuerza (Fullbody)',
+  'entreno.cardioLiss': 'Cardio LISS',
+  'entreno.hiit': 'HIIT',
+  'entreno.claseDirigida': 'Clase dirigida',
+
   // ===================== Reportes (moderación) =====================
   'reportes.titulo': 'Reportes',
   'reportes.texto': 'Lo que la gente ha reportado sobre otras personas, agrupado por quién ha sido reportado. Reportar no bloquea por sí solo: quien reporta puede seguir viendo la conversación.',
