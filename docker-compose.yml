@@ -53,7 +53,8 @@ services:
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       # El servicio que convierte una biografía en un vector (ver embeddings/).
       # Vacío a propósito: el despliegue puede correr sin él.  El servicio
-      # ocupa 475 MB —medido, tras quitarle PyTorch y cuantizar el modelo— así
+      # ocupa 611 MB —medido: 475 tras quitarle PyTorch, y 611 desde que lee
+      # intenciones en vez de vectores, que es lo que arregló el factor— así
       # que cabe donde haga falta; ponerlo aquí lo activa. Sin él, la gente de
       # demostración ya trae sus vectores calculados y el factor semántico
       # funciona igual: lo que se pierde es vectorizar las biografías escritas

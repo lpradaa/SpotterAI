@@ -9,15 +9,17 @@ El objetivo de este documento es un enlace que alguien pueda abrir, **por 0 €*
 | Frontend (Angular + nginx) | sí | despreciable — 717 KB compilados |
 | Backend (Spring Boot) | sí | **337 MB** |
 | Base de datos (MariaDB) | sí | ~120 MB |
-| **Servicio de embeddings** | opcional | **475 MB** |
+| **Servicio del modelo** | opcional | **611 MB** |
 
-El servicio de embeddings es opcional. Ocupaba 756 MB y no cabía en una capa
-gratuita de 512; hoy son **475 MB**, tras quitarle PyTorch y pasar el modelo a
-int8 (ver `embeddings/README.md`). Cabe, pero sigue sin ser obligatorio.
+El servicio del modelo es opcional. Ocupaba 756 MB y no cabía en una capa
+gratuita de 512; bajó a **475 MB** al quitarle PyTorch y cuantizar el modelo, y
+volvió a subir a **611** cuando dejó de calcular vectores y pasó a leer
+intenciones — que es lo que arregló el noveno factor, y está contado en
+`embeddings/README.md`. Sigue sin ser obligatorio, y ahora esa opción vale más.
 
 La aplicación está construida para funcionar sin él —`EMBEDDINGS_URL` vacío y el
 noveno factor del motor queda «sin datos», que la calculadora ya sabe repartir— y
-la gente de demostración se siembra con **sus vectores ya calculados**
+la gente de demostración se siembra con **sus intenciones ya leídas**
 (`backend/src/main/resources/demo/vectores-biografia.tsv`), así que el factor
 semántico se ve funcionando aunque no lo levantes.
 

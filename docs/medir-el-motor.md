@@ -174,7 +174,7 @@ apunta igual.
 ## Resultado 3: qué aporta el noveno factor
 
 La afinidad de lo escrito es el único factor que necesita un modelo levantado,
-un servicio aparte y 475 MB de memoria. Eso obliga a hacerle una pregunta que a
+un servicio aparte y cientos de MB de memoria. Eso obliga a hacerle una pregunta que a
 los otros ocho no: **¿cuántas decisiones cambia?**
 
 Se mide con la misma población dos veces, con biografía y sin ella. Sin

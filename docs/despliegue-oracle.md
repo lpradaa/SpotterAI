@@ -212,7 +212,7 @@ COOKIE_SEGURA=false
 
 > `EMBEDDINGS_URL` **vacío** vale perfectamente para empezar: la gente de
 > demostración lleva sus vectores ya calculados y el factor semántico funciona
-> igual. El servicio ocupa 475 MB y cabe de sobra en esta máquina, así que
+> igual. El servicio ocupa 611 MB y cabe de sobra en esta máquina, así que
 > puedes levantarlo después — lo que gana es vectorizar las biografías escritas
 > desde la aplicación. El detalle, en [despliegue.md](despliegue.md).
 >
