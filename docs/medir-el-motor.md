@@ -34,6 +34,13 @@ cd backend
 ./mvnw test -Dtest=LasDosViasDelGimnasioTest  # de dónde sale la influencia del gimnasio
 ```
 
+Y la evaluación del noveno factor, que no es un test de Java sino un script
+contra el modelo real:
+
+```bash
+cd embeddings && .venv/Scripts/python calibracion/evaluar_afinidad.py
+```
+
 `SensibilidadDelMotorTest` imprime dos tablas: la de siempre y la misma con la
 gente entrenando a las horas de verdad. Compararlas es lo que dice si un número
 depende del supuesto de horarios o no.
@@ -355,6 +362,117 @@ en rojo al medir el reparto realista, y con razón.
 Y valida el instrumento por partida doble, que es la lección de este documento:
 que las tres poblaciones son la misma gente con lo único distinto que debe serlo,
 y que anular un factor de 8 puntos no mueve la puntuación más de 8.
+
+## Resultado 5: el noveno factor no ordena por lo que dice ordenar
+
+Del factor semántico se sabía cuánto mueve —un punto de media, una decisión de
+cada veintidós— y **no se sabía si acierta**. Son dos preguntas distintas: un
+factor puede mover decisiones y moverlas mal.
+
+No hacen falta usuarios para responderla. Bastan pares cuya relación se conoce
+por construcción, pasados por el modelo real que sirve la aplicación
+(`embeddings/calibracion/evaluar_afinidad.py`):
+
+| grupo | qué es | debería |
+|---|---|---|
+| PARÁFRASIS | la misma intención con otras palabras | alto |
+| CONTRASTE | intenciones incompatibles | bajo |
+| INVERTIDO | casi el mismo texto, intención opuesta | bajo |
+| CAMBIO_MIN | una palabra cambiada, sin negar | bajo |
+| REAL_COMPAT | dos biografías largas compatibles, escritas distinto | alto |
+| REAL_INCOMP | dos biografías largas opuestas, escritas parecido | bajo |
+| FONDO | dos textos del dominio sin relación | el suelo |
+
+### El resultado
+
+| grupo | coseno | puntos de 6 |
+|---|---|---|
+| PARÁFRASIS | 0,508 | 5,4 |
+| CONTRASTE | 0,360 | 3,2 |
+| INVERTIDO | 0,525 | 5,6 |
+| **CAMBIO_MIN** | **0,743** | **6,0** |
+| REAL_COMPAT | 0,499 | 5,2 |
+| **REAL_INCOMP** | **0,843** | **6,0** |
+| FONDO | 0,227 | 1,2 |
+
+**El factor no mide compatibilidad, mide parecido de redacción.** Dos personas
+que quieren lo contrario dicho con la misma estructura sacan 0,84; dos que
+quieren lo mismo dicho con sus palabras sacan 0,50. El orden está invertido
+respecto a lo que el producto necesita, y las dos salen en pantalla como «mucha
+afinidad».
+
+### El control que cambió la conclusión
+
+La primera pasada solo tenía INVERTIDO, y decía lo que todo el mundo espera de
+estos modelos: **que ignoran la negación**. Es falso aquí. Cambiar una palabra
+*sin* negar —`mañanas` por `tardes`— da **0,743**, más alto todavía que negar
+(0,525). La negación no es el punto ciego; el punto ciego es que la similitud de
+superficie domina sobre el significado, y el «no» al menos añade un token que
+mueve algo.
+
+Sin ese control, en esta página habría quedado escrita una explicación plausible
+y equivocada. Es la tercera vez que pasa lo mismo en este documento.
+
+### Y el segundo hallazgo, que estaba escondido
+
+Los umbrales del factor (0,15 a 0,55) se calibraron con las trece biografías de
+la demostración, que son de quince palabras. Con veinticinco, **casi todo
+satura**: 0,499 y 0,843 dan 5,2 y 6,0 puntos, y la misma frase en pantalla. El
+rango se queda corto justo donde el texto se parece a lo que la gente escribe.
+
+### ¿Se arregla cambiando de modelo?
+
+No. Es la pregunta obvia y se midió antes de descartarla, con
+`multilingual-e5-small` — misma cuantización, mismo runtime, mismo banco, y con
+el prefijo `query:` que ese modelo necesita, porque medirlo sin él sería
+construirle un fallo al rival.
+
+| | premia a las opuestas por | su rango entero | el error vale |
+|---|---|---|---|
+| MiniLM-paraphrase (hoy) | +0,344 | 0,617 | **56 %** |
+| multilingual-e5-small | +0,073 | 0,115 | **63 %** |
+
+En bruto parece que E5 mejora cinco veces. **No se pueden comparar en bruto**:
+cada modelo vive en su banda, y E5 mete todo entre 0,85 y 0,97 — dos textos sin
+ninguna relación ya dan 0,851. Lo comparable es qué fracción de su propio rango
+ocupa el error, y ahí E5 es **peor**.
+
+La razón es estructural y no se arregla con otro modelo de la misma clase. Un
+bi-encoder proyecta cada texto por separado: cuando codifica «busco a alguien
+que me exija» no hay nada en ese vector que sepa que va a compararse con su
+negación. **La oposición entre dos frases no es una propiedad de ninguna de las
+dos, es de la pareja.**
+
+Lo que sí lo resolvería —un cross-encoder, o un modelo de inferencia textual que
+sepa decir «contradicción»— rompe la arquitectura: no habría vector que guardar y
+habría que pasar el modelo por **cada pareja**, justo lo que el diseño evita para
+que el emparejamiento sea instantáneo y para que el servicio pueda caerse sin que
+el motor se entere.
+
+### Lo que esto no invalida
+
+El daño está acotado **por diseño**. El factor vale 6 de 100 y cambia una
+decisión de cada veintidós, y eso es exactamente porque en su día se decidió que
+un modelo no mandara sobre datos duros. Esa decisión aguanta y es la que impide
+que un fallo así se lleve el producto por delante.
+
+Lo que no aguanta es la calidad de la señal dentro de esos seis puntos.
+
+### Lo honesto sobre este experimento
+
+Los pares están escritos aquí, no etiquetados por terceros: «por construcción»
+significa que la relación es evidente para cualquiera que lea español, no que
+haya pasado por anotadores. Y los pares incompatibles son **adversariales a
+propósito** —misma estructura, palabra cambiada—, cosa que dos personas
+cualesquiera no hacen al escribir.
+
+Lo que no es adversarial es la otra mitad: el 0,499 de dos biografías
+genuinamente compatibles escritas con voz propia es realista, y queda por debajo
+de casi todo lo demás.
+
+Validar el motor **entero** —el orden que produce, no este factor— necesita otra
+cosa: juicios humanos por comparación de pares, con acuerdo entre anotadores
+medido para saber cuál es el techo. Eso sigue pendiente.
 
 ## Qué protege esto para el futuro
 
