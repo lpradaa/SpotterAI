@@ -24,7 +24,8 @@ jobs:
       - name: Compilar y pasar los tests
         working-directory: backend
         # Los tests usan H2 en memoria y Flyway va apagado ahí, así que no hace
-        # falta levantar ninguna base de datos para esto.
+        # falta levantar ninguna base de datos para esto. Lo que eso deja fuera
+        # —las migraciones y el esquema real— lo cubre el trabajo «arranque».
         env:
           JWT_SECRET: clave-solo-para-ci-no-es-un-secreto-real
         run: ./mvnw -B verify
@@ -35,6 +36,62 @@ jobs:
         with:
           name: informes-surefire
           path: backend/target/surefire-reports/
+
+  # Lo que ninguno de los otros tres trabajos comprueba: que la aplicación
+  # arranque.
+  #
+  # Los tests del backend corren con H2 y Flyway apagado, así que nadie ejecuta
+  # las migraciones; y construir una imagen Docker no la arranca. Con ese hueco
+  # se coló una migración numerada V10 cuando ya había otra V10, y la aplicación
+  # dejó de levantar — con 389 pruebas en verde y las dos imágenes construidas.
+  #
+  # Aquí se levanta contra un MariaDB de verdad, que es lo que comprueba las tres
+  # cosas que no se ven de otra forma: que las migraciones se resuelven, que
+  # MariaDB acepta su SQL, y que cada entidad casa con el esquema que dejan
+  # (ddl-auto=validate).
+  arranque:
+    name: Backend · arranca contra el esquema real
+    runs-on: ubuntu-latest
+
+    services:
+      base:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: spotterai
+          MARIADB_DATABASE: spotterai_db
+        ports:
+          - 3306:3306
+        # Sin esperar a que esté lista, el test se conecta a un puerto abierto
+        # sobre una base que aún no acepta consultas.
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Preparar JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      # Una base recién creada: las migraciones se aplican todas desde cero, que
+      # es el caso que de verdad hay que probar. Contra una base ya migrada solo
+      # se comprobaría la última.
+      - name: Arrancar contra MariaDB
+        working-directory: backend
+        env:
+          JWT_SECRET: clave-solo-para-ci-no-es-un-secreto-real
+          DB_HOST: 127.0.0.1
+          DB_PORT: '3306'
+          DB_NAME: spotterai_db
+          DB_USER: root
+          DB_PASSWORD: spotterai
+        run: ./mvnw -B test -Dtest=ArranqueConEsquemaRealTest
 
   frontend:
     name: Frontend · tests y compilación
@@ -63,6 +120,21 @@ jobs:
         working-directory: frontend
         run: npm test -- --no-watch
 
+      # Lo mecánico de la accesibilidad: que ningún botón, imagen o campo se
+      # quede sin nombre que leer. Hoy sale a cero, y esto es lo que lo mantiene:
+      # un botón de icono sin aria-label se ve perfectamente y se oye «botón».
+      - name: Auditar accesibilidad
+        working-directory: frontend
+        run: npm run accesibilidad
+
+      # El nivel y el objetivo se guardan en español y solo se traduce su
+      # etiqueta. Una plantilla que los interpole crudos se ve perfecta en
+      # español —«Intermedio» es lo que había que enseñar— y deja la palabra
+      # suelta en español al mirar la pantalla en inglés. Se coló en el tablero.
+      - name: Auditar valores guardados
+        working-directory: frontend
+        run: npm run valores-guardados
+
       - name: Compilar para producción
         working-directory: frontend
         run: npm run build -- --configuration production
@@ -72,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     # Solo si lo anterior pasa: construir imágenes de código que no compila no
     # aporta ninguna señal nueva y tarda varios minutos.
-    needs: [backend, frontend]
+    needs: [backend, arranque, frontend]
 
     steps:
       - uses: actions/checkout@v5
