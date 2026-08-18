@@ -133,7 +133,7 @@ public class SembradorDemo implements CommandLineRunner {
         // "te falta algo" tapando lo que se quiere enseñar.
         Usuario yo = persona("Alex Moreno", EMAIL_DEMO, CLAVE_DEMO, 28, "Intermedio",
                 "Hipertrofia", centro, Rutina.TORSO_PIERNA, "ascua",
-                "Llevo dos años entrenando en serio. Busco a alguien constante para los días de fuerza.");
+                "Llevo dos años entrenando en serio y ya he pasado la fase de venir cuando me apetece. Lo que busco es alguien que no falle: prefiero un compañero más flojo que aparezca siempre a uno fuerte que cancele la mitad de las semanas. Me viene bien que me metan prisa entre series, tiendo a acomodarme con el móvil.");
         franjas(yo, fija("Lunes", "18:00", "20:00"), fija("Miércoles", "18:00", "20:00"),
                 suelta("Viernes", "18:00", "20:30"));
         marcas(yo, marca(Ejercicio.PRESS_BANCA, 90, 5), marca(Ejercicio.SENTADILLA, 130, 3),
@@ -142,7 +142,7 @@ public class SembradorDemo implements CommandLineRunner {
         // --- Los que encajan mucho: mismo gimnasio, mismas horas fijas, fuerza parecida ---
         Usuario marta = persona("Marta Ibáñez", "marta@spotterai.test", CLAVE_DEMO, 27, "Intermedio",
                 "Hipertrofia", centro, Rutina.TORSO_PIERNA, "ciruela",
-                "Torso/pierna cuatro días. Prefiero entrenar acompañada en los básicos.");
+                "Torso/pierna cuatro días, llevo así casi un año y me va bien. En los básicos prefiero no estar sola —sobre todo en banca, que me da respeto quedarme pillada— así que busco a alguien para esos días. No hace falta que sea un fenómeno, con que sepa colocarse detrás y contar repeticiones me vale.");
         franjas(marta, fija("Lunes", "18:00", "20:00"), fija("Miércoles", "18:30", "20:30"),
                 suelta("Sábado", "10:00", "12:00"));
         marcas(marta, marca(Ejercicio.PRESS_BANCA, 62, 5), marca(Ejercicio.SENTADILLA, 105, 4),
@@ -150,7 +150,7 @@ public class SembradorDemo implements CommandLineRunner {
 
         Usuario javi = persona("Javi Ortega", "javi@spotterai.test", CLAVE_DEMO, 30, "Intermedio",
                 "Fuerza", centro, Rutina.TORSO_PIERNA, "acero",
-                "Vengo de powerlifting. Necesito a alguien que pueda ayudarme en banca pesada.");
+                "Vengo del powerlifting y sigo entrenando como si compitiera: series de tres a cinco, descansos largos y mucha barra. Necesito a alguien que pueda con mi banca para las series pesadas, porque solo no las saco. Aviso de que soy pesado con la técnica y no me callo si veo que alguien va a hacerse daño.");
         franjas(javi, fija("Lunes", "18:00", "20:00"), fija("Miércoles", "18:00", "20:00"),
                 fija("Viernes", "18:00", "20:00"));
         marcas(javi, marca(Ejercicio.PRESS_BANCA, 100, 3), marca(Ejercicio.SENTADILLA, 145, 2),
@@ -159,33 +159,33 @@ public class SembradorDemo implements CommandLineRunner {
         // --- Encajan a medias: coinciden en algo pero no en todo ---
         Usuario lucia = persona("Lucía Ferrer", "lucia@spotterai.test", CLAVE_DEMO, 25, "Principiante",
                 "Pérdida de peso", centro, Rutina.FULL_BODY, "ambar",
-                "Empecé en enero. Todavía me da respeto la zona de peso libre.");
+                "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara. No busco que me exijan todavía, busco perderle el miedo a la barra.");
         franjas(lucia, suelta("Lunes", "19:00", "21:00"), suelta("Jueves", "19:00", "21:00"));
         marcas(lucia, marca(Ejercicio.SENTADILLA, 45, 8), marca(Ejercicio.PRESS_BANCA, 30, 8));
 
         Usuario diego = persona("Diego Salas", "diego@spotterai.test", CLAVE_DEMO, 34, "Avanzado",
                 "Fuerza", centro, Rutina.EMPUJE_TIRON_PIERNA, "pizarra",
-                "Empuje/tirón/pierna. Entreno temprano casi siempre.");
+                "Empuje/tirón/pierna, y entreno a las siete de la mañana porque es la única hora en la que nadie me cambia los planes. A esa hora el gimnasio está vacío y se puede entrenar de verdad. Busco a alguien que aguante madrugar, que es la parte difícil; lo demás ya se apaña.");
         franjas(diego, fija("Martes", "07:00", "09:00"), fija("Jueves", "07:00", "09:00"),
                 suelta("Miércoles", "19:00", "20:30"));
         marcas(diego, marca(Ejercicio.PRESS_BANCA, 115, 3), marca(Ejercicio.PESO_MUERTO, 200, 1));
 
         Usuario noa = persona("Noa Prieto", "noa@spotterai.test", CLAVE_DEMO, 29, "Intermedio",
                 "Resistencia", centro, Rutina.LIBRE, "oliva",
-                "Corro y hago algo de fuerza. Me amoldo a lo que haga falta.");
+                "Vengo del running y este año he empezado a meter fuerza porque me lesionaba. No tengo una rutina cerrada y me da bastante igual lo que toque: me amoldo a lo que entrene el otro, que además así aprendo. Lo que no quiero es meterme en algo demasiado serio, esto es mi rato y quiero que siga siéndolo.");
         franjas(noa, suelta("Miércoles", "18:00", "19:30"), suelta("Viernes", "18:00", "20:00"));
         marcas(noa, marca(Ejercicio.SENTADILLA, 70, 6));
 
         Usuario hugo = persona("Hugo Bermejo", "hugo@spotterai.test", CLAVE_DEMO, 22, "Intermedio",
                 "Hipertrofia", centro, Rutina.WEIDER, "ascua",
-                "Un grupo por día, sin prisa. Pecho los lunes, como todo el mundo.");
+                "Un grupo por día, sin prisa, y sí, pecho los lunes como todo el mundo. Llevo años así y no pienso cambiarlo. Vengo también a despejarme, así que me gusta charlar entre series; si buscas a alguien que te cronometre los descansos, no soy yo.");
         franjas(hugo, fija("Lunes", "19:00", "21:00"), suelta("Martes", "19:00", "21:00"));
         marcas(hugo, marca(Ejercicio.PRESS_BANCA, 80, 6), marca(Ejercicio.REMO_BARRA, 70, 8));
 
         // --- Encajan poco: otro gimnasio, u horas que no cruzan ---
         Usuario carmen = persona("Carmen Vidal", "carmen@spotterai.test", CLAVE_DEMO, 31, "Intermedio",
                 "Hipertrofia", chamberi, Rutina.TORSO_PIERNA, "ciruela",
-                "En Chamberí, casi siempre por la tarde. Me muevo si hace falta.");
+                "Entreno en Chamberí casi siempre por la tarde, aunque si hace falta me muevo a otro sitio sin problema —vivo a medio camino entre dos gimnasios—. Llevo bastante tiempo y voy a mi ritmo, ni compito ni pretendo; lo que quiero es no volver a dejarlo como me pasó hace dos años.");
         franjas(carmen, fija("Lunes", "18:00", "20:00"), fija("Jueves", "18:00", "20:00"));
         marcas(carmen, marca(Ejercicio.HIP_THRUST, 120, 8), marca(Ejercicio.SENTADILLA, 90, 5));
         // El caso que existe para que se vea funcionar: coincide con la cuenta
@@ -197,12 +197,12 @@ public class SembradorDemo implements CommandLineRunner {
 
         Usuario ruben = persona("Rubén Casas", "ruben@spotterai.test", CLAVE_DEMO, 26, "Principiante",
                 "Hipertrofia", retiro, Rutina.FULL_BODY, "acero",
-                "Recién mudado al barrio, buscando con quién ir.");
+                "Me acabo de mudar al barrio y no conozco a nadie, así que más que un compañero de entreno busco no venir solo. Entreno de todo un poco y me adapto sin problema al plan de otro. Nivel medio tirando a bajo, aviso, pero vengo cuando digo que vengo.");
         franjas(ruben, suelta("Martes", "20:00", "22:00"), suelta("Sábado", "11:00", "13:00"));
 
         Usuario elena = persona("Elena Sanz", "elena@spotterai.test", CLAVE_DEMO, 38, "Avanzado",
                 "Fuerza", chamberi, Rutina.EMPUJE_TIRON_PIERNA, "oliva",
-                "Compito en -63 kg. Entreno de mañana.");
+                "Compito en -63 y entreno de mañana porque por la tarde no rindo. Estoy en una planificación cerrada, así que no puedo cambiarla para adaptarme a nadie: quien entrene conmigo tiene que ir a lo suyo en paralelo. A cambio no falto nunca y sé asegurar bien.");
         franjas(elena, fija("Martes", "08:00", "10:00"), fija("Viernes", "08:00", "10:00"));
         marcas(elena, marca(Ejercicio.SENTADILLA, 120, 2), marca(Ejercicio.PESO_MUERTO, 145, 1));
 
@@ -213,11 +213,11 @@ public class SembradorDemo implements CommandLineRunner {
 
         Usuario irene = persona("Irene Lago", "irene@spotterai.test", CLAVE_DEMO, 24, null,
                 "Hipertrofia", null, Rutina.FULL_BODY, "ambar",
-                "Acabo de empezar, todavía rellenando el perfil.");
+                "Acabo de empezar, todavía estoy rellenando el perfil.");
 
         Usuario pablo = persona("Pablo Nieto", "pablo@spotterai.test", CLAVE_DEMO, 33, "Intermedio",
                 "Hipertrofia", centro, Rutina.TORSO_PIERNA, "ascua",
-                "Entreno a mediodía, que es cuando puedo escaparme del trabajo.");
+                "Entreno a mediodía porque es cuando puedo escaparme del trabajo, y voy con el tiempo justo: hora y media contando ducha. Eso significa poco descanso y nada de charla, que no es por antipatía. Busco a alguien con la misma prisa, que si no acabo yendo solo.");
         franjas(pablo, fija("Lunes", "13:00", "14:30"), fija("Miércoles", "13:00", "14:30"));
         marcas(pablo, marca(Ejercicio.PRESS_BANCA, 85, 5));
 

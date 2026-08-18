@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpotterAI · ¿con cuál entrenarías?</title>
+<style>
+  :root {
+    --fondo: #faf8f6; --tarjeta: #fff; --texto: #1c1a19; --tenue: #6b6560;
+    --borde: #e3ddd7; --acento: #a34a24; --acento-suave: #f5e9e2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fondo: #17150f; --tarjeta: #221f19; --texto: #f2ede6; --tenue: #a49c92;
+      --borde: #37322a; --acento: #d97b4a; --acento-suave: #2e2119;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 1.5rem 1rem 4rem; background: var(--fondo); color: var(--texto);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 60rem; margin: 0 auto; }
+  h1 { font-size: 1.35rem; margin: 0 0 .35rem; }
+  .sub { color: var(--tenue); margin: 0 0 1.5rem; font-size: .95rem; }
+
+  .barra { height: 5px; background: var(--borde); border-radius: 3px; margin-bottom: 1.75rem; }
+  .barra > div { height: 100%; background: var(--acento); border-radius: 3px; transition: width .25s; }
+
+  .tu {
+    background: var(--acento-suave); border: 1px solid var(--borde);
+    border-radius: 12px; padding: 1rem 1.15rem; margin-bottom: 1.5rem;
+  }
+  .tu h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em;
+           color: var(--tenue); margin: 0 0 .5rem; }
+  .tu p { margin: .2rem 0; font-size: .93rem; }
+
+  .pareja { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 46rem) { .pareja { grid-template-columns: 1fr; } }
+
+  .ficha {
+    background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px;
+    padding: 1.15rem; display: flex; flex-direction: column; gap: .5rem;
+  }
+  .ficha header { display: flex; align-items: center; gap: .7rem; }
+  .ficha h3 { margin: 0; font-size: 1.05rem; }
+  .avatar {
+    width: 42px; height: 42px; border-radius: 50%; flex: 0 0 42px;
+    display: grid; place-items: center; font-weight: 700; color: #fff;
+    font-size: .9rem; letter-spacing: .02em;
+  }
+  /* Los mismos seis de la aplicación: identidad visual sin foto. Una foto
+     haría que se juzgara también por el aspecto, y el motor no ve fotos:
+     las discrepancias que salieran no dirían nada sobre los pesos. */
+  .ascua{background:#a8442a} .ambar{background:#a87a1e} .oliva{background:#5f7434}
+  .acero{background:#3c6b91} .ciruela{background:#7a4a86} .pizarra{background:#555}
+  .constancia { font-size: .84rem; color: var(--tenue); margin: 0; }
+  .ficha dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .2rem .6rem;
+              font-size: .88rem; }
+  .ficha dt { color: var(--tenue); }
+  .ficha dd { margin: 0; }
+  .bio { font-style: italic; color: var(--tenue); font-size: .9rem; margin: .3rem 0 0;
+         border-left: 2px solid var(--borde); padding-left: .7rem; }
+
+  button {
+    font: inherit; cursor: pointer; border-radius: 9px; border: 1px solid var(--borde);
+    padding: .7rem 1rem; background: var(--tarjeta); color: var(--texto);
+  }
+  button:hover { border-color: var(--acento); }
+  button:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+  .elegir { width: 100%; margin-top: auto; background: var(--acento); color: #fff;
+            border-color: var(--acento); font-weight: 600; }
+  .ninguna { display: block; margin: 1.15rem auto 0; }
+
+  .fin { text-align: center; padding: 2.5rem 1rem; }
+  .fin textarea { width: 100%; height: 11rem; font-family: ui-monospace, monospace;
+                  font-size: .8rem; margin-top: 1rem; padding: .7rem;
+                  border: 1px solid var(--borde); border-radius: 9px;
+                  background: var(--tarjeta); color: var(--texto); }
+</style>
+</head>
+<body>
+<main>
+  <h1>¿Con cuál entrenarías?</h1>
+  <p class="sub">
+    Imagina que eres la persona de arriba. Abajo tienes dos posibles compañeros
+    de entrenamiento: elige con cuál entrenarías tú. No hay respuesta correcta —
+    lo que interesa es tu criterio.
+  </p>
+
+  <div class="barra"><div id="progreso" style="width:0"></div></div>
+  <div id="pantalla"></div>
+</main>
+
+<script>
+// Los datos van dentro del fichero a propósito: así se abre con doble clic desde
+// cualquier sitio, sin servidor y sin conexión. Un fetch() no funcionaría con
+// file://, y montar un servidor para veinte preguntas espantaría a la mitad.
+const COMPARACIONES = /*COMPARACIONES*/;
+
+// El orden se baraja por persona. Sin esto, quien conteste rápido acabaría
+// respondiendo por posición —siempre la izquierda— en vez de por criterio.
+const orden = COMPARACIONES.map((_, i) => i).sort(() => Math.random() - 0.5);
+const respuestas = [];
+let actual = 0;
+
+const pantalla = document.getElementById('pantalla');
+const progreso = document.getElementById('progreso');
+
+function ficha(p, lado) {
+  return `
+    <article class="ficha">
+      <header>
+        <div class="avatar ${p.color}">${p.iniciales}</div>
+        <h3>${p.nombre}</h3>
+      </header>
+      <p class="constancia">${p.constancia}</p>
+      <dl>
+        <dt>Nivel</dt><dd>${p.nivel} · ${p.edad} años</dd>
+        <dt>Objetivo</dt><dd>${p.objetivo}</dd>
+        <dt>Rutina</dt><dd>${p.rutina}</dd>
+        <dt>Gimnasio</dt><dd>${p.gimnasio}</dd>
+        <dt>Horarios</dt><dd>${p.horarios}</dd>
+        <dt>Marcas</dt><dd>${p.marcas}</dd>
+      </dl>
+      <p class="bio">«${p.bio}»</p>
+      <button class="elegir" data-lado="${lado}">Entrenaría con ${p.nombre.split(' ')[0]}</button>
+    </article>`;
+}
+
+function pintar() {
+  if (actual >= orden.length) return terminar();
+
+  const c = COMPARACIONES[orden[actual]];
+  progreso.style.width = (100 * actual / orden.length) + '%';
+
+  // Se sortea qué candidato va a la izquierda: si el mejor según el motor
+  // saliera siempre en el mismo lado, la posición se convertiría en la respuesta.
+  const alReves = Math.random() < 0.5;
+  const izq = alReves ? c.b : c.a;
+  const der = alReves ? c.a : c.b;
+
+  pantalla.innerHTML = `
+    <section class="tu">
+      <h2>Eres ${c.juez.nombre} — comparación ${actual + 1} de ${orden.length}</h2>
+      <p><strong>${c.juez.nivel}</strong> · ${c.juez.objetivo} · ${c.juez.rutina} · ${c.juez.gimnasio}</p>
+      <p>${c.juez.constancia}</p>
+      <p>Tus marcas: ${c.juez.marcas}</p>
+      <p>${c.juez.horarios}</p>
+      <p class="bio">«${c.juez.bio}»</p>
+    </section>
+    <div class="pareja">${ficha(izq, alReves ? 'b' : 'a')}${ficha(der, alReves ? 'a' : 'b')}</div>
+    <button class="ninguna">No sabría decidir</button>`;
+
+  pantalla.querySelectorAll('.elegir').forEach(b =>
+    b.onclick = () => responder(b.dataset.lado, alReves));
+  pantalla.querySelector('.ninguna').onclick = () => responder('ninguna', alReves);
+}
+
+function responder(elegido, alReves) {
+  const c = COMPARACIONES[orden[actual]];
+  respuestas.push({
+    juez: c.juez.nombre,
+    a: c.a.nombre, b: c.b.nombre,
+    // Se guarda lo que dijo el motor para poder comparar después, pero nunca se
+    // ha enseñado en pantalla: verlo habría anclado la respuesta.
+    puntosA: c.puntosA, puntosB: c.puntosB,
+    motivo: c.motivo,
+    elegido,
+    izquierdaFue: alReves ? 'b' : 'a'
+  });
+  actual++;
+  pintar();
+}
+
+function terminar() {
+  progreso.style.width = '100%';
+
+  const csv = ['juez,a,b,puntosA,puntosB,motivo,elegido,izquierdaFue']
+    .concat(respuestas.map(r => [r.juez, r.a, r.b, r.puntosA, r.puntosB,
+                                 r.motivo, r.elegido, r.izquierdaFue].join(',')))
+    .join('\n');
+
+  pantalla.innerHTML = `
+    <div class="fin">
+      <h2>Ya está. Gracias.</h2>
+      <p class="sub">Descarga el fichero y devuélvelo, o copia el texto de abajo.</p>
+      <button id="descargar">Descargar respuestas</button>
+      <textarea readonly>${csv}</textarea>
+    </div>`;
+
+  document.getElementById('descargar').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
+    a.download = 'respuestas-spotterai.csv';
+    a.click();
+  };
+}
+
+pintar();
+</script>
+</body>
+</html>
