@@ -87,6 +87,19 @@ El emparejamiento tiene dos capas, deliberadamente separadas:
 | Rutina | 5 | |
 | Edad | 5 | |
 
+Esos pesos están razonados uno a uno, y además **medidos**: anulando cada factor
+sobre 1.770 parejas se cuenta cuántas cambian de tramo. El horario decide el
+56 % de ellas, que es lo que corresponde a una restricción y no a una
+preferencia.
+
+Y sale una conclusión que no está en ninguna parte del código: **los dos factores
+que peor rinden son exactamente los dos que el perfil mínimo no exige** — la
+constancia y la fuerza, que valen 10 puntos cada uno y solo se pueden evaluar en
+el 69 % y el 23 % de las parejas. No es un reparto mal calibrado: es el precio de
+no obligar a rellenarlos, y ahora ese precio tiene un número. Método, resultados
+y las dos veces que el instrumento estuvo mal, en
+[`docs/medir-el-motor.md`](docs/medir-el-motor.md).
+
 Cinco decisiones del motor que no son obvias:
 
 **Coincidir en horario en gimnasios distintos no es coincidir.** El gimnasio no es un mérito que suma aparte: es la condición bajo la cual el solape significa algo. Tú a las seis en McFit y ella a las seis en Basic-Fit no estáis juntos, estáis en dos edificios de la ciudad a la misma hora — y la aplicación llegó a decir *«los dos vais siempre un día a la misma hora»* de una pareja así. Ahora el solape en otro gimnasio vale una cuarta parte, y la frase lo dice.
@@ -231,7 +244,10 @@ Cada push a `main` y cada pull request ejecuta [este workflow](.github/workflows
 
 - **Backend** — `./mvnw verify`, la suite entera sobre H2 en memoria. Si algo falla, sube los informes de surefire como artefacto.
 - **Frontend** — `npm ci` y compilación de producción. `ci` y no `install`: falla si `package.json` y el lock se han desincronizado, que es justo lo que interesa saber.
+- **Arranque** — levanta el backend contra un MariaDB de verdad, con Flyway y `ddl-auto=validate`. Es el único que ejecuta las migraciones: los tests corren sobre H2 con Flyway apagado, así que sin esto nadie comprueba que se resuelvan, que MariaDB acepte su SQL ni que las entidades casen con el esquema que dejan.
 - **Imágenes** — construye las dos imágenes Docker (sin publicarlas). Comprueba que los `Dockerfile` siguen siendo válidos, que es lo que se rompe sin que nadie lo note hasta que alguien intenta levantar el proyecto.
+
+El trabajo de arranque existe por un fallo concreto: una migración nueva salió numerada `V10` cuando ya había otra `V10`, y la aplicación dejó de levantar —`Found more than one migration with version 10`— con 389 pruebas en verde y las dos imágenes construidas. **Construir una imagen no la arranca**, y ahí había una clase entera de fallo sin ninguna red. La comprobación barata de ese caso (versiones repetidas o con huecos) está además en `MigracionesTest`, que corre en milisegundos y sin base de datos.
 
 ---
 
@@ -258,6 +274,14 @@ frontend/src/scss/  Tokens de diseño y componentes compartidos
 ```
 
 Dos piezas que conviene mirar si vienes de fuera: `matching/CalculadoraCompatibilidad` es donde vive el producto, y `components/rejilla-semana` es lo que lo hace visible.
+
+Y tres documentos que cuentan decisiones que no caben en un comentario:
+
+| | |
+|---|---|
+| [`docs/medir-el-motor.md`](docs/medir-el-motor.md) | Qué mueve cada peso de verdad, medido sobre 1.770 parejas |
+| [`docs/i18n.md`](docs/i18n.md) | Cómo se traduce una pantalla, y las reglas que no son obvias |
+| [`embeddings/README.md`](embeddings/README.md) | Por qué el servicio del modelo ocupa 475 MB y no 740 |
 
 ---
 
