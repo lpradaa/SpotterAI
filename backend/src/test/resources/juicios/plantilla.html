@@ -15,6 +15,15 @@
       --borde: #37322a; --acento: #d97b4a; --acento-suave: #2e2119;
     }
   }
+  :root[data-theme="dark"] {
+    --fondo: #17150f; --tarjeta: #221f19; --texto: #f2ede6; --tenue: #a49c92;
+    --borde: #37322a; --acento: #d97b4a; --acento-suave: #2e2119;
+  }
+  :root[data-theme="light"] {
+    --fondo: #faf8f6; --tarjeta: #fff; --texto: #1c1a19; --tenue: #6b6560;
+    --borde: #e3ddd7; --acento: #a34a24; --acento-suave: #f5e9e2;
+  }
+
   * { box-sizing: border-box; }
   body {
     margin: 0; padding: 1.5rem 1rem 4rem; background: var(--fondo); color: var(--texto);
@@ -90,6 +99,12 @@
 
   <div class="barra"><div id="progreso" style="width:0"></div></div>
   <div id="pantalla"></div>
+
+  <!-- El registro compartido. Cada respuesta se añade aquí como un <li> y eso
+       es lo que se guarda y me llega: la lista ES el documento, no un reflejo
+       de un objeto de JavaScript. Va oculta a propósito — quien contesta no
+       debe ver lo que han elegido los demás. -->
+  <ul id="respuestas" artifact-sync hidden></ul>
 </main>
 
 <script>
@@ -179,12 +194,33 @@ function terminar() {
   const csv = ['juez,a,b,puntosA,puntosB,motivo,elegido,izquierdaFue']
     .concat(respuestas.map(r => [r.juez, r.a, r.b, r.puntosA, r.puntosB,
                                  r.motivo, r.elegido, r.izquierdaFue].join(',')))
-    .join('\n');
+    .join('
+');
+
+  // Se intenta guardar en el registro compartido, que es lo que hace que las
+  // respuestas lleguen solas. Puede no estar permitido —quien abre un enlace
+  // de solo lectura no escribe— y por eso el texto de abajo se enseña siempre:
+  // sin esa salida, esas personas contestarían para nada.
+  let guardado = false;
+  try {
+    const lista = document.getElementById('respuestas');
+    const sesion = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    respuestas.forEach(r => {
+      lista.insertAdjacentHTML('beforeend',
+        '<li>' + [sesion, r.juez, r.a, r.b, r.puntosA, r.puntosB,
+                  r.motivo, r.elegido, r.izquierdaFue].join(' | ') + '</li>');
+    });
+    guardado = lista.children.length > 0;
+  } catch (e) {
+    guardado = false;
+  }
 
   pantalla.innerHTML = `
     <div class="fin">
       <h2>Ya está. Gracias.</h2>
-      <p class="sub">Descarga el fichero y devuélvelo, o copia el texto de abajo.</p>
+      <p class="sub">${guardado
+        ? 'Tus respuestas se han guardado. Si aun así quieres mandarlas, aquí las tienes.'
+        : 'Copia el texto de abajo y devuélvelo, o descarga el fichero.'}</p>
       <button id="descargar">Descargar respuestas</button>
       <textarea readonly>${csv}</textarea>
     </div>`;
