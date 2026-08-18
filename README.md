@@ -68,13 +68,38 @@ Un muro abierto invita a publicar para que lo vean, y nada de eso ayuda a que do
 personas coincidan un martes, que es la vara con la que se ha medido todo lo
 demás.
 
+### En español y en inglés, incluido lo que escribe el motor
+
+El selector cambia el idioma **en caliente**, sin recargar y sin perder lo que
+estuvieras haciendo: son señales de Angular, no el i18n nativo, que compila una
+versión de la aplicación por idioma.
+
+Lo que se traduce es la etiqueta, nunca el dato. El nivel, el objetivo, los días
+y los tipos de entreno siguen guardándose en español y comparándose así — si los
+dos lados normalizaran distinto, la misma persona saldría traducida en el chip de
+su tarjeta y en español en la frase del motor de al lado.
+
+Y el backend también escribe. La frase de compatibilidad, los nombres de las
+rutinas, lo que le falta a tu perfil y los errores que se te enseñan llevan
+**claves** y no frases hechas, y se redactan en un solo sitio con el idioma de
+cada petición. Los correos son el caso que obliga a hacerlo así: se escriben
+fuera de una petición —un barrido que corre cada minuto— así que su idioma no
+puede salir de `Accept-Language`, y sale de una columna del usuario.
+
+Tres redes lo sostienen, y las tres nacieron de un fallo real: el compilador de
+TypeScript no deja añadir una clave en un idioma y olvidarla en el otro, un test
+comprueba lo mismo en los `.properties` del backend, y un script busca valores
+guardados que se pinten sin etiquetar — el peor de todos era `«ascua colour»`, el
+nombre de un color de avatar que solo existe para quien usa un lector de
+pantalla. Está contado en [`docs/i18n.md`](docs/i18n.md).
+
 ---
 
 ## Cómo funciona el match
 
 El emparejamiento tiene dos capas, deliberadamente separadas:
 
-**1. Motor determinista** (`matching/CalculadoraCompatibilidad`) — puntúa de 0 a 100 cruzando horarios reales, fuerza, nivel, objetivo, rutina, gimnasio y edad. Mismo input, mismo resultado. Sin coste, sin red, testeado.
+**1. Motor determinista** (`matching/CalculadoraCompatibilidad`) — puntúa de 0 a 100 cruzando horarios reales, fuerza, nivel, objetivo, rutina, gimnasio y edad. Mismo input, mismo resultado. Sin coste, sin red, testeado. Hay un noveno factor que sí necesita un modelo, y está más abajo.
 
 | Factor | Peso | |
 |---|---:|---|
@@ -100,6 +125,53 @@ no obligar a rellenarlos, y ahora ese precio tiene un número. Método, resultad
 y las dos veces que el instrumento estuvo mal, en
 [`docs/medir-el-motor.md`](docs/medir-el-motor.md).
 
+### El noveno factor, que es el único que necesita un modelo
+
+Los ocho de arriba salen de campos que la gente elige en un desplegable. El
+noveno lee lo único que se escribe a mano —la biografía— y vale **6 de 100**, a
+propósito: una señal blanda de un modelo no puede pesar como el horario.
+
+Y es la parte del proyecto que más veces se ha equivocado, siempre por escrito:
+
+**Primero comparaba las dos biografías con la similitud del coseno.** Medido con
+pares de relación conocida, aquello ordenaba por **parecido de redacción y no por
+compatibilidad**: dos personas que querían lo contrario dicho con la misma
+estructura sacaban 0,843, y dos que querían lo mismo dicho con sus palabras,
+0,499. Justo al revés de lo que el producto necesita.
+
+**No se arreglaba cambiando de modelo**, que era la salida evidente. Medido
+también: `multilingual-e5-small` sale peor en proporción a su propio rango. El
+fallo es estructural — un bi-encoder proyecta cada texto por separado, y la
+oposición entre dos frases no es propiedad de ninguna de las dos, es de la pareja.
+
+**Ahora cada biografía se lee sola**, con un modelo de inferencia textual que sí
+entiende la negación, y lo que se guarda son tres posiciones con nombre en vez de
+384 números opacos:
+
+| eje | de un lado | del otro |
+|---|---|---|
+| qué busca del otro | que le exija | compañía |
+| ambición | competir | mantenerse |
+| flexibilidad | me amoldo | tengo mi plan |
+
+Un eje del que uno de los dos no habla **no se evalúa**: la mitad de las
+biografías reales no dicen nada de la mitad de los ejes, y colocar en el centro a
+quien calla sería atribuirle una postura que no ha dado.
+
+Eso cabe donde un cross-encoder no cabría, y la diferencia importa: el modelo lee
+a **una** persona al guardar su perfil, no compara a dos al emparejar. Emparejar
+sigue siendo aritmética sobre datos ya calculados, y el servicio puede caerse sin
+que el motor se entere.
+
+Lo que se gana no son los seis puntos, es que el factor **por fin se explica**.
+Antes decía *«describís lo que buscáis de forma muy parecida»*, que es una
+afirmación sobre dos vectores; ahora dice *«coincidís en lo que estáis dispuestos
+a amoldaros»*, que se puede discutir — y por tanto creer o no.
+
+El precio está medido y se paga a sabiendas: el servicio del modelo pasa de 475 a
+**611 MB**. Un factor que ordena al revés de lo que dice ordenar no vale 127 MB
+menos, vale cero.
+
 Cinco decisiones del motor que no son obvias:
 
 **Coincidir en horario en gimnasios distintos no es coincidir.** El gimnasio no es un mérito que suma aparte: es la condición bajo la cual el solape significa algo. Tú a las seis en McFit y ella a las seis en Basic-Fit no estáis juntos, estáis en dos edificios de la ciudad a la misma hora — y la aplicación llegó a decir *«los dos vais siempre un día a la misma hora»* de una pareja así. Ahora el solape en otro gimnasio vale una cuarta parte, y la frase lo dice.
@@ -118,7 +190,7 @@ Cinco decisiones del motor que no son obvias:
 
 **2. Explicación** (`matching/ExplicadorCompatibilidad`) — hila los textos que ya trae cada factor, sin inventar nada. Solo menciona factores que sumaron puntos, así que la explicación nunca puede contradecir a la nota que acompaña.
 
-**3. El desglose** — y debajo, si se pide, los ocho factores uno a uno: lo que aportó cada uno, sobre cuánto podía aportar y por qué. La apuesta de todo esto es que un porcentaje sin explicación no vale nada, y durante un tiempo se servía exactamente eso: un porcentaje y una frase, porque el desglose se calculaba entero y se aplastaba a una cadena antes de salir del backend. Enseñarlo es lo que hace visibles las dos decisiones más caras del motor:
+**3. El desglose** — y debajo, si se pide, los nueve factores uno a uno: lo que aportó cada uno, sobre cuánto podía aportar y por qué. La apuesta de todo esto es que un porcentaje sin explicación no vale nada, y durante un tiempo se servía exactamente eso: un porcentaje y una frase, porque el desglose se calculaba entero y se aplastaba a una cadena antes de salir del backend. Enseñarlo es lo que hace visibles las dos decisiones más caras del motor:
 
 - Un factor **sin datos** aparece aparte y sin barra, diciendo que no resta. Una barra vacía se leería como «puntuó cero», que es lo contrario de lo que pasa.
 - Su peso **se reparte** entre los demás. Por eso puede salir «Edad 13/13» donde la tabla de arriba dice 5 — y sin decirlo, ese 13 parecería un error.
@@ -243,11 +315,19 @@ El frontend llama al backend con rutas relativas (`/api/…`) y quien las reenv�
 Cada push a `main` y cada pull request ejecuta [este workflow](.github/workflows/ci.yml):
 
 - **Backend** — `./mvnw verify`, la suite entera sobre H2 en memoria. Si algo falla, sube los informes de surefire como artefacto.
-- **Frontend** — `npm ci` y compilación de producción. `ci` y no `install`: falla si `package.json` y el lock se han desincronizado, que es justo lo que interesa saber.
+- **Frontend** — `npm ci`, la suite de Vitest y compilación de producción, más dos auditorías: que ningún control interactivo se quede sin nombre accesible, y que ningún valor guardado se pinte sin etiquetar. `ci` y no `install`: falla si `package.json` y el lock se han desincronizado, que es justo lo que interesa saber.
 - **Arranque** — levanta el backend contra un MariaDB de verdad, con Flyway y `ddl-auto=validate`. Es el único que ejecuta las migraciones: los tests corren sobre H2 con Flyway apagado, así que sin esto nadie comprueba que se resuelvan, que MariaDB acepte su SQL ni que las entidades casen con el esquema que dejan.
 - **Imágenes** — construye las dos imágenes Docker (sin publicarlas). Comprueba que los `Dockerfile` siguen siendo válidos, que es lo que se rompe sin que nadie lo note hasta que alguien intenta levantar el proyecto.
 
 El trabajo de arranque existe por un fallo concreto: una migración nueva salió numerada `V10` cuando ya había otra `V10`, y la aplicación dejó de levantar —`Found more than one migration with version 10`— con 389 pruebas en verde y las dos imágenes construidas. **Construir una imagen no la arranca**, y ahí había una clase entera de fallo sin ninguna red. La comprobación barata de ese caso (versiones repetidas o con huecos) está además en `MigracionesTest`, que corre en milisegundos y sin base de datos.
+
+Hay tres pruebas más de esa misma familia, y las tres existen porque el fallo ya
+había ocurrido: que los dos catálogos de textos digan lo mismo, que ningún
+controlador capture un error para devolver su clave en pantalla, y que los ejes
+del noveno factor se llamen igual en Java que en el servicio de Python. Todas
+cazan lo mismo —algo que **se ve perfectamente en pantalla** y que ninguna prueba
+de comportamiento mira, porque ninguna afirma lo que alguien lee— y todas se
+comprobaron rompiendo el código a propósito para verlas fallar.
 
 ---
 
@@ -279,9 +359,9 @@ Y tres documentos que cuentan decisiones que no caben en un comentario:
 
 | | |
 |---|---|
-| [`docs/medir-el-motor.md`](docs/medir-el-motor.md) | Qué mueve cada peso de verdad, medido sobre 1.770 parejas |
+| [`docs/medir-el-motor.md`](docs/medir-el-motor.md) | Qué mueve cada peso de verdad, y las tres veces que una explicación mía resultó falsa al medirla |
 | [`docs/i18n.md`](docs/i18n.md) | Cómo se traduce una pantalla, y las reglas que no son obvias |
-| [`embeddings/README.md`](embeddings/README.md) | Por qué el servicio del modelo ocupa 475 MB y no 740, y por qué luego se pagaron 127 más a sabiendas |
+| [`embeddings/README.md`](embeddings/README.md) | Por qué el servicio bajó de 740 MB a 475, y por qué después subió a 611 a sabiendas |
 
 ---
 
@@ -347,6 +427,18 @@ Lo que hay, y por qué:
 
 - **Chat sin indicador de escritura.** Los mensajes llegan al instante y se ve si el otro los ha leído, pero no si está escribiendo.
 - **No se avisa de los mensajes por correo, solo de solicitudes y propuestas.** Es deliberado: un correo por cada mensaje de un chat es la forma más rápida de que alguien silencie el remitente, y entonces se pierden también los avisos que sí importaban. Lo que falta de verdad es un resumen —"tienes 3 mensajes sin leer"— y eso pide decidir cada cuánto, que es una decisión de producto, no de código.
+- **Nadie ha comprobado que el motor acierte.** Está medido contra sí mismo
+  —cuánto mueve cada peso, dónde se apoya, qué factor no puede evaluarse— y eso
+  no es lo mismo que validarlo. Validar sería comprobar que la gente con
+  puntuación alta acaba entrenando junta, y para eso está el embudo de
+  `/embudo`, que hoy dice —correctamente— que hacen falta 20 solicitudes por
+  tramo y todavía no hay. El camino más corto no es conseguir usuarios: son
+  **juicios humanos por comparación de pares**, con el acuerdo entre anotadores
+  medido para saber cuál es el techo. Eso sigue sin hacerse.
+- **El noveno factor opina en 7 de cada 10 parejas.** Es el precio de no
+  inventarle una postura a quien no ha hablado de un eje, y es mejor que el
+  factor anterior, que opinaba siempre y ordenaba al revés. Pero es una pérdida
+  y está contada.
 - **Sin paginación.** Con decenas de usuarios sobra; con miles no.
 - **`DisponibilidadController` expone un CRUD que nadie llama** — los horarios se gestionan dentro de `PUT /perfil`.
 - **Accesibilidad, solo lo básico.** Está el equivalente textual de la rejilla, el foco atrapado en los diálogos y el contraste medido; falta pasarle un lector de pantalla de verdad y revisar el orden de tabulación pantalla por pantalla.
