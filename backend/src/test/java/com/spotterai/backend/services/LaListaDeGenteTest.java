@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.config.IdiomaConfig;
 import com.spotterai.backend.semantica.VectorDePrueba;
 import com.spotterai.backend.semantica.VectorDeBiografia;
 import com.spotterai.backend.textos.TextosDePrueba;
@@ -16,11 +17,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Clock;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -231,6 +234,26 @@ class LaListaDeGenteTest {
     @DisplayName("La rutina llega a la lista para poder pintarla")
     void laRutinaViaja() {
         assertEquals("Torso / Pierna", servicio.buscarCompañeros("luis@test.com").get(0).getRutina());
+    }
+
+    /**
+     * Este campo es el chip de rutina de cada tarjeta, y salia del nombre que el
+     * enum llevaba escrito dentro: español fijo, sin pasar por el catalogo. La
+     * tarjeta entera en ingles con "Torso / Pierna" en medio, y encima justo
+     * debajo de la frase del motor, que si se traducia.
+     */
+    @Test
+    @DisplayName("La rutina sale en el idioma de la petición, como el resto de la tarjeta")
+    void laRutinaSeTraduce() {
+        try {
+            LocaleContextHolder.setLocale(Locale.ENGLISH);
+
+            assertEquals("Upper / Lower",
+                    servicio.buscarCompañeros("luis@test.com").get(0).getRutina());
+        } finally {
+            // El locale vive en el hilo, que las pruebas comparten.
+            LocaleContextHolder.setLocale(IdiomaConfig.ESPANOL);
+        }
     }
 
     @Test

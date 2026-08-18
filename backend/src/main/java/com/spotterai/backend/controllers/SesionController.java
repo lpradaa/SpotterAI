@@ -18,6 +18,13 @@ import java.util.Map;
  * corresponde (responder por otro, quedar con quien no es tu compañero) y 400
  * cuando lo que pides no tiene sentido (el pasado, una hora imposible). Son dos
  * cosas distintas y la interfaz las trata distinto.
+ *
+ * <p>Eso ya no se escribe aquí: lo hace {@link ManejadorDeErrores}, que además
+ * los redacta en el idioma de la petición. Cada método tenía el mismo par de
+ * {@code catch} copiado —seis veces en este fichero— y devolvía el mensaje que
+ * la excepción llevara dentro, que estaba en español. Dejarlos ahora sería peor
+ * que antes: con la clave dentro de la excepción, un {@code getMessage()} suelto
+ * enseñaría «error.sesion.enElPasado» en la pantalla.
  */
 @RestController
 @RequestMapping("/api/sesiones")
@@ -57,14 +64,7 @@ public class SesionController {
      */
     @GetMapping("/sugerencia/{otroUsuarioId}")
     public ResponseEntity<?> sugerencia(@PathVariable Long otroUsuarioId) {
-        try {
-            SugerenciaSesionDTO sugerencia = sesionService.sugerir(emailAutenticado(), otroUsuarioId);
-            return ResponseEntity.ok(sugerencia);
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(sesionService.sugerir(emailAutenticado(), otroUsuarioId));
     }
 
     /**
@@ -84,13 +84,7 @@ public class SesionController {
     @PostMapping("/proponer/{otroUsuarioId}")
     public ResponseEntity<?> proponer(@PathVariable Long otroUsuarioId,
                                       @RequestBody NuevaSesionDTO cuerpo) {
-        try {
-            return ResponseEntity.ok(sesionService.proponer(emailAutenticado(), otroUsuarioId, cuerpo));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(sesionService.proponer(emailAutenticado(), otroUsuarioId, cuerpo));
     }
 
     /** POST /api/sesiones/{id}/aceptar */
@@ -106,26 +100,14 @@ public class SesionController {
     }
 
     private ResponseEntity<?> responder(Long id, boolean acepta) {
-        try {
-            return ResponseEntity.ok(sesionService.responder(emailAutenticado(), id, acepta));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(sesionService.responder(emailAutenticado(), id, acepta));
     }
 
     /** DELETE /api/sesiones/{id} — cancelar, mientras no haya empezado. */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> cancelar(@PathVariable Long id) {
-        try {
-            sesionService.cancelar(emailAutenticado(), id);
-            return ResponseEntity.noContent().build();
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        sesionService.cancelar(emailAutenticado(), id);
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -135,12 +117,6 @@ public class SesionController {
      */
     @PostMapping("/{id}/confirmar")
     public ResponseEntity<?> confirmar(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(sesionService.confirmar(emailAutenticado(), id));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(sesionService.confirmar(emailAutenticado(), id));
     }
 }

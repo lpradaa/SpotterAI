@@ -1,5 +1,7 @@
 package com.spotterai.backend.seguridad;
 
+import com.spotterai.backend.textos.ErrorDeNegocio;
+
 /**
  * Que se acepta como contraseña.
  *
@@ -26,15 +28,15 @@ public final class Contrasenas {
     private Contrasenas() {}
 
     /**
-     * @throws IllegalArgumentException con el motivo, para poder enseñarlo tal cual
+     * @throws ErrorDeNegocio con la clave del motivo, que se le enseña a quien
+     *         esta poniendo la contraseña y por tanto va en su idioma
      */
     public static void exigirQueValga(String contrasena) {
         if (contrasena == null || contrasena.isBlank()) {
-            throw new IllegalArgumentException("La contraseña no puede estar vacía.");
+            throw ErrorDeNegocio.de("error.contrasena.vacia");
         }
         if (contrasena.length() < MINIMO) {
-            throw new IllegalArgumentException(
-                    "La contraseña necesita al menos " + MINIMO + " caracteres.");
+            throw ErrorDeNegocio.de("error.contrasena.corta", MINIMO);
         }
     }
 }

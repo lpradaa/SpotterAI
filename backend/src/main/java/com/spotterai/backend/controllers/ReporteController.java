@@ -39,12 +39,8 @@ public class ReporteController {
     @PostMapping("/{reportadoId}")
     public ResponseEntity<?> reportar(@PathVariable Long reportadoId,
                                       @RequestBody Map<String, String> cuerpo) {
-        try {
-            reportes.reportar(emailAutenticado(), reportadoId, cuerpo.get("motivo"), cuerpo.get("detalle"));
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        reportes.reportar(emailAutenticado(), reportadoId, cuerpo.get("motivo"), cuerpo.get("detalle"));
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -90,11 +86,7 @@ public class ReporteController {
             return ResponseEntity.notFound().build();
         }
 
-        try {
-            reportes.marcarRevisado(reporteId, emailAutenticado());
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        reportes.marcarRevisado(reporteId, emailAutenticado());
+        return ResponseEntity.noContent().build();
     }
 }

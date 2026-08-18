@@ -1,5 +1,7 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.ErrorDeNegocio;
+import com.spotterai.backend.textos.ErrorDePermiso;
 import com.spotterai.backend.dtos.HitoDTO;
 import com.spotterai.backend.models.Hito;
 import com.spotterai.backend.models.Usuario;
@@ -43,7 +45,7 @@ public class HitoService {
 
         String tituloLimpio = titulo == null ? "" : titulo.trim();
         if (tituloLimpio.isEmpty()) {
-            throw new IllegalArgumentException("El hito necesita un título.");
+            throw ErrorDeNegocio.de("error.hito.sinTitulo");
         }
         if (hitoRepository.findByUsuarioIdOrderByFechaDescIdDesc(yo.getId()).size() >= MAX_POR_USUARIO) {
             throw new IllegalArgumentException(
@@ -68,7 +70,7 @@ public class HitoService {
                 .orElseThrow(() -> new IllegalArgumentException("Ese hito no existe."));
 
         if (!hito.getUsuario().getId().equals(yo.getId())) {
-            throw new SecurityException("Solo puedes borrar tus propios hitos.");
+            throw ErrorDePermiso.de("error.permiso.hitoAjeno");
         }
         hitoRepository.delete(hito);
     }

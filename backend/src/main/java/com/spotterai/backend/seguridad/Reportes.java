@@ -1,5 +1,6 @@
 package com.spotterai.backend.seguridad;
 
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import com.spotterai.backend.models.Reporte;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.ReporteRepository;
@@ -49,7 +50,7 @@ public class Reportes {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
         if (reportador.getId().equals(reportadoId)) {
-            throw new IllegalArgumentException("No puedes reportarte a ti mismo.");
+            throw ErrorDeNegocio.de("error.reporte.aTiMismo");
         }
 
         Usuario reportado = usuarios.findById(reportadoId)

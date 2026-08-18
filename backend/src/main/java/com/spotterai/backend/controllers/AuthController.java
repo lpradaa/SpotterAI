@@ -23,6 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import com.spotterai.backend.textos.Mensaje;
+import com.spotterai.backend.textos.Textos;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -44,12 +47,15 @@ public class AuthController {
     private final Cartero cartero;
     private final BorradoDeCuenta borrado;
 
+    /** Quien redacta las claves, con el idioma de la peticion. */
+    private final Textos textos;
+
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
                           JwtUtil jwtUtil, ControlDeIntentos control, GalletaDeSesion galleta,
                           Restablecimientos restablecimientos, RedactorDeAvisos redactor,
-                          Cartero cartero, BorradoDeCuenta borrado) {
+                          Cartero cartero, BorradoDeCuenta borrado, Textos textos) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -59,6 +65,7 @@ public class AuthController {
         this.redactor = redactor;
         this.cartero = cartero;
         this.borrado = borrado;
+        this.textos = textos;
     }
 
     /**
@@ -111,20 +118,16 @@ public class AuthController {
     /** Poner la contraseña nueva con el token del correo. */
     @PostMapping("/restablecer")
     public ResponseEntity<?> restablecer(@RequestBody Map<String, String> cuerpo) {
-        try {
-            boolean hecho = restablecimientos.consumir(
-                    cuerpo.get("token"), cuerpo.get("password"));
+        boolean hecho = restablecimientos.consumir(
+                cuerpo.get("token"), cuerpo.get("password"));
 
-            if (!hecho) {
-                return ResponseEntity.status(HttpStatus.GONE).body(Map.of(
-                        "error", "Ese enlace ya no vale. Pide uno nuevo."));
-            }
-            return ResponseEntity.noContent().build();
-
-        } catch (IllegalArgumentException e) {
-            // La regla de la contraseña, tal cual, para poder enseñarla.
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        // La contraseña corta la rechaza Contrasenas con su propia clave, y de
+        // eso responde ManejadorDeErrores: aqui ya no hay nada que capturar.
+        if (!hecho) {
+            return ResponseEntity.status(HttpStatus.GONE).body(Map.of(
+                    "error", textos.de(Mensaje.de("error.enlace.caducado"))));
         }
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -142,24 +145,19 @@ public class AuthController {
                                                HttpServletResponse respuesta) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        try {
-            boolean hecho = restablecimientos.cambiar(
-                    email, cuerpo.get("actual"), cuerpo.get("nueva"));
+        boolean hecho = restablecimientos.cambiar(
+                email, cuerpo.get("actual"), cuerpo.get("nueva"));
 
-            if (!hecho) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                        "error", "La contraseña actual no es correcta."));
-            }
-
-            // La galleta de esta sesion tambien deja de valer, asi que se borra:
-            // dejarla puesta significaria un 403 en cada peticion sin que la
-            // interfaz supiera por que.
-            respuesta.addHeader(GalletaDeSesion.CABECERA, galleta.cerrar());
-            return ResponseEntity.noContent().build();
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        if (!hecho) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", textos.de(Mensaje.de("error.contrasena.actualMal"))));
         }
+
+        // La galleta de esta sesion tambien deja de valer, asi que se borra:
+        // dejarla puesta significaria un 403 en cada peticion sin que la
+        // interfaz supiera por que.
+        respuesta.addHeader(GalletaDeSesion.CABECERA, galleta.cerrar());
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -179,7 +177,7 @@ public class AuthController {
 
         if (!borrado.borrar(email, cuerpo.get("password"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "error", "La contraseña no es correcta."));
+                    "error", textos.de(Mensaje.de("error.contrasena.noEsCorrecta"))));
         }
 
         // La galleta apunta a una cuenta que ya no existe: dejarla puesta seria

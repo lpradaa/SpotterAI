@@ -1,10 +1,12 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.ErrorDePermiso;
 import com.spotterai.backend.dtos.SolicitudDTO;
 import com.spotterai.backend.eventos.CanalEventos;
 import com.spotterai.backend.eventos.TipoEvento;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.BloqueoRepository;
@@ -48,7 +50,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Override
     public Solicitud cambiarEstado(Long id, String nuevoEstado) {
         Solicitud solicitud = solicitudRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Solicitud no encontrada"));
+            .orElseThrow(() -> ErrorDeNegocio.de("error.solicitud.noEncontrada"));
         
         solicitud.setEstado(nuevoEstado);
         return solicitudRepository.save(solicitud);
@@ -57,20 +59,20 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Override
     public SolicitudDTO enviarSolicitud(String emailEmisor, Long receptorId) {
         Usuario emisor = usuarioRepository.findByEmail(emailEmisor)
-                .orElseThrow(() -> new IllegalArgumentException("Emisor no encontrado"));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.usuarioNoEncontrado"));
         
         Usuario receptor = usuarioRepository.findById(receptorId)
-                .orElseThrow(() -> new IllegalArgumentException("Receptor no encontrado"));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.usuarioNoEncontrado"));
 
         if (emisor.getId().equals(receptor.getId())) {
-            throw new IllegalArgumentException("No puedes enviarte una solicitud a ti mismo.");
+            throw ErrorDeNegocio.de("error.solicitud.aTiMismo");
         }
 
         // Tercera puerta, y la que de verdad hacia falta: sin esto, deshacer la
         // relacion no servia de nada porque el otro podia mandar otra solicitud
         // al segundo siguiente. El mensaje no dice que hay un bloqueo.
         if (bloqueoRepository.hayBloqueoEntre(emisor.getId(), receptor.getId())) {
-            throw new IllegalArgumentException("No se puede conectar con esa persona.");
+            throw ErrorDeNegocio.de("error.solicitud.noSePuede");
         }
 
         // Usamos findFirstBy para evitar errores si en el futuro hay basura en la BD
@@ -78,7 +80,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         Optional<Solicitud> previaVuelta = solicitudRepository.findFirstByEmisorIdAndReceptorId(receptor.getId(), emisor.getId());
         
         if (previaIda.isPresent() || previaVuelta.isPresent()) {
-            throw new IllegalArgumentException("Ya existe una solicitud entre estos usuarios.");
+            throw ErrorDeNegocio.de("error.solicitud.yaExiste");
         }
 
         Solicitud nueva = new Solicitud();
@@ -100,7 +102,7 @@ public class SolicitudServiceImpl implements SolicitudService {
             // pueden ver que no hay nada y las dos intentar insertar. Para eso
             // esta la restriccion unica, y el resultado debe leerse igual que si
             // lo hubiera detectado la comprobacion, no como un error del servidor.
-            throw new IllegalArgumentException("Ya existe una solicitud entre estos usuarios.");
+            throw ErrorDeNegocio.de("error.solicitud.yaExiste");
         }
 
         SolicitudDTO dto = mapearADTO(guardada);
@@ -116,17 +118,17 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Override
     public SolicitudDTO responderSolicitud(String emailReceptor, Long solicitudId, String nuevoEstado) {
         Usuario usuarioLogueado = usuarioRepository.findByEmail(emailReceptor)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.usuarioNoEncontrado"));
 
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
-                .orElseThrow(() -> new IllegalArgumentException("Solicitud no encontrada"));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.solicitud.noEncontrada"));
 
         if (!solicitud.getReceptor().getId().equals(usuarioLogueado.getId())) {
-            throw new SecurityException("No tienes permiso para responder a esta solicitud.");
+            throw ErrorDePermiso.de("error.permiso.solicitudAjena");
         }
 
         if (!nuevoEstado.equals("ACEPTADA") && !nuevoEstado.equals("RECHAZADA")) {
-            throw new IllegalArgumentException("Estado no válido.");
+            throw ErrorDeNegocio.de("error.solicitud.estadoNoValido");
         }
 
         solicitud.setEstado(nuevoEstado);
@@ -142,7 +144,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Override
     public List<SolicitudDTO> obtenerPendientes(String emailReceptor) {
         Usuario receptor = usuarioRepository.findByEmail(emailReceptor)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.usuarioNoEncontrado"));
 
         List<Solicitud> pendientes = solicitudRepository.findByReceptorIdAndEstado(receptor.getId(), "PENDIENTE");
         
@@ -153,13 +155,13 @@ public class SolicitudServiceImpl implements SolicitudService {
     @Transactional
     public void deshacerRelacion(String email, Long otroUsuarioId) {
         Usuario yo = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.usuarioNoEncontrado"));
 
         // Se busca en los dos sentidos porque una solicitud no tiene dueño: la
         // relacion es la misma la mandara quien la mandara.
         Solicitud relacion = solicitudRepository.findFirstByEmisorIdAndReceptorId(yo.getId(), otroUsuarioId)
                 .or(() -> solicitudRepository.findFirstByEmisorIdAndReceptorId(otroUsuarioId, yo.getId()))
-                .orElseThrow(() -> new IllegalArgumentException("No hay ninguna relación con ese usuario."));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.solicitud.sinRelacion"));
 
         // Una solicitud que te han enviado a ti y sigue pendiente no se retira,
         // se responde: para eso estan aceptar y rechazar, que ademas avisan a
@@ -167,7 +169,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         boolean pendienteAjena = "PENDIENTE".equals(relacion.getEstado())
                 && relacion.getReceptor().getId().equals(yo.getId());
         if (pendienteAjena) {
-            throw new SecurityException("Esa solicitud es tuya para responderla, no para retirarla.");
+            throw ErrorDePermiso.de("error.permiso.tuyaParaResponder");
         }
 
         solicitudRepository.delete(relacion);

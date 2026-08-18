@@ -9,6 +9,7 @@ import com.spotterai.backend.seguridad.ControlDeIntentos;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import com.spotterai.backend.textos.TextosDePrueba;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,9 +51,12 @@ class LoginConFrenoTest {
         controlador = new AuthController(usuarios, cifrador, jwt, control,
                 new GalletaDeSesion(jwt, false),
                 Mockito.mock(com.spotterai.backend.seguridad.Restablecimientos.class),
-                new com.spotterai.backend.avisos.RedactorDeAvisos("http://localhost:4200"),
+                new com.spotterai.backend.avisos.RedactorDeAvisos("http://localhost:4200", TextosDePrueba.nuevo()),
                 aviso -> { },
-                Mockito.mock(com.spotterai.backend.seguridad.BorradoDeCuenta.class));
+                Mockito.mock(com.spotterai.backend.seguridad.BorradoDeCuenta.class),
+                // Con el catalogo de verdad: lo que este controlador devuelve
+                // ahora son frases redactadas, no textos escritos a mano.
+                TextosDePrueba.nuevo());
 
         alguien.setId(1L);
         alguien.setEmail("alguien@test.com");

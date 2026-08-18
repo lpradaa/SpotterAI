@@ -1,5 +1,7 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.ErrorDeNegocio;
+import com.spotterai.backend.textos.ErrorDePermiso;
 import com.spotterai.backend.dtos.DisponibilidadDTO;
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Usuario;
@@ -25,7 +27,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
     public DisponibilidadDTO agregarHorario(String emailUsuario, DisponibilidadDTO dto) {
         // 1. Validar lógica de tiempos
         if (dto.getHoraInicio().compareTo(dto.getHoraFin()) >= 0) {
-            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la hora de fin.");
+            throw ErrorDeNegocio.de("error.horario.alReves");
         }
 
         // 2. Buscar al usuario
@@ -67,7 +69,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
 
         // COMPROBACIÓN DE SEGURIDAD CRÍTICA: ¿El horario es suyo?
         if (!horario.getUsuario().getId().equals(usuario.getId())) {
-            throw new SecurityException("No tienes permiso para borrar este horario.");
+            throw ErrorDePermiso.de("error.permiso.horarioAjeno");
         }
 
         disponibilidadRepository.delete(horario);

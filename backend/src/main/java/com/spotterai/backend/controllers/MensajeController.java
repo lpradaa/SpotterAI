@@ -1,5 +1,6 @@
 package com.spotterai.backend.controllers;
 
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import com.spotterai.backend.dtos.ConversacionDTO;
 import com.spotterai.backend.dtos.MensajeDTO;
 import com.spotterai.backend.dtos.NuevoMensajeDTO;
@@ -34,17 +35,10 @@ public class MensajeController {
                                            @RequestBody NuevoMensajeDTO cuerpo) {
         String contenido = cuerpo == null || cuerpo.contenido() == null ? "" : cuerpo.contenido().trim();
         if (contenido.isEmpty()) {
-            return ResponseEntity.badRequest().body("El mensaje está vacío.");
+            throw ErrorDeNegocio.de("error.mensaje.vacio");
         }
 
-        try {
-            MensajeDTO mensajeEnviado = mensajeService.enviarMensaje(emailAutenticado(), receptorId, contenido);
-            return ResponseEntity.ok(mensajeEnviado);
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al enviar el mensaje.");
-        }
+        return ResponseEntity.ok(mensajeService.enviarMensaje(emailAutenticado(), receptorId, contenido));
     }
 
     /**

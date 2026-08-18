@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.ErrorDePermiso;
 import com.spotterai.backend.dtos.NuevaSesionDTO;
 import com.spotterai.backend.dtos.SesionDTO;
 import com.spotterai.backend.dtos.SugerenciaSesionDTO;
@@ -8,6 +9,7 @@ import com.spotterai.backend.eventos.TipoEvento;
 import com.spotterai.backend.matching.CalculadoraSolape;
 import com.spotterai.backend.matching.ProximaOcasion;
 import com.spotterai.backend.matching.SolapeHorario;
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import com.spotterai.backend.models.Entrenamiento;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Sesion;
@@ -117,18 +119,18 @@ public class SesionServiceImpl implements SesionService {
 
         LocalDateTime comienzo = LocalDateTime.of(fecha, inicio);
         if (!comienzo.isAfter(ahora())) {
-            throw new IllegalArgumentException("No se puede quedar en el pasado.");
+            throw ErrorDeNegocio.de("error.sesion.enElPasado");
         }
         if (fecha.isAfter(ahora().toLocalDate().plusDays(DIAS_MAXIMOS_POR_DELANTE))) {
-            throw new IllegalArgumentException("Esa fecha queda demasiado lejos.");
+            throw ErrorDeNegocio.de("error.sesion.demasiadoLejos");
         }
 
         int duracion = (int) java.time.Duration.between(inicio, fin).toMinutes();
         if (duracion < MINUTOS_MINIMOS) {
-            throw new IllegalArgumentException("La sesión tiene que durar al menos un cuarto de hora.");
+            throw ErrorDeNegocio.de("error.sesion.muyCorta");
         }
         if (duracion > MINUTOS_MAXIMOS) {
-            throw new IllegalArgumentException("Esa sesión dura demasiado, revisa las horas.");
+            throw ErrorDeNegocio.de("error.sesion.muyLarga");
         }
 
         Sesion sesion = new Sesion();
@@ -166,7 +168,7 @@ public class SesionServiceImpl implements SesionService {
     private Gimnasio donde(Usuario yo, Usuario otro, Long gimnasioId) {
         if (gimnasioId != null) {
             return gimnasioRepository.findById(gimnasioId)
-                    .orElseThrow(() -> new IllegalArgumentException("Ese gimnasio no existe."));
+                    .orElseThrow(() -> ErrorDeNegocio.de("error.sesion.gimnasioNoExiste"));
         }
 
         // Sin elegir: si comparten gimnasio no hacia falta preguntarlo.
@@ -182,10 +184,10 @@ public class SesionServiceImpl implements SesionService {
         Sesion sesion = porIdDeSesion(sesionId);
 
         if (!sesion.getInvitado().getId().equals(yo.getId())) {
-            throw new SecurityException("Solo puede responder la persona invitada.");
+            throw ErrorDePermiso.de("error.permiso.respondeElInvitado");
         }
         if (!sesion.estaPendiente()) {
-            throw new IllegalArgumentException("Esta propuesta ya está resuelta.");
+            throw ErrorDeNegocio.de("error.sesion.yaResuelta");
         }
         // Aceptar una hora que ya ha pasado deja en el calendario un plan que
         // nadie puede cumplir. Se cierra sola en vez de quedarse ahi.
@@ -193,7 +195,7 @@ public class SesionServiceImpl implements SesionService {
             sesion.setEstado(Sesion.CANCELADA);
             sesion.setRespondidaEn(ahora());
             sesionRepository.save(sesion);
-            throw new IllegalArgumentException("Esa hora ya ha pasado. Proponed otra.");
+            throw ErrorDeNegocio.de("error.sesion.horaPasada");
         }
 
         sesion.setEstado(acepta ? Sesion.ACEPTADA : Sesion.RECHAZADA);
@@ -213,10 +215,10 @@ public class SesionServiceImpl implements SesionService {
         Sesion sesion = porIdDeSesion(sesionId);
 
         if (!sesion.participa(yo.getId())) {
-            throw new SecurityException("Esa sesión no es tuya.");
+            throw ErrorDePermiso.de("error.permiso.sesionAjena");
         }
         if (!sesion.estaPendiente() && !sesion.estaEnMarcha(ahora())) {
-            throw new IllegalArgumentException("Esta sesión ya no se puede cancelar.");
+            throw ErrorDeNegocio.de("error.sesion.noSePuedeCancelar");
         }
 
         sesion.setEstado(Sesion.CANCELADA);
@@ -234,13 +236,13 @@ public class SesionServiceImpl implements SesionService {
         Sesion sesion = porIdDeSesion(sesionId);
 
         if (!sesion.participa(yo.getId())) {
-            throw new SecurityException("Esa sesión no es tuya.");
+            throw ErrorDePermiso.de("error.permiso.sesionAjena");
         }
         if (!sesion.yaOcurrio(ahora())) {
-            throw new IllegalArgumentException("Esa sesión todavía no ha ocurrido.");
+            throw ErrorDeNegocio.de("error.sesion.todaviaNoHaOcurrido");
         }
         if (sesion.confirmadaPor(yo.getId())) {
-            throw new IllegalArgumentException("Ya la habías apuntado.");
+            throw ErrorDeNegocio.de("error.sesion.yaApuntada");
         }
 
         sesion.confirmarPor(yo.getId());
@@ -318,17 +320,17 @@ public class SesionServiceImpl implements SesionService {
 
     private Usuario porEmail(String email) {
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.usuarioNoEncontrado"));
     }
 
     private Usuario porId(Long id) {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Esa persona no existe."));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.sesion.personaNoExiste"));
     }
 
     private Sesion porIdDeSesion(Long id) {
         return sesionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Esa sesión no existe."));
+                .orElseThrow(() -> ErrorDeNegocio.de("error.sesion.noExiste"));
     }
 
     /**
@@ -338,7 +340,7 @@ public class SesionServiceImpl implements SesionService {
      */
     private void exigirCompaneros(Usuario yo, Usuario otro) {
         if (yo.getId().equals(otro.getId())) {
-            throw new IllegalArgumentException("No puedes quedar contigo mismo.");
+            throw ErrorDeNegocio.de("error.sesion.contigoMismo");
         }
 
         List<Solicitud> relaciones = solicitudRepository.findAceptadasPorUsuario(yo.getId());
@@ -346,7 +348,7 @@ public class SesionServiceImpl implements SesionService {
                 s.getEmisor().getId().equals(otro.getId()) || s.getReceptor().getId().equals(otro.getId()));
 
         if (!sonCompaneros) {
-            throw new SecurityException("Solo puedes quedar con tus compañeros.");
+            throw ErrorDePermiso.de("error.permiso.soloCompaneros");
         }
     }
 
@@ -388,7 +390,7 @@ public class SesionServiceImpl implements SesionService {
         try {
             return LocalDate.parse(valor);
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException("Esa fecha no vale.");
+            throw ErrorDeNegocio.de("error.sesion.fechaNoVale");
         }
     }
 
@@ -396,7 +398,7 @@ public class SesionServiceImpl implements SesionService {
         try {
             return LocalTime.parse(valor);
         } catch (DateTimeParseException | NullPointerException e) {
-            throw new IllegalArgumentException("La hora " + cual + " no vale.");
+            throw ErrorDeNegocio.de("error.sesion.horaNoVale", cual);
         }
     }
 

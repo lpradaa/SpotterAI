@@ -1,6 +1,7 @@
 package com.spotterai.backend.matching;
 
 import com.spotterai.backend.models.Usuario;
+import com.spotterai.backend.textos.Mensaje;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -68,53 +69,67 @@ public record RendimientoDelPerfil(int puntosEnJuego, List<HuecoDelPerfil> hueco
         List<HuecoDelPerfil> huecos = new ArrayList<>();
 
         if (!miConstancia.tieneHistorial()) {
-            huecos.add(new HuecoDelPerfil("entrenamientos", "Entrenamientos",
+            huecos.add(new HuecoDelPerfil("entrenamientos",
+                    Mensaje.de("hueco.entrenamientos.nombre"),
                     (int) CalculadoraCompatibilidad.PESO_CONSTANCIA,
-                    "Sin ningún entrenamiento registrado no hay forma de saber si apareces, "
-                            + "que es lo que más mira quien busca compañero."));
+                    Mensaje.de("hueco.entrenamientos.motivo")));
         } else if (miConstancia.ritmo() < UMBRAL_CONSTANCIA) {
             int perdidos = (int) Math.round(
                     (1 - miConstancia.ritmo()) * CalculadoraCompatibilidad.PESO_CONSTANCIA);
-            huecos.add(new HuecoDelPerfil("constancia", "Constancia", perdidos,
-                    "Has registrado %d %s en el último mes. Una pareja entrena tan a menudo como el que menos aparece, así que esto te resta con todo el mundo."
-                            .formatted(miConstancia.entrenosRecientes(),
-                                    miConstancia.entrenosRecientes() == 1 ? "entrenamiento" : "entrenamientos")));
+            // El recuento va como mensaje dentro del mensaje, no formateado
+            // aparte: compuesto a mano, la frase se traduce y el "3
+            // entrenamientos" de dentro se queda en español.
+            int recientes = miConstancia.entrenosRecientes();
+            Mensaje cuantos = recientes == 1
+                    ? Mensaje.de("hueco.constancia.uno")
+                    : Mensaje.de("hueco.constancia.varios", recientes);
+
+            huecos.add(new HuecoDelPerfil("constancia",
+                    Mensaje.de("hueco.constancia.nombre"), perdidos,
+                    Mensaje.de("hueco.constancia.motivo", cuantos)));
         }
 
         if (!tieneLevantamientos) {
-            huecos.add(new HuecoDelPerfil("levantamientos", "Levantamientos",
+            huecos.add(new HuecoDelPerfil("levantamientos",
+                    Mensaje.de("hueco.levantamientos.nombre"),
                     (int) CalculadoraCompatibilidad.PESO_FUERZA,
-                    "Sin saber cuánto mueves, nadie puede saber si podríais cubriros con la barra."));
+                    Mensaje.de("hueco.levantamientos.motivo")));
         }
         if (!tieneHorarios) {
-            huecos.add(new HuecoDelPerfil("horarios", "Horario",
+            huecos.add(new HuecoDelPerfil("horarios",
+                    Mensaje.de("hueco.horarios.nombre"),
                     (int) CalculadoraCompatibilidad.PESO_HORARIO,
-                    "Sin saber cuándo entrenas no hay forma de cruzarte con nadie."));
+                    Mensaje.de("hueco.horarios.motivo")));
         }
         if (enBlanco(usuario.getNivel())) {
-            huecos.add(new HuecoDelPerfil("nivel", "Nivel",
+            huecos.add(new HuecoDelPerfil("nivel",
+                    Mensaje.de("hueco.nivel.nombre"),
                     (int) CalculadoraCompatibilidad.PESO_NIVEL,
-                    "Entrenar con alguien de nivel muy distinto rara vez funciona."));
+                    Mensaje.de("hueco.nivel.motivo")));
         }
         if (enBlanco(usuario.getObjetivos())) {
-            huecos.add(new HuecoDelPerfil("objetivos", "Objetivo",
+            huecos.add(new HuecoDelPerfil("objetivos",
+                    Mensaje.de("hueco.objetivos.nombre"),
                     (int) CalculadoraCompatibilidad.PESO_OBJETIVO,
-                    "Buscar lo mismo es lo que hace que las sesiones cuadren."));
+                    Mensaje.de("hueco.objetivos.motivo")));
         }
         if (usuario.getGimnasio() == null) {
-            huecos.add(new HuecoDelPerfil("gimnasioId", "Gimnasio",
+            huecos.add(new HuecoDelPerfil("gimnasioId",
+                    Mensaje.de("hueco.gimnasioId.nombre"),
                     (int) CalculadoraCompatibilidad.PESO_GIMNASIO,
-                    "Coincidir en horario no sirve de nada en dos gimnasios distintos."));
+                    Mensaje.de("hueco.gimnasioId.motivo")));
         }
         if (Rutina.desde(usuario.getRutina()).isEmpty()) {
-            huecos.add(new HuecoDelPerfil("rutina", "Rutina",
+            huecos.add(new HuecoDelPerfil("rutina",
+                    Mensaje.de("hueco.rutina.nombre"),
                     (int) CalculadoraCompatibilidad.PESO_RUTINA,
-                    "Sin saber cómo repartes la semana, no se puede saber si haríais lo mismo el mismo día."));
+                    Mensaje.de("hueco.rutina.motivo")));
         }
         if (usuario.getEdad() == null) {
-            huecos.add(new HuecoDelPerfil("edad", "Edad",
+            huecos.add(new HuecoDelPerfil("edad",
+                    Mensaje.de("hueco.edad.nombre"),
                     (int) CalculadoraCompatibilidad.PESO_EDAD,
-                    "Pesa poco, pero desempata."));
+                    Mensaje.de("hueco.edad.motivo")));
         }
 
         huecos.sort(Comparator.comparingInt(HuecoDelPerfil::puntos).reversed());

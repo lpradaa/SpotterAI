@@ -1,5 +1,7 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.config.IdiomaConfig;
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import com.spotterai.backend.textos.Textos;
 import com.spotterai.backend.semantica.VectorDeBiografia;
 import com.spotterai.backend.textos.Mensaje;
@@ -47,6 +49,7 @@ import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import com.spotterai.backend.seguridad.Contrasenas;
 
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -147,7 +150,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public UsuarioResponseDTO registrarUsuario(UsuarioRegistroDTO dto) {
         if (usuarioRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Error: El email ya está registrado en SpotterAI.");
+            throw ErrorDeNegocio.de("error.email.yaRegistrado");
         }
 
         // No se comprobaba nada: se podia registrar una cuenta con la contraseña
@@ -164,9 +167,42 @@ public class UsuarioServiceImpl implements UsuarioService {
         nuevoUsuario.setPeso(dto.getPeso());
         nuevoUsuario.setPassword(passwordEncoder.encode(dto.getPassword()));
 
+        // El idioma con el que se ha registrado, que es el unico que se sabe de
+        // alguien que acaba de llegar. Despues lo corrige el selector.
+        nuevoUsuario.setIdioma(idiomaDeLaPeticion());
+
         Usuario guardado = usuarioRepository.save(nuevoUsuario);
 
         return new UsuarioResponseDTO(guardado.getId(), guardado.getNombre(), guardado.getEmail(), guardado.getEdad(), guardado.getGenero(), guardado.getPeso());
+    }
+
+    /**
+     * El idioma de la peticion en curso, tal y como lo resolvio la cabecera.
+     *
+     * <p>Se guarda para los correos, que se mandan cuando no hay ninguna
+     * peticion de la que sacarlo. Lo que no sea ingles se guarda como español,
+     * que es lo que hace el resto del catalogo.
+     */
+    private String idiomaDeLaPeticion() {
+        return IdiomaConfig.INGLES.getLanguage()
+                .equals(LocaleContextHolder.getLocale().getLanguage()) ? "en" : "es";
+    }
+
+    /**
+     * Deja apuntado en que idioma escribirle a alguien.
+     *
+     * <p>Lo llama el selector de idioma, que es el unico sitio donde esto se
+     * decide. No hay un campo para esto en el formulario del perfil a proposito:
+     * dos sitios para elegir lo mismo acaban diciendo cosas distintas.
+     */
+    @Override
+    @Transactional
+    public void guardarIdioma(String email, String idioma) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> ErrorDeNegocio.de("error.usuarioNoEncontrado"));
+
+        usuario.setIdioma("en".equalsIgnoreCase(idioma) ? "en" : "es");
+        usuarioRepository.save(usuario);
     }
 
     @Override
@@ -340,16 +376,26 @@ public class UsuarioServiceImpl implements UsuarioService {
         perfil.put("avisosPorCorreo", usuario.isAvisosPorCorreo());
         perfil.put("puedoDesplazarme", usuario.isPuedoDesplazarme());
         perfil.put("rutina", Rutina.desde(usuario.getRutina()).map(Enum::name).orElse(null));
+        // La clave es lo que se guarda y el nombre solo como se lee, asi que el
+        // nombre va en el idioma de quien pregunta. Con getNombre() el
+        // desplegable de rutina era lo unico en español de la pantalla de
+        // bienvenida.
         perfil.put("rutinasDisponibles", Arrays.stream(Rutina.values())
-                .map(r -> Map.of("clave", r.name(), "nombre", r.getNombre())).toList());
+                .map(r -> Map.of("clave", r.name(), "nombre", textos.de(r.nombre()))).toList());
 
         List<Levantamiento> misLevantamientos = levantamientoRepository.findByUsuarioId(usuario.getId());
         perfil.put("levantamientos", misLevantamientos.stream()
-                .map(UsuarioServiceImpl::aLevantamientoDTO).toList());
+                .map(this::aLevantamientoDTO).toList());
         // El catalogo viaja con el perfil para que el desplegable no tenga que
         // llevar una copia de la lista, que es como acaban divergiendo.
-        perfil.put("ejerciciosDisponibles", Arrays.stream(Ejercicio.values())
-                .map(e -> Map.of("clave", e.name(), "nombre", e.getNombre())).toList());
+        // Los tres basicos primero, y marcados. El orden es la sugerencia: el
+        // factor de fuerza solo puede comparar si los dos han apuntado el mismo
+        // ejercicio, y con seis a elegir eso pasaba en el 22 % de las parejas.
+        perfil.put("ejerciciosDisponibles", Ejercicio.sugeridosPrimero().stream()
+                .map(e -> Map.of("clave", e.name(),
+                                 "nombre", textos.de(e.nombre()),
+                                 "basico", e.esBasico()))
+                .toList());
         perfil.put("metaSemanal", usuario.getMetaSemanal() != null ? usuario.getMetaSemanal() : 4);
 
         // Viaja con el perfil y no en un endpoint aparte: se calcula de los
@@ -360,10 +406,24 @@ public class UsuarioServiceImpl implements UsuarioService {
         // puntos: el guardian mira esto, y el aviso del tablero lo otro.
         perfil.put("perfilMinimo", PerfilMinimo.de(usuario, !misHorarios.isEmpty()));
 
-        perfil.put("rendimiento", RendimientoDelPerfil.de(
+        RendimientoDelPerfil rendimiento = RendimientoDelPerfil.de(
                 usuario, !misHorarios.isEmpty(), !misLevantamientos.isEmpty(),
                 cargarConstanciaDe(List.of(usuario.getId()))
-                        .getOrDefault(usuario.getId(), Constancia.DESCONOCIDA)));
+                        .getOrDefault(usuario.getId(), Constancia.DESCONOCIDA));
+
+        // Los huecos llevan claves dentro, asi que se redactan aqui: el record se
+        // serializaria tal cual y lo que llegaria al navegador serian objetos
+        // Mensaje. El campo no se traduce, que es el identificador con el que el
+        // frontend sabe adonde llevar.
+        perfil.put("rendimiento", Map.of(
+                "puntosEnJuego", rendimiento.puntosEnJuego(),
+                "huecos", rendimiento.huecos().stream()
+                        .map(h -> Map.of(
+                                "campo", h.campo(),
+                                "nombre", textos.de(h.nombre()),
+                                "puntos", h.puntos(),
+                                "motivo", textos.de(h.motivo())))
+                        .toList()));
 
         List<UsuarioPerfilDTO.HorarioDTO> horarios = disponibilidadRepository.findByUsuarioId(usuario.getId())
                 .stream().map(d -> {
@@ -469,7 +529,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         // persona te ha bloqueado": eso le confirmaria el bloqueo a quien lo
         // sufre, que es justo lo que convierte un bloqueo en un motivo.
         if (bloqueoRepository.hayBloqueoEntre(yo.getId(), otro.getId())) {
-            throw new IllegalArgumentException("Esa persona no existe.");
+            throw ErrorDeNegocio.de("error.persona.noExiste");
         }
 
         // Tu propio perfil ahora si se visita: desde que es una pagina con URL,
@@ -501,7 +561,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 otro.getBiografia(),
                 otro.getNivel(),
                 otro.getObjetivos(),
-                Rutina.desde(otro.getRutina()).map(Rutina::getNombre).orElse(null),
+                Rutina.desde(otro.getRutina()).map(r -> textos.de(r.nombre())).orElse(null),
                 otro.getEdad(),
                 otro.getGimnasio() != null ? otro.getGimnasio().getNombre() : null,
                 esMio ? 0 : puntuacion.total(),
@@ -510,12 +570,12 @@ public class UsuarioServiceImpl implements UsuarioService {
                 esMio ? List.of() : puntuacion.solape().franjas(),
                 hitos,
                 levantamientoRepository.findByUsuarioId(otro.getId()).stream()
-                        .map(UsuarioServiceImpl::aLevantamientoDTO).toList(),
+                        .map(this::aLevantamientoDTO).toList(),
                 // Las tuyas, salvo en tu propio perfil: alli las de al lado ya
                 // son las tuyas y la columna se compararia consigo misma.
                 esMio ? List.of()
                       : levantamientoRepository.findByUsuarioId(yo.getId()).stream()
-                                .map(UsuarioServiceImpl::aLevantamientoDTO).toList(),
+                                .map(this::aLevantamientoDTO).toList(),
                 entrenos,
                 sesionRepository.contarQuedadasEntre(yo.getId(), otro.getId(),
                         LocalDate.now(reloj), LocalTime.now(reloj)),
@@ -575,7 +635,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
 
-    private static LevantamientoDTO aLevantamientoDTO(Levantamiento l) {
+    private LevantamientoDTO aLevantamientoDTO(Levantamiento l) {
         // El maximo estimado se calcula aqui y no en el navegador para que solo
         // haya una formula: la misma que usa el motor para puntuar la fuerza. Con
         // dos, la pantalla podria decir que levantais lo mismo mientras el factor
@@ -584,7 +644,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 : (int) Math.round(CalculadoraFuerza.maximoEstimado(l.getPeso(), l.getRepeticiones()));
 
         return new LevantamientoDTO(
-                l.getEjercicio().name(), l.getEjercicio().getNombre(),
+                l.getEjercicio().name(), textos.de(l.getEjercicio().nombre()),
                 l.getPeso(), l.getRepeticiones(), maximo);
     }
 
@@ -607,11 +667,11 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("El usuario sugerido no existe"));
 
         if (miUsuario.getId().equals(otro.getId())) {
-            throw new IllegalArgumentException("No puedes pedir la compatibilidad contigo mismo.");
+            throw ErrorDeNegocio.de("error.compatibilidad.contigoMismo");
         }
 
         if (bloqueoRepository.hayBloqueoEntre(miUsuario.getId(), otro.getId())) {
-            throw new IllegalArgumentException("Esa persona no está disponible.");
+            throw ErrorDeNegocio.de("error.persona.noDisponible");
         }
 
         // Aqui estaba el fallo: se montaban los perfiles a mano con la sobrecarga
@@ -757,7 +817,12 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Fuera del constructor porque ese ya tiene doce parametros posicionales
         // y añadir el trece es pedir que alguien los cruce al llamarlo.
         dto.setFotoUrl(u.getFotoUrl());
-        dto.setRutina(Rutina.desde(u.getRutina()).map(Rutina::getNombre).orElse(null));
+        // Resuelto con el idioma de la peticion y no con getNombre(), que
+        // devuelve el español fijo: este campo es el chip de rutina de cada
+        // tarjeta, asi que con getNombre() la tarjeta entera salia en ingles con
+        // "Torso / Pierna" dentro. La frase del motor que hay justo encima ya se
+        // traducia, que lo dejaba todavia mas a la vista.
+        dto.setRutina(Rutina.desde(u.getRutina()).map(r -> textos.de(r.nombre())).orElse(null));
         return dto;
     }
 

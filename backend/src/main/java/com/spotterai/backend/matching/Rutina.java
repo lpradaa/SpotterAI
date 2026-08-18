@@ -21,24 +21,17 @@ import java.util.Optional;
  */
 public enum Rutina {
 
-    FULL_BODY("Cuerpo completo", false),
-    TORSO_PIERNA("Torso / Pierna", true),
-    EMPUJE_TIRON_PIERNA("Empuje / Tirón / Pierna", true),
-    WEIDER("Weider (un grupo por día)", true),
-    LIBRE("Sin rutina fija", false);
-
-    private final String nombre;
+    FULL_BODY(false),
+    TORSO_PIERNA(true),
+    EMPUJE_TIRON_PIERNA(true),
+    WEIDER(true),
+    LIBRE(false);
 
     /** Si reparte los grupos en dias distintos, en vez de tocarlo todo cada sesion. */
     private final boolean dividida;
 
-    Rutina(String nombre, boolean dividida) {
-        this.nombre = nombre;
+    Rutina(boolean dividida) {
         this.dividida = dividida;
-    }
-
-    public String getNombre() {
-        return nombre;
     }
 
     public boolean esDividida() {
@@ -93,10 +86,11 @@ public enum Rutina {
     /**
      * El nombre de la rutina, sin redactar.
      *
-     * <p>{@code getNombre()} sigue existiendo y sigue devolviendo el español: lo
-     * usan el DTO del perfil y el sembrador. Lo que cambia es que las frases del
-     * motor ya no lo meten dentro tal cual, porque entonces la frase se traducia
-     * y la rutina de dentro no.
+     * <p>Es el unico sitio del que sale, y por eso el enum ya no lleva el texto
+     * dentro. Lo llevaba —un {@code getNombre()} que devolvia el español fijo— y
+     * los DTO tiraban de el, asi que las tarjetas salian traducidas con la
+     * rutina en español dentro. Dos copias del mismo texto y solo una traducida
+     * es peor que una sola: la que se olvida es la que se ve.
      */
     public Mensaje nombre() {
         return Mensaje.de("rutina." + name());

@@ -7,6 +7,7 @@ import com.spotterai.backend.repositories.SesionRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import com.spotterai.backend.textos.TextosDePrueba;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -81,7 +82,7 @@ class RastreadorDeAvisosTest {
         when(bajas.llaveDe(any())).thenReturn("llave-de-prueba");
 
         rastreador = new RastreadorDeAvisos(solicitudes, sesiones,
-                new RedactorDeAvisos("https://spotterai.example"), cartero, bajas, reloj);
+                new RedactorDeAvisos("https://spotterai.example", TextosDePrueba.nuevo()), cartero, bajas, reloj);
 
         when(solicitudes.pendientesPorAvisar(any(), any())).thenReturn(List.of());
         when(sesiones.propuestasPorAvisar(any(), any(), any())).thenReturn(List.of());
@@ -117,7 +118,7 @@ class RastreadorDeAvisosTest {
         Solicitud s = solicitud();
         when(solicitudes.pendientesPorAvisar(any(), any())).thenReturn(List.of(s));
         rastreador = new RastreadorDeAvisos(solicitudes, sesiones,
-                new RedactorDeAvisos("https://spotterai.example"),
+                new RedactorDeAvisos("https://spotterai.example", TextosDePrueba.nuevo()),
                 aviso -> { throw new IllegalStateException("SMTP caído"); }, bajas, reloj);
 
         rastreador.barrer();
@@ -135,7 +136,7 @@ class RastreadorDeAvisosTest {
 
         when(solicitudes.pendientesPorAvisar(any(), any())).thenReturn(List.of(rota, buena));
         rastreador = new RastreadorDeAvisos(solicitudes, sesiones,
-                new RedactorDeAvisos("https://spotterai.example"),
+                new RedactorDeAvisos("https://spotterai.example", TextosDePrueba.nuevo()),
                 aviso -> {
                     if (aviso.para().equals("rebota@test.com")) throw new IllegalStateException("rebota");
                     enviados.add(aviso);

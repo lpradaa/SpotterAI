@@ -30,17 +30,29 @@ public class UsuarioController {
      */
     @PostMapping("/registro")
     public ResponseEntity<?> registrar(@RequestBody UsuarioRegistroDTO dto) {
-        try {
-            // Le pasamos el DTO al servicio para que haga la magia (validar, cifrar, guardar)
-            UsuarioResponseDTO usuarioCreado = usuarioService.registrarUsuario(dto);
-            
-            // Si todo va bien, devolvemos un 200 OK con los datos seguros (sin contraseña)
-            return ResponseEntity.ok(usuarioCreado);
-            
-        } catch (IllegalArgumentException e) {
-            // Si el email ya existía, devolvemos un error 400 Bad Request con el mensaje
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        // El correo repetido y la contraseña corta los para el servicio con su
+        // clave, y de eso responde ManejadorDeErrores. Capturar aqui y devolver
+        // getMessage() enseñaria la clave en la pantalla de registro.
+        return ResponseEntity.ok(usuarioService.registrarUsuario(dto));
+    }
+
+    /**
+     * PUT /api/usuarios/idioma — en que idioma se te escribe.
+     *
+     * <p>Lo llama el selector de la cabecera. Todo lo demas que traduce el
+     * backend sale de la cabecera Accept-Language de cada peticion; esto se
+     * guarda porque los correos se mandan sin ninguna peticion de por medio.
+     *
+     * <p>Sin cuerpo de respuesta: no hay nada que devolver y el frontend ya sabe
+     * lo que ha pedido. Si falla, tampoco pasa nada grave — se seguira
+     * escribiendo en el idioma anterior.
+     */
+    @PutMapping("/idioma")
+    public ResponseEntity<Void> guardarIdioma(@RequestBody Map<String, String> cuerpo) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        usuarioService.guardarIdioma(email, cuerpo.get("idioma"));
+
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -49,19 +61,11 @@ public class UsuarioController {
      */
     @PutMapping("/perfil")
     public ResponseEntity<?> actualizarPerfil(@RequestBody UsuarioPerfilDTO dto) {
-        try {
-            // ¡MAGIA! Sacamos el email directamente del Token JWT del usuario que hace la petición
-            String emailLogueado = SecurityContextHolder.getContext().getAuthentication().getName();
+        // El email sale del token, no del cuerpo: es lo que impide editar el
+        // perfil de otra persona mandando su id.
+        String emailLogueado = SecurityContextHolder.getContext().getAuthentication().getName();
 
-            // Actualizamos su perfil de forma segura
-            UsuarioResponseDTO usuarioActualizado = usuarioService.actualizarPerfil(emailLogueado, dto);
-            
-            return ResponseEntity.ok(usuarioActualizado);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error inesperado al actualizar el perfil.");
-        }
+        return ResponseEntity.ok(usuarioService.actualizarPerfil(emailLogueado, dto));
     }
 
     /**
@@ -119,14 +123,8 @@ public class UsuarioController {
      */
     @GetMapping("/matches/{id}/explicacion")
     public ResponseEntity<?> explicarMatch(@PathVariable Long id) {
-        try {
-            String emailLogueado = SecurityContextHolder.getContext().getAuthentication().getName();
-            return ResponseEntity.ok(usuarioService.explicarMatch(emailLogueado, id));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error al generar la explicación del match.");
-        }
+        String emailLogueado = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(usuarioService.explicarMatch(emailLogueado, id));
     }
 
     /**
@@ -143,12 +141,8 @@ public class UsuarioController {
 
     @GetMapping("/{otroUsuarioId}/perfil")
     public ResponseEntity<?> verPerfilDe(@PathVariable Long otroUsuarioId) {
-        try {
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
-            return ResponseEntity.ok(usuarioService.verPerfilDe(email, otroUsuarioId));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(usuarioService.verPerfilDe(email, otroUsuarioId));
     }
 
 

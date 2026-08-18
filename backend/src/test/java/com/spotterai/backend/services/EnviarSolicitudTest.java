@@ -7,6 +7,7 @@ import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.BloqueoRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -115,10 +116,13 @@ class EnviarSolicitudTest {
         Mockito.when(solicitudRepository.save(any()))
                 .thenThrow(new DataIntegrityViolationException("uk_solicitud_emisor_receptor"));
 
-        var error = assertThrows(IllegalArgumentException.class,
+        var error = assertThrows(ErrorDeNegocio.class,
                 () -> servicio.enviarSolicitud(emisor.getEmail(), receptor.getId()));
 
-        assertTrue(error.getMessage().contains("Ya existe una solicitud"));
+        // Por la clave y no por un trozo de la frase: la frase cambia de idioma,
+        // así que afirmando sobre ella este test decidiría en cuál está escrito
+        // el servicio. Que se lea bien lo comprueba ManejadorDeErroresTest.
+        assertEquals("error.solicitud.yaExiste", error.mensaje().clave());
     }
 
     @Test

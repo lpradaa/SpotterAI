@@ -2,8 +2,12 @@ package com.spotterai.backend.matching;
 
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.models.Usuario;
+import com.spotterai.backend.textos.Textos;
+import com.spotterai.backend.textos.TextosDePrueba;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -121,7 +125,28 @@ class RendimientoDelPerfilTest {
                 .findFirst().orElseThrow(() -> new AssertionError("No avisa de la constancia floja"));
 
         assertTrue(hueco.puntos() > 0);
-        assertTrue(hueco.motivo().contains("2 entrenamientos"), hueco.motivo());
+
+        // El recuento va dentro de la frase como mensaje anidado, asi que se
+        // redacta para comprobarlo: compuesto a mano, la frase se traducia y el
+        // "2 entrenamientos" de dentro se quedaba en español.
+        String motivo = TextosDePrueba.nuevo().de(hueco.motivo());
+        assertTrue(motivo.contains("2 entrenamientos"), motivo);
+    }
+
+    @Test
+    @DisplayName("Y el aviso se dice en el idioma de quien pregunta, recuento incluido")
+    void laConstanciaFlojaSeAvisaEnIngles() {
+        RendimientoDelPerfil r = RendimientoDelPerfil.de(
+                perfilCompleto(), true, true, new Constancia(2, true));
+
+        HuecoDelPerfil hueco = r.huecos().stream()
+                .filter(h -> h.campo().equals("constancia"))
+                .findFirst().orElseThrow();
+
+        Textos textos = TextosDePrueba.nuevo();
+        assertEquals("Consistency", textos.de(hueco.nombre(), Locale.ENGLISH));
+        assertTrue(textos.de(hueco.motivo(), Locale.ENGLISH).contains("2 sessions"),
+                textos.de(hueco.motivo(), Locale.ENGLISH));
     }
 
     @Test

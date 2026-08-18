@@ -1,8 +1,11 @@
 package com.spotterai.backend.avisos;
 
+import com.spotterai.backend.config.IdiomaConfig;
 import com.spotterai.backend.models.Sesion;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
+import com.spotterai.backend.textos.Mensaje;
+import com.spotterai.backend.textos.Textos;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +20,16 @@ import java.util.Locale;
  * que dicen los correos sin levantar un servidor ni la base. Lo que se rompe en
  * un aviso no es el SMTP, es la frase —el nombre que falta, la fecha en formato
  * ISO, el enlace que apunta a localhost en produccion—.
+ *
+ * <h2>En que idioma</h2>
+ *
+ * <p>En el de quien lo recibe, que sale de su columna {@code idioma}. Es el
+ * unico texto del backend que no puede mirar la cabecera {@code Accept-Language}
+ * de la peticion: estos correos los manda un barrido que corre cada minuto por
+ * su cuenta, y cuando escribe no hay ninguna peticion. Ese es justo el motivo
+ * por el que el motor escribe claves y no frases, y esta escrito en
+ * {@link Mensaje}: si el backend no mandara correos, traducir podria haber sido
+ * cosa del frontend.
  *
  * <h2>Por que estos correos dicen lo que dicen</h2>
  *
@@ -39,52 +52,56 @@ public class RedactorDeAvisos {
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
 
     private final String urlBase;
+    private final Textos textos;
 
-    public RedactorDeAvisos(@Value("${spotterai.correo.url-base}") String urlBase) {
+    public RedactorDeAvisos(@Value("${spotterai.correo.url-base}") String urlBase, Textos textos) {
         // Sin la barra final, para no acabar componiendo enlaces con "//".
         this.urlBase = urlBase.endsWith("/") ? urlBase.substring(0, urlBase.length() - 1) : urlBase;
+        this.textos = textos;
+    }
+
+    /**
+     * El idioma de quien recibe.
+     *
+     * <p>Lo que no se reconozca cae en español, igual que el catalogo: es el
+     * idioma en el que esta escrita la aplicacion.
+     */
+    private Locale idiomaDe(Usuario quien) {
+        return "en".equalsIgnoreCase(quien.getIdioma()) ? IdiomaConfig.INGLES : IdiomaConfig.ESPANOL;
+    }
+
+    private String enSuIdioma(Usuario quien, String clave, Object... args) {
+        return textos.de(Mensaje.de(clave, args), idiomaDe(quien));
     }
 
     public Aviso paraSolicitud(Solicitud solicitud, String llaveDeBaja) {
+        Usuario quienRecibe = solicitud.getReceptor();
         String quien = solicitud.getEmisor().getNombre();
 
         return new Aviso(
-                solicitud.getReceptor().getEmail(),
-                quien + " quiere entrenar contigo",
-                """
-                %s te ha mandado una solicitud en SpotterAI.
-
-                Puedes aceptarla o rechazarla aquí:
-                %s/solicitudes
-
-                Si no respondes no pasa nada: la solicitud se queda esperando.
-                %s""".formatted(quien, urlBase, pieDeBaja(llaveDeBaja)));
+                quienRecibe.getEmail(),
+                enSuIdioma(quienRecibe, "correo.solicitud.asunto", quien),
+                enSuIdioma(quienRecibe, "correo.solicitud.cuerpo", quien, urlBase)
+                        + pieDeBaja(quienRecibe, llaveDeBaja));
     }
 
     public Aviso paraSesion(Sesion sesion, String llaveDeBaja) {
+        Usuario quienRecibe = sesion.getInvitado();
         String quien = sesion.getProponente().getNombre();
+        Locale idioma = idiomaDe(quienRecibe);
 
         return new Aviso(
-                sesion.getInvitado().getEmail(),
-                quien + " propone entrenar el " + diaCorto(sesion),
-                """
-                %s propone que entrenéis juntos:
-
-                  %s, de %s a %s%s
-
-                Responde aquí:
-                %s/conexiones?con=%d
-
-                Si ese día no te viene bien, dilo y proponéis otro.
-                %s""".formatted(
+                quienRecibe.getEmail(),
+                enSuIdioma(quienRecibe, "correo.sesion.asunto", quien, diaCorto(sesion, idioma)),
+                enSuIdioma(quienRecibe, "correo.sesion.cuerpo",
                         quien,
-                        diaLargo(sesion),
+                        diaLargo(sesion, idioma),
                         sesion.getHoraInicio().format(HORA),
                         sesion.getHoraFin().format(HORA),
-                        donde(sesion),
+                        donde(sesion, quienRecibe),
                         urlBase,
-                        sesion.getProponente().getId(),
-                        pieDeBaja(llaveDeBaja)));
+                        sesion.getProponente().getId())
+                        + pieDeBaja(quienRecibe, llaveDeBaja));
     }
 
     /**
@@ -102,17 +119,8 @@ public class RedactorDeAvisos {
     public Aviso paraRestablecer(Usuario usuario, String token) {
         return new Aviso(
                 usuario.getEmail(),
-                "Recuperar tu contraseña de SpotterAI",
-                """
-                Has pedido cambiar tu contraseña. Puedes hacerlo aquí:
-
-                %s/restablecer?t=%s
-
-                El enlace vale una hora y solo se puede usar una vez.
-
-                Si no has sido tú, no hace falta que hagas nada: mientras no
-                abras ese enlace, tu contraseña sigue siendo la de siempre.
-                """.formatted(urlBase, token));
+                enSuIdioma(usuario, "correo.restablecer.asunto"),
+                enSuIdioma(usuario, "correo.restablecer.cuerpo", urlBase, token));
     }
 
     /**
@@ -128,31 +136,34 @@ public class RedactorDeAvisos {
      * cuenta: con una baja de un solo clic, media lista se da de baja sola sin
      * que nadie haya tocado nada.
      */
-    private String pieDeBaja(String llave) {
-        return """
-
-                --
-                ¿No quieres estos avisos? Páralos aquí:
-                %s/baja?t=%s
-                """.formatted(urlBase, llave);
+    private String pieDeBaja(Usuario quienRecibe, String llave) {
+        return enSuIdioma(quienRecibe, "correo.pieDeBaja", urlBase, llave);
     }
 
     /** "en McFit Madrid Centro", o nada si no consta el gimnasio. */
-    private String donde(Sesion sesion) {
-        return sesion.getGimnasio() == null ? "" : ", en " + sesion.getGimnasio().getNombre();
+    private String donde(Sesion sesion, Usuario quienRecibe) {
+        return sesion.getGimnasio() == null ? ""
+                : enSuIdioma(quienRecibe, "correo.sesion.donde", sesion.getGimnasio().getNombre());
     }
 
-    /** "lunes 3" para el asunto, que tiene que caber. */
-    private String diaCorto(Sesion sesion) {
-        return sesion.getFecha().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.of("es", "ES"))
-                + " " + sesion.getFecha().getDayOfMonth();
+    /**
+     * "lunes 3" para el asunto, que tiene que caber.
+     *
+     * <p>El nombre del dia lo sabe decir Java en los dos idiomas; lo que cambia
+     * entre ellos es el orden y las preposiciones, y por eso el montaje va por
+     * el catalogo y no pegando cadenas.
+     */
+    private String diaCorto(Sesion sesion, Locale idioma) {
+        return textos.de(Mensaje.de("correo.fecha.corta",
+                sesion.getFecha().getDayOfWeek().getDisplayName(TextStyle.FULL, idioma),
+                sesion.getFecha().getDayOfMonth()), idioma);
     }
 
     /** "lunes 3 de agosto" para el cuerpo, donde sí cabe el mes. */
-    private String diaLargo(Sesion sesion) {
-        Locale es = Locale.of("es", "ES");
-        return sesion.getFecha().getDayOfWeek().getDisplayName(TextStyle.FULL, es)
-                + " " + sesion.getFecha().getDayOfMonth()
-                + " de " + sesion.getFecha().getMonth().getDisplayName(TextStyle.FULL, es);
+    private String diaLargo(Sesion sesion, Locale idioma) {
+        return textos.de(Mensaje.de("correo.fecha.larga",
+                sesion.getFecha().getDayOfWeek().getDisplayName(TextStyle.FULL, idioma),
+                sesion.getFecha().getDayOfMonth(),
+                sesion.getFecha().getMonth().getDisplayName(TextStyle.FULL, idioma)), idioma);
     }
 }

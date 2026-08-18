@@ -29,13 +29,11 @@ public class SolicitudController {
      */
     @PostMapping("/enviar/{receptorId}")
     public ResponseEntity<?> enviarSolicitud(@PathVariable Long receptorId) {
-        try {
-            String email = obtenerEmailAutenticado();
-            SolicitudDTO dto = solicitudService.enviarSolicitud(email, receptorId);
-            return ResponseEntity.ok(dto);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); // Captura si se envía a sí mismo o si ya existe
-        }
+        // Enviarse una solicitud a uno mismo, que ya exista o que haya un
+        // bloqueo de por medio los para el servicio con su clave, y de eso
+        // responde ManejadorDeErrores.
+        return ResponseEntity.ok(
+                solicitudService.enviarSolicitud(obtenerEmailAutenticado(), receptorId));
     }
 
     /**
@@ -46,15 +44,8 @@ public class SolicitudController {
     public ResponseEntity<?> responderSolicitud(
             @PathVariable Long solicitudId, 
             @RequestParam String estado) {
-        try {
-            String email = obtenerEmailAutenticado();
-            SolicitudDTO dto = solicitudService.responderSolicitud(email, solicitudId, estado);
-            return ResponseEntity.ok(dto);
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(e.getMessage()); // 403 Si intenta aceptar una solicitud que no es suya
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(
+                solicitudService.responderSolicitud(obtenerEmailAutenticado(), solicitudId, estado));
     }
 
     /**
@@ -87,14 +78,8 @@ public class SolicitudController {
      */
     @DeleteMapping("/con/{otroUsuarioId}")
     public ResponseEntity<?> deshacerRelacion(@PathVariable Long otroUsuarioId) {
-        try {
-            solicitudService.deshacerRelacion(obtenerEmailAutenticado(), otroUsuarioId);
-            return ResponseEntity.noContent().build();
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        solicitudService.deshacerRelacion(obtenerEmailAutenticado(), otroUsuarioId);
+        return ResponseEntity.noContent().build();
     }
 
 }

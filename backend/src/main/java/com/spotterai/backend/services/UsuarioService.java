@@ -13,6 +13,15 @@ import java.util.Optional;
 
 public interface UsuarioService {
     UsuarioResponseDTO registrarUsuario(UsuarioRegistroDTO dto);
+
+    /**
+     * En que idioma escribirle a alguien por correo.
+     *
+     * <p>Lo llama el selector de idioma. Es el unico dato de presentacion que se
+     * guarda, y esta guardado por un motivo concreto: los correos se mandan
+     * cuando no hay ninguna peticion de la que sacar el idioma.
+     */
+    void guardarIdioma(String email, String idioma);
     Optional<Usuario> buscarPorEmail(String email);
     List<Usuario> obtenerTodosLosUsuarios();
     UsuarioResponseDTO actualizarPerfil(String email, UsuarioPerfilDTO dto);

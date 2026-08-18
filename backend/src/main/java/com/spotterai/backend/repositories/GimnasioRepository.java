@@ -1,5 +1,6 @@
 package com.spotterai.backend.repositories;
 
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import com.spotterai.backend.models.Gimnasio;
 import com.spotterai.backend.services.NombreDeGimnasio;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,7 +37,7 @@ public interface GimnasioRepository extends JpaRepository<Gimnasio, Long> {
     default Gimnasio buscarOCrear(String nombre) {
         String normalizado = NombreDeGimnasio.normalizar(nombre);
         if (normalizado.isEmpty()) {
-            throw new IllegalArgumentException("El gimnasio necesita un nombre.");
+            throw ErrorDeNegocio.de("error.gimnasio.sinNombre");
         }
 
         return findAll().stream()

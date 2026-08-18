@@ -45,6 +45,20 @@ public class Usuario {
     private String genero;
     private Float peso;
 
+    /**
+     * En que idioma se le escribe.
+     *
+     * <p>Solo lo usan los correos. Todo lo demas sale de la cabecera
+     * Accept-Language de cada peticion, pero los correos los manda un barrido
+     * que corre solo: cuando se escribe no hay ninguna peticion de la que sacar
+     * el idioma, asi que hay que tenerlo guardado.
+     *
+     * <p>Lo pone el selector de idioma, no un campo del formulario: dos sitios
+     * para decidir lo mismo acaban diciendo cosas distintas.
+     */
+    @Column(nullable = false, length = 5)
+    private String idioma = "es";
+
     @Column(length = 280)
     private String biografia;
 
@@ -209,6 +223,9 @@ public class Usuario {
 
     public String getGenero() { return genero; }
     public void setGenero(String genero) { this.genero = genero; }
+
+    public String getIdioma() { return idioma; }
+    public void setIdioma(String idioma) { this.idioma = idioma; }
 
     public Float getPeso() { return peso; }
     public void setPeso(Float peso) { this.peso = peso; }

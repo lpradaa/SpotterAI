@@ -41,29 +41,20 @@ public class HitoController {
 
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody NuevoHito cuerpo) {
-        try {
-            LocalDate fecha = cuerpo.fecha() == null || cuerpo.fecha().isBlank()
-                    ? null : LocalDate.parse(cuerpo.fecha());
+        // La fecha con formato imposible tambien sale por aqui:
+        // DateTimeParseException hereda de IllegalArgumentException, asi que la
+        // recoge ManejadorDeErrores igual que el resto.
+        LocalDate fecha = cuerpo.fecha() == null || cuerpo.fecha().isBlank()
+                ? null : LocalDate.parse(cuerpo.fecha());
 
-            return ResponseEntity.ok(hitoService.crear(emailAutenticado(),
-                    cuerpo.titulo(), cuerpo.descripcion(), fecha,
-                    cuerpo.medioUrl(), cuerpo.medioTipo()));
-        } catch (IllegalArgumentException e) {
-            // Cubre también una fecha con formato imposible, que DateTimeParseException
-            // hereda de aquí.
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(hitoService.crear(emailAutenticado(),
+                cuerpo.titulo(), cuerpo.descripcion(), fecha,
+                cuerpo.medioUrl(), cuerpo.medioTipo()));
     }
 
     @DeleteMapping("/{hitoId}")
     public ResponseEntity<?> borrar(@PathVariable Long hitoId) {
-        try {
-            hitoService.borrar(emailAutenticado(), hitoId);
-            return ResponseEntity.noContent().build();
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        hitoService.borrar(emailAutenticado(), hitoId);
+        return ResponseEntity.noContent().build();
     }
 }

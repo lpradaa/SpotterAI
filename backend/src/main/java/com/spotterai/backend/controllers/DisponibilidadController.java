@@ -39,13 +39,8 @@ public class DisponibilidadController {
      */
     @PostMapping
     public ResponseEntity<?> agregarHorario(@RequestBody DisponibilidadDTO dto) {
-        try {
-            String email = obtenerEmailAutenticado();
-            DisponibilidadDTO nuevoHorario = disponibilidadService.agregarHorario(email, dto);
-            return ResponseEntity.ok(nuevoHorario);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(
+                disponibilidadService.agregarHorario(obtenerEmailAutenticado(), dto));
     }
 
     /**
@@ -54,14 +49,10 @@ public class DisponibilidadController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarHorario(@PathVariable Long id) {
-        try {
-            String email = obtenerEmailAutenticado();
-            disponibilidadService.eliminarHorario(email, id);
-            return ResponseEntity.ok().body("Horario eliminado correctamente.");
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403).body(e.getMessage()); // 403 Forbidden
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        // Sin try: los errores los redacta ManejadorDeErrores, que es el unico
+        // sitio que sabe el idioma de la peticion. Capturarlos aqui devolvia
+        // getMessage(), que desde que la excepcion lleva clave es la clave.
+        disponibilidadService.eliminarHorario(obtenerEmailAutenticado(), id);
+        return ResponseEntity.noContent().build();
     }
 }

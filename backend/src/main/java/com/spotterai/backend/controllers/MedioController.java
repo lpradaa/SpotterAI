@@ -38,8 +38,6 @@ public class MedioController {
         try {
             AlmacenDeMedios.MedioGuardado guardado = almacen.guardar(archivo);
             return ResponseEntity.ok(Map.of("url", guardado.url(), "tipo", guardado.tipo()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IOException e) {
             return ResponseEntity.status(500).body("No se ha podido guardar el archivo.");
         }

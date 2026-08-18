@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.ErrorDePermiso;
 import com.spotterai.backend.dtos.ConversacionDTO;
 import com.spotterai.backend.dtos.MensajeDTO;
 import com.spotterai.backend.dtos.SinLeerPorEmisor;
@@ -56,7 +57,7 @@ public class MensajeServiceImpl implements MensajeService {
         );
 
         if (!sonAmigos) {
-            throw new SecurityException("No puedes enviar mensajes a un usuario con el que no tienes un Match.");
+            throw ErrorDePermiso.de("error.permiso.sinMatch");
         }
 
         // Creamos y guardamos el mensaje

@@ -16,6 +16,9 @@ import com.spotterai.backend.repositories.GimnasioRepository;
 import com.spotterai.backend.repositories.SesionRepository;
 import com.spotterai.backend.repositories.SolicitudRepository;
 import com.spotterai.backend.repositories.UsuarioRepository;
+import com.spotterai.backend.textos.ErrorDeNegocio;
+import com.spotterai.backend.textos.Textos;
+import com.spotterai.backend.textos.TextosDePrueba;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.time.Clock;
+import java.util.Locale;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -164,11 +168,33 @@ class SesionServiceTest {
     @Test
     @DisplayName("No se puede quedar en el pasado")
     void niEnElPasado() {
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+        ErrorDeNegocio e = assertThrows(ErrorDeNegocio.class,
                 () -> servicio.proponer(yo.getEmail(), otro.getId(),
                         datos("2026-06-29", "18:00", "20:00")));
 
-        assertTrue(e.getMessage().contains("pasado"));
+        // Por la clave y no por un trozo de la frase: la frase es lo que cambia
+        // de idioma, así que afirmando sobre ella este test decidiría en qué
+        // idioma tiene que estar escrito el servicio.
+        assertEquals("error.sesion.enElPasado", e.mensaje().clave());
+    }
+
+    /**
+     * Lo que se le enseña a alguien sale en su idioma.
+     *
+     * <p>Estos errores acaban pintados tal cual en la pantalla —el controlador
+     * devuelve el texto y el frontend lo enseña—, así que con la frase escrita
+     * dentro de la excepción salía en español en una pantalla en inglés.
+     */
+    @Test
+    @DisplayName("Y se redacta en el idioma de quien pregunta")
+    void elErrorSeTraduce() {
+        ErrorDeNegocio e = assertThrows(ErrorDeNegocio.class,
+                () -> servicio.proponer(yo.getEmail(), otro.getId(),
+                        datos("2026-06-29", "18:00", "20:00")));
+
+        Textos textos = TextosDePrueba.nuevo();
+        assertEquals("No se puede quedar en el pasado.", textos.de(e.mensaje()));
+        assertEquals("You cannot meet in the past.", textos.de(e.mensaje(), Locale.ENGLISH));
     }
 
     @Test

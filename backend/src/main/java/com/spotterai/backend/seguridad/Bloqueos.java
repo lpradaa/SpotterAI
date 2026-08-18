@@ -1,5 +1,6 @@
 package com.spotterai.backend.seguridad;
 
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import com.spotterai.backend.models.Bloqueo;
 import com.spotterai.backend.models.Usuario;
 import com.spotterai.backend.repositories.BloqueoRepository;
@@ -73,7 +74,7 @@ public class Bloqueos {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
         if (yo.getId().equals(otroId)) {
-            throw new IllegalArgumentException("No puedes bloquearte a ti mismo.");
+            throw ErrorDeNegocio.de("error.bloqueo.aTiMismo");
         }
 
         Usuario otro = usuarios.findById(otroId)

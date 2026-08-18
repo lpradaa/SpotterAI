@@ -5,6 +5,7 @@ import com.spotterai.backend.models.Sesion;
 import com.spotterai.backend.models.Solicitud;
 import com.spotterai.backend.models.Usuario;
 import org.junit.jupiter.api.DisplayName;
+import com.spotterai.backend.textos.TextosDePrueba;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -25,7 +26,7 @@ class RedactorDeAvisosTest {
     /** La llave de baja no es lo que se prueba aqui; solo tiene que viajar. */
     private static final String LLAVE = "LLAVE-DE-PRUEBA";
 
-    private final RedactorDeAvisos redactor = new RedactorDeAvisos("https://spotterai.example");
+    private final RedactorDeAvisos redactor = new RedactorDeAvisos("https://spotterai.example", TextosDePrueba.nuevo());
 
     private static Usuario usuario(Long id, String nombre, String email) {
         Usuario u = new Usuario();
@@ -89,7 +90,7 @@ class RedactorDeAvisosTest {
     @Test
     @DisplayName("Una barra de más en la url no produce enlaces con //")
     void laBarraSobranteNoEnsucia() {
-        String cuerpo = new RedactorDeAvisos("https://spotterai.example/")
+        String cuerpo = new RedactorDeAvisos("https://spotterai.example/", TextosDePrueba.nuevo())
                 .paraSolicitud(solicitud(), LLAVE).cuerpo();
 
         assertTrue(cuerpo.contains("https://spotterai.example/solicitudes"), cuerpo);
@@ -143,5 +144,66 @@ class RedactorDeAvisosTest {
         assertFalse(aviso.cuerpo().contains("93"), aviso.cuerpo());
         assertFalse(aviso.cuerpo().contains("%"), aviso.cuerpo());
         assertFalse(aviso.asunto().contains("93"), aviso.asunto());
+    }
+
+    // ===================== En qué idioma =====================
+
+    /**
+     * El único texto del backend que no puede mirar la cabecera de la petición:
+     * estos correos los manda un barrido que corre cada minuto por su cuenta, y
+     * cuando escribe no hay ninguna petición. De ahí que el idioma esté
+     * guardado en la persona.
+     */
+    @Test
+    @DisplayName("El correo va en el idioma de quien lo recibe, no en el del servidor")
+    void enElIdiomaDeQuienLoRecibe() {
+        Solicitud s = solicitud();
+        s.getReceptor().setIdioma("en");
+
+        Aviso aviso = redactor.paraSolicitud(s, LLAVE);
+
+        assertTrue(aviso.asunto().contains("wants to train with you"), aviso.asunto());
+        assertTrue(aviso.cuerpo().contains("has sent you a request"), aviso.cuerpo());
+        // Y la salida también: es la parte que alguien busca cuando se harta.
+        assertTrue(aviso.cuerpo().contains("Stop them here"), aviso.cuerpo());
+    }
+
+    @Test
+    @DisplayName("Y quien no lo ha cambiado lo sigue recibiendo en español")
+    void porDefectoEnEspanol() {
+        Aviso aviso = redactor.paraSolicitud(solicitud(), LLAVE);
+
+        assertTrue(aviso.asunto().contains("quiere entrenar contigo"), aviso.asunto());
+        assertTrue(aviso.cuerpo().contains("te ha mandado una solicitud"), aviso.cuerpo());
+    }
+
+    /**
+     * La fecha se compone por el catálogo y no pegando cadenas: en español es
+     * "lunes 3 de agosto" y en inglés "Monday 3 August", y esa preposición de
+     * en medio es justo lo que no se puede concatenar.
+     */
+    @Test
+    @DisplayName("La fecha de la propuesta también cambia de idioma")
+    void laFechaTambienCambia() {
+        Sesion s = sesion();
+        s.getInvitado().setIdioma("en");
+
+        Aviso aviso = redactor.paraSesion(s, LLAVE);
+
+        assertTrue(aviso.asunto().contains("Monday 3"), aviso.asunto());
+        assertTrue(aviso.cuerpo().contains("Monday 3 August"), aviso.cuerpo());
+        assertFalse(aviso.cuerpo().contains(" de "), aviso.cuerpo());
+    }
+
+    @Test
+    @DisplayName("El de recuperar la contraseña también, que es el que más urge entender")
+    void elDeRecuperarTambien() {
+        Usuario quien = usuario(3L, "Ana", "ana@test.com");
+        quien.setIdioma("en");
+
+        Aviso aviso = redactor.paraRestablecer(quien, "un-token");
+
+        assertTrue(aviso.asunto().contains("Recover your SpotterAI password"), aviso.asunto());
+        assertTrue(aviso.cuerpo().contains("valid for one hour"), aviso.cuerpo());
     }
 }

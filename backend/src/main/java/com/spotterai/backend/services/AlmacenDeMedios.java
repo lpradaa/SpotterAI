@@ -1,5 +1,6 @@
 package com.spotterai.backend.services;
 
+import com.spotterai.backend.textos.ErrorDeNegocio;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,17 +53,17 @@ public class AlmacenDeMedios {
 
     public MedioGuardado guardar(MultipartFile archivo) throws IOException {
         if (archivo == null || archivo.isEmpty()) {
-            throw new IllegalArgumentException("No has adjuntado ningún archivo.");
+            throw ErrorDeNegocio.de("error.medio.sinArchivo");
         }
         if (archivo.getSize() > TAMANO_MAXIMO) {
-            throw new IllegalArgumentException("El archivo pasa de 15 MB.");
+            throw ErrorDeNegocio.de("error.medio.demasiadoGrande", TAMANO_MAXIMO / (1024 * 1024));
         }
 
         String contentType = archivo.getContentType() == null
                 ? "" : archivo.getContentType().toLowerCase(Locale.ROOT);
         String extension = TIPOS_PERMITIDOS.get(contentType);
         if (extension == null) {
-            throw new IllegalArgumentException("Solo se admiten imágenes (jpg, png, webp, gif) y vídeos (mp4, webm, mov).");
+            throw ErrorDeNegocio.de("error.medio.formatoNoAdmitido");
         }
 
         // El tipo declarado lo pone quien sube, asi que no basta con creerselo:
@@ -74,7 +75,7 @@ public class AlmacenDeMedios {
             leidos = sonda.readNBytes(cabecera, 0, cabecera.length);
         }
         if (!contenidoCoincide(cabecera, leidos, extension)) {
-            throw new IllegalArgumentException("El archivo no es realmente un " + extension + ".");
+            throw ErrorDeNegocio.de("error.medio.noEsLoQueDice", extension);
         }
 
         Files.createDirectories(carpeta);

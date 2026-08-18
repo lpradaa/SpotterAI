@@ -44,12 +44,8 @@ public class BloqueoController {
 
     @PostMapping("/{otroUsuarioId}")
     public ResponseEntity<?> bloquear(@PathVariable Long otroUsuarioId) {
-        try {
-            bloqueos.bloquear(yo(), otroUsuarioId);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        bloqueos.bloquear(yo(), otroUsuarioId);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{otroUsuarioId}")
