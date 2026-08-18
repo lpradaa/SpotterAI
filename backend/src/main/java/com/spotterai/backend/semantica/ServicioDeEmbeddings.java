@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -68,6 +69,45 @@ public class ServicioDeEmbeddings {
 
     /** Lo que responde el servicio. */
     public record Vectorizado(List<Double> vector, String huella, int dimensiones) {}
+
+    /**
+     * Lo que dice una biografia, leido por ejes.
+     *
+     * @param ejes  nombre del eje -> posicion de -1 a 1, o <b>null</b> si el
+     *              texto no habla de ese eje. El null viaja tal cual a la base:
+     *              es un dato ("no ha dicho nada de esto") y no un fallo.
+     * @param huella de que texto salieron
+     */
+    public record Intenciones(Map<String, Double> ejes, String huella) {}
+
+    /**
+     * Los ejes de un texto, si se puede.
+     *
+     * <p>Mismo contrato que {@link #vectorizar}: vacio cuando no hay servicio,
+     * el texto esta en blanco o el servicio falla. La calculadora ya sabe
+     * puntuar sin este factor, asi que un servicio caido no rompe nada — solo
+     * deja de releer las biografias que cambien mientras tanto.
+     */
+    public Optional<Intenciones> leerIntenciones(String texto) {
+        if (!activo || texto == null || texto.isBlank()) return Optional.empty();
+
+        try {
+            Intenciones respuesta = cliente.post()
+                    .uri("/intenciones")
+                    .body(new PeticionDeVector(texto.trim()))
+                    .retrieve()
+                    .body(Intenciones.class);
+
+            if (respuesta == null || respuesta.ejes() == null) return Optional.empty();
+            return Optional.of(respuesta);
+
+        } catch (Exception e) {
+            // Mismo criterio que arriba: esto es opcional por diseño y no puede
+            // tumbar un guardado de perfil.
+            log.warn("No se han podido leer las intenciones: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
 
     /**
      * El vector de un texto, si se puede.

@@ -281,7 +281,7 @@ Y tres documentos que cuentan decisiones que no caben en un comentario:
 |---|---|
 | [`docs/medir-el-motor.md`](docs/medir-el-motor.md) | Qué mueve cada peso de verdad, medido sobre 1.770 parejas |
 | [`docs/i18n.md`](docs/i18n.md) | Cómo se traduce una pantalla, y las reglas que no son obvias |
-| [`embeddings/README.md`](embeddings/README.md) | Por qué el servicio del modelo ocupa 475 MB y no 740 |
+| [`embeddings/README.md`](embeddings/README.md) | Por qué el servicio del modelo ocupa 475 MB y no 740, y por qué luego se pagaron 127 más a sabiendas |
 
 ---
 

@@ -108,6 +108,8 @@ class LaListaDeGenteTest {
                 bloqueoRepository,
                 TextosDePrueba.nuevo(),
                 new VectorDeBiografia(new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
+                new com.spotterai.backend.semantica.IntencionesDeBiografia(
+                        new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
                 Clock.systemDefaultZone());
 
         gimnasio.setId(1L);

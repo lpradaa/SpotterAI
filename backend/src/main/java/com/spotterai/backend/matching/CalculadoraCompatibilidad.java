@@ -650,34 +650,85 @@ public final class CalculadoraCompatibilidad {
      * a quien si, del mismo modo que no rellenar el gimnasio no significa
      * entrenar en otro sitio.
      */
+    /**
+     * Lo que cada uno ha escrito sobre como quiere entrenar: 6 puntos.
+     *
+     * <h2>Por que ya no es un coseno</h2>
+     *
+     * <p>Hasta la V19 esto comparaba los vectores de las dos biografias. Medido,
+     * aquello ordenaba por <b>parecido de redaccion</b> y no por compatibilidad:
+     * dos personas que querian lo contrario dicho con la misma estructura
+     * sacaban 0,843 y dos que querian lo mismo dicho con sus palabras, 0,499. Y
+     * no era cosa del modelo —otro de la misma clase salia peor— sino de que un
+     * bi-encoder proyecta cada texto por separado y la oposicion entre dos
+     * frases no es propiedad de ninguna de las dos.
+     *
+     * <p>Ahora cada biografia se lee por separado en tres ejes —que busca del
+     * otro, cuanta ambicion, cuanta flexibilidad— y aqui solo se restan
+     * posiciones. Todo el recorrido esta en {@code docs/medir-el-motor.md}.
+     *
+     * <h2>Eje a eje, y solo los que los dos han dicho</h2>
+     *
+     * <p>Un eje del que uno de los dos no habla <b>no se evalua</b>. La mitad de
+     * las biografias reales no dicen nada de la mitad de los ejes, y colocar en
+     * el centro a quien calla seria atribuirle una postura que no ha dado. Si no
+     * queda ningun eje comun, el factor entero se declara sin datos y sus puntos
+     * se reparten entre los demas, igual que cuando falta el gimnasio.
+     */
     private static FactorCompatibilidad factorAfinidad(Usuario yo, Usuario otro) {
-        VectorDeTexto mio = VectorDeTexto.desdeBytes(yo.getBiografiaVector());
-        VectorDeTexto suyo = VectorDeTexto.desdeBytes(otro.getBiografiaVector());
+        double[] mias = {
+                nulo(yo.getIntencionExigencia()), nulo(yo.getIntencionAmbicion()),
+                nulo(yo.getIntencionFlexibilidad())};
+        double[] suyas = {
+                nulo(otro.getIntencionExigencia()), nulo(otro.getIntencionAmbicion()),
+                nulo(otro.getIntencionFlexibilidad())};
 
-        if (mio == null || suyo == null) {
+        double suma = 0;
+        int comunes = 0;
+        int masParecido = -1;
+        double mejorEncaje = -1;
+
+        for (int i = 0; i < mias.length; i++) {
+            if (Double.isNaN(mias[i]) || Double.isNaN(suyas[i])) continue;
+
+            // Las posiciones van de -1 a 1, asi que la distancia maxima es 2.
+            double encaje = 1.0 - Math.abs(mias[i] - suyas[i]) / 2.0;
+            suma += encaje;
+            comunes++;
+
+            if (encaje > mejorEncaje) {
+                mejorEncaje = encaje;
+                masParecido = i;
+            }
+        }
+
+        if (comunes == 0) {
             return FactorCompatibilidad.sinDatos("afinidad",
                     Mensaje.de("factor.afinidad.sinDatos"));
         }
 
-        double similitud = mio.similitudCon(suyo);
+        double ratio = Math.clamp(suma / comunes, 0.0, 1.0);
 
-        // Reescalado desde el suelo: lo que puntua es cuanto se parecen por
-        // encima del fondo comun que comparten dos textos cualesquiera sobre
-        // entrenar, no ese fondo.
-        double sobreElSuelo = (similitud - AFINIDAD_MINIMA) / (AFINIDAD_DE_SOBRA - AFINIDAD_MINIMA);
-        double ratio = Math.clamp(sobreElSuelo, 0.0, 1.0);
-
-        Mensaje detalle;
-        if (ratio >= 0.75) {
-            detalle = Mensaje.de("factor.afinidad.mucha");
-        } else if (ratio >= 0.4) {
-            detalle = Mensaje.de("factor.afinidad.algo");
-        } else {
-            detalle = Mensaje.de("factor.afinidad.poca");
-        }
+        // La frase dice EN QUE coincidis, no cuanto. Es la diferencia entre un
+        // factor que puntua y uno que se explica, y era imposible con 384
+        // numeros: no habia nada que nombrar.
+        Mensaje detalle = ratio >= 0.75
+                ? Mensaje.de("factor.afinidad.coincidis", Mensaje.de(CLAVES_DE_EJE[masParecido]))
+                : ratio >= 0.4 ? Mensaje.de("factor.afinidad.algo")
+                               : Mensaje.de("factor.afinidad.poca");
 
         return FactorCompatibilidad.evaluado("afinidad", ratio * PESO_AFINIDAD, PESO_AFINIDAD, detalle);
     }
+
+    /** Un eje del que alguien no ha hablado. NaN porque no es un valor, es un hueco. */
+    private static double nulo(Double valor) {
+        return valor == null ? Double.NaN : valor;
+    }
+
+    /** En el mismo orden en el que se leen los ejes de la entidad. */
+    private static final String[] CLAVES_DE_EJE = {
+            "factor.afinidad.eje.exigencia", "factor.afinidad.eje.ambicion",
+            "factor.afinidad.eje.flexibilidad"};
 
     private static String normalizar(String valor) {
         return valor == null || valor.isBlank() ? null : valor.trim().toLowerCase(Locale.ROOT);

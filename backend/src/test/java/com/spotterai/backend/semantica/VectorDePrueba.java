@@ -22,12 +22,44 @@ public final class VectorDePrueba {
 
     private VectorDePrueba() {}
 
-    /** Le pone al usuario una biografia y un vector coherente con ella. */
+    /** Le pone al usuario una biografia y lo que sale de ella. */
     public static Usuario con(Usuario usuario, double semilla) {
         usuario.setBiografia("Biografía de prueba " + semilla);
+
+        // El vector se queda mientras la columna exista, aunque desde la V19 el
+        // factor no lo mire: hay pruebas que comprueban que se sigue guardando.
         usuario.setBiografiaVector(vector(semilla).aBytes());
         usuario.setBiografiaVectorDe("huella-" + semilla);
+
+        intenciones(usuario, semilla);
         return usuario;
+    }
+
+    /**
+     * Los tres ejes, deterministas a partir de la semilla.
+     *
+     * <p>La misma semilla da las mismas posiciones —dos personas que se
+     * describen igual encajan del todo— y algunas salen <b>null</b> a
+     * proposito: en las biografias reales la mitad de los ejes no aparecen, y
+     * una poblacion de prueba donde todo el mundo opina de todo mediria un
+     * factor que no existe.
+     */
+    public static void intenciones(Usuario usuario, double semilla) {
+        usuario.setIntencionExigencia(eje(semilla, 0));
+        usuario.setIntencionAmbicion(eje(semilla, 1));
+        usuario.setIntencionFlexibilidad(eje(semilla, 2));
+        usuario.setIntencionesDe("huella-" + semilla);
+    }
+
+    private static Double eje(double semilla, int indice) {
+        double posicion = Math.sin(semilla * 1.7 + indice * 2.1);
+
+        // El mismo umbral que aplica el servicio: por debajo, el texto no habla
+        // de ese eje. Alla esta medido; aqui solo hace falta que algunos salgan
+        // nulos, asi que se deja mas alto a proposito y la poblacion de prueba
+        // sigue teniendo huecos que ejercitar.
+        if (Math.abs(posicion) < 0.15) return null;
+        return Math.round(posicion * 1000) / 1000.0;
     }
 
     /** El mismo vector para los dos: dos personas que se describen igual. */

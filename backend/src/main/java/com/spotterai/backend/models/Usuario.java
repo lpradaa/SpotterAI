@@ -91,6 +91,37 @@ public class Usuario {
     private String biografiaVectorDe;
 
     /**
+     * Lo que la biografia dice sobre como quiere entrenar esta persona.
+     *
+     * <p>Sustituye al vector de 384 numeros, que comparaba dos biografias con la
+     * similitud del coseno y resulto medir <b>parecido de redaccion</b> y no
+     * compatibilidad: dos personas que querian lo contrario dicho con la misma
+     * estructura puntuaban 0,843 y dos que querian lo mismo dicho con sus
+     * palabras, 0,499. Esta medido en {@code docs/medir-el-motor.md}.
+     *
+     * <p>Tres numeros con nombre en vez de 384 opacos, y eso cambia dos cosas:
+     * el factor se puede explicar en pantalla —«los dos buscais que os
+     * exijan»— y un valor raro se ve mirando la fila en la base.
+     *
+     * <p><b>Null no es cero.</b> Es «esta persona no ha dicho nada de esto», y
+     * la mitad de las biografias reales no hablan de la mitad de los ejes.
+     * Ponerle un cero seria colocar a todo el que calla justo en el medio, que
+     * es una opinion que nadie ha dado.
+     */
+    @Column(name = "intencion_exigencia")
+    private Double intencionExigencia;
+
+    @Column(name = "intencion_ambicion")
+    private Double intencionAmbicion;
+
+    @Column(name = "intencion_flexibilidad")
+    private Double intencionFlexibilidad;
+
+    /** De que texto salieron. Mismo papel que {@code biografiaVectorDe}. */
+    @Column(name = "intenciones_de", length = 64)
+    private String intencionesDe;
+
+    /**
      * Entrenamientos que se propone hacer a la semana.
      *
      * Estaba en localStorage con la clave meta_semanal_<nombre>, asi que se
@@ -275,6 +306,18 @@ public class Usuario {
     public String getBiografia() {
         return biografia;
     }
+
+    public Double getIntencionExigencia() { return intencionExigencia; }
+    public void setIntencionExigencia(Double v) { this.intencionExigencia = v; }
+
+    public Double getIntencionAmbicion() { return intencionAmbicion; }
+    public void setIntencionAmbicion(Double v) { this.intencionAmbicion = v; }
+
+    public Double getIntencionFlexibilidad() { return intencionFlexibilidad; }
+    public void setIntencionFlexibilidad(Double v) { this.intencionFlexibilidad = v; }
+
+    public String getIntencionesDe() { return intencionesDe; }
+    public void setIntencionesDe(String v) { this.intencionesDe = v; }
 
     public byte[] getBiografiaVector() { return biografiaVector; }
     public void setBiografiaVector(byte[] biografiaVector) { this.biografiaVector = biografiaVector; }

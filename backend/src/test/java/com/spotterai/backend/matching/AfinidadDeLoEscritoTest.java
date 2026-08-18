@@ -2,7 +2,6 @@ package com.spotterai.backend.matching;
 
 import com.spotterai.backend.models.Disponibilidad;
 import com.spotterai.backend.models.Usuario;
-import com.spotterai.backend.semantica.VectorDeTexto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -36,26 +35,27 @@ class AfinidadDeLoEscritoTest {
         return u;
     }
 
-    /** Un usuario con un vector de biografia construido a mano. */
-    private static Usuario conVector(double semilla) {
+    /**
+     * Un usuario con sus tres ejes puestos a mano.
+     *
+     * <p>Antes esto ponia un vector de 384 numeros. Desde la V19 el factor lee
+     * tres posiciones con nombre, porque comparar los vectores resulto ordenar
+     * por parecido de redaccion y no por compatibilidad — medido en
+     * {@code docs/medir-el-motor.md}.
+     */
+    private static Usuario conEjes(Double exigencia, Double ambicion, Double flexibilidad) {
         Usuario u = usuario();
-        u.setBiografia("da igual, lo que compara el motor es el vector");
-        u.setBiografiaVector(vector(semilla).aBytes());
-        u.setBiografiaVectorDe("huella" + semilla);
+        u.setBiografia("da igual: lo que compara el motor son los ejes");
+        u.setIntencionExigencia(exigencia);
+        u.setIntencionAmbicion(ambicion);
+        u.setIntencionFlexibilidad(flexibilidad);
+        u.setIntencionesDe("huella");
         return u;
     }
 
-    /** Vectores deterministas y normalizados, como los del servicio real. */
-    private static VectorDeTexto vector(double semilla) {
-        float[] v = new float[VectorDeTexto.DIMENSIONES];
-        for (int i = 0; i < v.length; i++) v[i] = (float) Math.sin(semilla + i * 0.1);
-
-        double suma = 0;
-        for (float x : v) suma += x * x;
-        float norma = (float) Math.sqrt(suma);
-        for (int i = 0; i < v.length; i++) v[i] /= norma;
-
-        return new VectorDeTexto(v);
+    /** Los tres ejes iguales, para el caso corriente. */
+    private static Usuario conEjes(double todos) {
+        return conEjes(todos, todos, todos);
     }
 
     private static Disponibilidad franja(String dia, String inicio, String fin) {
@@ -89,18 +89,41 @@ class AfinidadDeLoEscritoTest {
     @Test
     @DisplayName("si solo uno ha escrito, tampoco hay nada que comparar")
     void soloUnoEscribe() {
-        assertThat(afinidadDe(conVector(1), usuario()).aplicable()).isFalse();
+        assertThat(afinidadDe(conEjes(0.8), usuario()).aplicable()).isFalse();
     }
 
     @Test
-    @DisplayName("un vector guardado por otro modelo se trata como dato ausente")
-    void vectorDeOtroModelo() {
-        Usuario viejo = usuario();
-        viejo.setBiografia("tengo bio pero el vector es de antes");
-        viejo.setBiografiaVector(new byte[]{1, 2, 3});
+    @DisplayName("una biografía que no habla de ningún eje se trata como dato ausente")
+    void biografiaQueNoDiceNada() {
+        Usuario callado = usuario();
+        callado.setBiografia("Entreno los lunes y los miércoles a las siete.");
+        // Habla de horario, que ya es un campo del perfil: de los tres ejes, nada.
 
-        // No revienta el calculo de nadie: cae en "no lo sabemos".
-        assertThat(afinidadDe(viejo, conVector(1)).aplicable()).isFalse();
+        assertThat(afinidadDe(callado, conEjes(0.8)).aplicable()).isFalse();
+    }
+
+    @Test
+    @DisplayName("solo cuentan los ejes de los que han hablado los dos")
+    void unEjeSueltoBasta() {
+        // Uno solo habla de ambición, el otro de los tres. El unico eje comun
+        // es la ambicion, y ahi coinciden: el factor se evalua con ese.
+        Usuario parco = conEjes(null, 0.7, null);
+        FactorCompatibilidad afinidad = afinidadDe(parco, conEjes(0.7));
+
+        assertThat(afinidad.aplicable()).isTrue();
+        assertThat(afinidad.ratio()).isCloseTo(1.0, org.assertj.core.data.Offset.offset(0.01));
+    }
+
+    @Test
+    @DisplayName("querer lo contrario puntúa menos que querer lo mismo")
+    void loContrarioPuntuaMenos() {
+        // Es exactamente el caso que el factor anterior hacia al reves: dos
+        // biografias opuestas escritas parecido sacaban mas que dos compatibles
+        // escritas distinto.
+        double opuestos = afinidadDe(conEjes(0.9), conEjes(-0.9)).puntos();
+        double iguales = afinidadDe(conEjes(0.9), conEjes(0.9)).puntos();
+
+        assertThat(opuestos).isLessThan(iguales);
     }
 
     // ===================== La señal =====================
@@ -108,8 +131,8 @@ class AfinidadDeLoEscritoTest {
     @Test
     @DisplayName("dos biografías idénticas dan el máximo del factor")
     void identicas() {
-        Usuario uno = conVector(2);
-        Usuario otro = conVector(2);
+        Usuario uno = conEjes(0.6);
+        Usuario otro = conEjes(0.6);
 
         FactorCompatibilidad afinidad = afinidadDe(uno, otro);
 
@@ -120,10 +143,10 @@ class AfinidadDeLoEscritoTest {
     @Test
     @DisplayName("parecerse más da más puntos que parecerse menos")
     void masParecidoPuntuaMas() {
-        Usuario yo = conVector(0);
+        Usuario yo = conEjes(0.5);
 
-        double cerca = afinidadDe(yo, conVector(0.05)).puntos();
-        double lejos = afinidadDe(yo, conVector(3.0)).puntos();
+        double cerca = afinidadDe(yo, conEjes(0.45)).puntos();
+        double lejos = afinidadDe(yo, conEjes(-0.6)).puntos();
 
         assertThat(cerca).isGreaterThan(lejos);
     }
@@ -133,8 +156,8 @@ class AfinidadDeLoEscritoTest {
     @Test
     @DisplayName("la afinidad no puede tapar que no coincidáis en horario")
     void noTapaElHorario() {
-        Usuario uno = conVector(5);
-        Usuario otro = conVector(5); // biografias identicas: el maximo del factor
+        Usuario uno = conEjes(0.7);
+        Usuario otro = conEjes(0.7); // los mismos ejes: el maximo del factor
 
         // Pero entrenan a horas que no se cruzan.
         PuntuacionCompatibilidad sinSolape = CalculadoraCompatibilidad.calcular(
@@ -150,12 +173,12 @@ class AfinidadDeLoEscritoTest {
     @Test
     @DisplayName("el factor pesa 6 y no más")
     void elPesoEsElQueEs() {
-        FactorCompatibilidad afinidad = afinidadDe(conVector(1), conVector(1));
+        FactorCompatibilidad afinidad = afinidadDe(conEjes(0.4), conEjes(0.4));
 
         // Se comprueba contra el resto para que la prueba siga significando algo
         // si alguien reajusta el reparto: lo que se defiende no es el numero 6,
         // es que una señal blanda de un modelo no pese como el horario.
-        double horario = afinidadDe(conVector(1), conVector(1)) != null
+        double horario = afinidadDe(conEjes(0.4), conEjes(0.4)) != null
                 ? CalculadoraCompatibilidad.PESO_HORARIO : 0;
 
         assertThat(CalculadoraCompatibilidad.PESO_AFINIDAD).isEqualTo(6);

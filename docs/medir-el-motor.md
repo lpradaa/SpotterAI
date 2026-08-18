@@ -563,12 +563,36 @@ El otro precio es la cobertura: muchas biografías no dicen nada de ninguno de l
 tres ejes, así que el factor **opinará menos veces**. Es el mismo caso que la
 fuerza, y es preferible a opinar mal — pero es una pérdida y hay que contarla.
 
-### Qué queda decidido y qué no
+### Y se integró
 
-Queda medido que el rediseño funciona y lo que cuesta. Queda **sin decidir** si se
-integra, y esa es una decisión de producto: cambiar de modelo obliga a recalcular
-todos los vectores guardados, a recalibrar los umbrales del factor y a rehacer la
-historia de memoria del README. Con seis puntos de cien en juego.
+La migración `V19` crea tres columnas `DOUBLE` nullable y una huella. Son tres
+números con nombre en lugar de un blob de 384, y eso cambia dos cosas que no son
+de rendimiento: **un valor raro se ve mirando la fila** en la base, y el factor
+por fin puede decir *en qué* coincidís en vez de solo cuánto.
+
+`NULL` no es cero, y ahí está la decisión que más importa: la mitad de las
+biografías reales no hablan de la mitad de los ejes, y poner un cero colocaría en
+el centro a todo el que calla — una opinión que nadie ha dado. Un eje del que uno
+de los dos no habla **no se evalúa**; si no queda ninguno común, el factor entero
+se declara sin datos y sus puntos se reparten, igual que cuando falta el gimnasio.
+
+No hizo falta script de migración de datos: `RepasoDeVectores` ya recalculaba lo
+que no estuviera al día, y las columnas nuevas nacen vacías, así que el primer
+arranque después de migrar las rellena solas.
+
+Lo que sí hizo falta fue tocar nueve pruebas. Ocho se arreglaron cambiando un
+solo sitio —el helper que monta usuarios de prueba, que ahora pone también los
+tres ejes— y la novena, `AfinidadDeLoEscritoTest`, se reescribió entera porque
+probaba el mecanismo viejo. Dos casos nuevos que antes no se podían escribir:
+que **querer lo contrario puntúe menos que querer lo mismo**, y que una biografía
+que solo habla de horarios se trate como dato ausente.
+
+Y una prueba que no existía y ahora sí: los tres ejes se llaman igual en Java que
+en Python. `IntencionesDeBiografiaTest` **lee el fichero del servicio** y
+comprueba los nombres, porque si el servicio empezara a mandar `motivacion` en
+vez de `ambicion`, el backend guardaría un null y el factor perdería un tercio de
+su información sin una excepción, sin un log y sin que ninguna prueba de
+comportamiento se enterara.
 
 ## Qué protege esto para el futuro
 

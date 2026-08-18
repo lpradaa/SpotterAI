@@ -70,3 +70,47 @@ curl -s localhost:8000/vector -H "Content-Type: application/json" \
 variable está vacía el backend no llama a nadie y el factor semántico queda
 permanentemente sin datos — que es el comportamiento correcto en un entorno
 donde este servicio no está desplegado.
+
+
+---
+
+## Y después se pagaron 127 MB de vuelta
+
+Todo lo de arriba sigue siendo verdad y ya no es toda la historia. El factor para
+el que se optimizó este servicio —comparar dos biografías con la similitud del
+coseno— resultó **medir parecido de redacción y no compatibilidad**: dos personas
+que quieren lo contrario dicho con la misma estructura sacaban 0,843 y dos que
+quieren lo mismo dicho con sus palabras, 0,499.
+
+No se arreglaba con otro modelo de la misma clase. Se probó `multilingual-e5-small`
+y, medido como fracción de su propio rango, sale **peor**: el fallo es
+estructural, porque un bi-encoder proyecta cada texto por separado y la oposición
+entre dos frases no es propiedad de ninguna de las dos.
+
+Lo que sí lo arregla es dejar de comparar textos y **leer cada biografía por
+separado** con un modelo de inferencia textual, preguntándole tres cosas
+concretas. Eso cabe aquí porque el modelo lee a una persona, no compara a dos:
+sigue corriendo una vez al guardar el perfil y fuera del camino crítico.
+
+| | RSS |
+|---|---|
+| base (python + onnxruntime + tokenizers) | 18,6 MB |
+| el de embeddings | 483,9 MB |
+| **el de intenciones (mDeBERTa-xnli int8)** | **610,9 MB** |
+
+**El servicio pasa de 484 a 611 MB.** Desactivar la arena de ONNX Runtime solo
+devuelve 7, así que no hay palanca fácil, y esos 611 rompen el objetivo de 512 que
+motivó quitar PyTorch.
+
+Se paga a sabiendas y por dos razones. La primera es que aquellos 512 eran de
+**portabilidad** —caber en cualquier capa gratuita— y el despliegue que documenta
+`docs/despliegue-oracle.md` es ARM Always Free con 24 GB. La segunda es más
+simple: un factor que ordena al revés de lo que dice ordenar no vale 127 MB menos,
+vale cero.
+
+Los dos modelos se cargan **de forma perezosa** y por eso no se suman: desde que
+el factor se calcula por ejes nadie llama a `/vector`, y cargar los dos a la vez
+sería pagar 1,1 GB para siempre por atender el último repaso de una migración.
+
+El recorrido entero —las tres cosas que se probaron y las dos que fallaron— está
+en [`docs/medir-el-motor.md`](../docs/medir-el-motor.md).

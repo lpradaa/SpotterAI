@@ -69,6 +69,8 @@ class BuscarCompanerosTest {
                 Mockito.mock(com.spotterai.backend.repositories.BloqueoRepository.class),
                 TextosDePrueba.nuevo(),
                 new VectorDeBiografia(new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
+                new com.spotterai.backend.semantica.IntencionesDeBiografia(
+                        new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
                 java.time.Clock.systemDefaultZone());
 
         gimnasio = new Gimnasio();

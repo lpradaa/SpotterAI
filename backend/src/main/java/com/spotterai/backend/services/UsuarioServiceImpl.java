@@ -3,6 +3,7 @@ package com.spotterai.backend.services;
 import com.spotterai.backend.config.IdiomaConfig;
 import com.spotterai.backend.textos.ErrorDeNegocio;
 import com.spotterai.backend.textos.Textos;
+import com.spotterai.backend.semantica.IntencionesDeBiografia;
 import com.spotterai.backend.semantica.VectorDeBiografia;
 import com.spotterai.backend.textos.Mensaje;
 import com.spotterai.backend.dtos.ActividadDTO;
@@ -109,6 +110,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     /** Mantiene al dia el vector de la biografia, para el factor semantico. */
     private final VectorDeBiografia vectorDeBiografia;
+    private final IntencionesDeBiografia intencionesDeBiografia;
 
     /**
      * Tope de marcas por persona.
@@ -130,6 +132,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                               BloqueoRepository bloqueoRepository,
                               Textos textos,
                               VectorDeBiografia vectorDeBiografia,
+                              IntencionesDeBiografia intencionesDeBiografia,
                               Clock reloj) {
         this.levantamientoRepository = levantamientoRepository;
         this.sesionRepository = sesionRepository;
@@ -145,6 +148,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.bloqueoRepository = bloqueoRepository;
         this.textos = textos;
         this.vectorDeBiografia = vectorDeBiografia;
+        this.intencionesDeBiografia = intencionesDeBiografia;
     }
 
     @Override
@@ -290,7 +294,10 @@ public class UsuarioServiceImpl implements UsuarioService {
         // perfil. Si el servicio de embeddings no responde, esto no lanza nada —
         // el perfil se guarda igual y la biografia se queda sin vector hasta la
         // siguiente edicion.
+        // Las dos, mientras dure la transicion: el vector para quien todavia lo
+        // tenga guardado y las intenciones, que son las que puntuan desde la V19.
         vectorDeBiografia.actualizar(usuario);
+        intencionesDeBiografia.actualizar(usuario);
 
         Usuario guardado = usuarioRepository.save(usuario);
 

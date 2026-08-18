@@ -30,6 +30,7 @@ import os
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
+from intenciones import EJES, LectorDeIntenciones
 from modelo_ligero import DIMENSIONES, ModeloLigero
 
 # Multilingue y pequeño. Hay modelos mejores, y todos son mas grandes: este cabe
@@ -48,9 +49,34 @@ VARIANTE = os.getenv("VARIANTE_MODELO", "onnx/model_qint8_avx512_vnni.onnx")
 
 app = FastAPI(title="SpotterAI · embeddings")
 
-# Se carga una vez al arrancar, no por peticion. Cargarlo por peticion son ocho
-# segundos cada vez y el mismo modelo en memoria varias veces.
-modelo = ModeloLigero(NOMBRE_DEL_MODELO, VARIANTE)
+# --------------------------------------------------------- los dos modelos
+#
+# Cada uno se carga la PRIMERA VEZ que se pide, no al arrancar. No es por
+# tiempo de arranque: es que juntos son 1,1 GB y separados 484 y 611 MB.
+#
+# El de intenciones sustituye al de embeddings, no se suma: desde que el factor
+# semantico se calcula por ejes, nadie llama a /vector. Pero el endpoint sigue
+# ahi mientras queden vectores guardados que recalcular, y cargar los dos a la
+# vez solo para atender el ultimo repaso de una migracion seria pagar el doble
+# de memoria para siempre por una tarde.
+#
+# Cargarlo por peticion, en cambio, serian ocho segundos cada vez.
+_modelo = None
+_lector = None
+
+
+def modelo_de_vectores() -> ModeloLigero:
+    global _modelo
+    if _modelo is None:
+        _modelo = ModeloLigero(NOMBRE_DEL_MODELO, VARIANTE)
+    return _modelo
+
+
+def lector_de_intenciones() -> LectorDeIntenciones:
+    global _lector
+    if _lector is None:
+        _lector = LectorDeIntenciones()
+    return _lector
 
 
 class Peticion(BaseModel):
@@ -70,11 +96,45 @@ class Respuesta(BaseModel):
     dimensiones: int
 
 
+class RespuestaIntenciones(BaseModel):
+    ejes: dict[str, float | None]
+    """
+    De -1 a 1 en cada eje, o null si la biografia no habla de eso.
+
+    El null no es un fallo ni un cero: es «esta persona no ha dicho nada de
+    esto», y el motor lo trata como cualquier otro dato que falta.
+    """
+
+    huella: str
+    """De que texto salio, para saber si lo guardado sigue siendo lo actual."""
+
+
 @app.get("/salud")
 def salud() -> dict:
-    """Para que el backend —y la plataforma— sepan si el modelo esta cargado."""
-    return {"estado": "listo", "modelo": NOMBRE_DEL_MODELO,
-            "variante": VARIANTE, "dimensiones": DIMENSIONES}
+    """Para que el backend —y la plataforma— sepan que hay cargado."""
+    return {
+        "estado": "listo",
+        "ejes": list(EJES),
+        # Cual esta cargado de verdad, que con carga perezosa no es evidente.
+        "vectores_cargados": _modelo is not None,
+        "intenciones_cargadas": _lector is not None,
+        "modelo": NOMBRE_DEL_MODELO,
+        "variante": VARIANTE,
+        "dimensiones": DIMENSIONES,
+    }
+
+
+@app.post("/intenciones", response_model=RespuestaIntenciones)
+def intenciones(peticion: Peticion) -> RespuestaIntenciones:
+    """Lo que dice una biografia sobre como quiere entrenar quien la escribio."""
+    texto = peticion.texto.strip()
+
+    return RespuestaIntenciones(
+        ejes=lector_de_intenciones().leer(texto),
+        # Misma huella que /vector: es del TEXTO, asi que el backend puede saber
+        # si lo que tiene guardado corresponde a la biografia de ahora.
+        huella=hashlib.sha256(texto.encode("utf-8")).hexdigest()[:32],
+    )
 
 
 @app.post("/vector", response_model=Respuesta)
@@ -84,7 +144,7 @@ def vector(peticion: Peticion) -> Respuesta:
     # Ya viene normalizado de modelo_ligero: la similitud del coseno entre dos
     # vectores de longitud 1 es su producto escalar, y eso deja el lado Java
     # como una suma de productos sin raices cuadradas ni divisiones.
-    embedding = modelo.vector(texto)
+    embedding = modelo_de_vectores().vector(texto)
 
     return Respuesta(
         vector=embedding.tolist(),

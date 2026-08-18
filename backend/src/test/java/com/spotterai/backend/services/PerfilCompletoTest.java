@@ -54,6 +54,8 @@ class PerfilCompletoTest {
                 Mockito.mock(BloqueoRepository.class),
                 TextosDePrueba.nuevo(),
                 new VectorDeBiografia(new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
+                new com.spotterai.backend.semantica.IntencionesDeBiografia(
+                        new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
                 Clock.systemDefaultZone());
 
         Mockito.when(disponibilidadRepository.findByUsuarioId(Mockito.any())).thenReturn(List.of());

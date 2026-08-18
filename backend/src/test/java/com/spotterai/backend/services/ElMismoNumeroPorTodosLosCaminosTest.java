@@ -103,6 +103,8 @@ class ElMismoNumeroPorTodosLosCaminosTest {
                 Mockito.mock(BloqueoRepository.class),
                 TextosDePrueba.nuevo(),
                 new VectorDeBiografia(new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
+                new com.spotterai.backend.semantica.IntencionesDeBiografia(
+                        new com.spotterai.backend.semantica.ServicioDeEmbeddings("")),
                 Clock.systemDefaultZone());
 
         when(usuarioRepository.findByEmail("luis@test.com")).thenReturn(Optional.of(yo));

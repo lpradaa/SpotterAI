@@ -33,18 +33,25 @@ public class RepasoDeVectores {
 
     private final UsuarioRepository usuarios;
     private final VectorDeBiografia vectores;
+    private final IntencionesDeBiografia intenciones;
 
-    public RepasoDeVectores(UsuarioRepository usuarios, VectorDeBiografia vectores) {
+    public RepasoDeVectores(UsuarioRepository usuarios, VectorDeBiografia vectores,
+                            IntencionesDeBiografia intenciones) {
         this.usuarios = usuarios;
         this.vectores = vectores;
+        this.intenciones = intenciones;
     }
 
     @Async
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void alArrancar() {
+        // Las intenciones entran aqui por la puerta de siempre. Al crearse las
+        // columnas de la V19 estan vacias para todo el mundo, asi que este
+        // repaso las rellena en el primer arranque despues de migrar: no hace
+        // falta un script de migracion de datos aparte.
         List<Usuario> pendientes = usuarios.findAll().stream()
-                .filter(u -> !vectores.estaAlDia(u))
+                .filter(u -> !vectores.estaAlDia(u) || !intenciones.estaAlDia(u))
                 .toList();
 
         if (pendientes.isEmpty()) return;
@@ -53,7 +60,10 @@ public class RepasoDeVectores {
 
         int hechos = 0;
         for (Usuario usuario : pendientes) {
-            if (vectores.actualizar(usuario)) {
+            boolean cambiado = vectores.actualizar(usuario);
+            cambiado |= intenciones.actualizar(usuario);
+
+            if (cambiado) {
                 usuarios.save(usuario);
                 hechos++;
             }
