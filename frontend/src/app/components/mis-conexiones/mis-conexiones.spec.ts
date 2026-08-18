@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 
 import { MisConexionesComponent } from './mis-conexiones';
 import { Mensaje } from '../../services/mensajes.service';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * El chat tiene que decir qué día se dijo cada cosa.
@@ -21,6 +22,7 @@ describe('MisConexionesComponent · las marcas de día', () => {
 
   let component: MisConexionesComponent;
   let fixture: ComponentFixture<MisConexionesComponent>;
+  let idioma: IdiomaService;
 
   function mensaje(id: number, fecha: Date): Mensaje {
     return {
@@ -47,6 +49,11 @@ describe('MisConexionesComponent · las marcas de día', () => {
       imports: [MisConexionesComponent],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
+
+    // En español y dicho a propósito: «Hoy» y «Ayer» son frases, y sin fijarlo
+    // salen en el idioma del entorno, que en jsdom es inglés.
+    idioma = TestBed.inject(IdiomaService);
+    idioma.cambiar('es');
 
     fixture = TestBed.createComponent(MisConexionesComponent);
     component = fixture.componentInstance;
@@ -143,6 +150,31 @@ describe('MisConexionesComponent · las marcas de día', () => {
       component.historial.set([mensaje(9, new Date())]);
 
       expect(component.ultimoMio()).toBeNull();
+    });
+  });
+
+  /**
+   * Las fechas del chat iban con `toLocaleDateString('es-ES', …)` escrito a
+   * mano y la hora de cada burbuja con `| date`, que usa el LOCALE_ID fijado al
+   * arrancar. Las dos cosas se quedaban en español con la pantalla en inglés, y
+   * son de las que no se ven leyendo el código.
+   */
+  describe('las fechas siguen al idioma', () => {
+
+    it('las marcas de día', () => {
+      component.historial.set([mensaje(1, haceDias(0)), mensaje(2, haceDias(1))]);
+      expect(etiquetas()).toEqual(['Hoy', 'Ayer']);
+
+      idioma.cambiar('en');
+      expect(etiquetas()).toEqual(['Today', 'Yesterday']);
+    });
+
+    it('y el día largo de un plan', () => {
+      // Un lunes, para poder afirmar sobre el nombre del día.
+      expect(component.diaLargo('2026-08-17')).toContain('lunes');
+
+      idioma.cambiar('en');
+      expect(component.diaLargo('2026-08-17')).toContain('Monday');
     });
   });
 });

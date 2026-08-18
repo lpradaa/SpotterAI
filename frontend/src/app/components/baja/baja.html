@@ -1,54 +1,41 @@
 <div class="baja">
 
   @if (sinEnlace) {
-    <h1 class="baja__titulo">Este enlace no está completo</h1>
-    <p class="baja__texto">
-      Ábrelo desde el correo que recibiste. Si lo copiaste a mano, puede que se
-      quedara alguna parte por el camino.
-    </p>
+    <h1 class="baja__titulo">{{ i18n.t('enlace.incompleto') }}</h1>
+    <p class="baja__texto">{{ i18n.t('enlace.incompletoTexto') }}</p>
 
   } @else if (resultado() === false) {
-    <h1 class="baja__titulo">Hecho, no te escribimos más</h1>
-    <p class="baja__texto">
-      No vas a recibir más avisos por correo. Las solicitudes y las propuestas te
-      seguirán apareciendo dentro de la aplicación.
-    </p>
+    <h1 class="baja__titulo">{{ i18n.t('baja.hecha') }}</h1>
+    <p class="baja__texto">{{ i18n.t('baja.hechaTexto') }}</p>
     <!-- La vuelta, en la misma pantalla: una baja de la que hay que buscar cómo
          salir convierte un clic mal dado en un problema. -->
     <button class="btn btn--fantasma" [disabled]="enviando()" (click)="cambiar(true)">
-      Me he equivocado, quiero seguir recibiéndolos
+      {{ i18n.t('baja.deshacer') }}
     </button>
 
   } @else if (resultado() === true) {
-    <h1 class="baja__titulo">Vuelves a recibirlos</h1>
-    <p class="baja__texto">
-      Te avisaremos cuando alguien te mande una solicitud o te proponga entrenar.
-    </p>
+    <h1 class="baja__titulo">{{ i18n.t('baja.activada') }}</h1>
+    <p class="baja__texto">{{ i18n.t('baja.activadaTexto') }}</p>
     <button class="btn btn--fantasma" [disabled]="enviando()" (click)="cambiar(false)">
-      Dejar de recibirlos
+      {{ i18n.t('baja.dejarDeRecibir') }}
     </button>
 
   } @else {
-    <h1 class="baja__titulo">¿Dejar de recibir avisos por correo?</h1>
-    <p class="baja__texto">
-      Solo te escribimos por dos cosas, y solo si siguen esperando tu respuesta
-      diez minutos después: cuando alguien quiere entrenar contigo y cuando
-      alguien te propone un día concreto.
-    </p>
-    <p class="baja__texto">
-      Si los desactivas seguirás viéndolo todo dentro de la aplicación; lo que
-      no habrá es nada que te avise cuando la tengas cerrada.
-    </p>
+    <h1 class="baja__titulo">{{ i18n.t('baja.titulo') }}</h1>
+    <p class="baja__texto">{{ i18n.t('baja.texto1') }}</p>
+    <p class="baja__texto">{{ i18n.t('baja.texto2') }}</p>
 
     @if (error()) {
-      <p class="aviso-inline" role="alert">
-        Ese enlace ya no vale. Prueba con el de un correo más reciente.
-      </p>
+      <p class="aviso-inline" role="alert">{{ i18n.t('baja.enlaceCaducado') }}</p>
     }
 
     <div class="baja__acciones">
       <button class="btn btn--primario" [disabled]="enviando()" (click)="cambiar(false)">
-        @if (enviando()) { Un momento… } @else { Sí, dejar de recibirlos }
+        @if (enviando()) {
+          {{ i18n.t('comun.unMomento') }}
+        } @else {
+          {{ i18n.t('baja.confirmar') }}
+        }
       </button>
     </div>
   }

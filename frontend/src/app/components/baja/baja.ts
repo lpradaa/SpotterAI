@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { api } from '../../config/api';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * Dejar de recibir avisos por correo, desde el enlace del propio correo.
@@ -26,6 +27,9 @@ import { api } from '../../config/api';
 export class BajaComponent {
   private http = inject(HttpClient);
   private ruta = inject(ActivatedRoute);
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
 
   private token = this.ruta.snapshot.queryParamMap.get('t') ?? '';
 

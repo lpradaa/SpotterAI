@@ -2,6 +2,7 @@ import { Component, OnInit, DestroyRef, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { IdiomaService } from '../../services/idioma.service';
 import { UsuarioService } from '../../services/usuario.service';
 import { EventosService } from '../../services/eventos.service';
 import { AvisosService } from '../../services/avisos.service';
@@ -25,6 +26,9 @@ export class SolicitudesComponent implements OnInit {
   private perfiles = inject(PerfilesService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
 
   /** Tramo de compatibilidad, para colorear el número con la escala de siempre. */
   tramo = tramoDe;
@@ -89,20 +93,20 @@ export class SolicitudesComponent implements OnInit {
     peticion.subscribe({
       next: () => {
         this.mostrarAviso(acepta
-          ? `Hecho. Entrenas con ${sesion.conNombre}.`
-          : 'Propuesta rechazada.', acepta ? 'exito' : 'error');
+          ? this.i18n.t('sesion.hecho', { nombre: sesion.conNombre })
+          : this.i18n.t('sesion.rechazada'), acepta ? 'exito' : 'error');
         this.cargarSesiones();
         this.avisos.refrescar();
       },
       error: err => this.mostrarAviso(
-        err?.error?.error ?? 'No se ha podido responder.', 'error')
+        err?.error?.error ?? this.i18n.t('sesion.errorResponder'), 'error')
     });
   }
 
   /** "Viernes 3 de julio", que es como se dice una fecha cuando se queda. */
   diaLargo(fecha: string): string {
     const d = new Date(`${fecha}T00:00:00`);
-    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    return this.i18n.fecha(d, { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
   hhmm(hora: string | null): string {
@@ -138,8 +142,8 @@ export class SolicitudesComponent implements OnInit {
         // se parece a nada del resto de la interfaz.
         this.mostrarAviso(
           estado === 'ACEPTADA'
-            ? 'Aceptada. Ya podéis hablar desde Compañeros.'
-            : 'Solicitud rechazada.',
+            ? this.i18n.t('solicitudes.aceptada')
+            : this.i18n.t('solicitudes.rechazada'),
           'exito');
       },
       error: err => {
@@ -149,7 +153,7 @@ export class SolicitudesComponent implements OnInit {
           copia.delete(solicitudId);
           return copia;
         });
-        this.mostrarAviso('No se ha podido procesar la respuesta.', 'error');
+        this.mostrarAviso(this.i18n.t('solicitudes.error'), 'error');
       }
     });
   }

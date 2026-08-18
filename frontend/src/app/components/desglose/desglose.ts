@@ -1,6 +1,7 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FactorDelDesglose } from '../../services/usuario.service';
+import { IdiomaService } from '../../services/idioma.service';
 import { tramoDe } from '../../utils/compatibilidad';
 
 /**
@@ -26,6 +27,15 @@ import { tramoDe } from '../../utils/compatibilidad';
 })
 export class Desglose {
   factores = input.required<FactorDelDesglose[]>();
+
+  /**
+   * protected: la plantilla llama a i18n.t() en cada texto.
+   *
+   * <p>Aquí son cuatro: la etiqueta y el detalle de cada factor llegan
+   * redactados del backend, en el idioma de la petición, porque es quien los
+   * calcula.
+   */
+  protected i18n = inject(IdiomaService);
 
   /** Los que sí puntuaron, de mayor a menor peso: primero lo que más decide. */
   evaluados = computed(() =>

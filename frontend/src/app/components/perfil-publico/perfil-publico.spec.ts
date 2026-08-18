@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 
 import { PerfilPublicoComponent } from './perfil-publico';
 import { Levantamiento, PerfilPublico } from '../../services/perfiles.service';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * La página donde se decide.
@@ -19,6 +20,7 @@ import { Levantamiento, PerfilPublico } from '../../services/perfiles.service';
 describe('PerfilPublicoComponent', () => {
 
   let componente: PerfilPublicoComponent;
+  let idioma: IdiomaService;
 
   function marca(ejercicio: string, peso: number, reps: number, maximo: number): Levantamiento {
     return { ejercicio, nombre: ejercicio, peso, repeticiones: reps, maximoEstimado: maximo };
@@ -37,6 +39,12 @@ describe('PerfilPublicoComponent', () => {
       imports: [PerfilPublicoComponent],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
+
+    // En español y dicho a propósito: parte de lo que se afirma abajo son
+    // frases, y sin fijarlo salen en el idioma del entorno, que en jsdom es
+    // inglés.
+    idioma = TestBed.inject(IdiomaService);
+    idioma.cambiar('es');
 
     componente = TestBed.createComponent(PerfilPublicoComponent).componentInstance;
   });
@@ -139,5 +147,65 @@ describe('PerfilPublicoComponent', () => {
     expect(componente.tramo(70)).toBe('alta');
     expect(componente.tramo(69)).toBe('media');
     expect(componente.tramo(39)).toBe('baja');
+  });
+
+  // ===================== Los dos idiomas =====================
+
+  describe('las frases que arma la página', () => {
+
+    /** Hace n días, en el formato que llega del servidor. */
+    function haceDias(n: number): string {
+      return new Date(Date.now() - n * 86_400_000).toISOString();
+    }
+
+    it('cuenta la actividad y las veces que habéis quedado, con su singular', () => {
+      componente.perfil.set(perfil({ entrenosUltimaSemana: 1, sesionesJuntos: 1 }));
+      expect(componente.actividad()).toBe('1 entrenamiento esta semana');
+      expect(componente.juntos()).toBe('Ya habéis quedado una vez');
+
+      componente.perfil.set(perfil({ entrenosUltimaSemana: 3, sesionesJuntos: 4 }));
+      expect(componente.actividad()).toBe('3 entrenamientos esta semana');
+      expect(componente.juntos()).toBe('Ya habéis quedado 4 veces');
+    });
+
+    it('y no dice nada cuando no hay nada que decir', () => {
+      componente.perfil.set(perfil({ entrenosUltimaSemana: 0, sesionesJuntos: 0 }));
+
+      // Inventar es peor: un "0 entrenamientos esta semana" en la ficha de
+      // alguien es un reproche que nadie ha pedido.
+      expect(componente.actividad()).toBeNull();
+      expect(componente.juntos()).toBeNull();
+    });
+
+    it('cuenta hacia atrás cuándo fue un logro', () => {
+      expect(componente.cuando(haceDias(0))).toBe('hoy');
+      expect(componente.cuando(haceDias(1))).toBe('ayer');
+      expect(componente.cuando(haceDias(3))).toBe('hace 3 días');
+      expect(componente.cuando(haceDias(14))).toBe('hace 2 semanas');
+      expect(componente.cuando(haceDias(40))).toBe('hace 1 mes');
+    });
+
+    it('todo eso también en el otro idioma', () => {
+      idioma.cambiar('en');
+      componente.perfil.set(perfil({ entrenosUltimaSemana: 1, sesionesJuntos: 2 }));
+
+      expect(componente.actividad()).toBe('1 session this week');
+      expect(componente.juntos()).toBe('You have met 2 times already');
+      expect(componente.cuando(haceDias(1))).toBe('yesterday');
+      expect(componente.cuando(haceDias(14))).toBe('2 weeks ago');
+    });
+
+    /**
+     * La fecha de la próxima ocasión iba con `toLocaleDateString('es-ES', …)`
+     * escrito a mano, así que el día salía en español dentro de una frase en
+     * inglés — que es de lo que no se entera nadie leyendo el código.
+     */
+    it('el día de la próxima ocasión sigue al idioma', () => {
+      // Un lunes, para poder afirmar sobre el nombre del día.
+      expect(componente.cuandoLargo('2026-08-17')).toContain('lunes');
+
+      idioma.cambiar('en');
+      expect(componente.cuandoLargo('2026-08-17')).toContain('Monday');
+    });
   });
 });

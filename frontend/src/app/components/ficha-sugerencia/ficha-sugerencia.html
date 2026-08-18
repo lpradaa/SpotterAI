@@ -6,7 +6,8 @@
   <div class="modal modal--sugerencia" (click)="$event.stopPropagation()"
        role="dialog" aria-modal="true" aria-labelledby="titulo-sugerencia"
      appModalAccesible (cerrarPedido)="cerrar.emit()">
-    <button class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">✕</button>
+    <button class="cerrar" (click)="cerrar.emit()"
+            [attr.aria-label]="i18n.t('sugerencia.cerrar')">✕</button>
 
     @if (actual(); as candidato) {
       <div class="sugerencia">
@@ -40,26 +41,37 @@
 
             <button class="explicacion__mas" (click)="verDesglose.set(!verDesglose())"
                     [attr.aria-expanded]="verDesglose()">
-              {{ verDesglose() ? 'Ocultar el desglose' : 'Ver de dónde sale' }}
+              {{ i18n.t(verDesglose() ? 'sugerencia.ocultarDesglose' : 'sugerencia.verDesglose') }}
             </button>
           } @else {
             <p class="explicacion__motivo">{{ candidato.resumenCompatibilidad }}</p>
           }
         </div>
 
+        <!-- El nivel y el objetivo se guardan en español y viajan así; lo que se
+             pinta es su etiqueta. El gimnasio es un nombre propio. -->
         <dl class="sugerencia__datos">
-          <div><dt>Nivel</dt><dd>{{ candidato.nivel || '—' }}</dd></div>
-          <div><dt>Objetivo</dt><dd>{{ candidato.objetivos || '—' }}</dd></div>
-          <div><dt>Gimnasio</dt><dd>{{ candidato.gimnasioNombre || '—' }}</dd></div>
+          <div>
+            <dt>{{ i18n.t('sugerencia.nivel') }}</dt>
+            <dd>{{ candidato.nivel ? nivel(candidato.nivel) : '—' }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('sugerencia.objetivo') }}</dt>
+            <dd>{{ candidato.objetivos ? objetivo(candidato.objetivos) : '—' }}</dd>
+          </div>
+          <div>
+            <dt>{{ i18n.t('sugerencia.gimnasio') }}</dt>
+            <dd>{{ candidato.gimnasioNombre || '—' }}</dd>
+          </div>
         </dl>
 
         <!-- La semana completa: se ve exactamente cuándo entrenaríais juntos -->
         <div class="sugerencia__semana">
           <div class="sugerencia__semana-cabecera">
-            <span class="sugerencia__horario-titulo">Vuestra semana</span>
+            <span class="sugerencia__horario-titulo">{{ i18n.t('sugerencia.vuestraSemana') }}</span>
             @if (candidato.minutosEnComun) {
               <span class="sugerencia__horario-total cifra">
-                {{ formatearSolape(candidato.minutosEnComun) }} en común
+                {{ i18n.t('sugerencia.enComun', { tiempo: formatearSolape(candidato.minutosEnComun) }) }}
               </span>
             }
           </div>
@@ -69,18 +81,20 @@
         </div>
 
         <button class="btn btn--primario btn--ancho" (click)="conectarConActual()">
-          Conectar con {{ candidato.nombre.split(' ')[0] }}
+          {{ i18n.t('sugerencia.conectarCon', { nombre: candidato.nombre.split(' ')[0] }) }}
         </button>
 
         <div class="paginador">
           <button class="paginador__btn" (click)="anterior()"
-                  [disabled]="indiceActual() === 0" aria-label="Sugerencia anterior">←</button>
+                  [disabled]="indiceActual() === 0"
+                  [attr.aria-label]="i18n.t('sugerencia.anterior')">←</button>
           <span class="paginador__posicion cifra">
-            {{ indiceActual() + 1 }} de {{ candidatos().length }}
+            {{ i18n.t('sugerencia.posicion', {
+                 actual: indiceActual() + 1, total: candidatos().length }) }}
           </span>
           <button class="paginador__btn" (click)="siguiente()"
                   [disabled]="indiceActual() === candidatos().length - 1"
-                  aria-label="Sugerencia siguiente">→</button>
+                  [attr.aria-label]="i18n.t('sugerencia.siguiente')">→</button>
         </div>
       </div>
     }

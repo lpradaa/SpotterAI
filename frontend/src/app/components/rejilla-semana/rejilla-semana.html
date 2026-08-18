@@ -1,5 +1,5 @@
 @if (!hayDatos()) {
-  <p class="rejilla-vacia">Sin horarios que cruzar todavía.</p>
+  <p class="rejilla-vacia">{{ i18n.t('rejilla.vacia') }}</p>
 } @else {
 
   <!-- El equivalente en texto de todo lo que hay debajo.
@@ -21,16 +21,19 @@
     @if (modo() === 'completa') {
       <div class="rejilla__horas" aria-hidden="true">
         @for (h of horasVisibles(); track h) {
-          <span class="rejilla__hora" [style.top.%]="posicionHora(h)">{{ h }}h</span>
+          <span class="rejilla__hora" [style.top.%]="posicionHora(h)">
+            {{ i18n.t('rejilla.hora', { hora: h }) }}
+          </span>
         }
       </div>
     }
 
     <div class="rejilla__cuerpo">
-      <!-- Cabecera de días -->
+      <!-- Cabecera de días. Ya vienen leídas y al ancho del modo: en compacta la
+           fila entera tiene que caber en una tarjeta de lista. -->
       <div class="rejilla__dias" aria-hidden="true">
-        @for (dia of dias; track dia; let i = $index) {
-          <span class="rejilla__dia">{{ modo() === 'compacta' ? abreviados[i] : dia.slice(0, 3) }}</span>
+        @for (dia of cabeceras(); track $index) {
+          <span class="rejilla__dia">{{ dia }}</span>
         }
       </div>
 
@@ -57,10 +60,10 @@
 
   @if (modo() === 'completa') {
     <ul class="leyenda" aria-hidden="true">
-      <li><span class="muestra muestra--mio"></span>Tu disponibilidad</li>
+      <li><span class="muestra muestra--mio"></span>{{ i18n.t('rejilla.tuDisponibilidad') }}</li>
       @if (haySolape()) {
-        <li><span class="muestra muestra--solape"></span>Coincidís</li>
-        <li><span class="muestra muestra--ancla"></span>Los dos vais siempre</li>
+        <li><span class="muestra muestra--solape"></span>{{ i18n.t('rejilla.coincidis') }}</li>
+        <li><span class="muestra muestra--ancla"></span>{{ i18n.t('rejilla.losDosSiempre') }}</li>
       }
     </ul>
   }

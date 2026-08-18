@@ -1,30 +1,22 @@
 <div class="embudo">
 
   <header class="embudo__cabecera">
-    <h1 class="embudo__titulo">¿Acierta el motor?</h1>
-    <p class="embudo__texto">
-      La compatibilidad se calcula con ocho factores y unos pesos que salen de
-      razonar sobre cómo funciona un gimnasio, no de haber mirado qué pasa
-      después. Esta tabla mira qué pasa después: de las solicitudes que salieron
-      con cada puntuación, cuántas se aceptaron y cuántas acabaron en un
-      entrenamiento que <strong>las dos personas</strong> confirmaron.
-    </p>
+    <h1 class="embudo__titulo">{{ i18n.t('embudo.titulo') }}</h1>
+    <p class="embudo__texto">{{ i18n.t('embudo.texto') }}</p>
   </header>
 
   @if (error()) {
-    <p class="aviso-inline" role="alert">No se ha podido cargar el embudo.</p>
+    <p class="aviso-inline" role="alert">{{ i18n.t('embudo.error') }}</p>
   } @else if (embudo(); as e) {
 
     <table class="tabla">
-      <caption class="visually-hidden">
-        Solicitudes enviadas, aceptadas y acabadas en entrenamiento, por tramo de compatibilidad
-      </caption>
+      <caption class="visually-hidden">{{ i18n.t('embudo.tabla') }}</caption>
       <thead>
         <tr>
-          <th scope="col">Compatibilidad</th>
-          <th scope="col">Enviadas</th>
-          <th scope="col">Se aceptaron</th>
-          <th scope="col">Entrenaron</th>
+          <th scope="col">{{ i18n.t('embudo.compatibilidad') }}</th>
+          <th scope="col">{{ i18n.t('embudo.enviadas') }}</th>
+          <th scope="col">{{ i18n.t('embudo.aceptadas') }}</th>
+          <th scope="col">{{ i18n.t('embudo.entrenaron') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -53,28 +45,20 @@
          arriba del todo y no en una nota al pie. -->
     @if (!e.sePuedeComparar) {
       <p class="banda banda--acero">
-        <strong>Todavía no se puede concluir nada.</strong>
-        Hacen falta al menos 20 solicitudes en cada tramo para que la diferencia
-        entre unos y otros no se explique por quién pulsó el botón esa semana.
-        Ahora mismo hay {{ totalMedibles() }} medibles en total.
+        <strong>{{ i18n.t('embudo.sinMuestraTitulo') }}</strong>
+        {{ i18n.t('embudo.sinMuestraTexto', { minimo: MINIMO_POR_TRAMO, cuantas: totalMedibles() }) }}
       </p>
     } @else {
-      <p class="banda banda--exito">
-        Hay muestra suficiente en los tres tramos: la comparación entre ellos ya
-        significa algo.
-      </p>
+      <p class="banda banda--exito">{{ i18n.t('embudo.conMuestra') }}</p>
     }
 
     @if (e.sinPuntuacion > 0) {
       <p class="embudo__nota">
-        Quedan fuera {{ e.sinPuntuacion }} solicitudes anteriores a que se
-        guardara la puntuación. No se rellenan con el número de hoy: la
-        constancia lo mueve sola cada semana y los pesos han cambiado desde
-        entonces, así que sería inventarse el dato.
+        {{ i18n.t('embudo.sinPuntuacion', { cuantas: e.sinPuntuacion }) }}
       </p>
     }
 
   } @else {
-    <p class="embudo__nota">Cargando…</p>
+    <p class="embudo__nota">{{ i18n.t('comun.cargando') }}</p>
   }
 </div>

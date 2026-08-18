@@ -8,9 +8,12 @@ import { Avatar } from '../avatar/avatar';
 import { Carga } from '../carga/carga';
 import { FichaSugerenciaComponent } from '../ficha-sugerencia/ficha-sugerencia';
 import { PerfilesService } from '../../services/perfiles.service';
+import { IdiomaService } from '../../services/idioma.service';
 import { ModalAccesible } from '../../directivas/modal-accesible';
 import { mensajeDeError } from '../../utils/errores';
 import { tramoDe } from '../../utils/compatibilidad';
+import { etiquetaDeNivel, etiquetaDeObjetivo } from '../../utils/valores-de-perfil';
+import type { ClaveDeMensaje } from '../../i18n/es';
 
 @Component({
   selector: 'app-explore',
@@ -24,6 +27,25 @@ export class Explore implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   private perfiles = inject(PerfilesService);
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
+
+  /**
+   * El nivel y el objetivo, tal y como se leen.
+   *
+   * <p>Lo que llega es el valor guardado —«Intermedio», «Pérdida de peso»—, que
+   * viaja al backend y se compara para puntuar; traducirlo sería escribir
+   * inglés en la base. Lo que cambia es la etiqueta, y lo que no reconozcamos
+   * sale tal cual.
+   */
+  protected nivel(valor: string): string {
+    return etiquetaDeNivel(valor, c => this.i18n.t(c));
+  }
+
+  protected objetivo(valor: string): string {
+    return etiquetaDeObjetivo(valor, c => this.i18n.t(c));
+  }
 
   /**
    * A la pagina de una persona.
@@ -158,13 +180,21 @@ export class Explore implements OnInit {
    * `navigator.share` en el móvil —que es donde se manda esto— y copiar al
    * portapapeles en el escritorio. El aviso se dice en el propio botón y no en
    * una alerta: una alerta hay que cerrarla y esto no merece un clic más.
+   *
+   * El aviso se guarda como clave y no como la frase ya resuelta: guardando la
+   * frase, el botón se quedaba en el idioma que hubiera cuando se pintó, y era
+   * el único texto español de una pantalla en inglés.
    */
-  protected textoInvitar = signal('Invitar a alguien de tu gimnasio');
+  private avisoEnElBoton = signal<ClaveDeMensaje | null>(null);
+
+  /** Lo que dice el botón: su texto, o el aviso mientras dura. */
+  protected textoInvitar = computed(
+    () => this.i18n.t(this.avisoEnElBoton() ?? 'explorar.invitar'));
 
   async invitar(): Promise<void> {
     const enlace = `${location.origin}/login`;
-    const mensaje = `Estoy usando SpotterAI para no entrenar solo. Si te apuntas, `
-      + `cruzamos horarios y vemos qué días coincidimos: ${enlace}`;
+    // Va en el idioma de quien invita: de quien lo recibe no sabemos nada.
+    const mensaje = this.i18n.t('explorar.mensajeInvitacion', { enlace });
 
     try {
       if (navigator.share) {
@@ -172,18 +202,17 @@ export class Explore implements OnInit {
         return;
       }
       await navigator.clipboard.writeText(mensaje);
-      this.avisarEnElBoton('Enlace copiado');
+      this.avisarEnElBoton('explorar.enlaceCopiado');
     } catch {
       // Cancelar el diálogo de compartir entra por aquí y no es un error: no se
       // dice nada. Solo se avisa si de verdad no se ha podido copiar.
-      if (!navigator.share) this.avisarEnElBoton('No se ha podido copiar');
+      if (!navigator.share) this.avisarEnElBoton('explorar.noSeHaCopiado');
     }
   }
 
-  private avisarEnElBoton(texto: string): void {
-    const original = 'Invitar a alguien de tu gimnasio';
-    this.textoInvitar.set(texto);
-    setTimeout(() => this.textoInvitar.set(original), 2500);
+  private avisarEnElBoton(clave: ClaveDeMensaje): void {
+    this.avisoEnElBoton.set(clave);
+    setTimeout(() => this.avisoEnElBoton.set(null), 2500);
   }
 
   ngOnInit(): void {
@@ -253,7 +282,7 @@ export class Explore implements OnInit {
   conectarConUsuario(id: number): void {
     this.usuarioService.enviarSolicitudConexion(id).subscribe({
       next: () => {
-        this.mostrarToast('Solicitud enviada.');
+        this.mostrarToast(this.i18n.t('explorar.solicitudEnviada'));
         // Se queda en la lista, cambiando de estado. Antes desaparecia, que era
         // coherente cuando esta pantalla solo ensenaba a desconocidos; ahora
         // ensena a todo el mundo y hacer desaparecer a alguien al conectar seria
@@ -265,7 +294,8 @@ export class Explore implements OnInit {
       error: (err) => {
         // "Ya existe una solicitud", "No se puede conectar con esa persona"
         // (bloqueo)... un texto fijo obligaba a adivinar cuál de los dos era.
-        this.mostrarToast(mensajeDeError(err, 'No se pudo enviar la solicitud.'), 'error');
+        this.mostrarToast(
+          mensajeDeError(err, this.i18n.t('explorar.solicitudNoEnviada')), 'error');
       }
     });
   }
@@ -276,10 +306,10 @@ export class Explore implements OnInit {
       next: () => {
         this.usuarios.update(lista => lista.map(u =>
           u.id === usuario.id ? { ...u, solicitudPendiente: false } : u));
-        this.mostrarToast(`Solicitud a ${usuario.nombre} retirada.`);
+        this.mostrarToast(this.i18n.t('explorar.solicitudRetirada', { nombre: usuario.nombre }));
         this.cdr.detectChanges();
       },
-      error: () => this.mostrarToast('No se ha podido retirar la solicitud.', 'error')
+      error: () => this.mostrarToast(this.i18n.t('explorar.solicitudNoRetirada'), 'error')
     });
   }
 
@@ -298,7 +328,7 @@ export class Explore implements OnInit {
 
   abrirSugerencias(): void {
     if (this.sinContactar().length === 0) {
-      this.mostrarToast('No hay nadie nuevo por ahora.', 'error');
+      this.mostrarToast(this.i18n.t('explorar.nadieNuevo'), 'error');
       return;
     }
     this.isSugerenciasOpen.set(true);

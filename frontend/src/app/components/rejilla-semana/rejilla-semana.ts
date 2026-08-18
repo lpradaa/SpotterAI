@@ -1,5 +1,7 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IdiomaService } from '../../services/idioma.service';
+import { etiquetaDeDia, indiceDeDia, VALORES_DE_DIA } from '../../utils/valores-de-perfil';
 
 /** Una franja horaria, tal y como la manejan el perfil y el solape. */
 export interface Franja {
@@ -19,17 +21,6 @@ interface Bloque {
   hasta: number;
   fijo: boolean;
 }
-
-const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-const ABREVIADOS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-
-/** Quita tildes y pasa a minúsculas, igual que hace DiasSemana en el backend. */
-function clave(dia: string | undefined): string {
-  if (!dia) return '';
-  return dia.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-}
-
-const INDICE_DIA = new Map(DIAS.map((d, i) => [clave(d), i]));
 
 function aMinutos(hora: string | undefined): number | null {
   if (!hora) return null;
@@ -67,9 +58,19 @@ export class RejillaSemana {
 
   modo = input<'completa' | 'compacta'>('completa');
 
-  /** Etiquetas de los días, abreviadas en modo compacto. */
-  readonly dias = DIAS;
-  readonly abreviados = ABREVIADOS;
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
+
+  /**
+   * Las siete cabeceras, ya leídas y al ancho que toca.
+   *
+   * <p>Sale de los valores guardados y no de una lista propia: el orden de las
+   * columnas y el vocabulario que se cruza son el mismo dato, y tenerlo dos
+   * veces es tenerlo mal una de ellas.
+   */
+  protected cabeceras = computed(() => VALORES_DE_DIA.map(
+    dia => etiquetaDeDia(dia, c => this.i18n.t(c),
+      this.modo() === 'compacta' ? 'estrecho' : 'abrev')));
 
   /**
    * Ventana horaria visible.
@@ -135,25 +136,32 @@ export class RejillaSemana {
   titular = computed(() => {
     const cuantos = this.solape().length;
     if (cuantos === 0) {
-      return this.misFranjas().length > 0
-        ? 'Tu semana. No coincidís en ninguna franja.'
-        : 'Sin horarios que cruzar todavía.';
+      return this.i18n.t(this.misFranjas().length > 0 ? 'rejilla.tuSemana' : 'rejilla.vacia');
     }
-    return cuantos === 1
-      ? 'Coincidís en una franja de la semana.'
-      : `Coincidís en ${cuantos} franjas de la semana.`;
+    return this.i18n.t('rejilla.coincidisEn', { cuenta: cuantos });
   });
 
+  /**
+   * Un tramo, dicho entero.
+   *
+   * <p>La frase va completa en el catálogo, con el día y las horas dentro, en
+   * vez de armar «Lunes de 18:00 a 20:00» y meterlo luego en «…: coincidís».
+   * Componer obliga a que las dos piezas vayan en el mismo orden en los dos
+   * idiomas, y es la forma típica de acabar con media frase traducida.
+   */
   private describir(f: Franja, esSolape: boolean): string {
-    const dia = f.diaSemana ?? f.dia ?? '';
-    const desde = (f.horaInicio ?? f.inicio ?? '').slice(0, 5);
-    const hasta = (f.horaFin ?? f.fin ?? '').slice(0, 5);
-    const tramo = `${dia} de ${desde} a ${hasta}`;
+    const guardado = f.diaSemana ?? f.dia ?? '';
+    const valores = {
+      dia: etiquetaDeDia(guardado, c => this.i18n.t(c)),
+      desde: (f.horaInicio ?? f.inicio ?? '').slice(0, 5),
+      hasta: (f.horaFin ?? f.fin ?? '').slice(0, 5),
+    };
 
     if (esSolape) {
-      return f.ambosFijos ? `${tramo}: coincidís y los dos vais siempre` : `${tramo}: coincidís`;
+      return this.i18n.t(
+        f.ambosFijos ? 'rejilla.tramoCoincidisFijo' : 'rejilla.tramoCoincidis', valores);
     }
-    return f.habitual ? `${tramo}: vas siempre` : tramo;
+    return this.i18n.t(f.habitual ? 'rejilla.tramoVasSiempre' : 'rejilla.tramo', valores);
   }
 
   /** Posición vertical de una hora dentro de la rejilla, en porcentaje. */
@@ -169,8 +177,8 @@ export class RejillaSemana {
 
     const bloques: Bloque[] = [];
     for (const f of franjas) {
-      const indice = INDICE_DIA.get(clave(f.diaSemana ?? f.dia));
-      if (indice === undefined) continue;
+      const indice = indiceDeDia(f.diaSemana ?? f.dia);
+      if (indice === null) continue;
 
       const inicio = aMinutos(f.horaInicio ?? f.inicio);
       const fin = aMinutos(f.horaFin ?? f.fin);

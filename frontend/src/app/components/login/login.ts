@@ -33,7 +33,7 @@ export class LoginComponent implements OnInit {
     // este aviso, la persona aparece en el login sin saber por qué y cree que
     // algo se ha roto.
     if (this.route.snapshot.queryParamMap.get('sesion') === 'caducada') {
-      this.errorMessage.set('Tu sesión ha caducado. Vuelve a entrar.');
+      this.errorMessage.set(this.i18n.t('login.sesionCaducada'));
     }
   }
 
@@ -96,7 +96,7 @@ export class LoginComponent implements OnInit {
   protected olvideLaContrasena(): void {
     const email = (this.email || '').trim();
     if (!email) {
-      this.errorMessage.set('Escribe tu correo y vuelve a pulsar.');
+      this.errorMessage.set(this.i18n.t('login.escribeCorreo'));
       return;
     }
 
@@ -137,7 +137,7 @@ export class LoginComponent implements OnInit {
           return;
         }
 
-        this.errorMessage.set('Email o contraseña incorrectos. Inténtalo de nuevo.');
+        this.errorMessage.set(this.i18n.t('login.credencialesMal'));
       }
     });
   }

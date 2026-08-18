@@ -2,6 +2,7 @@ import { Component, inject, signal, input, output, ChangeDetectorRef, OnInit } f
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SesionesService, Sesion, SugerenciaSesion } from '../../services/sesiones.service';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * Proponer un día y una hora concretos a un compañero.
@@ -27,6 +28,9 @@ export class ProponerSesionComponent implements OnInit {
 
   private sesiones = inject(SesionesService);
   private cdr = inject(ChangeDetectorRef);
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
 
   /** Con quién se quiere quedar. */
   paraId = input.required<number>();
@@ -96,10 +100,11 @@ export class ProponerSesionComponent implements OnInit {
       next: sesion => this.propuesta.emit(sesion),
       error: err => {
         this.enviando.set(false);
-        // El servidor explica en castellano por qué no vale —el pasado, una
-        // duración imposible, una propuesta ya en marcha—; repetir esas reglas
-        // aquí sería mantener dos versiones de lo mismo.
-        this.error.set(err?.error?.error ?? 'No se ha podido proponer la sesión.');
+        // El servidor explica por qué no vale —el pasado, una duración
+        // imposible, una propuesta ya en marcha—; repetir esas reglas aquí sería
+        // mantener dos versiones de lo mismo. El respaldo sí es nuestro, para
+        // cuando lo que falla es la conexión y no hay mensaje que enseñar.
+        this.error.set(err?.error?.error ?? this.i18n.t('propuesta.error'));
         this.cdr.detectChanges();
       }
     });

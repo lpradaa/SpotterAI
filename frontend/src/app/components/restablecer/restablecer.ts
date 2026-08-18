@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { api } from '../../config/api';
+import { IdiomaService } from '../../services/idioma.service';
 
 /** Lo mismo que exige el backend. Duplicarlo aquí es para avisar antes, no para decidir. */
 export const MINIMO_CONTRASENA = 12;
@@ -30,6 +31,9 @@ export class RestablecerComponent {
   private http = inject(HttpClient);
   private ruta = inject(ActivatedRoute);
   private router = inject(Router);
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
 
   private token = this.ruta.snapshot.queryParamMap.get('t') ?? '';
 
@@ -61,7 +65,7 @@ export class RestablecerComponent {
         },
         error: (e) => {
           this.enviando.set(false);
-          this.error.set(e?.error?.error ?? 'No se ha podido cambiar la contraseña.');
+          this.error.set(e?.error?.error ?? this.i18n.t('restablecer.error'));
         },
       });
   }

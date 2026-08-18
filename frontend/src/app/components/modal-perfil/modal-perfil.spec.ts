@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 
 import { ModalPerfilComponent } from './modal-perfil';
 import { api } from '../../config/api';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * Lo que se protege aquí es el viaje de ida y vuelta de cada campo.
@@ -36,7 +37,15 @@ describe('ModalPerfilComponent', () => {
     fotoUrl: '/api/medios/abc.png',
     horarios: [{ diaSemana: 'Lunes', horaInicio: '18:00', horaFin: '20:00', habitual: true }],
     levantamientos: [{ ejercicio: 'PRESS_BANCA', peso: 90, repeticiones: 5 }],
-    ejerciciosDisponibles: [{ clave: 'PRESS_BANCA', nombre: 'Press de banca' }],
+    // Como los sirve el backend: los tres basicos primero y marcados.
+    ejerciciosDisponibles: [
+      { clave: 'SENTADILLA', nombre: 'Sentadilla', basico: true },
+      { clave: 'PRESS_BANCA', nombre: 'Press de banca', basico: true },
+      { clave: 'PESO_MUERTO', nombre: 'Peso muerto', basico: true },
+      { clave: 'PRESS_MILITAR', nombre: 'Press militar', basico: false },
+      { clave: 'REMO_BARRA', nombre: 'Remo con barra', basico: false },
+      { clave: 'HIP_THRUST', nombre: 'Hip thrust', basico: false },
+    ],
     rutinasDisponibles: [{ clave: 'TORSO_PIERNA', nombre: 'Torso / Pierna' }]
   };
 
@@ -204,5 +213,106 @@ describe('ModalPerfilComponent', () => {
 
     expect(cuerpo.nuevoGimnasioNombre).toBe('Gimnasio del barrio');
     expect(cuerpo.gimnasioId).toBeNull();
+  });
+
+  // ===================== Sugerir los básicos =====================
+
+  /**
+   * El factor de fuerza solo puede comparar cuando las dos personas han
+   * apuntado *el mismo* ejercicio, y con seis a elegir eso pasaba en el 22 % de
+   * las parejas. Sugerirlos lo sube al 30 %, medido en `docs/medir-el-motor.md`.
+   */
+  describe('sugerir los básicos', () => {
+
+    beforeEach(() => {
+      fixture.componentRef.setInput('perfil', { ...PERFIL, levantamientos: [] });
+      fixture.detectChanges();
+    });
+
+    function ejerciciosPuestos(): string[] {
+      return componente['perfilForm'].levantamientos.map((l: any) => l.ejercicio);
+    }
+
+    it('propone los tres básicos, en orden y sin repetir', () => {
+      componente['anadirLevantamiento']();
+      componente['anadirLevantamiento']();
+      componente['anadirLevantamiento']();
+
+      expect(ejerciciosPuestos()).toEqual(['SENTADILLA', 'PRESS_BANCA', 'PESO_MUERTO']);
+    });
+
+    /**
+     * Se sugiere el ejercicio y nunca el peso: rellenar un número por alguien
+     * sería inventarle un dato al factor del que depende el nombre del
+     * producto, que es justo lo que PerfilMinimo evita al no exigir las marcas.
+     */
+    it('no rellena el peso ni las repeticiones', () => {
+      componente['anadirLevantamiento']();
+
+      const fila = componente['perfilForm'].levantamientos[0];
+      expect(fila.peso).toBeNull();
+      expect(fila.repeticiones).toBeNull();
+    });
+
+    it('no vuelve a proponer uno que ya está puesto', () => {
+      fixture.componentRef.setInput('perfil', {
+        ...PERFIL,
+        levantamientos: [{ ejercicio: 'SENTADILLA', peso: 100, repeticiones: 5 }],
+      });
+      fixture.detectChanges();
+
+      componente['anadirLevantamiento']();
+
+      expect(ejerciciosPuestos()).toEqual(['SENTADILLA', 'PRESS_BANCA']);
+    });
+
+    /**
+     * Con los tres puestos ya no hay nada que sugerir, y la fila sale vacía
+     * para que se elija: quien entrena otra cosa la tiene que poder apuntar.
+     */
+    it('con los tres básicos puestos, la fila sale vacía', () => {
+      fixture.componentRef.setInput('perfil', {
+        ...PERFIL,
+        levantamientos: [
+          { ejercicio: 'SENTADILLA', peso: 100, repeticiones: 5 },
+          { ejercicio: 'PRESS_BANCA', peso: 80, repeticiones: 5 },
+        ],
+      });
+      fixture.detectChanges();
+
+      componente['anadirLevantamiento']();
+      expect(ejerciciosPuestos()[2]).toBe('PESO_MUERTO');
+
+      // El cuarto no existe: el tope son tres.
+      componente['anadirLevantamiento']();
+      expect(componente['perfilForm'].levantamientos.length).toBe(3);
+    });
+  });
+
+  /**
+   * El circulo de color no lleva texto, asi que su nombre solo lo oye quien usa
+   * un lector de pantalla. Por eso se le escapo la traduccion: mirando la
+   * pantalla en ingles se ve un circulo naranja, igual de correcto que en
+   * espanol, y nadie nota que ahi pone «ascua colour».
+   */
+  describe('el nombre del color', () => {
+
+    it('traduce el color guardado, sin cambiarlo', () => {
+      const idioma = TestBed.inject(IdiomaService);
+
+      idioma.cambiar('en');
+      expect(componente['nombreDelColor']('ascua')).toBe('ember');
+
+      idioma.cambiar('es');
+      expect(componente['nombreDelColor']('ascua')).toBe('ascua');
+
+      // Y el valor sigue siendo el que se guarda.
+      expect(componente['perfilForm'].avatar).toBe('ascua');
+    });
+
+    it('un color que no conozcamos se lee tal cual', () => {
+      TestBed.inject(IdiomaService).cambiar('en');
+      expect(componente['nombreDelColor']('turquesa')).toBe('turquesa');
+    });
   });
 });

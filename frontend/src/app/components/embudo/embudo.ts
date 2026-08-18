@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of } from 'rxjs';
 import { api } from '../../config/api';
+import { IdiomaService } from '../../services/idioma.service';
 
 /** Una fila del embudo, tal y como la manda el backend. */
 export interface FilaEmbudo {
@@ -44,6 +45,17 @@ export interface Embudo {
 export class EmbudoComponent {
   private http = inject(HttpClient);
 
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
+
+  /**
+   * El listón de muestra por tramo, que la plantilla dice en voz alta.
+   *
+   * <p>Escrito una vez: el número aparece en la frase que explica por qué
+   * todavía no se puede concluir nada, y ahí es donde se comprueba.
+   */
+  protected readonly MINIMO_POR_TRAMO = 20;
+
   protected error = signal(false);
 
   protected embudo = toSignal(
@@ -60,7 +72,14 @@ export class EmbudoComponent {
     (this.embudo()?.filas ?? []).reduce((suma, f) => suma + f.enviadas, 0),
   );
 
+  /** El nombre de cada tramo, con su umbral, en el idioma de la pantalla. */
   protected nombre(tramo: FilaEmbudo['tramo']): string {
-    return { ALTA: 'Alta (70 % o más)', MEDIA: 'Media (40–69 %)', BAJA: 'Baja (menos de 40 %)' }[tramo];
+    const claves = {
+      ALTA: 'embudo.tramoAlta',
+      MEDIA: 'embudo.tramoMedia',
+      BAJA: 'embudo.tramoBaja',
+    } as const;
+
+    return this.i18n.t(claves[tramo]);
   }
 }

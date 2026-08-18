@@ -1,8 +1,8 @@
 <div class="solicitudes">
   <header class="solicitudes__cabecera">
     <div>
-      <h1 class="solicitudes__titulo">Solicitudes</h1>
-      <p class="solicitudes__subtitulo">Lo que espera tu respuesta.</p>
+      <h1 class="solicitudes__titulo">{{ i18n.t('solicitudes.titulo') }}</h1>
+      <p class="solicitudes__subtitulo">{{ i18n.t('solicitudes.subtitulo') }}</p>
     </div>
     @if (pendientes() > 0) {
       <!-- Un contador de bandeja, no una compatibilidad: antes usaba .marcador,
@@ -16,7 +16,7 @@
     <p class="aviso-inline" [class.aviso-inline--error]="a.tipo === 'error'" role="status">
       {{ a.texto }}
       @if (a.tipo === 'exito') {
-        <button class="aviso__enlace" (click)="irAConversacion()">Ir a Compañeros</button>
+        <button class="aviso__enlace" (click)="irAConversacion()">{{ i18n.t('solicitudes.irACompaneros') }}</button>
       }
     </p>
   }
@@ -32,9 +32,14 @@
 
           <div class="peticion__texto">
             <h2 class="peticion__nombre">{{ sesion.conNombre }}</h2>
+            <!-- Con el gimnasio dentro y no cosido al final: en inglés el sitio
+                 no va donde va en español, y coserlo obligaba a que sí. -->
             <p class="peticion__detalle">
-              Propone entrenar el {{ diaLargo(sesion.fecha) }},
-              de {{ hhmm(sesion.horaInicio) }} a {{ hhmm(sesion.horaFin) }}@if (sesion.gimnasioNombre) { en {{ sesion.gimnasioNombre }}}.
+              {{ i18n.t(sesion.gimnasioNombre ? 'solicitudes.proponeEntrenarEn' : 'solicitudes.proponeEntrenar', {
+                   cuando: diaLargo(sesion.fecha),
+                   desde: hhmm(sesion.horaInicio),
+                   hasta: hhmm(sesion.horaFin),
+                   gimnasio: sesion.gimnasioNombre ?? '' }) }}
             </p>
             @if (sesion.nota) {
               <p class="peticion__nota">«{{ sesion.nota }}»</p>
@@ -43,10 +48,10 @@
 
           <div class="peticion__acciones">
             <button class="btn btn--fantasma btn--pequeno" (click)="responderSesion(sesion, false)">
-              Rechazar
+              {{ i18n.t('solicitudes.rechazar') }}
             </button>
             <button class="btn btn--primario btn--pequeno" (click)="responderSesion(sesion, true)">
-              Aceptar
+              {{ i18n.t('solicitudes.aceptar') }}
             </button>
           </div>
         </li>
@@ -56,11 +61,8 @@
 
   @if (pendientes() === 0) {
     <div class="vacio-grande">
-      <h2>No hay nada pendiente</h2>
-      <p>
-        Cuando alguien quiera entrenar contigo, la solicitud aparecerá aquí
-        sin que tengas que recargar.
-      </p>
+      <h2>{{ i18n.t('solicitudes.vacioTitulo') }}</h2>
+      <p>{{ i18n.t('solicitudes.vacioTexto') }}</p>
     </div>
   } @else if (solicitudesPendientes().length > 0) {
     <ul class="peticiones">
@@ -72,10 +74,10 @@
 
           <div class="peticion__texto">
             <h2 class="peticion__nombre">{{ solicitud.emisorNombre }}</h2>
-            <p class="peticion__detalle">Quiere conectar contigo para entrenar.</p>
+            <p class="peticion__detalle">{{ i18n.t('solicitudes.quiereConectar') }}</p>
             <!-- Antes de decidir hace falta poder mirar quién es. -->
             <a class="peticion__enlace" [routerLink]="['/u', solicitud.emisorId]">
-              Ver su perfil
+              {{ i18n.t('solicitudes.verPerfil') }}
             </a>
           </div>
 
@@ -85,7 +87,7 @@
           @if (solicitud.compatibilidad != null) {
             <span class="peticion__marcador" [attr.data-tramo]="tramo(solicitud.compatibilidad)">
               <span class="peticion__cifra">{{ solicitud.compatibilidad }}<small>%</small></span>
-              <span class="peticion__etiqueta">compatibles</span>
+              <span class="peticion__etiqueta">{{ i18n.t('solicitudes.compatibles') }}</span>
             </span>
           }
 
@@ -93,12 +95,12 @@
             <button class="btn btn--fantasma btn--pequeno"
                     [disabled]="enCurso(solicitud.id)"
                     (click)="responder(solicitud.id, 'RECHAZADA')">
-              Rechazar
+              {{ i18n.t('solicitudes.rechazar') }}
             </button>
             <button class="btn btn--primario btn--pequeno"
                     [disabled]="enCurso(solicitud.id)"
                     (click)="responder(solicitud.id, 'ACEPTADA')">
-              Aceptar
+              {{ i18n.t('solicitudes.aceptar') }}
             </button>
           </div>
         </li>

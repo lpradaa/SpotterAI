@@ -14,6 +14,7 @@ import { Avatar } from '../avatar/avatar';
 import { Carga } from '../carga/carga';
 import { tramoDe } from '../../utils/compatibilidad';
 import { VALORES_DE_MOTIVO, claveDeMotivo } from '../../utils/motivos-de-reporte';
+import { etiquetaDeNivel, etiquetaDeObjetivo } from '../../utils/valores-de-perfil';
 import { IdiomaService } from '../../services/idioma.service';
 import { Desglose } from '../desglose/desglose';
 
@@ -60,6 +61,21 @@ export class PerfilPublicoComponent {
   private http = inject(HttpClient);
   /** protected: la plantilla llama a i18n.t() en cada texto. */
   protected i18n = inject(IdiomaService);
+
+  /**
+   * El nivel y el objetivo guardados, tal y como se leen.
+   *
+   * <p>El valor viaja al backend y se compara para puntuar; lo que cambia es la
+   * etiqueta. La rutina que va al lado en la misma fila ya llega traducida,
+   * porque el enum lo conoce el backend.
+   */
+  protected nivel(valor: string): string {
+    return etiquetaDeNivel(valor, c => this.i18n.t(c));
+  }
+
+  protected objetivo(valor: string): string {
+    return etiquetaDeObjetivo(valor, c => this.i18n.t(c));
+  }
 
   /**
    * A quién se mira, sacado de la URL.
@@ -146,10 +162,16 @@ export class PerfilPublicoComponent {
     });
   }
 
-  /** "el lunes 3 de agosto", que es como se dice un día cuando se queda. */
+  /**
+   * «el lunes 3 de agosto», que es como se dice un día cuando se queda.
+   *
+   * <p>Por `i18n.fecha` y no por `toLocaleDateString('es-ES', …)`: escrito a
+   * mano, el día salía en español dentro de una frase en inglés. El locale sale
+   * de la señal del idioma, así que esto cambia cuando cambia la pantalla.
+   */
   cuandoLargo(fecha: string): string {
-    return new Date(`${fecha}T00:00:00`)
-      .toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    return this.i18n.fecha(`${fecha}T00:00:00`,
+      { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
   /** Las horas llegan con segundos; un plan no los necesita. */
@@ -253,7 +275,7 @@ export class PerfilPublicoComponent {
     // son datos distintos de los de la ficha pública.
     this.usuarios.getMiPerfil().subscribe({
       next: perfil => { this.perfilPropio.set(perfil); this.editando.set(true); },
-      error: () => this.error.set('No se ha podido abrir el formulario.')
+      error: () => this.error.set(this.i18n.t('perfil.errorFormulario'))
     });
     this.usuarios.getGimnasios().subscribe({
       next: lista => this.gimnasios.set(lista),
@@ -265,7 +287,7 @@ export class PerfilPublicoComponent {
   alGuardar(): void {
     this.editando.set(false);
     this.cargar(this.usuarioId());
-    this.avisoDelFormulario.set('Perfil actualizado.');
+    this.avisoDelFormulario.set(this.i18n.t('perfil.actualizado'));
     setTimeout(() => this.avisoDelFormulario.set(null), 3000);
   }
 
@@ -284,7 +306,7 @@ export class PerfilPublicoComponent {
         this.cargando.set(false);
       },
       error: () => {
-        this.error.set('No se ha podido cargar el perfil.');
+        this.error.set(this.i18n.t('perfil.errorCarga'));
         this.cargando.set(false);
       }
     });
@@ -368,7 +390,7 @@ export class PerfilPublicoComponent {
         this.enviando.set(false);
       },
       error: () => {
-        this.error.set('No se ha podido enviar la solicitud.');
+        this.error.set(this.i18n.t('perfil.errorSolicitud'));
         this.enviando.set(false);
       }
     });
@@ -385,7 +407,7 @@ export class PerfilPublicoComponent {
         this.enviando.set(false);
       },
       error: () => {
-        this.error.set('No se ha podido deshacer.');
+        this.error.set(this.i18n.t('perfil.errorDeshacer'));
         this.enviando.set(false);
       }
     });
@@ -398,22 +420,20 @@ export class PerfilPublicoComponent {
    */
   cuando(fecha: string): string {
     const dias = Math.floor((Date.now() - new Date(fecha).getTime()) / 86_400_000);
-    if (dias <= 0) return 'hoy';
-    if (dias === 1) return 'ayer';
-    if (dias < 7) return `hace ${dias} días`;
+    if (dias <= 0) return this.i18n.t('perfil.hoy');
+    if (dias === 1) return this.i18n.t('perfil.ayer');
+    if (dias < 7) return this.i18n.t('perfil.haceDias', { cuenta: dias });
     if (dias < 30) {
-      const semanas = Math.floor(dias / 7);
-      return `hace ${semanas} ${semanas === 1 ? 'semana' : 'semanas'}`;
+      return this.i18n.t('perfil.haceSemanas', { cuenta: Math.floor(dias / 7) });
     }
-    const meses = Math.floor(dias / 30);
-    return `hace ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+    return this.i18n.t('perfil.haceMeses', { cuenta: Math.floor(dias / 30) });
   }
 
   /** Frase de actividad. Sin datos no se dice nada, que inventar es peor. */
   actividad = computed(() => {
     const n = this.perfil()?.entrenosUltimaSemana ?? 0;
     if (n === 0) return null;
-    return `${n} ${n === 1 ? 'entrenamiento' : 'entrenamientos'} esta semana`;
+    return this.i18n.t('perfil.actividad', { cuenta: n });
   });
 
   /** Formulario de propuesta abierto dentro de la ficha. */
@@ -429,7 +449,7 @@ export class PerfilPublicoComponent {
   juntos = computed(() => {
     const n = this.perfil()?.sesionesJuntos ?? 0;
     if (n === 0) return null;
-    return n === 1 ? 'Ya habéis quedado una vez' : `Ya habéis quedado ${n} veces`;
+    return this.i18n.t('perfil.juntos', { cuenta: n });
   });
 
   /** Propuesta hecha: se cierra el formulario y la ficha lo refleja. */

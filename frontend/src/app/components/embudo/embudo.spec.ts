@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 
 import { EmbudoComponent, Embudo, FilaEmbudo } from './embudo';
 import { api } from '../../config/api';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * La pantalla no saca conclusiones por su cuenta.
@@ -58,6 +59,10 @@ describe('EmbudoComponent', () => {
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
+
+    // En español y dicho a propósito: lo que se afirma abajo son frases, y sin
+    // fijarlo la pantalla sale en el idioma del entorno, que en jsdom es inglés.
+    TestBed.inject(IdiomaService).cambiar('es');
   });
 
   afterEach(() => http.verify());

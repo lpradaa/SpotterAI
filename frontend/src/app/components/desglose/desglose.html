@@ -29,9 +29,12 @@
        lee como "cero puntos", y es justo lo contrario de lo que pasa. -->
   @if (sinDatos().length > 0) {
     <div class="desglose__huecos">
+      <!-- El énfasis se lleva la frase entera: para ponerlo en dos palabras de
+           dentro habría que partir el texto y volver a unirlo en el mismo orden
+           en los dos idiomas. -->
       <p class="desglose__aviso">
-        Esto no se ha podido mirar, así que <strong>no resta</strong>: su peso se
-        reparte entre lo demás.
+        <strong>{{ i18n.t('desglose.noResta') }}</strong>
+        {{ i18n.t('desglose.avisoResto') }}
       </p>
 
       <ul class="desglose__lista">
@@ -39,7 +42,7 @@
           <li class="desglose__factor desglose__factor--sin-datos">
             <div class="desglose__fila">
               <span class="desglose__etiqueta">{{ f.etiqueta }}</span>
-              <span class="desglose__puntos desglose__puntos--vacio">sin datos</span>
+              <span class="desglose__puntos desglose__puntos--vacio">{{ i18n.t('desglose.sinDatos') }}</span>
             </div>
             <p class="desglose__detalle">{{ f.detalle }}</p>
           </li>
@@ -49,10 +52,7 @@
       <!-- No se dice cuál de los dos perfiles es el que falta por completar: la
            calculadora escribe "de alguno de los dos" a propósito, y señalar a
            uno sería afirmar algo que no se sabe. -->
-      <p class="desglose__nota">
-        Con el perfil completo el número se parece más a lo que de verdad
-        encajáis.
-      </p>
+      <p class="desglose__nota">{{ i18n.t('desglose.nota') }}</p>
     </div>
   }
 </div>

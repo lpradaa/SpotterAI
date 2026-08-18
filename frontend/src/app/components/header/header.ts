@@ -7,6 +7,7 @@ import { PerfilEstadoService } from '../../services/perfil-estado.service';
 import { AvisosService } from '../../services/avisos.service';
 import { AuthService } from '../../services/auth.service';
 import { IdiomaService } from '../../services/idioma.service';
+import { UsuarioService } from '../../services/usuario.service';
 import { Avatar } from '../avatar/avatar';
 
 @Component({
@@ -25,6 +26,7 @@ export class Header {
   private eventos = inject(EventosService);
   private perfilEstado = inject(PerfilEstadoService);
   private avisos = inject(AvisosService);
+  private usuarios = inject(UsuarioService);
   /** protected: el sidebar lee auth.usuario() directamente en la plantilla. */
   protected auth = inject(AuthService);
   /** protected: la plantilla llama a i18n.t() en cada texto. */
@@ -64,8 +66,17 @@ export class Header {
 
   idiomaActual = this.i18n.idioma;
 
+  /**
+   * Cambia el idioma de la pantalla y deja apuntado el de los correos.
+   *
+   * <p>Lo segundo va al servidor porque los avisos por correo se mandan cuando
+   * no hay ninguna petición de la que sacar el idioma. Y va sin esperar
+   * respuesta: la pantalla ya ha cambiado, y un error aquí no es algo que la
+   * persona pueda arreglar ni tenga que saber.
+   */
   alternarIdioma(): void {
     this.i18n.alternar();
+    this.usuarios.guardarIdioma(this.i18n.idioma()).subscribe({ error: () => {} });
   }
 
   toggleSidebar() {

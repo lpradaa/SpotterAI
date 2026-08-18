@@ -113,7 +113,7 @@ export class BienvenidaComponent implements OnInit {
       },
       error: () => {
         this.guardando.set(false);
-        this.error.set('No se ha podido guardar tu horario. Inténtalo otra vez.');
+        this.error.set(this.i18n.t('bienvenida.errorHorario'));
       }
     });
   }
@@ -139,7 +139,7 @@ export class BienvenidaComponent implements OnInit {
       },
       error: () => {
         this.guardando.set(false);
-        this.error.set('No se han podido guardar tus datos. Inténtalo otra vez.');
+        this.error.set(this.i18n.t('bienvenida.errorDatos'));
       }
     });
   }

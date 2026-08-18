@@ -4,35 +4,37 @@
      chat para poder quedar. -->
 <section class="propuesta">
   <div class="propuesta__cabecera">
-    <h3 class="propuesta__titulo">Proponer una sesión</h3>
-    <button class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">✕</button>
+    <h3 class="propuesta__titulo">{{ i18n.t('propuesta.titulo') }}</h3>
+    <button class="cerrar" (click)="cerrar.emit()"
+            [attr.aria-label]="i18n.t('propuesta.cerrar')">✕</button>
   </div>
 
   @if (sugerencia(); as s) {
     @if (s.hayFranjas) {
+      <!-- Las dos variantes enteras y no una frase con un trozo cosido en medio:
+           el trozo obliga a que las dos piezas vayan en el mismo orden en los
+           dos idiomas. -->
       <p class="propuesta__pista">
-        Es el próximo hueco que compartís
-        @if (s.ambosFijos) { <strong>y los dos vais siempre</strong> }.
-        Puedes cambiarlo.
+        {{ i18n.t(s.ambosFijos ? 'propuesta.huecoFijo' : 'propuesta.hueco') }}
       </p>
     } @else {
       <p class="propuesta__pista propuesta__pista--aviso">
-        No tenéis ninguna franja en común, así que hay que elegir día y hora a mano.
+        {{ i18n.t('propuesta.sinFranjas') }}
       </p>
     }
   }
 
   <div class="propuesta__campos">
     <label class="campo">
-      <span>Día</span>
+      <span>{{ i18n.t('propuesta.dia') }}</span>
       <input type="date" [(ngModel)]="formulario.fecha">
     </label>
     <label class="campo">
-      <span>Desde</span>
+      <span>{{ i18n.t('propuesta.desde') }}</span>
       <input type="time" [(ngModel)]="formulario.horaInicio">
     </label>
     <label class="campo">
-      <span>Hasta</span>
+      <span>{{ i18n.t('propuesta.hasta') }}</span>
       <input type="time" [(ngModel)]="formulario.horaFin">
     </label>
   </div>
@@ -42,12 +44,8 @@
        quedabais a una hora y en ninguna parte. -->
   @if (sugerencia()?.donde?.length) {
     <fieldset class="campo campo--ancho donde">
-      <legend><span>¿Dónde quedáis?</span></legend>
-      <p class="donde__pista">
-        Entrenáis en sitios distintos, así que uno de los dos se desplaza.
-        Miradlo entre vosotros: muchos gimnasios venden entrada suelta o dejan
-        traer invitado.
-      </p>
+      <legend><span>{{ i18n.t('propuesta.donde') }}</span></legend>
+      <p class="donde__pista">{{ i18n.t('propuesta.dondePista') }}</p>
 
       <div class="donde__opciones">
         @for (g of sugerencia()!.donde; track g.id) {
@@ -55,7 +53,9 @@
                   [class.donde__opcion--activa]="gimnasioElegido() === g.id"
                   [attr.aria-pressed]="gimnasioElegido() === g.id"
                   (click)="gimnasioElegido.set(g.id)">
-            <span class="donde__dequien">{{ g.dequien === 'mio' ? 'El tuyo' : 'El suyo' }}</span>
+            <span class="donde__dequien">
+              {{ i18n.t(g.dequien === 'mio' ? 'propuesta.elTuyo' : 'propuesta.elSuyo') }}
+            </span>
             <span class="donde__nombre">{{ g.nombre }}</span>
           </button>
         }
@@ -64,9 +64,9 @@
   }
 
   <label class="campo campo--ancho">
-    <span>Nota (opcional)</span>
+    <span>{{ i18n.t('propuesta.nota') }}</span>
     <input type="text" [(ngModel)]="formulario.nota" maxlength="140"
-           placeholder="Empiezo por pierna, llevo las bandas…">
+           [placeholder]="i18n.t('propuesta.notaEjemplo')">
   </label>
 
   @if (error(); as texto) {
@@ -74,10 +74,12 @@
   }
 
   <div class="propuesta__acciones">
-    <button class="btn btn--fantasma btn--pequeno" (click)="cerrar.emit()">Cancelar</button>
+    <button class="btn btn--fantasma btn--pequeno" (click)="cerrar.emit()">
+      {{ i18n.t('comun.cancelar') }}
+    </button>
     <button class="btn btn--primario btn--pequeno" (click)="enviar()"
             [disabled]="!completo || enviando()">
-      Proponer
+      {{ i18n.t('propuesta.proponer') }}
     </button>
   </div>
 </section>

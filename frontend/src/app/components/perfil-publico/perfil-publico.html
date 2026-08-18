@@ -6,11 +6,13 @@
      gente son lugares, no estados de un componente. -->
 <article class="ficha">
   <nav class="ficha__volver">
-    <button class="btn btn--fantasma btn--pequeno" (click)="volver()">← Volver</button>
+    <button class="btn btn--fantasma btn--pequeno" (click)="volver()">
+      {{ i18n.t('comun.volver') }}
+    </button>
   </nav>
 
   @if (cargando()) {
-    <p class="ficha__cargando">Cargando…</p>
+    <p class="ficha__cargando">{{ i18n.t('comun.cargando') }}</p>
   } @else if (error()) {
     <p class="aviso-inline aviso-inline--error" role="alert">{{ error() }}</p>
   } @else if (perfil(); as p) {
@@ -26,11 +28,13 @@
       <div class="ficha__quien">
         <h2 class="ficha__nombre">{{ p.nombre }}</h2>
 
+        <!-- El nivel y el objetivo se guardan en español y viajan así; lo que
+             se pinta es su etiqueta. La rutina ya viene traducida del backend. -->
         <p class="ficha__rasgos">
-          @if (p.nivel) { <span>{{ p.nivel }}</span> }
-          @if (p.objetivos) { <span>{{ p.objetivos }}</span> }
+          @if (p.nivel) { <span>{{ nivel(p.nivel) }}</span> }
+          @if (p.objetivos) { <span>{{ objetivo(p.objetivos) }}</span> }
           @if (p.rutina) { <span>{{ p.rutina }}</span> }
-          @if (p.edad) { <span>{{ p.edad }} años</span> }
+          @if (p.edad) { <span>{{ i18n.t('perfil.anos', { cuenta: p.edad }) }}</span> }
         </p>
 
         @if (p.gimnasioNombre) {
@@ -63,9 +67,9 @@
     @if (p.esMio) {
       <section class="ficha__bloque">
         <div class="ficha__cabecera-bloque">
-          <h3 class="ficha__subtitulo">Tu semana</h3>
-          @if (miMeta()) {
-            <span class="ficha__meta">{{ miMeta() }} {{ miMeta() === 1 ? 'día' : 'días' }} por semana</span>
+          <h3 class="ficha__subtitulo">{{ i18n.t('perfil.tuSemana') }}</h3>
+          @if (miMeta(); as meta) {
+            <span class="ficha__meta">{{ i18n.t('perfil.metaSemanal', { cuenta: meta }) }}</span>
           }
         </div>
 
@@ -74,10 +78,7 @@
                secas, que es lo que los demás miran de ti. -->
           <app-rejilla-semana [misFranjas]="misFranjas()" [solape]="[]" />
         } @else {
-          <p class="ficha__motivo">
-            Todavía no has puesto tus horarios, y es el dato que más pesa:
-            sin ellos no hay con quién cruzarte.
-          </p>
+          <p class="ficha__motivo">{{ i18n.t('perfil.sinHorarios') }}</p>
         }
       </section>
 
@@ -87,12 +88,13 @@
                algo. Los demas te cuentan como te ven, este te dice que hacer,
                y con la misma caja que el resto se leia como un apartado mas. -->
           <section class="ficha__bloque ficha__bloque--principal ficha__bloque--pendiente">
-            <h3 class="ficha__subtitulo">Lo que te falta</h3>
+            <h3 class="ficha__subtitulo">{{ i18n.t('perfil.loQueTeFalta') }}</h3>
+            <!-- El énfasis se lleva la frase entera: ponerlo en dos palabras de
+                 dentro obliga a partir el texto y volver a unirlo en el mismo
+                 orden en los dos idiomas. -->
             <p class="ficha__motivo">
-              Son <strong>{{ r.puntosEnJuego }} puntos</strong> de compatibilidad
-              que ahora mismo no puedes ganar con nadie. No restan: se reparten
-              entre lo demás, y eso hace que tu número diga menos de lo que
-              podría.
+              <strong>{{ i18n.t('perfil.puntosEnJuego', { puntos: r.puntosEnJuego }) }}</strong>
+              {{ i18n.t('perfil.puntosEnJuegoTexto') }}
             </p>
 
             <ul class="huecos">
@@ -106,7 +108,7 @@
             </ul>
 
             <button class="btn btn--contorno btn--pequeno" (click)="abrirEdicion()">
-              Completar mi perfil
+              {{ i18n.t('perfil.completar') }}
             </button>
           </section>
         }
@@ -152,8 +154,10 @@
            donde se decide si conectar— no se decía nunca. -->
       @if (p.proximaOcasion; as ocasion) {
         <p class="ficha__ocasion" [class.ficha__ocasion--fija]="ocasion.ambosFijos">
-          Podríais entrenar <strong>{{ cuandoLargo(ocasion.fecha) }}</strong>,
-          de {{ hhmm(ocasion.inicio) }} a {{ hhmm(ocasion.fin) }}@if (ocasion.ambosFijos) {, y los dos vais siempre}.
+          {{ i18n.t(ocasion.ambosFijos ? 'perfil.ocasionFija' : 'perfil.ocasion', {
+               cuando: cuandoLargo(ocasion.fecha),
+               desde: hhmm(ocasion.inicio),
+               hasta: hhmm(ocasion.fin) }) }}
         </p>
       }
 
@@ -166,11 +170,11 @@
       <button class="ficha__mas" (click)="alternarDesglose(p.id)"
               [attr.aria-expanded]="desglose() !== null">
         @if (cargandoDesglose()) {
-          Un momento…
+          {{ i18n.t('comun.unMomento') }}
         } @else if (desglose()) {
-          Ocultar el desglose
+          {{ i18n.t('perfil.ocultarDesglose') }}
         } @else {
-          Ver de dónde sale este {{ p.compatibilidad }} %
+          {{ i18n.t('perfil.verDesglose', { puntuacion: p.compatibilidad }) }}
         }
       </button>
     </section>
@@ -181,7 +185,9 @@
          cargada, que es literalmente para lo que sirve un spotter. -->
     @if (p.levantamientos.length > 0) {
       <section class="ficha__bloque">
-        <h3 class="ficha__subtitulo">{{ p.esMio ? 'Lo que mueves' : 'Lo que movéis' }}</h3>
+        <h3 class="ficha__subtitulo">
+          {{ i18n.t(p.esMio ? 'perfil.loQueMueves' : 'perfil.loQueMoveis') }}
+        </h3>
 
         <!-- En tu propia página no hay nada que comparar: es una lista. -->
         @if (p.esMio) {
@@ -200,13 +206,11 @@
           <!-- Lado a lado. Una lista de kilos ajenos no dice nada: lo que decide
                si podéis cubriros es la diferencia con los tuyos. -->
           <table class="marcas">
-            <caption class="visually-hidden">
-              Vuestras marcas principales, con el máximo estimado a una repetición
-            </caption>
+            <caption class="visually-hidden">{{ i18n.t('perfil.tablaMarcas') }}</caption>
             <thead>
               <tr>
-                <th scope="col">Ejercicio</th>
-                <th scope="col">Tú</th>
+                <th scope="col">{{ i18n.t('perfil.ejercicio') }}</th>
+                <th scope="col">{{ i18n.t('perfil.tu') }}</th>
                 <th scope="col">{{ p.nombre.split(' ')[0] }}</th>
               </tr>
             </thead>
@@ -235,12 +239,10 @@
 
           <p class="ficha__motivo">
             @if (ejerciciosEnComun() === 0) {
-              No tenéis ningún ejercicio en común, así que no hay forma de saber
-              si podríais cubriros.
+              {{ i18n.t('perfil.sinEjerciciosEnComun') }}
             } @else {
-              El número grande es el <strong>máximo estimado a una repetición</strong>,
-              que es lo que permite comparar «100&nbsp;kg × 3» con «85&nbsp;kg × 8».
-              Debajo va la marca tal cual la apuntasteis.
+              <strong>{{ i18n.t('perfil.maximoEstimado') }}</strong>
+              {{ i18n.t('perfil.maximoEstimadoTexto') }}
             }
           </p>
         }
@@ -257,7 +259,9 @@
            Es lo unico de esta pagina que ha escrito una persona; meterlo en el
            mismo gris que la tabla de kilos era decir que valen lo mismo. -->
       <section class="ficha__bloque ficha__bloque--llano">
-        <h3 class="ficha__subtitulo">{{ p.esMio ? 'Mis marcas' : 'Sus marcas' }}</h3>
+        <h3 class="ficha__subtitulo">
+          {{ i18n.t(p.esMio ? 'perfil.misMarcas' : 'perfil.susMarcas') }}
+        </h3>
 
         <ul class="hitos">
           @for (hito of p.hitos; track hito.id) {
@@ -320,28 +324,24 @@
              vista todo el rato, ocupando un tercio de la pantalla en un movil. -->
         @if (p.yaConectado) {
           <button class="btn btn--enlace" [disabled]="enviando()" (click)="retirar()">
-            Dejar de ser compañeros
+            {{ i18n.t('perfil.dejarDeSerCompaneros') }}
           </button>
         }
 
         @if (!confirmandoBloqueo()) {
           <button class="btn btn--enlace" (click)="confirmandoBloqueo.set(true)">
-            Bloquear a {{ p.nombre.split(' ')[0] }}
+            {{ i18n.t('perfil.bloquearA', { nombre: p.nombre.split(' ')[0] }) }}
           </button>
         } @else {
           <div class="bloqueo">
-            <p class="bloqueo__texto">
-              Dejaréis de veros en la aplicación y no podrá volver a escribirte.
-              Si erais compañeros, se deshace. Puedes quitarlo cuando quieras
-              desde tu perfil.
-            </p>
+            <p class="bloqueo__texto">{{ i18n.t('perfil.avisoBloqueo') }}</p>
             <div class="bloqueo__acciones">
               <button class="btn btn--fantasma btn--pequeno" (click)="confirmandoBloqueo.set(false)">
-                Cancelar
+                {{ i18n.t('comun.cancelar') }}
               </button>
               <button class="btn btn--peligro btn--pequeno" [disabled]="enviando()"
                       (click)="bloquear(p.id)">
-                Bloquear
+                {{ i18n.t('perfil.bloquear') }}
               </button>
             </div>
           </div>
@@ -351,34 +351,34 @@
              no saca a nadie de la ficha ni deshace la relación. -->
         @if (!confirmandoReporte()) {
           <button class="btn btn--enlace" (click)="confirmandoReporte.set(true)">
-            Reportar a {{ p.nombre.split(' ')[0] }}
+            {{ i18n.t('perfil.reportarA', { nombre: p.nombre.split(' ')[0] }) }}
           </button>
         } @else if (reporteEnviado()) {
-          <p class="bloqueo__texto">Reporte enviado. Gracias por avisar.</p>
+          <p class="bloqueo__texto">{{ i18n.t('perfil.reporteEnviado') }}</p>
         } @else {
           <div class="bloqueo">
             <label class="campo campo--ancho">
-              <span>Motivo</span>
+              <span>{{ i18n.t('perfil.motivo') }}</span>
               <select [ngModel]="motivoReporte()" (ngModelChange)="motivoReporte.set($event)">
-                <option [ngValue]="null" disabled>Elige un motivo</option>
+                <option [ngValue]="null" disabled>{{ i18n.t('perfil.eligeMotivo') }}</option>
                 @for (m of motivosDeReporte(); track m.valor) {
                   <option [ngValue]="m.valor">{{ m.etiqueta }}</option>
                 }
               </select>
             </label>
             <label class="campo campo--ancho">
-              <span>Algo más que añadir (opcional)</span>
+              <span>{{ i18n.t('perfil.algoMas') }}</span>
               <textarea [(ngModel)]="detalleReporte" rows="2" maxlength="500"
-                        placeholder="Lo que creas que ayuda a entender lo que ha pasado"></textarea>
+                        [placeholder]="i18n.t('perfil.algoMasEjemplo')"></textarea>
             </label>
             <div class="bloqueo__acciones">
               <button class="btn btn--fantasma btn--pequeno" (click)="confirmandoReporte.set(false)">
-                Cancelar
+                {{ i18n.t('comun.cancelar') }}
               </button>
               <button class="btn btn--peligro btn--pequeno"
                       [disabled]="!motivoReporte() || enviando()"
                       (click)="reportar(p.id)">
-                Enviar reporte
+                {{ i18n.t('perfil.enviarReporte') }}
               </button>
             </div>
           </div>
@@ -398,24 +398,24 @@
            vez de apilarse. -->
       @if (p.esMio) {
         <button class="btn btn--primario" (click)="abrirEdicion()">
-          Editar mi perfil
+          {{ i18n.t('perfil.editar') }}
         </button>
       } @else if (p.yaConectado) {
         @if (!proponiendo()) {
           <button class="btn btn--primario" (click)="proponiendo.set(true)">
-            Proponer sesión
+            {{ i18n.t('perfil.proponerSesion') }}
           </button>
         }
         <button class="btn btn--fantasma" (click)="escribirA(p.id)">
-          Escribir a {{ p.nombre.split(' ')[0] }}
+          {{ i18n.t('perfil.escribirA', { nombre: p.nombre.split(' ')[0] }) }}
         </button>
       } @else if (p.solicitudPendiente) {
         <button class="btn btn--fantasma" [disabled]="enviando()" (click)="retirar()">
-          Retirar solicitud
+          {{ i18n.t('perfil.retirarSolicitud') }}
         </button>
       } @else {
         <button class="btn btn--primario" [disabled]="enviando()" (click)="conectar()">
-          Conectar con {{ p.nombre.split(' ')[0] }}
+          {{ i18n.t('perfil.conectarCon', { nombre: p.nombre.split(' ')[0] }) }}
         </button>
       }
     </footer>

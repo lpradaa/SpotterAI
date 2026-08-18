@@ -10,6 +10,8 @@ import { ModalAccesible } from '../../directivas/modal-accesible';
 import { HttpClient } from '@angular/common/http';
 import { api } from '../../config/api';
 import { MINIMO_CONTRASENA } from '../restablecer/restablecer';
+import { VALORES_DE_DIA, etiquetaDeDia, etiquetaDeColor } from '../../utils/valores-de-perfil';
+import { IdiomaService } from '../../services/idioma.service';
 
 /** Lo que sale hacia el tablero para que enseñe un aviso. */
 export interface AvisoPerfil {
@@ -61,10 +63,53 @@ export class ModalPerfilComponent {
    * el mismo emoji eran indistinguibles en una lista.
    */
   coloresAvatar = COLORES_AVATAR;
-  diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+  /**
+   * El nombre del color, para el boton que solo se oye.
+   *
+   * El circulo no lleva texto: quien mira ve el color y quien escucha oye esto.
+   * Interpolar la clave guardada dejaba «ascua colour» en la pantalla inglesa.
+   */
+  protected nombreDelColor(color: string): string {
+    return etiquetaDeColor(color, c => this.i18n.t(c));
+  }
+
+  /**
+   * Los días del desplegable de cada horario.
+   *
+   * <p>Del vocabulario compartido y no de una lista propia: este desplegable
+   * **escribe** el día en la franja que se guarda, igual que la rejilla de
+   * pintar, así que las dos tienen que decir exactamente lo mismo. Era la cuarta
+   * copia de la lista, y la última.
+   */
+  diasSemana = VALORES_DE_DIA;
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
+
+  /**
+   * Cómo se lee un día guardado.
+   *
+   * <p>El desplegable de arriba escribe el valor en español —es lo que se
+   * cruza con la semana de otra persona— y esto es lo único que cambia.
+   */
+  protected nombreDeDia(valor: string): string {
+    return etiquetaDeDia(valor, c => this.i18n.t(c));
+  }
 
   /** Coincide con el límite de la columna y con el recorte del servidor. */
   readonly maxBiografia = 280;
+
+  /**
+   * Los dos topes que la pantalla dice en voz alta.
+   *
+   * <p>Escritos una vez y no repetidos en la plantilla: el número aparece en el
+   * contador («2 de 3») y en la condición que decide si se puede añadir otro,
+   * y separados acabarían diciendo cosas distintas. Los mismos que aplica el
+   * backend, que es quien de verdad los impone.
+   */
+  protected readonly MAX_LEVANTAMIENTOS = 3;
+  protected readonly MAX_HITOS = 12;
 
   /**
    * Tope de franjas marcadas como "Voy siempre".
@@ -130,7 +175,7 @@ export class ModalPerfilComponent {
         },
         error: (e) => {
           this.cambioEnCurso.set(false);
-          this.errorContrasena.set(e?.error?.error ?? 'No se ha podido cambiar la contraseña.');
+          this.errorContrasena.set(e?.error?.error ?? this.i18n.t('perfilEd.errorContrasena'));
         },
       });
   }
@@ -161,7 +206,7 @@ export class ModalPerfilComponent {
         },
         error: (e) => {
           this.borradoEnCurso.set(false);
-          this.errorBorrado.set(e?.error?.error ?? 'No se ha podido borrar la cuenta.');
+          this.errorBorrado.set(e?.error?.error ?? this.i18n.t('perfilEd.errorBorrado'));
         },
       });
   }
@@ -174,7 +219,7 @@ export class ModalPerfilComponent {
   };
 
   /** Los catálogos los manda el backend: duplicarlos aquí es que diverjan. */
-  ejerciciosDisponibles = signal<{ clave: string, nombre: string }[]>([]);
+  ejerciciosDisponibles = signal<{ clave: string, nombre: string, basico?: boolean }[]>([]);
   rutinasDisponibles = signal<{ clave: string, nombre: string }[]>([]);
 
   nuevoGimnasioNombre = '';
@@ -279,7 +324,7 @@ export class ModalPerfilComponent {
       error: err => {
         this.subiendoFoto.set(false);
         entrada.value = '';
-        this.avisar(err, 'No se ha podido subir la foto.');
+        this.avisar(err, this.i18n.t('perfilEd.errorFoto'));
       }
     });
   }
@@ -296,9 +341,42 @@ export class ModalPerfilComponent {
 
   // --- Levantamientos ---
 
+  /**
+   * Añade una fila, ya con un ejercicio propuesto.
+   *
+   * <p>Propone el siguiente **básico** que no esté puesto —sentadilla, banca,
+   * peso muerto— y solo cae en la lista general si ya están los tres. No es
+   * una preferencia estética: el factor de fuerza solo puede comparar cuando
+   * las dos personas han apuntado *el mismo* ejercicio, y con seis a elegir eso
+   * pasaba en el 22 % de las parejas. Sugerirlos lo sube al 30 %, medido en
+   * `docs/medir-el-motor.md`.
+   *
+   * <p>Se sugiere el ejercicio y **nunca el peso**. Rellenar un número por
+   * alguien sería inventarle un dato al factor del que depende el nombre del
+   * producto, que es justo lo que `PerfilMinimo` evita al no exigir las marcas.
+   * Y se puede cambiar: quien entrene otra cosa la apunta igual.
+   */
   anadirLevantamiento(): void {
-    if (this.perfilForm.levantamientos.length >= 3) return;
-    this.perfilForm.levantamientos.push({ ejercicio: '', peso: null, repeticiones: null });
+    if (this.perfilForm.levantamientos.length >= this.MAX_LEVANTAMIENTOS) return;
+
+    this.perfilForm.levantamientos.push({
+      ejercicio: this.siguienteSugerido(),
+      peso: null,
+      repeticiones: null,
+    });
+  }
+
+  /** El primer ejercicio sugerido que todavía no está en la lista, o ninguno. */
+  private siguienteSugerido(): string {
+    const puestos = new Set(
+      (this.perfilForm.levantamientos ?? []).map((l: any) => l.ejercicio).filter(Boolean));
+
+    // El backend los manda con los básicos delante, así que el primero libre de
+    // la lista ya es el que hay que proponer.
+    const libre = this.ejerciciosDisponibles()
+      .find(e => (e as any).basico && !puestos.has(e.clave));
+
+    return libre?.clave ?? '';
   }
 
   quitarLevantamiento(indice: number): void {
@@ -331,7 +409,7 @@ export class ModalPerfilComponent {
       // texto es más útil que uno genérico nuestro.
       error: err => {
         this.subiendo.set(false);
-        this.avisar(err, 'No se ha podido subir el archivo.');
+        this.avisar(err, this.i18n.t('perfilEd.errorArchivo'));
       }
     });
   }
@@ -351,7 +429,7 @@ export class ModalPerfilComponent {
         this.nuevoHito = { titulo: '', descripcion: '', fecha: '', medioUrl: null, medioTipo: null };
         this.cdr.detectChanges();
       },
-      error: err => this.avisar(err, 'No se ha podido guardar la marca.')
+      error: err => this.avisar(err, this.i18n.t('perfilEd.errorMarca'))
     });
   }
 
@@ -361,7 +439,7 @@ export class ModalPerfilComponent {
         this.misHitos.update(lista => lista.filter(h => h.id !== hitoId));
         this.cdr.detectChanges();
       },
-      error: () => this.aviso.emit({ texto: 'No se ha podido borrar.', tipo: 'error' })
+      error: () => this.aviso.emit({ texto: this.i18n.t('perfilEd.errorBorrarMarca'), tipo: 'error' })
     });
   }
 
@@ -406,7 +484,7 @@ export class ModalPerfilComponent {
   alternarHabitual(horario: any): void {
     if (!this.puedeMarcarHabitual(horario)) {
       this.aviso.emit({
-        texto: `Puedes marcar ${this.maxHabituales} franjas como fijas.`, tipo: 'error'
+        texto: this.i18n.t('perfilEd.topeFijas', { tope: this.maxHabituales }), tipo: 'error'
       });
       return;
     }
@@ -424,11 +502,11 @@ export class ModalPerfilComponent {
 
     this.usuarioService.actualizarPerfil(this.perfilForm).subscribe({
       next: () => {
-        this.aviso.emit({ texto: 'Perfil actualizado.', tipo: 'success' });
+        this.aviso.emit({ texto: this.i18n.t('perfilEd.guardado'), tipo: 'success' });
         this.guardado.emit();
       },
       error: () => this.aviso.emit({
-        texto: 'Hubo un error al guardar tu perfil.', tipo: 'error'
+        texto: this.i18n.t('perfilEd.errorGuardar'), tipo: 'error'
       })
     });
   }

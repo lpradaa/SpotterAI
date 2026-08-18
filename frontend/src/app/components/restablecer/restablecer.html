@@ -1,36 +1,30 @@
 <div class="restablecer">
 
   @if (sinEnlace) {
-    <h1 class="restablecer__titulo">Este enlace no está completo</h1>
-    <p class="restablecer__texto">
-      Ábrelo desde el correo que recibiste. Si lo copiaste a mano, puede que se
-      quedara alguna parte por el camino.
-    </p>
-    <a class="btn btn--fantasma" routerLink="/login">Volver a entrar</a>
+    <h1 class="restablecer__titulo">{{ i18n.t('enlace.incompleto') }}</h1>
+    <p class="restablecer__texto">{{ i18n.t('enlace.incompletoTexto') }}</p>
+    <a class="btn btn--fantasma" routerLink="/login">{{ i18n.t('restablecer.volverAEntrar') }}</a>
 
   } @else if (hecho()) {
-    <h1 class="restablecer__titulo">Contraseña cambiada</h1>
-    <p class="restablecer__texto">
-      Ya puedes entrar con la nueva. Si tenías la sesión abierta en algún otro
-      sitio, se ha cerrado.
-    </p>
-    <a class="btn btn--primario" routerLink="/login">Entrar</a>
+    <h1 class="restablecer__titulo">{{ i18n.t('restablecer.hecha') }}</h1>
+    <p class="restablecer__texto">{{ i18n.t('restablecer.hechaTexto') }}</p>
+    <a class="btn btn--primario" routerLink="/login">{{ i18n.t('restablecer.entrar') }}</a>
 
   } @else {
-    <h1 class="restablecer__titulo">Elige una contraseña nueva</h1>
+    <h1 class="restablecer__titulo">{{ i18n.t('restablecer.titulo') }}</h1>
 
     <label class="campo">
-      <span>Contraseña</span>
+      <span>{{ i18n.t('restablecer.contrasena') }}</span>
       <input type="password" [(ngModel)]="contrasena" (keyup.enter)="guardar()"
-             autocomplete="new-password" placeholder="Al menos {{ minimo }} caracteres">
+             autocomplete="new-password"
+             [placeholder]="i18n.t('restablecer.minimo', { minimo })">
       <!-- El aviso aquí y no solo al enviar: el enlace es de un solo uso, así
            que gastarlo por escribir algo corto sería quedarse sin cuenta. -->
       <small class="campo__pista" [class.campo__pista--al-limite]="demasiadoCorta">
         @if (demasiadoCorta) {
-          Faltan {{ minimo - contrasena.length }} caracteres
+          {{ i18n.t('restablecer.faltan', { cuenta: minimo - contrasena.length }) }}
         } @else {
-          Cuenta la longitud, no los símbolos raros: son más difíciles de
-          adivinar y más fáciles de recordar.
+          {{ i18n.t('restablecer.consejo') }}
         }
       </small>
     </label>
@@ -40,7 +34,11 @@
     <button class="btn btn--primario"
             [disabled]="contrasena.length < minimo || enviando()"
             (click)="guardar()">
-      @if (enviando()) { Guardando… } @else { Cambiar la contraseña }
+      @if (enviando()) {
+        {{ i18n.t('restablecer.guardando') }}
+      } @else {
+        {{ i18n.t('restablecer.cambiar') }}
+      }
     </button>
   }
 </div>

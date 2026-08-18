@@ -2,16 +2,18 @@
 
   <header class="explorar__cabecera">
     <div>
-      <h1 class="explorar__titulo">Explorar</h1>
+      <h1 class="explorar__titulo">{{ i18n.t('explorar.titulo') }}</h1>
       <p class="explorar__resumen">
-        {{ usuariosFiltrados().length }} de {{ usuarios().length }}
-        {{ usuarios().length === 1 ? 'persona' : 'personas' }} en tu comunidad
+        {{ i18n.t('explorar.resumen', {
+             mostrados: usuariosFiltrados().length,
+             total: usuarios().length,
+             cuenta: usuarios().length }) }}
       </p>
     </div>
 
     <div class="explorar__controles">
       <label class="buscador">
-        <span class="visually-hidden">Buscar por nombre</span>
+        <span class="visually-hidden">{{ i18n.t('explorar.buscarPorNombre') }}</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2" stroke-linecap="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
@@ -20,14 +22,16 @@
              hueco corta "Buscar por nombre" en "Buscar por nom", y media palabra
              recortada se lee peor que una entera. El texto completo sigue estando
              en la etiqueta de arriba, que es la que oye un lector de pantalla. -->
-        <input type="text" placeholder="Buscar"
+        <input type="text" [placeholder]="i18n.t('explorar.buscar')"
                [ngModel]="filtrosActivos().busqueda"
                (ngModelChange)="actualizarFiltros('busqueda', $event)">
       </label>
 
       <button class="btn btn--neutro btn--pequeno" (click)="toggleFiltros()">
-        Filtros
-        @if (hayFiltrosActivos()) { <span class="btn__punto" aria-label="Hay filtros activos"></span> }
+        {{ i18n.t('explorar.filtros') }}
+        @if (hayFiltrosActivos()) {
+          <span class="btn__punto" [attr.aria-label]="i18n.t('explorar.hayFiltros')"></span>
+        }
       </button>
 
       <!-- Venia del tablero. Es un modo de descubrimiento —de uno en uno, con la
@@ -40,7 +44,7 @@
            si distingue a una persona de otra, que es la compatibilidad"). Un
            conmutador de modo no puede pesar mas que aquello sobre lo que decide. -->
       <button class="btn btn--neutro btn--pequeno" (click)="abrirSugerencias()">
-        De una en una
+        {{ i18n.t('explorar.deUnaEnUna') }}
       </button>
     </div>
   </header>
@@ -50,10 +54,8 @@
   @if (soyElPrimeroDeMiGimnasio()) {
     <div class="banda">
       <div>
-        <strong>Eres el primero de tu gimnasio.</strong>
-        Aquí abajo hay gente, pero entrena en otros sitios, y coincidir a la misma
-        hora en dos edificios distintos no es coincidir: por eso puntúan bajo.
-        Con alguien de tu gimnasio los números son otros.
+        <strong>{{ i18n.t('explorar.primeroTitulo') }}</strong>
+        {{ i18n.t('explorar.primeroTexto') }}
       </div>
       <button class="btn btn--primario" (click)="invitar()">
         {{ textoInvitar() }}
@@ -66,17 +68,16 @@
       <!-- Dos situaciones distintas que decían lo mismo: que no haya nadie
            todavía no es que tus filtros no dejen pasar a nadie. -->
       @if (comunidadVacia()) {
-        <h2>Todavía no hay nadie</h2>
-        <p>
-          Esto se llena con gente de tu gimnasio. Trae a alguien con quien ya
-          entrenes y el resto viene solo.
-        </p>
+        <h2>{{ i18n.t('explorar.vacioTitulo') }}</h2>
+        <p>{{ i18n.t('explorar.vacioTexto') }}</p>
         <button class="btn btn--primario" (click)="invitar()">{{ textoInvitar() }}</button>
       } @else {
-        <h2>Sin resultados</h2>
-        <p>No hay nadie que encaje con esa combinación de filtros.</p>
+        <h2>{{ i18n.t('explorar.sinResultados') }}</h2>
+        <p>{{ i18n.t('explorar.sinResultadosTexto') }}</p>
         @if (hayFiltrosActivos()) {
-          <button class="btn btn--fantasma" (click)="resetearFiltros()">Quitar filtros</button>
+          <button class="btn btn--fantasma" (click)="resetearFiltros()">
+            {{ i18n.t('explorar.quitarFiltros') }}
+          </button>
         }
       }
     </div>
@@ -92,12 +93,12 @@
             El componente ya sabe resolver color, foto e iniciales.
           -->
           <button class="ficha__cabecera" (click)="verPerfil(usuario.id)"
-                  [attr.aria-label]="'Ver el perfil de ' + usuario.nombre">
+                  [attr.aria-label]="i18n.t('explorar.verPerfilDe', { nombre: usuario.nombre })">
             <app-avatar [nombre]="usuario.nombre" [valor]="usuario.avatar"
                          [foto]="urlMedio(usuario.fotoUrl)" medida="ficha" />
             <span class="ficha__quien">
               <span class="ficha__nombre">{{ usuario.nombre }}</span>
-              <span class="ficha__gimnasio">{{ usuario.gimnasioNombre || 'Sin gimnasio' }}</span>
+              <span class="ficha__gimnasio">{{ usuario.gimnasioNombre || i18n.t('explorar.sinGimnasio') }}</span>
             </span>
             <span class="ficha__marcador">
               <span class="ficha__nota">{{ usuario.compatibilidad }}<small>%</small></span>
@@ -119,23 +120,28 @@
             <p class="ficha__bio">{{ usuario.biografia }}</p>
           }
 
+          <!-- El nivel y el objetivo se guardan en español y viajan así; lo que
+               se pinta es su etiqueta. La rutina ya viene traducida del backend,
+               que es quien conoce el enum. -->
           <div class="ficha__etiquetas">
-            <span class="chip">{{ usuario.nivel || 'Sin nivel' }}</span>
-            @if (usuario.objetivos) { <span class="chip chip--objetivo">{{ usuario.objetivos }}</span> }
+            <span class="chip">{{ usuario.nivel ? nivel(usuario.nivel) : i18n.t('explorar.sinNivel') }}</span>
+            @if (usuario.objetivos) { <span class="chip chip--objetivo">{{ objetivo(usuario.objetivos) }}</span> }
             @if (usuario.rutina) { <span class="chip">{{ usuario.rutina }}</span> }
             <!-- Que podáis cubriros con la barra es lo que da sentido al nombre
                  del producto, así que se dice y no se deja solo dentro del
                  porcentaje. -->
             @if (usuario.fuerzaCompatible) {
-              <span class="chip chip--fija" title="Movéis pesos parecidos">Podéis cubriros</span>
+              <span class="chip chip--fija" [title]="i18n.t('explorar.pesosParecidos')">
+                {{ i18n.t('explorar.podeisCubriros') }}
+              </span>
             }
             @if (usuario.diasFijosEnComun > 0) {
               <span class="chip chip--fija">
-                {{ usuario.diasFijosEnComun }} {{ usuario.diasFijosEnComun === 1 ? 'día fijo' : 'días fijos' }}
+                {{ i18n.t('explorar.diasFijos', { cuenta: usuario.diasFijosEnComun }) }}
               </span>
             }
             @if (usuario.compatibilidadIncompleta) {
-              <span class="chip chip--parcial">Datos incompletos</span>
+              <span class="chip chip--parcial">{{ i18n.t('explorar.datosIncompletos') }}</span>
             }
           </div>
 
@@ -145,10 +151,14 @@
                pixel que mide lo paga la lista entera catorce veces. Por el mismo
                motivo por el que ya iba en contorno y no en relleno. -->
           @if (usuario.yaConectado) {
-            <button class="btn btn--exito-contorno btn--ancho btn--pequeno" (click)="irAlChat(usuario.id)">Escribir</button>
+            <button class="btn btn--exito-contorno btn--ancho btn--pequeno" (click)="irAlChat(usuario.id)">
+              {{ i18n.t('explorar.escribir') }}
+            </button>
           } @else if (usuario.solicitudPendiente) {
             <button class="btn btn--fantasma btn--ancho btn--pequeno" (click)="retirarSolicitud(usuario)"
-                    [title]="'Retirar la solicitud enviada a ' + usuario.nombre">Retirar</button>
+                    [title]="i18n.t('explorar.retirarTitulo', { nombre: usuario.nombre })">
+              {{ i18n.t('explorar.retirar') }}
+            </button>
           } @else {
             <!-- Contorno y no relleno. Con seis tarjetas en pantalla, seis
                  botones naranjas solidos eran lo mas llamativo de la pagina, y
@@ -156,7 +166,7 @@
                  El acento se queda donde si distingue a una persona de otra,
                  que es la compatibilidad. -->
             <button class="btn btn--contorno btn--ancho btn--pequeno" (click)="conectarConUsuario(usuario.id)">
-              Conectar
+              {{ i18n.t('explorar.conectar') }}
             </button>
           }
         </li>
@@ -170,69 +180,77 @@
   }
 
   <aside class="panel" [class.panel--abierto]="isFiltrosOpen()"
-         role="dialog" aria-label="Filtros de búsqueda"
+         role="dialog" [attr.aria-label]="i18n.t('explorar.panelFiltros')"
          appModalAccesible (cerrarPedido)="toggleFiltros()">
     <header class="panel__cabecera">
-      <h2>Filtros</h2>
-      <button class="cerrar" (click)="toggleFiltros()" aria-label="Cerrar filtros">✕</button>
+      <h2>{{ i18n.t('explorar.filtros') }}</h2>
+      <button class="cerrar" (click)="toggleFiltros()"
+              [attr.aria-label]="i18n.t('explorar.cerrarFiltros')">✕</button>
     </header>
 
     <div class="panel__cuerpo">
       <label class="campo">
-        <span>Gimnasio</span>
+        <span>{{ i18n.t('explorar.gimnasio') }}</span>
         <select [ngModel]="filtrosActivos().gimnasio" (change)="actualizarFiltros('gimnasio', $event)">
-          <option value="">Todos</option>
+          <option value="">{{ i18n.t('explorar.todos') }}</option>
           @for (gym of gimnasiosDisponibles(); track gym) { <option [value]="gym">{{ gym }}</option> }
         </select>
       </label>
 
+      <!-- El valor de cada opción es el que se compara con lo que hay guardado,
+           así que se queda en español; la etiqueta es lo único que cambia. -->
       <label class="campo">
-        <span>Nivel</span>
+        <span>{{ i18n.t('explorar.nivel') }}</span>
         <select [ngModel]="filtrosActivos().nivel" (change)="actualizarFiltros('nivel', $event)">
-          <option value="">Cualquiera</option>
-          <option value="Principiante">Principiante</option>
-          <option value="Intermedio">Intermedio</option>
-          <option value="Avanzado">Avanzado</option>
+          <option value="">{{ i18n.t('explorar.cualquiera') }}</option>
+          <option value="Principiante">{{ i18n.t('nivel.principiante') }}</option>
+          <option value="Intermedio">{{ i18n.t('nivel.intermedio') }}</option>
+          <option value="Avanzado">{{ i18n.t('nivel.avanzado') }}</option>
         </select>
       </label>
 
       <!-- El objetivo dice qué busca alguien; la rutina, qué le toca el martes.
-           Los dos entran en la puntuación, así que los dos se pueden filtrar. -->
+           Los dos entran en la puntuación, así que los dos se pueden filtrar.
+
+           Las rutinas salen de los propios resultados y llegan ya traducidas del
+           backend, así que aquí no hay nada que etiquetar. -->
       <label class="campo">
-        <span>Rutina</span>
+        <span>{{ i18n.t('explorar.rutina') }}</span>
         <select [ngModel]="filtrosActivos().rutina" (change)="actualizarFiltros('rutina', $event)">
-          <option value="">Cualquiera</option>
+          <option value="">{{ i18n.t('explorar.cualquiera') }}</option>
           @for (r of rutinasDisponibles(); track r) { <option [value]="r">{{ r }}</option> }
         </select>
       </label>
 
       <label class="campo">
-        <span>Objetivo</span>
+        <span>{{ i18n.t('explorar.objetivo') }}</span>
         <select [ngModel]="filtrosActivos().objetivo" (change)="actualizarFiltros('objetivo', $event)">
-          <option value="">Cualquiera</option>
-          <option value="Hipertrofia">Hipertrofia</option>
-          <option value="Fuerza">Fuerza</option>
-          <option value="Pérdida de peso">Pérdida de peso</option>
-          <option value="Resistencia">Resistencia</option>
+          <option value="">{{ i18n.t('explorar.cualquiera') }}</option>
+          <option value="Hipertrofia">{{ i18n.t('objetivo.hipertrofia') }}</option>
+          <option value="Fuerza">{{ i18n.t('objetivo.fuerza') }}</option>
+          <option value="Pérdida de peso">{{ i18n.t('objetivo.perdidaDePeso') }}</option>
+          <option value="Resistencia">{{ i18n.t('objetivo.resistencia') }}</option>
         </select>
       </label>
 
       <label class="campo">
-        <span>Género</span>
+        <span>{{ i18n.t('explorar.genero') }}</span>
         <select [ngModel]="filtrosActivos().genero" (change)="actualizarFiltros('genero', $event)">
-          <option value="">Cualquiera</option>
-          <option value="Masculino">Masculino</option>
-          <option value="Femenino">Femenino</option>
+          <option value="">{{ i18n.t('explorar.cualquiera') }}</option>
+          <option value="Masculino">{{ i18n.t('genero.masculino') }}</option>
+          <option value="Femenino">{{ i18n.t('genero.femenino') }}</option>
         </select>
       </label>
 
       <fieldset class="campo campo--rango">
-        <legend>Edad</legend>
+        <legend>{{ i18n.t('explorar.edad') }}</legend>
         <div class="rango">
-          <input type="number" placeholder="Desde" aria-label="Edad mínima"
+          <input type="number" [placeholder]="i18n.t('explorar.desde')"
+                 [attr.aria-label]="i18n.t('explorar.edadMinima')"
                  [ngModel]="filtrosActivos().edadMin" (ngModelChange)="actualizarFiltros('edadMin', $event)">
           <span aria-hidden="true">–</span>
-          <input type="number" placeholder="Hasta" aria-label="Edad máxima"
+          <input type="number" [placeholder]="i18n.t('explorar.hasta')"
+                 [attr.aria-label]="i18n.t('explorar.edadMaxima')"
                  [ngModel]="filtrosActivos().edadMax" (ngModelChange)="actualizarFiltros('edadMax', $event)">
         </div>
       </fieldset>
@@ -243,8 +261,8 @@
         <input type="checkbox" [checked]="filtrosActivos().soloSiPodemosCubrirnos"
                (change)="alternarFiltro('soloSiPodemosCubrirnos', $event)">
         <span>
-          Solo quien pueda cubrirme
-          <small>Deja fuera a quien no tenga marcas: sin ellas no se sabe.</small>
+          {{ i18n.t('explorar.soloCubrirme') }}
+          <small>{{ i18n.t('explorar.soloCubrirmeNota') }}</small>
         </span>
       </label>
 
@@ -255,12 +273,8 @@
         <input type="checkbox" [checked]="filtrosActivos().soloMiGimnasio"
                (change)="alternarFiltro('soloMiGimnasio', $event)">
         <span>
-          Solo mi gimnasio
-          <small>
-            Va por el sitio, no por el nombre: hay gimnasios repetidos en la
-            lista de arriba. Entrenar en el mismo vale 8 puntos y además
-            cuadruplica lo que cuenta coincidir de horario.
-          </small>
+          {{ i18n.t('explorar.soloMiGimnasio') }}
+          <small>{{ i18n.t('explorar.soloMiGimnasioNota') }}</small>
         </span>
       </label>
 
@@ -268,17 +282,16 @@
         <input type="checkbox" [checked]="filtrosActivos().soloConDiasFijos"
                (change)="alternarFiltro('soloConDiasFijos', $event)">
         <span>
-          Solo con días fijos en común
-          <small>
-            No que podáis coincidir: que los dos vais siempre ese día a esa
-            hora. Es la señal más fuerte que tiene el motor.
-          </small>
+          {{ i18n.t('explorar.soloDiasFijos') }}
+          <small>{{ i18n.t('explorar.soloDiasFijosNota') }}</small>
         </span>
       </label>
     </div>
 
     <footer class="panel__pie">
-      <button class="btn btn--fantasma btn--ancho" (click)="resetearFiltros()">Limpiar</button>
+      <button class="btn btn--fantasma btn--ancho" (click)="resetearFiltros()">
+        {{ i18n.t('explorar.limpiar') }}
+      </button>
     </footer>
   </aside>
 

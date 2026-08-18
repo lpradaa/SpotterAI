@@ -17,8 +17,8 @@
       <div class="barra__quien">
         <h1 class="barra__nombre">{{ userName() }}</h1>
         <p class="barra__rasgos">
-          @if (perfilCargado()?.nivel) { <span>{{ perfilCargado()?.nivel }}</span> }
-          @if (perfilCargado()?.objetivos) { <span>{{ perfilCargado()?.objetivos }}</span> }
+          @if (perfilCargado()?.nivel) { <span>{{ nivel(perfilCargado()!.nivel!) }}</span> }
+          @if (perfilCargado()?.objetivos) { <span>{{ objetivo(perfilCargado()!.objetivos!) }}</span> }
           @if (!perfilCargado()?.nivel && !perfilCargado()?.objetivos) { <span>{{ i18n.t('tablero.perfilSinCompletar') }}</span> }
         </p>
         <!-- Cuantos candidatos hay es un dato de la pantalla de buscar, no de
@@ -139,14 +139,14 @@
                   <p class="actividad__titular">
                     <a [routerLink]="['/u', a.usuarioId]">{{ a.usuarioNombre }}</a>
                     @if (a.tipo === 'HITO') { {{ i18n.t('tablero.haApuntado') }} } @else { {{ i18n.t('tablero.haEntrenado') }} }
-                    <strong>{{ a.titulo }}</strong>
+                    <strong>{{ tituloDeActividad(a) }}</strong>
                   </p>
                   @if (a.detalle) { <p class="actividad__detalle">{{ a.detalle }}</p> }
                   <time class="actividad__cuando">{{ diaLargo(a.fecha) }}</time>
                 </div>
 
                 @if (a.medioUrl) {
-                  <img class="actividad__medio" [src]="urlMedio(a.medioUrl)" [alt]="a.titulo">
+                  <img class="actividad__medio" [src]="urlMedio(a.medioUrl)" [alt]="tituloDeActividad(a)">
                 }
               </li>
             }

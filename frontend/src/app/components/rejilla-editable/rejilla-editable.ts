@@ -1,20 +1,12 @@
-import { Component, computed, effect, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Franja } from '../rejilla-semana/rejilla-semana';
-
-const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-const ABREVIADOS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+import { IdiomaService } from '../../services/idioma.service';
+import { etiquetaDeDia, indiceDeDia, VALORES_DE_DIA } from '../../utils/valores-de-perfil';
 
 /** Ventana fija, al contrario que en la rejilla de solo lectura. */
 const HORA_DESDE = 6;
 const HORA_HASTA = 23;
-
-function clave(dia: string | undefined): string {
-  if (!dia) return '';
-  return dia.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-}
-
-const INDICE_DIA = new Map(DIAS.map((d, i) => [clave(d), i]));
 
 /**
  * Rejilla para pintar tu disponibilidad a golpe de clic.
@@ -42,9 +34,40 @@ export class RejillaEditable {
   /** Se emite en cada cambio, ya fundido en franjas. */
   cambio = output<Franja[]>();
 
-  readonly dias = DIAS;
-  readonly abreviados = ABREVIADOS;
   readonly horas = Array.from({ length: HORA_HASTA - HORA_DESDE }, (_, i) => HORA_DESDE + i);
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
+
+  /**
+   * Las cabeceras, en las tres formas que necesita la plantilla.
+   *
+   * <p>El día **completo** va en el `title` y en la etiqueta de cada celda, que
+   * es lo único que dice qué se está marcando en una rejilla de botones vacíos.
+   * Las otras dos son la misma columna a dos anchos: el CSS enseña una u otra
+   * según quepa.
+   *
+   * <p>Lo que no está aquí es el valor: ese sale de {@link VALORES_DE_DIA} y se
+   * queda en español, porque es lo que se guarda.
+   */
+  protected cabeceras = computed(() => VALORES_DE_DIA.map(dia => ({
+    completo: this.dia(dia, 'completo'),
+    abrev: this.dia(dia, 'abrev'),
+    estrecho: this.dia(dia, 'estrecho'),
+  })));
+
+  private dia(valor: string, forma: 'completo' | 'abrev' | 'estrecho'): string {
+    return etiquetaDeDia(valor, c => this.i18n.t(c), forma);
+  }
+
+  /** Qué se está marcando, para un botón que no tiene texto dentro. */
+  protected etiquetaDeCelda(columna: number, hora: number): string {
+    return this.i18n.t('rejilla.celda', {
+      dia: this.dia(VALORES_DE_DIA[columna], 'completo'),
+      hora,
+      siguiente: hora + 1,
+    });
+  }
 
   /** Celdas pintadas, como "indiceDia:hora". */
   private celdas = signal<Set<string>>(new Set());
@@ -68,8 +91,8 @@ export class RejillaEditable {
 
     const set = new Set<string>();
     for (const f of iniciales) {
-      const dia = INDICE_DIA.get(clave(f.diaSemana ?? f.dia));
-      if (dia === undefined) continue;
+      const dia = indiceDeDia(f.diaSemana ?? f.dia);
+      if (dia === null) continue;
 
       const desde = parseInt((f.horaInicio ?? f.inicio ?? '').split(':')[0], 10);
       const hasta = parseInt((f.horaFin ?? f.fin ?? '').split(':')[0], 10);
@@ -104,7 +127,7 @@ export class RejillaEditable {
   private aFranjas(): Franja[] {
     const franjas: Franja[] = [];
 
-    for (let dia = 0; dia < DIAS.length; dia++) {
+    for (let dia = 0; dia < VALORES_DE_DIA.length; dia++) {
       const horas = this.horas.filter(h => this.estaPintada(dia, h)).sort((a, b) => a - b);
       if (horas.length === 0) continue;
 
@@ -123,10 +146,18 @@ export class RejillaEditable {
     return franjas;
   }
 
+  /**
+   * La franja que se guarda.
+   *
+   * <p>El día va en español y sin traducir: es el dato, no la etiqueta. Lo que
+   * sale de aquí viaja al backend, se guarda y es lo que se cruza con la semana
+   * de otra persona para saber si coincidís. Un «Monday» aquí sería una franja
+   * que no cruza con nada.
+   */
   private franja(dia: number, desde: number, hasta: number): Franja {
     const dosCifras = (n: number) => String(n).padStart(2, '0');
     return {
-      diaSemana: DIAS[dia],
+      diaSemana: VALORES_DE_DIA[dia],
       horaInicio: `${dosCifras(desde)}:00`,
       horaFin: `${dosCifras(hasta)}:00`,
       // Siempre entra como disponibilidad, nunca como compromiso. Marcar "voy

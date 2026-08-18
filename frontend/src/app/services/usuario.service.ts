@@ -143,6 +143,22 @@ export class UsuarioService {
     return this.http.delete<void>(`${this.solicitudes}/con/${otroUsuarioId}`);
   }
 
+  /**
+   * Deja apuntado en qué idioma escribirte por correo.
+   *
+   * <p>Todo lo demás que traduce el backend sale de la cabecera
+   * `Accept-Language` que va en cada petición. Los correos no pueden: los manda
+   * un barrido que corre solo, sin ninguna petición de la que sacar el idioma.
+   *
+   * <p>Lo llama el selector de la cabecera y nada más. Si falla no se dice nada
+   * —se seguiría escribiendo en el idioma anterior— porque avisar de esto
+   * interrumpiría algo que la persona no ha pedido: pulsó para cambiar la
+   * pantalla, y la pantalla ya ha cambiado.
+   */
+  guardarIdioma(idioma: 'es' | 'en'): Observable<void> {
+    return this.http.put<void>(`${this.usuarios}/idioma`, { idioma });
+  }
+
   // obtenerMisConexiones se ha ido: la lista de compañeros la sirve ahora
   // MensajesService.conversaciones(), que ademas trae el ultimo mensaje y lo
   // pendiente. Era el unico consumidor de /solicitudes/aceptadas desde el front.

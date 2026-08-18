@@ -5,6 +5,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { FichaSugerenciaComponent } from './ficha-sugerencia';
 import { api } from '../../config/api';
 import { Match } from '../../services/usuario.service';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * Fichas de una en una, con su explicación pedida al servidor.
@@ -20,6 +21,7 @@ describe('FichaSugerenciaComponent', () => {
   let fixture: ComponentFixture<FichaSugerenciaComponent>;
   let componente: FichaSugerenciaComponent;
   let http: HttpTestingController;
+  let idioma: IdiomaService;
 
   function candidato(id: number, nombre: string): Match {
     return {
@@ -35,6 +37,11 @@ describe('FichaSugerenciaComponent', () => {
       imports: [FichaSugerenciaComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
+
+    // En español y dicho a propósito: lo que se afirma más abajo son frases, y
+    // sin fijarlo la ficha sale en el idioma del entorno, que en jsdom es inglés.
+    idioma = TestBed.inject(IdiomaService);
+    idioma.cambiar('es');
 
     fixture = TestBed.createComponent(FichaSugerenciaComponent);
     componente = fixture.componentInstance;
@@ -149,5 +156,36 @@ describe('FichaSugerenciaComponent', () => {
     expect(componente.formatearSolape(60)).toBe('1 hora');
     expect(componente.formatearSolape(120)).toBe('2 horas');
     expect(componente.formatearSolape(270)).toBe('4h 30min');
+  });
+
+  it('y también en el otro idioma, con su singular', () => {
+    explicacionDe(1).flush({ titular: '', motivo: '' });
+    idioma.cambiar('en');
+
+    expect(componente.formatearSolape(45)).toBe('45 min');
+    expect(componente.formatearSolape(60)).toBe('1 hour');
+    expect(componente.formatearSolape(120)).toBe('2 hours');
+    expect(componente.formatearSolape(270)).toBe('4h 30min');
+  });
+
+  /**
+   * La ficha la abre un botón de explorar, que ya estaba traducida: hasta ahora
+   * pulsarlo era pasar de una pantalla en inglés a un panel en español.
+   */
+  it('la ficha entera cambia de idioma', () => {
+    explicacionDe(1).flush({ titular: '', motivo: 'Coincidís los lunes' });
+    fixture.detectChanges();
+
+    const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(texto()).toContain('Vuestra semana');
+    expect(texto()).toContain('Conectar con Marta');
+
+    idioma.cambiar('en');
+    fixture.detectChanges();
+
+    expect(texto()).toContain('Your week together');
+    expect(texto()).toContain('Connect with Marta');
+    expect(texto()).toContain('See where it comes from');
   });
 });

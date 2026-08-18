@@ -14,6 +14,7 @@ import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { ProponerSesionComponent } from '../proponer-sesion/proponer-sesion';
 import { Avatar } from '../avatar/avatar';
 import { PerfilesService } from '../../services/perfiles.service';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * Una fila del historial: o un mensaje, o la marca del día en que empieza.
@@ -35,6 +36,9 @@ export type LineaDelChat =
 export class MisConexionesComponent implements OnInit, AfterViewChecked {
   private cdr = inject(ChangeDetectorRef);
   private perfiles = inject(PerfilesService);
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
 
   /** La foto de alguien, resuelta a URL servible. */
   foto(ruta: string | null | undefined): string | null {
@@ -145,11 +149,11 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
     const ayer = new Date(hoy);
     ayer.setDate(hoy.getDate() - 1);
 
-    if (d.toDateString() === hoy.toDateString()) return 'Hoy';
-    if (d.toDateString() === ayer.toDateString()) return 'Ayer';
+    if (d.toDateString() === hoy.toDateString()) return this.i18n.t('chat.hoy');
+    if (d.toDateString() === ayer.toDateString()) return this.i18n.t('chat.ayer');
 
     const mismoAno = d.getFullYear() === hoy.getFullYear();
-    return d.toLocaleDateString('es-ES', {
+    return this.i18n.fecha(d, {
       weekday: 'long', day: 'numeric', month: 'long',
       ...(mismoAno ? {} : { year: 'numeric' }),
     });
@@ -157,10 +161,22 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
 
   /** La fecha completa, para el title y el atributo datetime de cada burbuja. */
   fechaCompleta(fecha: string): string {
-    return new Date(fecha).toLocaleString('es-ES', {
+    return this.i18n.fecha(fecha, {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });
+  }
+
+  /**
+   * La hora de cada burbuja.
+   *
+   * <p>Un método y no `| date:'shortTime'`: el pipe de Angular usa `LOCALE_ID`,
+   * que se fija al arrancar y no se puede cambiar en caliente — que es justo lo
+   * que hace el selector de idioma. Era el único `| date` de las veinte
+   * plantillas.
+   */
+  hora(fecha: string): string {
+    return this.i18n.fecha(fecha, { hour: '2-digit', minute: '2-digit' });
   }
 
   ngOnInit(): void {
@@ -425,7 +441,7 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
         this.cdr.detectChanges();
       },
       error: err => {
-        this.errorSesion.set(err?.error?.error ?? 'No se ha podido responder.');
+        this.errorSesion.set(err?.error?.error ?? this.i18n.t('chat.errorResponder'));
         this.cdr.detectChanges();
       }
     });
@@ -441,7 +457,7 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
         this.cdr.detectChanges();
       },
       error: err => {
-        this.errorSesion.set(err?.error?.error ?? 'No se ha podido cancelar.');
+        this.errorSesion.set(err?.error?.error ?? this.i18n.t('chat.errorCancelar'));
         this.cdr.detectChanges();
       }
     });
@@ -458,7 +474,7 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
         this.cdr.detectChanges();
       },
       error: err => {
-        this.errorSesion.set(err?.error?.error ?? 'No se ha podido apuntar.');
+        this.errorSesion.set(err?.error?.error ?? this.i18n.t('chat.errorApuntar'));
         this.cdr.detectChanges();
       }
     });
@@ -466,8 +482,8 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
 
   /** "Viernes 3 de julio", que es como se dice una fecha cuando se queda. */
   diaLargo(fecha: string): string {
-    const d = new Date(`${fecha}T00:00:00`);
-    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    return this.i18n.fecha(`${fecha}T00:00:00`,
+      { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
   /** Las horas llegan como "18:00:00" y en un plan sobran los segundos. */
@@ -486,13 +502,13 @@ export class MisConexionesComponent implements OnInit, AfterViewChecked {
 
     const mismoDia = d.toDateString() === ahora.toDateString();
     if (mismoDia) {
-      return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      return this.i18n.fecha(d, { hour: '2-digit', minute: '2-digit' });
     }
 
     const diasDeDiferencia = Math.floor((ahora.getTime() - d.getTime()) / 86_400_000);
     if (diasDeDiferencia < 7) {
-      return d.toLocaleDateString('es-ES', { weekday: 'short' });
+      return this.i18n.fecha(d, { weekday: 'short' });
     }
-    return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+    return this.i18n.fecha(d, { day: '2-digit', month: '2-digit' });
   }
 }

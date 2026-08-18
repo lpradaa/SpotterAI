@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { Explore } from './explore';
 import { Match } from '../../services/usuario.service';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * El arranque en frío.
@@ -36,10 +37,19 @@ describe('Explore', () => {
     return (fixture.nativeElement as HTMLElement).textContent ?? '';
   }
 
+  let idioma: IdiomaService;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Explore],
     }).compileComponents();
+
+    /* En español y dicho a proposito. Lo que se afirma aqui abajo son frases, y
+       sin fijar el idioma la pantalla sale en el del entorno: jsdom dice ingles,
+       asi que estos tests pasaban a rojo en cuanto la pantalla se tradujo. La
+       preferencia se lee del navegador y no la elige el test. */
+    idioma = TestBed.inject(IdiomaService);
+    idioma.cambiar('es');
 
     fixture = TestBed.createComponent(Explore);
     component = fixture.componentInstance;
@@ -84,5 +94,42 @@ describe('Explore', () => {
 
     expect(texto()).toContain('combinación de filtros');
     expect(texto()).not.toContain('Todavía no hay nadie');
+  });
+
+  /**
+   * Que la pantalla cambie entera, y en caliente.
+   *
+   * <p>Un texto fijo que se cuele en la plantilla no rompe nada visible: se ve
+   * bien en español, que es como se escribe y como se mira. Aparece en inglés,
+   * rodeado de lo que sí cambió, y eso no se lee como aplicación bilingüe sino
+   * como aplicación rota.
+   */
+  it('cambia de idioma sin recargar', () => {
+    component.usuarios.set([]);
+    expect(texto()).toContain('Todavía no hay nadie');
+
+    idioma.cambiar('en');
+    expect(texto()).toContain('Nobody here yet');
+    expect(texto()).not.toContain('Todavía no hay nadie');
+  });
+
+  /**
+   * El nivel y el objetivo se guardan en español y viajan asi, que es lo que
+   * compara el motor. Lo que cambia es la etiqueta.
+   */
+  it('traduce el nivel y el objetivo guardados sin tocar el valor', () => {
+    component.usuarios.set([persona(1, true)]);
+    expect(texto()).toContain('Intermedio');
+
+    idioma.cambiar('en');
+    expect(texto()).toContain('Intermediate');
+    expect(texto()).toContain('Hypertrophy');
+
+    // El desplegable filtra contra lo guardado, asi que su valor sigue en español
+    const opciones = (fixture.nativeElement as HTMLElement)
+      .querySelectorAll<HTMLOptionElement>('option');
+    const valores = Array.from(opciones).map(o => o.value);
+    expect(valores).toContain('Intermedio');
+    expect(valores).toContain('Pérdida de peso');
   });
 });

@@ -5,6 +5,7 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 
 import { BajaComponent } from './baja';
 import { api } from '../../config/api';
+import { IdiomaService } from '../../services/idioma.service';
 
 /**
  * La salida de los avisos por correo.
@@ -32,6 +33,11 @@ describe('BajaComponent', () => {
       ],
     });
     http = TestBed.inject(HttpTestingController);
+
+    // En español y dicho a propósito: lo que se afirma abajo son frases, y sin
+    // fijarlo la pantalla sale en el idioma del entorno, que en jsdom es inglés.
+    TestBed.inject(IdiomaService).cambiar('es');
+
     fixture = TestBed.createComponent(BajaComponent);
     fixture.detectChanges();
   }

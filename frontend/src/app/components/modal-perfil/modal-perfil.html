@@ -7,16 +7,15 @@
        aria-labelledby="titulo-editar-perfil"
        appModalAccesible (cerrarPedido)="cerrar.emit()">
     <header class="modal__cabecera">
-      <h2 id="titulo-editar-perfil">Editar perfil</h2>
-      <button class="cerrar" (click)="cerrar.emit()" aria-label="Cerrar">✕</button>
+      <h2 id="titulo-editar-perfil">{{ i18n.t('perfilEd.titulo') }}</h2>
+      <button class="cerrar" (click)="cerrar.emit()"
+              [attr.aria-label]="i18n.t('perfilEd.cerrar')">✕</button>
     </header>
 
     <div class="modal__cuerpo">
       <fieldset class="bloque">
-        <legend class="bloque__titulo">Tu color</legend>
-        <p class="bloque__ayuda">
-          Tu inicial te identifica en las listas; el color es para distinguirte de un vistazo.
-        </p>
+        <legend class="bloque__titulo">{{ i18n.t('perfilEd.tuColor') }}</legend>
+        <p class="bloque__ayuda">{{ i18n.t('perfilEd.tuColorAyuda') }}</p>
         <div class="colores">
           <app-avatar [nombre]="nombre()" [valor]="perfilForm.avatar"
                       [foto]="urlFoto()" medida="cabecera" />
@@ -27,7 +26,7 @@
                       class="color"
                       [class.color--activo]="perfilForm.avatar === color && !perfilForm.fotoUrl"
                       [attr.data-color]="color"
-                      [attr.aria-label]="'Color ' + color"
+                      [attr.aria-label]="i18n.t('perfilEd.color', { color: nombreDelColor(color) })"
                       [attr.aria-pressed]="perfilForm.avatar === color && !perfilForm.fotoUrl"
                       (click)="seleccionarAvatar(color)"></button>
             }
@@ -39,68 +38,82 @@
              igual de bien mientras tanto. -->
         <div class="foto-acciones">
           <label class="btn btn--fantasma btn--pequeno">
-            @if (subiendoFoto()) { Subiendo… }
-            @else if (perfilForm.fotoUrl) { Cambiar foto }
-            @else { Subir una foto }
+            @if (subiendoFoto()) { {{ i18n.t('perfilEd.subiendo') }} }
+            @else if (perfilForm.fotoUrl) { {{ i18n.t('perfilEd.cambiarFoto') }} }
+            @else { {{ i18n.t('perfilEd.subirFoto') }} }
             <input type="file" accept="image/*" (change)="alElegirFoto($event)" hidden>
           </label>
 
           @if (perfilForm.fotoUrl) {
             <button type="button" class="btn btn--fantasma btn--pequeno" (click)="quitarFoto()">
-              Quitar
+              {{ i18n.t('perfilEd.quitar') }}
             </button>
           }
         </div>
       </fieldset>
 
       <fieldset class="bloque">
-        <legend class="bloque__titulo">Datos y objetivos</legend>
+        <legend class="bloque__titulo">{{ i18n.t('perfilEd.datos') }}</legend>
         <div class="rejilla-campos">
+          <!-- El valor de cada opción es el que se guarda y el que compara el
+               motor, así que se queda en español; la etiqueta es lo que cambia. -->
           <label class="campo">
-            <span>Nivel</span>
+            <span>{{ i18n.t('perfilEd.nivel') }}</span>
             <select [(ngModel)]="perfilForm.nivel">
-              <option value="" disabled>Elige tu nivel</option>
-              <option value="Principiante">Principiante</option>
-              <option value="Intermedio">Intermedio</option>
-              <option value="Avanzado">Avanzado</option>
+              <option value="" disabled>{{ i18n.t('perfilEd.eligeNivel') }}</option>
+              <option value="Principiante">{{ i18n.t('nivel.principiante') }}</option>
+              <option value="Intermedio">{{ i18n.t('nivel.intermedio') }}</option>
+              <option value="Avanzado">{{ i18n.t('nivel.avanzado') }}</option>
             </select>
           </label>
           <label class="campo">
-            <span>Objetivo</span>
+            <span>{{ i18n.t('perfilEd.objetivo') }}</span>
             <select [(ngModel)]="perfilForm.objetivos">
-              <option value="" disabled>Elige tu objetivo</option>
-              <option value="Hipertrofia">Hipertrofia</option>
-              <option value="Fuerza">Fuerza</option>
-              <option value="Pérdida de peso">Pérdida de peso</option>
-              <option value="Resistencia">Resistencia</option>
+              <option value="" disabled>{{ i18n.t('perfilEd.eligeObjetivo') }}</option>
+              <option value="Hipertrofia">{{ i18n.t('objetivo.hipertrofia') }}</option>
+              <option value="Fuerza">{{ i18n.t('objetivo.fuerza') }}</option>
+              <option value="Pérdida de peso">{{ i18n.t('objetivo.perdidaDePeso') }}</option>
+              <option value="Resistencia">{{ i18n.t('objetivo.resistencia') }}</option>
             </select>
           </label>
           <!-- El objetivo dice qué busca alguien; la rutina, qué le toca el
                martes. Coincidir en horario con quien ese día hace pierna
-               mientras tú haces pecho es coincidir, no entrenar juntos. -->
+               mientras tú haces pecho es coincidir, no entrenar juntos.
+
+               Las rutinas las sirve el backend con su nombre ya traducido, y su
+               clave es lo que se guarda. -->
           <label class="campo">
-            <span>Rutina</span>
+            <span>{{ i18n.t('perfilEd.rutina') }}</span>
             <select [(ngModel)]="perfilForm.rutina">
-              <option value="" disabled>Cómo repartes la semana</option>
+              <option value="" disabled>{{ i18n.t('perfilEd.eligeRutina') }}</option>
               @for (r of rutinasDisponibles(); track r.clave) {
                 <option [value]="r.clave">{{ r.nombre }}</option>
               }
             </select>
           </label>
-          <label class="campo"><span>Edad</span><input type="number" [(ngModel)]="perfilForm.edad"></label>
-          <label class="campo"><span>Peso (kg)</span><input type="number" [(ngModel)]="perfilForm.peso"></label>
-          <label class="campo"><span>Género</span><input type="text" [(ngModel)]="perfilForm.genero"></label>
+          <label class="campo">
+            <span>{{ i18n.t('perfilEd.edad') }}</span>
+            <input type="number" [(ngModel)]="perfilForm.edad">
+          </label>
+          <label class="campo">
+            <span>{{ i18n.t('perfilEd.peso') }}</span>
+            <input type="number" [(ngModel)]="perfilForm.peso">
+          </label>
+          <label class="campo">
+            <span>{{ i18n.t('perfilEd.genero') }}</span>
+            <input type="text" [(ngModel)]="perfilForm.genero">
+          </label>
         </div>
 
         <!-- El único campo libre del perfil. Con el mismo nivel y el mismo
              objetivo, dos personas se leen igual: esto es lo que las separa. -->
         <label class="campo campo--ancho">
-          <span>Sobre ti</span>
+          <span>{{ i18n.t('perfilEd.sobreTi') }}</span>
           <textarea [(ngModel)]="perfilForm.biografia" rows="3" [maxlength]="maxBiografia"
-                    placeholder="Qué entrenas, cómo te gusta entrenar, si buscas a alguien constante…"></textarea>
+                    [placeholder]="i18n.t('perfilEd.sobreTiEjemplo')"></textarea>
           <small class="campo__pista"
                  [class.campo__pista--al-limite]="restanteBiografia() < 30">
-            {{ restanteBiografia() }} caracteres
+            {{ i18n.t('perfilEd.caracteres', { cuantos: restanteBiografia() }) }}
           </small>
         </label>
 
@@ -110,11 +123,8 @@
         <label class="campo campo--ancho casilla">
           <input type="checkbox" [(ngModel)]="perfilForm.avisosPorCorreo">
           <span>
-            Avisarme por correo
-            <small class="campo__pista">
-              Solo cuando alguien quiere entrenar contigo o te propone un día, y
-              solo si sigue sin respuesta diez minutos después.
-            </small>
+            {{ i18n.t('perfilEd.avisarme') }}
+            <small class="campo__pista">{{ i18n.t('perfilEd.avisarmeNota') }}</small>
           </span>
         </label>
       </fieldset>
@@ -125,20 +135,30 @@
            Un spotter que no puede con tu peso no te sirve de nada. -->
       <fieldset class="bloque">
         <div class="bloque__cabecera">
-          <legend class="bloque__titulo">Mis levantamientos</legend>
-          <span class="bloque__pista">{{ levantamientosPuestos() }} de 3</span>
+          <legend class="bloque__titulo">{{ i18n.t('perfilEd.levantamientos') }}</legend>
+          <span class="bloque__pista">
+            {{ i18n.t('perfilEd.deTres', { cuantos: levantamientosPuestos(), tope: MAX_LEVANTAMIENTOS }) }}
+          </span>
         </div>
 
         <p class="bloque__nota">
-          Cuenta <strong>10 de los 100 puntos</strong> de compatibilidad. Pon el peso
-          de la barra completa y a cuántas repeticiones lo mueves.
+          <strong>{{ i18n.t('perfilEd.levantamientosNota') }}</strong>
+          {{ i18n.t('perfilEd.levantamientosNota2') }}
         </p>
+
+        <!-- Por qué los tres primeros vienen puestos. Sin esta frase, la
+             sugerencia parece que el producto prefiere unos ejercicios a otros;
+             lo que pasa es que comparar exige coincidir. -->
+        <p class="bloque__ayuda">{{ i18n.t('perfilEd.porQueLosBasicos') }}</p>
 
         <div class="levantamientos">
           @for (fila of perfilForm.levantamientos; track $index; let i = $index) {
             <div class="levantamiento">
-              <select [(ngModel)]="fila.ejercicio" [name]="'ej' + i" aria-label="Ejercicio">
-                <option value="">Elige un ejercicio</option>
+              <!-- Los ejercicios los sirve el backend ya traducidos, y su clave
+                   es lo que viaja y se guarda. -->
+              <select [(ngModel)]="fila.ejercicio" [name]="'ej' + i"
+                      [attr.aria-label]="i18n.t('perfilEd.ejercicio')">
+                <option value="">{{ i18n.t('perfilEd.eligeEjercicio') }}</option>
                 @for (e of ejerciciosDisponibles(); track e.clave) {
                   <option [value]="e.clave">{{ e.nombre }}</option>
                 }
@@ -146,26 +166,29 @@
 
               <label class="levantamiento__dato">
                 <input type="number" [(ngModel)]="fila.peso" [name]="'peso' + i"
-                       min="1" max="600" placeholder="100" aria-label="Peso en kilos">
+                       min="1" max="600" placeholder="100"
+                       [attr.aria-label]="i18n.t('perfilEd.pesoEnKilos')">
                 <span>kg</span>
               </label>
 
               <label class="levantamiento__dato">
                 <input type="number" [(ngModel)]="fila.repeticiones" [name]="'reps' + i"
-                       min="1" max="12" placeholder="5" aria-label="Repeticiones">
-                <span>reps</span>
+                       min="1" max="12" placeholder="5"
+                       [attr.aria-label]="i18n.t('perfilEd.repeticiones')">
+                <span>{{ i18n.t('perfilEd.reps') }}</span>
               </label>
 
               <button type="button" class="btn-icono" (click)="quitarLevantamiento(i)"
-                      aria-label="Quitar este levantamiento" title="Quitar">✕</button>
+                      [attr.aria-label]="i18n.t('perfilEd.quitarLevantamiento')"
+                      [title]="i18n.t('perfilEd.quitar')">✕</button>
             </div>
           }
         </div>
 
-        @if (perfilForm.levantamientos.length < 3) {
+        @if (perfilForm.levantamientos.length < MAX_LEVANTAMIENTOS) {
           <button type="button" class="btn btn--fantasma btn--pequeno"
                   (click)="anadirLevantamiento()">
-            Añadir levantamiento
+            {{ i18n.t('perfilEd.anadirLevantamiento') }}
           </button>
         }
       </fieldset>
@@ -175,8 +198,10 @@
            desplegables, y con desplegables dos perfiles se leen igual. -->
       <fieldset class="bloque">
         <div class="bloque__cabecera">
-          <legend class="bloque__titulo">Mis marcas</legend>
-          <span class="bloque__pista">{{ misHitos().length }} de 12</span>
+          <legend class="bloque__titulo">{{ i18n.t('perfilEd.marcas') }}</legend>
+          <span class="bloque__pista">
+            {{ i18n.t('perfilEd.deTres', { cuantos: misHitos().length, tope: MAX_HITOS }) }}
+          </span>
         </div>
 
         @if (misHitos().length > 0) {
@@ -191,32 +216,36 @@
                   @if (hito.descripcion) { <span>{{ hito.descripcion }}</span> }
                 </div>
                 <button type="button" class="btn-icono" (click)="borrarHito(hito.id)"
-                        [attr.aria-label]="'Borrar ' + hito.titulo" title="Borrar">✕</button>
+                        [attr.aria-label]="i18n.t('perfilEd.borrarMarca', { titulo: hito.titulo })"
+                        [title]="i18n.t('perfilEd.borrar')">✕</button>
               </li>
             }
           </ul>
         }
 
-        @if (misHitos().length < 12) {
+        @if (misHitos().length < MAX_HITOS) {
           <div class="marca-nueva">
             <input type="text" [(ngModel)]="nuevoHito.titulo" name="hitoTitulo"
-                   placeholder="Sentadilla 140 kg × 3" maxlength="120" aria-label="Título de la marca">
+                   [placeholder]="i18n.t('perfilEd.tituloMarcaEjemplo')" maxlength="120"
+                   [attr.aria-label]="i18n.t('perfilEd.tituloMarca')">
             <input type="text" [(ngModel)]="nuevoHito.descripcion" name="hitoDesc"
-                   placeholder="Cómo fue (opcional)" maxlength="500" aria-label="Descripción">
+                   [placeholder]="i18n.t('perfilEd.descripcionEjemplo')" maxlength="500"
+                   [attr.aria-label]="i18n.t('perfilEd.descripcion')">
 
             <div class="marca-nueva__pie">
-              <input type="date" [(ngModel)]="nuevoHito.fecha" name="hitoFecha" aria-label="Fecha">
+              <input type="date" [(ngModel)]="nuevoHito.fecha" name="hitoFecha"
+                     [attr.aria-label]="i18n.t('perfilEd.fecha')">
 
               <label class="btn btn--fantasma btn--pequeno marca-nueva__adjuntar">
-                @if (subiendo()) { Subiendo… }
-                @else if (nuevoHito.medioUrl) { Archivo listo }
-                @else { Foto o vídeo }
+                @if (subiendo()) { {{ i18n.t('perfilEd.subiendo') }} }
+                @else if (nuevoHito.medioUrl) { {{ i18n.t('perfilEd.archivoListo') }} }
+                @else { {{ i18n.t('perfilEd.fotoOVideo') }} }
                 <input type="file" accept="image/*,video/*" (change)="alElegirMedio($event)" hidden>
               </label>
 
               <button type="button" class="btn btn--primario btn--pequeno"
                       [disabled]="!nuevoHito.titulo.trim() || subiendo()" (click)="anadirHito()">
-                Añadir
+                {{ i18n.t('perfilEd.anadir') }}
               </button>
             </div>
           </div>
@@ -225,33 +254,36 @@
 
       <fieldset class="bloque">
         <div class="bloque__cabecera">
-          <legend class="bloque__titulo">Meta semanal</legend>
-          <span class="meta__valor cifra">{{ metaSemanal() }} {{ metaSemanal() === 1 ? 'día' : 'días' }}</span>
+          <legend class="bloque__titulo">{{ i18n.t('perfilEd.metaSemanal') }}</legend>
+          <span class="meta__valor cifra">
+            {{ i18n.t('perfilEd.dias', { cuenta: metaSemanal() }) }}
+          </span>
         </div>
         <input type="range" min="1" max="7" class="meta__slider"
                [value]="metaSemanal()" (input)="actualizarMetaDesdeSlider($event)"
-               aria-label="Días de entrenamiento por semana" />
+               [attr.aria-label]="i18n.t('perfilEd.diasPorSemana')" />
         <div class="meta__escala" aria-hidden="true">
           @for (n of [1,2,3,4,5,6,7]; track n) { <span>{{ n }}</span> }
         </div>
       </fieldset>
 
       <fieldset class="bloque">
-        <legend class="bloque__titulo">Gimnasio habitual</legend>
+        <legend class="bloque__titulo">{{ i18n.t('perfilEd.gimnasio') }}</legend>
         <label class="campo">
-          <span>¿Dónde entrenas?</span>
+          <span>{{ i18n.t('perfilEd.dondeEntrenas') }}</span>
           <select [(ngModel)]="perfilForm.gimnasioId" (change)="toggleNuevoGimnasio($event)">
-            <option [value]="null">Selecciona tu gimnasio</option>
+            <option [value]="null">{{ i18n.t('perfilEd.eligeGimnasio') }}</option>
             @for (g of gimnasios(); track g.id) {
               <option [value]="g.id">{{ g.nombre }}</option>
             }
-            <option value="NUEVO">+ Añadir uno nuevo</option>
+            <option value="NUEVO">{{ i18n.t('perfilEd.nuevoGimnasio') }}</option>
           </select>
         </label>
         @if (mostrarInputGimnasio) {
           <label class="campo">
-            <span>Nombre del gimnasio</span>
-            <input type="text" [(ngModel)]="nuevoGimnasioNombre" placeholder="Ej: McFit Centro">
+            <span>{{ i18n.t('perfilEd.nombreGimnasio') }}</span>
+            <input type="text" [(ngModel)]="nuevoGimnasioNombre"
+                   [placeholder]="i18n.t('perfilEd.nombreGimnasioEjemplo')">
           </label>
         }
 
@@ -262,36 +294,38 @@
         <label class="campo campo--ancho casilla">
           <input type="checkbox" [(ngModel)]="perfilForm.puedoDesplazarme">
           <span>
-            Puedo entrenar en otro gimnasio
-            <small class="campo__pista">
-              Si te viene bien desplazarte de vez en cuando, saldrá gente que
-              entrena cerca pero no en tu sala. Cuenta menos que compartir
-              gimnasio, porque moverse cuesta.
-            </small>
+            {{ i18n.t('perfilEd.puedoDesplazarme') }}
+            <small class="campo__pista">{{ i18n.t('perfilEd.puedoDesplazarmeNota') }}</small>
           </span>
         </label>
       </fieldset>
 
       <fieldset class="bloque">
         <div class="bloque__cabecera">
-          <legend class="bloque__titulo">Horarios de entrenamiento</legend>
-          <button class="btn btn--neutro btn--pequeno" (click)="agregarHorario()">Añadir día</button>
+          <legend class="bloque__titulo">{{ i18n.t('perfilEd.horarios') }}</legend>
+          <button class="btn btn--neutro btn--pequeno" (click)="agregarHorario()">
+            {{ i18n.t('perfilEd.anadirDia') }}
+          </button>
         </div>
         <p class="bloque__ayuda">
-          Es el dato que más pesa en el emparejamiento. Marca <strong>Voy siempre</strong>
-          en las franjas a las que acudes de forma fija: coincidir una hora a la que
-          los dos vais seguro cuenta más que muchas horas de disponibilidad suelta.
-          Puedes marcar hasta {{ maxHabituales }}.
+          {{ i18n.t('perfilEd.horariosAyuda', { tope: maxHabituales }) }}
         </p>
 
         @for (h of perfilForm.horarios; track $index; let i = $index) {
           <div class="fila-horario" [class.fila-horario--fija]="h.habitual">
-            <select [(ngModel)]="h.diaSemana" aria-label="Día de la semana">
-              @for (dia of diasSemana; track dia) { <option [value]="dia">{{ dia }}</option> }
+            <!-- El valor del día es lo que se guarda y lo que se cruza con la
+                 semana de otra persona: se queda en español. Lo que se lee es
+                 su etiqueta. -->
+            <select [(ngModel)]="h.diaSemana" [attr.aria-label]="i18n.t('perfilEd.diaSemana')">
+              @for (dia of diasSemana; track dia) {
+                <option [value]="dia">{{ nombreDeDia(dia) }}</option>
+              }
             </select>
-            <input type="time" [(ngModel)]="h.horaInicio" aria-label="Hora de inicio">
+            <input type="time" [(ngModel)]="h.horaInicio"
+                   [attr.aria-label]="i18n.t('perfilEd.horaInicio')">
             <span aria-hidden="true">–</span>
-            <input type="time" [(ngModel)]="h.horaFin" aria-label="Hora de fin">
+            <input type="time" [(ngModel)]="h.horaFin"
+                   [attr.aria-label]="i18n.t('perfilEd.horaFin')">
 
             <button type="button"
                     class="conmutador"
@@ -299,18 +333,20 @@
                     [disabled]="!puedeMarcarHabitual(h)"
                     [attr.aria-pressed]="!!h.habitual"
                     (click)="alternarHabitual(h)">
-              {{ h.habitual ? 'Voy siempre' : 'Puedo ir' }}
+              {{ i18n.t(h.habitual ? 'perfilEd.voySiempre' : 'perfilEd.puedoIr') }}
             </button>
 
-            <button class="btn-icono btn-icono--no" (click)="eliminarHorario(i)">Quitar</button>
+            <button class="btn-icono btn-icono--no" (click)="eliminarHorario(i)">
+              {{ i18n.t('perfilEd.quitar') }}
+            </button>
           </div>
         }
 
         @if (perfilForm.horarios.length === 0) {
-          <p class="vacio">No tienes horarios añadidos.</p>
+          <p class="vacio">{{ i18n.t('perfilEd.sinHorarios') }}</p>
         } @else {
           <p class="bloque__ayuda">
-            Franjas fijas: {{ habitualesMarcadas() }} de {{ maxHabituales }}
+            {{ i18n.t('perfilEd.franjasFijas', { puestas: habitualesMarcadas(), tope: maxHabituales }) }}
           </p>
         }
       </fieldset>
@@ -318,22 +354,19 @@
       <!-- ================= Bloqueados =================
            Sin esto, bloquear seria irreversible desde la interfaz. -->
       <fieldset class="bloque">
-        <legend class="bloque__titulo">Personas bloqueadas</legend>
+        <legend class="bloque__titulo">{{ i18n.t('perfilEd.bloqueados') }}</legend>
 
         @if (bloqueados().length === 0) {
-          <p class="bloque__pista">No has bloqueado a nadie.</p>
+          <p class="bloque__pista">{{ i18n.t('perfilEd.sinBloqueados') }}</p>
         } @else {
-          <p class="bloque__pista">
-            No os veis en la aplicación. Quitar el bloqueo no os vuelve a
-            conectar: eso lo decidís otra vez.
-          </p>
+          <p class="bloque__pista">{{ i18n.t('perfilEd.bloqueadosNota') }}</p>
           <ul class="bloqueados">
             @for (b of bloqueados(); track b.usuarioId) {
               <li class="bloqueados__fila">
                 <span>{{ b.nombre }}</span>
                 <button type="button" class="btn btn--fantasma btn--pequeno"
                         (click)="desbloquear(b.usuarioId)">
-                  Quitar el bloqueo
+                  {{ i18n.t('perfilEd.quitarBloqueo') }}
                 </button>
               </li>
             }
@@ -345,28 +378,30 @@
            No estaba: hasta ahora la única forma de cambiarla era "la he
            olvidado" desde fuera de la aplicación, con el correo de por medio. -->
       <fieldset class="bloque">
-        <legend class="bloque__titulo">Contraseña</legend>
+        <legend class="bloque__titulo">{{ i18n.t('perfilEd.contrasena') }}</legend>
 
         @if (!cambiandoContrasena()) {
-          <p class="bloque__pista">
-            Al cambiarla se cierran todas las sesiones abiertas, incluida esta.
-          </p>
+          <p class="bloque__pista">{{ i18n.t('perfilEd.contrasenaNota') }}</p>
           <button type="button" class="btn btn--fantasma" (click)="cambiandoContrasena.set(true)">
-            Cambiar mi contraseña
+            {{ i18n.t('perfilEd.cambiarContrasena') }}
           </button>
         } @else {
           <label class="campo campo--ancho">
-            <span>Contraseña actual</span>
+            <span>{{ i18n.t('perfilEd.contrasenaActual') }}</span>
             <input type="password" [(ngModel)]="contrasenaActual"
-                   autocomplete="current-password" placeholder="Tu contraseña de ahora">
+                   autocomplete="current-password"
+                   [placeholder]="i18n.t('perfilEd.contrasenaActualEjemplo')">
           </label>
 
           <label class="campo campo--ancho">
-            <span>Contraseña nueva</span>
+            <span>{{ i18n.t('perfilEd.contrasenaNueva') }}</span>
             <input type="password" [(ngModel)]="contrasenaNueva"
-                   autocomplete="new-password" placeholder="Al menos {{ minimoContrasena }} caracteres">
+                   autocomplete="new-password"
+                   [placeholder]="i18n.t('restablecer.minimo', { minimo: minimoContrasena })">
             @if (nuevaContrasenaCorta) {
-              <small class="campo__pista">Faltan {{ minimoContrasena - contrasenaNueva.length }} caracteres</small>
+              <small class="campo__pista">
+                {{ i18n.t('restablecer.faltan', { cuenta: minimoContrasena - contrasenaNueva.length }) }}
+              </small>
             }
           </label>
 
@@ -374,12 +409,16 @@
 
           <div class="bloque__acciones">
             <button type="button" class="btn btn--fantasma" (click)="cambiandoContrasena.set(false)">
-              Cancelar
+              {{ i18n.t('comun.cancelar') }}
             </button>
             <button type="button" class="btn btn--primario"
                     [disabled]="!contrasenaActual || nuevaContrasenaCorta || !contrasenaNueva || cambioEnCurso()"
                     (click)="cambiarContrasena()">
-              @if (cambioEnCurso()) { Cambiando… } @else { Cambiar contraseña }
+              @if (cambioEnCurso()) {
+                {{ i18n.t('perfilEd.cambiando') }}
+              } @else {
+                {{ i18n.t('perfilEd.cambiar') }}
+              }
             </button>
           </div>
         }
@@ -389,36 +428,40 @@
            Abajo del todo y detras de dos pasos: no es una accion que nadie haga
            por error, y no tiene vuelta atras. -->
       <fieldset class="bloque bloque--peligro">
-        <legend class="bloque__titulo">Borrar mi cuenta</legend>
+        <legend class="bloque__titulo">{{ i18n.t('perfilEd.borrarCuenta') }}</legend>
 
         @if (!borrando()) {
           <p class="bloque__pista">
-            Se borra todo: tu perfil, tus horarios, tus marcas y tus entrenamientos.
-            <strong>También las conversaciones enteras</strong>, que desaparecen
-            igual para la otra persona. No se puede deshacer.
+            {{ i18n.t('perfilEd.borrarCuentaNota') }}
+            <strong>{{ i18n.t('perfilEd.borrarCuentaNota2') }}</strong>
           </p>
           <button type="button" class="btn btn--fantasma" (click)="borrando.set(true)">
-            Quiero borrar mi cuenta
+            {{ i18n.t('perfilEd.quieroBorrar') }}
           </button>
         } @else {
-          <p class="bloque__pista">Escribe tu contraseña para confirmarlo.</p>
+          <p class="bloque__pista">{{ i18n.t('perfilEd.escribeContrasena') }}</p>
 
           <label class="campo campo--ancho">
-            <span class="visually-hidden">Contraseña</span>
+            <span class="visually-hidden">{{ i18n.t('perfilEd.contrasena') }}</span>
             <input type="password" [(ngModel)]="contrasenaParaBorrar"
-                   autocomplete="current-password" placeholder="Tu contraseña">
+                   autocomplete="current-password"
+                   [placeholder]="i18n.t('perfilEd.tuContrasena')">
           </label>
 
           @if (errorBorrado()) { <p class="aviso-inline" role="alert">{{ errorBorrado() }}</p> }
 
           <div class="bloque__acciones">
             <button type="button" class="btn btn--fantasma" (click)="borrando.set(false)">
-              Cancelar
+              {{ i18n.t('comun.cancelar') }}
             </button>
             <button type="button" class="btn btn--peligro"
                     [disabled]="!contrasenaParaBorrar || borradoEnCurso()"
                     (click)="borrarCuenta()">
-              @if (borradoEnCurso()) { Borrando… } @else { Borrar para siempre }
+              @if (borradoEnCurso()) {
+                {{ i18n.t('perfilEd.borrando') }}
+              } @else {
+                {{ i18n.t('perfilEd.borrarParaSiempre') }}
+              }
             </button>
           </div>
         }
@@ -426,8 +469,12 @@
     </div>
 
     <footer class="modal__pie">
-      <button class="btn btn--fantasma" (click)="cerrar.emit()">Cancelar</button>
-      <button class="btn btn--primario" (click)="guardarPerfil()">Guardar cambios</button>
+      <button class="btn btn--fantasma" (click)="cerrar.emit()">
+        {{ i18n.t('comun.cancelar') }}
+      </button>
+      <button class="btn btn--primario" (click)="guardarPerfil()">
+        {{ i18n.t('perfilEd.guardar') }}
+      </button>
     </footer>
   </div>
 </div>

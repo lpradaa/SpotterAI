@@ -8,6 +8,8 @@ import { Avatar } from '../avatar/avatar';
 import { ModalAccesible } from '../../directivas/modal-accesible';
 import { tramoDe } from '../../utils/compatibilidad';
 import { PerfilesService } from '../../services/perfiles.service';
+import { IdiomaService } from '../../services/idioma.service';
+import { etiquetaDeNivel, etiquetaDeObjetivo } from '../../utils/valores-de-perfil';
 import { Desglose } from '../desglose/desglose';
 
 /**
@@ -33,6 +35,18 @@ export class FichaSugerenciaComponent {
   private usuarioService = inject(UsuarioService);
   private perfiles = inject(PerfilesService);
   private cdr = inject(ChangeDetectorRef);
+
+  /** protected: la plantilla llama a i18n.t() en cada texto. */
+  protected i18n = inject(IdiomaService);
+
+  /** El nivel y el objetivo guardados, tal y como se leen. */
+  protected nivel(valor: string): string {
+    return etiquetaDeNivel(valor, c => this.i18n.t(c));
+  }
+
+  protected objetivo(valor: string): string {
+    return etiquetaDeObjetivo(valor, c => this.i18n.t(c));
+  }
 
   /** La foto de alguien, resuelta a URL servible. */
   foto(ruta: string | null | undefined): string | null {
@@ -89,14 +103,20 @@ export class FichaSugerenciaComponent {
     if (candidato) this.conectar.emit(candidato.id);
   }
 
-  /** Convierte los minutos de solape en algo legible: "4h 30min". */
+  /**
+   * Convierte los minutos de solape en algo legible: «4h 30min».
+   *
+   * <p>Tres formas y no una: «90 min» se lee peor que «1h 30min», y «2h 0min»
+   * no lo dice nadie. El plural de las horas lo resuelve el catálogo.
+   */
   formatearSolape(minutos: number): string {
     if (!minutos) return '';
     const horas = Math.floor(minutos / 60);
     const resto = minutos % 60;
-    if (horas === 0) return `${resto} min`;
-    if (resto === 0) return horas === 1 ? '1 hora' : `${horas} horas`;
-    return `${horas}h ${resto}min`;
+
+    if (horas === 0) return this.i18n.t('duracion.minutos', { cuenta: resto });
+    if (resto === 0) return this.i18n.t('duracion.horas', { cuenta: horas });
+    return this.i18n.t('duracion.horasYMinutos', { horas, minutos: resto });
   }
 
   /** Tramo de compatibilidad, para no repetir umbrales por la plantilla. */

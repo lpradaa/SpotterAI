@@ -13,6 +13,7 @@ import { Avatar } from '../avatar/avatar';
 import { PerfilesService } from '../../services/perfiles.service';
 import { SesionesService, Sesion } from '../../services/sesiones.service';
 import { ModalAccesible } from '../../directivas/modal-accesible';
+import { etiquetaDeNivel, etiquetaDeObjetivo } from '../../utils/valores-de-perfil';
 
 @Component({
   selector: 'app-dashboard',
@@ -51,6 +52,34 @@ export class DashboardComponent implements OnInit {
   protected etiquetaDeEntreno(tipo: string): string {
     const clave = DashboardComponent.ETIQUETAS_DE_ENTRENO[tipo];
     return clave ? this.i18n.t(clave) : tipo;
+  }
+
+  /**
+   * El nivel y el objetivo, tal y como se leen.
+   *
+   * Mismo reparto que los tipos de entreno: el valor guardado sigue en espanol
+   * y esto solo cambia la etiqueta. Se pintaban crudos, asi que en ingles se
+   * quedaban en «Intermedio» y «Hipertrofia» con el resto de la pantalla
+   * traducida.
+   */
+  /**
+   * Lo que se lee en el muro despues del nombre.
+   *
+   * El mismo campo lleva dos cosas distintas: en un entreno es el tipo, que es
+   * un valor nuestro y se etiqueta; en un hito es lo que escribio la persona,
+   * y eso no se traduce nunca. Traducir un hito seria reescribirle la frase a
+   * su autor.
+   */
+  protected tituloDeActividad(a: { tipo?: string; titulo: string }): string {
+    return a.tipo === 'HITO' ? a.titulo : this.etiquetaDeEntreno(a.titulo);
+  }
+
+  protected nivel(valor: string): string {
+    return etiquetaDeNivel(valor, c => this.i18n.t(c));
+  }
+
+  protected objetivo(valor: string): string {
+    return etiquetaDeObjetivo(valor, c => this.i18n.t(c));
   }
   private eventos = inject(EventosService);
   private perfilEstado = inject(PerfilEstadoService);
@@ -166,7 +195,7 @@ export class DashboardComponent implements OnInit {
     this.eventos.solicitudes
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(solicitud => {
-        this.mostrarToast(`${solicitud.emisorNombre} quiere entrenar contigo.`, 'success');
+        this.mostrarToast(this.i18n.t('tablero.quiereEntrenar', { nombre: solicitud.emisorNombre }), 'success');
       });
 
     // Una propuesta que llega mientras miras el tablero. Se avisa y se recarga
@@ -175,7 +204,7 @@ export class DashboardComponent implements OnInit {
     this.eventos.sesiones
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((sesion: Sesion) => {
-        this.mostrarToast(`${sesion.conNombre} propone entrenar contigo.`, 'success');
+        this.mostrarToast(this.i18n.t('tablero.proponeEntrenar', { nombre: sesion.conNombre }), 'success');
         this.cargarSesiones();
       });
 
@@ -183,7 +212,7 @@ export class DashboardComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((sesion: Sesion) => {
         if (sesion.estado === 'ACEPTADA') {
-          this.mostrarToast(`${sesion.conNombre} ha aceptado entrenar contigo.`, 'success');
+          this.mostrarToast(this.i18n.t('tablero.haAceptado', { nombre: sesion.conNombre }), 'success');
         }
         this.cargarSesiones();
       });
@@ -289,12 +318,12 @@ export class DashboardComponent implements OnInit {
     peticion.subscribe({
       next: () => {
         this.mostrarToast(acepta
-          ? `Hecho. Entrenas con ${sesion.conNombre}.`
-          : 'Propuesta rechazada.', acepta ? 'success' : 'error');
+          ? this.i18n.t('sesion.hecho', { nombre: sesion.conNombre })
+          : this.i18n.t('sesion.rechazada'), acepta ? 'success' : 'error');
         this.cargarSesiones();
       },
       error: err => this.mostrarToast(
-        err?.error?.error ?? 'No se ha podido responder.', 'error')
+        err?.error?.error ?? this.i18n.t('sesion.errorResponder'), 'error')
     });
   }
 
@@ -306,19 +335,19 @@ export class DashboardComponent implements OnInit {
   confirmarSesion(sesion: Sesion): void {
     this.sesionesService.confirmar(sesion.id).subscribe({
       next: () => {
-        this.mostrarToast('Apuntado en tu historial.', 'success');
+        this.mostrarToast(this.i18n.t('sesion.apuntado'), 'success');
         this.cargarSesiones();
         this.cargarHistorialEntrenamientos();
       },
       error: err => this.mostrarToast(
-        err?.error?.error ?? 'No se ha podido apuntar.', 'error')
+        err?.error?.error ?? this.i18n.t('sesion.errorApuntar'), 'error')
     });
   }
 
   /** "Viernes 3 de julio", que es como se dice una fecha cuando se queda. */
   diaLargo(fecha: string): string {
-    const d = new Date(`${fecha}T00:00:00`);
-    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    return this.i18n.fecha(`${fecha}T00:00:00`,
+      { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
   /** Las horas llegan como "18:00:00" y en un plan sobran los segundos. */
@@ -368,11 +397,11 @@ export class DashboardComponent implements OnInit {
   guardarEntrenamiento(): void {
     this.usuarioService.registrarEntrenamiento(this.nuevoEntrenamiento).subscribe({
       next: () => {
-        this.mostrarToast('Entrenamiento registrado.');
+        this.mostrarToast(this.i18n.t('tablero.entrenamientoRegistrado'));
         this.cargarHistorialEntrenamientos();
         this.cerrarModalEntrenamiento();
       },
-      error: () => this.mostrarToast('Hubo un error al guardar tu entrenamiento.', 'error')
+      error: () => this.mostrarToast(this.i18n.t('tablero.errorRegistrar'), 'error')
     });
   }
 }
