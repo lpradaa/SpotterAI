@@ -594,6 +594,44 @@ vez de `ambicion`, el backend guardaría un null y el factor perdería un tercio
 su información sin una excepción, sin un log y sin que ninguna prueba de
 comportamiento se enterara.
 
+### Y con el factor puesto, qué cambió
+
+| | antes (coseno) | ahora (ejes) |
+|---|---|---|
+| diferencia media | 1,31 puntos | 1,71 puntos |
+| diferencia máxima | 6 | 6 |
+| cambian de tramo | 4,6 % | **5,6 %** |
+| cambian de frase | 3,6 % | 2,7 % |
+| cobertura en parejas reales | 100 %* | **70,5 %** |
+
+\* El coseno se podía evaluar siempre que los dos tuvieran biografía. Podía
+siempre, y ordenaba al revés.
+
+**Cuidado con leer esa tabla como una mejora de calidad.** El banco sintético no
+pasa por el modelo: sus posiciones se generan con una función determinista,
+porque leer 60 perfiles × 3 ejes serían 180 inferencias en cada ejecución de la
+suite. Así que esos números miden **el mecanismo nuevo**, no que el modelo
+acierte más. La calidad está medida aparte, con los pares de relación conocida, y
+es donde está la mejora de verdad.
+
+Lo que sí dice la tabla es que el factor no se ha vuelto inerte al ganar
+cobertura ni se le ha ido la mano: la diferencia máxima sigue siendo 6, que es su
+peso exacto, y eso es la comprobación de que el experimento está bien montado.
+
+### Lo que se ve en pantalla
+
+Y esto es lo que justifica todo lo demás. Antes:
+
+> Describís lo que buscáis de forma muy parecida
+
+Ahora, para la misma pareja:
+
+> Coincidís en lo que estáis dispuestos a amoldaros
+
+El primero es una afirmación sobre dos vectores. El segundo se puede discutir, y
+por tanto se puede confiar en él o no — que es la diferencia entre un número y un
+argumento, y la tesis del producto entero.
+
 ## Qué protege esto para el futuro
 
 Los informes son informes: sus números cambiarán si cambia el reparto. Lo que
