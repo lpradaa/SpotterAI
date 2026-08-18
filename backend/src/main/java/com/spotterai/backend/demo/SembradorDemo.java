@@ -55,6 +55,7 @@ public class SembradorDemo implements CommandLineRunner {
      * demo existe para enseñar.
      */
     private final VectoresSembrados vectores = new VectoresSembrados();
+    private final IntencionesSembradas intenciones = new IntencionesSembradas();
 
     /** Con quién se entra. Va en el README y en la pantalla de bienvenida. */
     public static final String EMAIL_DEMO = "demo@spotterai.test";
@@ -332,6 +333,9 @@ public class SembradorDemo implements CommandLineRunner {
         u.setBiografia(biografia);
         u.setMetaSemanal(4);
         vectores.aplicarA(u);
+        // Los ejes son los que puntuan desde la V19; el vector se sigue
+        // sembrando mientras la columna exista.
+        intenciones.aplicarA(u);
         return usuarios.save(u);
     }
 
