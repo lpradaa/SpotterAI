@@ -474,6 +474,102 @@ Validar el motor **entero** —el orden que produce, no este factor— necesita 
 cosa: juicios humanos por comparación de pares, con acuerdo entre anotadores
 medido para saber cuál es el techo. Eso sigue pendiente.
 
+## Resultado 6: el arreglo, y lo que costó encontrarlo
+
+Sabiendo que comparar dos biografías con un coseno mide redacción y no
+compatibilidad, el rediseño evidente es dejar de comparar textos y comparar
+**intenciones**: sacar de cada biografía su posición en unos pocos ejes y cruzar
+posiciones. Los ejes salen de las trece biografías reales, no de la imaginación
+—leídas seguidas, la mayoría hablan de horario y rutina, que ya son campos del
+perfil— y lo que el texto libre aporta y no cabe en ningún desplegable es esto:
+
+    qué busca del otro    que le exija  <->  compañía
+    ambición              competir      <->  mantenerse
+    flexibilidad          me amoldo     <->  tengo mi plan
+
+### Intento 1: proyectar contra anclas. No funciona
+
+La primera versión define cada polo con cuatro frases prototípicas y mira a cuál
+se acerca más la biografía. Falla, y falla exactamente igual:
+
+    A: «Busco a alguien que me exija, que me obligue…»       qué busca: +1,00
+    B: «Busco a alguien que NO me exija, que respete…»       qué busca: +1,00
+
+Idéntico. Proyectar contra un ancla **sigue siendo un coseno del mismo modelo**:
+se cambió qué se compara, no cómo, y el problema estaba en el cómo. De paso
+apareció un segundo defecto: el par que solo habla de horarios sacaba −1,00 en un
+eje del que no dice nada, o sea que el umbral le inventaba una posición a quien
+no había hablado del tema.
+
+### Intento 2: preguntarle a un modelo que entiende la negación
+
+Un modelo de inferencia textual recibe **dos** textos y decide si el primero
+implica al segundo, lo contradice, o ninguna cosa. Eso es justo la pregunta:
+
+    premisa:    «Busco a alguien que no me exija, que respete si un día…»
+    hipótesis:  «Busco que me exijan.»
+    respuesta:  contradicción
+
+**Y esto sí cabe en la arquitectura**, en contra de lo que se dijo un párrafo
+antes al descartar los cross-encoders. Aquel argumento —«habría que ejecutarlo
+por cada pareja»— es cierto para comparar dos biografías y **falso para leer
+una**: aquí el modelo corre una vez por persona al guardar el perfil, igual que
+el embedding de hoy, y lo que se guarda son tres números en vez de 384.
+Comparar a dos personas sigue siendo aritmética sobre datos ya calculados.
+
+### Lo que de verdad costó: la plantilla, no el modelo
+
+La primera tanda de hipótesis dio neutral en todo. El modelo no estaba roto —en
+casos de libro acierta— sino que no hace la correferencia entre «busco» y «esta
+persona busca»:
+
+| hipótesis | afirma | niega | separa |
+|---|---|---|---|
+| «Esta persona busca un compañero que le exija.» | +0,11 | +0,07 | **0,046** |
+| **«Busco que me exijan.»** | **+0,62** | **−0,51** | **1,128** |
+
+**Veinticuatro veces más separación por reescribir la frase en primera persona.**
+Ninguna mejora de esta página vino de cambiar de modelo; todas vinieron de
+cambiar la pregunta. Con NLI además sobra el segundo polo: una hipótesis por eje,
+y el signo dice el lado.
+
+### El resultado
+
+| | compatibles vs opuestas | paráfrasis vs palabra cambiada |
+|---|---|---|
+| coseno entre biografías | −0,344 ✗ | −0,234 ✗ |
+| ejes por anclas | −0,199 ✗ | −0,122 ✗ |
+| **ejes por NLI** | **+0,283 ✓** | **+0,115 ✓** |
+
+Por primera vez el orden es el correcto en las dos preguntas. Y el grupo FONDO
+—textos del dominio sin relación entre sí— sale **4 de 4 sin señal**: deja de
+llevarse 1,2 puntos por compartir vocabulario de gimnasio.
+
+### Lo que cuesta
+
+| | RSS |
+|---|---|
+| base (python + onnxruntime + tokenizers) | 18,6 MB |
+| el modelo de hoy | 483,9 MB |
+| **el NLI, sustituyéndolo** | **610,9 MB** |
+
+**+127 MB, un 26 %.** Desactivar la arena de ONNX Runtime solo devuelve 7, así
+que no hay palanca fácil. Eso rompe el objetivo de 512 MB que motivó toda la
+optimización de PyTorch — aunque conviene recordar de dónde salía ese número: era
+**portabilidad**, caber en cualquier capa gratuita. El despliegue que documenta
+`despliegue-oracle.md` es ARM Always Free con 24 GB, donde 611 MB no es nada.
+
+El otro precio es la cobertura: muchas biografías no dicen nada de ninguno de los
+tres ejes, así que el factor **opinará menos veces**. Es el mismo caso que la
+fuerza, y es preferible a opinar mal — pero es una pérdida y hay que contarla.
+
+### Qué queda decidido y qué no
+
+Queda medido que el rediseño funciona y lo que cuesta. Queda **sin decidir** si se
+integra, y esa es una decisión de producto: cambiar de modelo obliga a recalcular
+todos los vectores guardados, a recalibrar los umbrales del factor y a rehacer la
+historia de memoria del README. Con seis puntos de cien en juego.
+
 ## Qué protege esto para el futuro
 
 Los informes son informes: sus números cambiarán si cambia el reparto. Lo que
