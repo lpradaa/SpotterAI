@@ -81,6 +81,15 @@
             border-color: var(--acento); font-weight: 600; }
   .ninguna { display: block; margin: 1.15rem auto 0; }
 
+  .opciones { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0 .3rem; }
+
+  /* La segunda pregunta: en qué se apoyó quien contesta. Es la que permite
+     comparar el reparto de pesos del motor con el reparto de atención de una
+     persona — y la única que se puede contestar sin saber de gimnasios. */
+  .porque { margin-top: 1.15rem; padding: 1rem 1.15rem; background: var(--acento-suave);
+            border: 1px solid var(--borde); border-radius: 12px; }
+  .porque p { margin: 0 0 .5rem; font-size: .93rem; }
+
   .fin { text-align: center; padding: 2.5rem 1rem; }
   .fin textarea { width: 100%; height: 11rem; font-family: ui-monospace, monospace;
                   font-size: .8rem; margin-top: 1rem; padding: .7rem;
@@ -90,14 +99,27 @@
 </head>
 <body>
 <main>
-  <h1>¿Con cuál entrenarías?</h1>
+  <h1>¿Quién le encaja mejor?</h1>
   <p class="sub">
-    Imagina que eres la persona de arriba. Abajo tienes dos posibles compañeros
-    de entrenamiento: elige con cuál entrenarías tú. No hay respuesta correcta —
-    lo que interesa es tu criterio.
+    Arriba tienes a alguien que busca compañero de entrenamiento, y debajo dos
+    candidatos. Elige cuál de los dos le encaja mejor <em>a esa persona</em>.
+    No hace falta que entrenes ni que entiendas la jerga: lo que interesa es tu
+    criterio sobre si dos personas van a funcionar juntas.
   </p>
 
-  <div class="barra"><div id="progreso" style="width:0"></div></div>
+  <section id="antes" class="tu">
+    <h2>Antes de empezar — una sola pregunta</h2>
+    <p>¿Entrenas tú?</p>
+    <div class="opciones">
+      <button data-perfil="gimnasio">Sí, en un gimnasio</button>
+      <button data-perfil="otro">Sí, otro deporte</button>
+      <button data-perfil="no">No entreno</button>
+    </div>
+    <p class="constancia">Solo sirve para separar las respuestas al analizarlas.
+      Se responde igual de bien en los tres casos.</p>
+  </section>
+
+  <div class="barra" hidden><div id="progreso" style="width:0"></div></div>
   <div id="pantalla"></div>
 
   <!-- El registro compartido. Cada respuesta se añade aquí como un <li> y eso
@@ -139,7 +161,7 @@ function ficha(p, lado) {
         <dt>Marcas</dt><dd>${p.marcas}</dd>
       </dl>
       <p class="bio">«${p.bio}»</p>
-      <button class="elegir" data-lado="${lado}">Entrenaría con ${p.nombre.split(' ')[0]}</button>
+      <button class="elegir" data-lado="${lado}">Le encaja mejor ${p.nombre.split(' ')[0]}</button>
     </article>`;
 }
 
@@ -157,24 +179,37 @@ function pintar() {
 
   pantalla.innerHTML = `
     <section class="tu">
-      <h2>Eres ${c.juez.nombre} — comparación ${actual + 1} de ${orden.length}</h2>
+      <h2>${c.juez.nombre} busca compañero — ${actual + 1} de ${orden.length}</h2>
       <p><strong>${c.juez.nivel}</strong> · ${c.juez.objetivo} · ${c.juez.rutina} · ${c.juez.gimnasio}</p>
       <p>${c.juez.constancia}</p>
-      <p>Tus marcas: ${c.juez.marcas}</p>
+      <p>Sus marcas: ${c.juez.marcas}</p>
       <p>${c.juez.horarios}</p>
       <p class="bio">«${c.juez.bio}»</p>
     </section>
     <div class="pareja">${ficha(izq, alReves ? 'b' : 'a')}${ficha(der, alReves ? 'a' : 'b')}</div>
-    <button class="ninguna">No sabría decidir</button>`;
+    <button class="ninguna">Los dos igual / no sabría decidir</button>`;
 
   pantalla.querySelectorAll('.elegir').forEach(b =>
     b.onclick = () => responder(b.dataset.lado, alReves));
   pantalla.querySelector('.ninguna').onclick = () => responder('ninguna', alReves);
 }
 
+// Las cuatro cosas en las que se puede apoyar una decisión, que son las mismas
+// que reparte el motor. Aquí no se pregunta cuánto encajan: se pregunta EN QUÉ
+// se fijó quien contesta, y eso es lo que se puede comparar con el reparto de
+// pesos — 40 al horario, 6 a lo escrito. Es además la única pregunta del
+// cuadernillo que se contesta igual de bien sin haber pisado un gimnasio.
+const APOYOS = [
+  ['horario', 'Cuándo pueden entrenar'],
+  ['texto', 'Lo que cuentan de sí mismos'],
+  ['nivel', 'El nivel y la fuerza'],
+  ['sitio', 'El gimnasio y la rutina'],
+];
+
 function responder(elegido, alReves) {
   const c = COMPARACIONES[orden[actual]];
-  respuestas.push({
+
+  const pendiente = {
     juez: c.juez.nombre,
     a: c.a.nombre, b: c.b.nombre,
     // Se guarda lo que dijo el motor para poder comparar después, pero nunca se
@@ -182,8 +217,35 @@ function responder(elegido, alReves) {
     puntosA: c.puntosA, puntosB: c.puntosB,
     motivo: c.motivo,
     elegido,
-    izquierdaFue: alReves ? 'b' : 'a'
+    izquierdaFue: alReves ? 'b' : 'a',
+    apoyo: ''
+  };
+
+  // A quien no ha sabido decidir no se le pregunta en qué se apoyó: no se apoyó
+  // en nada, y obligarle a elegir algo inventaría el dato.
+  if (elegido === 'ninguna') return guardarYSeguir(pendiente);
+
+  const zona = document.createElement('div');
+  zona.className = 'porque';
+  zona.innerHTML = '<p><strong>¿Qué ha pesado más en tu decisión?</strong></p>'
+    + '<div class="opciones">'
+    + APOYOS.map(([k, t]) => `<button data-apoyo="${k}">${t}</button>`).join('')
+    + '<button data-apoyo="mezcla">Un poco de todo</button></div>';
+
+  pantalla.appendChild(zona);
+  zona.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+
+  // El resto se desactiva para que no se pueda cambiar la elección a medias.
+  pantalla.querySelectorAll('.elegir, .ninguna').forEach(b => b.disabled = true);
+
+  zona.querySelectorAll('[data-apoyo]').forEach(b => b.onclick = () => {
+    pendiente.apoyo = b.dataset.apoyo;
+    guardarYSeguir(pendiente);
   });
+}
+
+function guardarYSeguir(respuesta) {
+  respuestas.push(respuesta);
   actual++;
   pintar();
 }
@@ -191,11 +253,10 @@ function responder(elegido, alReves) {
 function terminar() {
   progreso.style.width = '100%';
 
-  const csv = ['juez,a,b,puntosA,puntosB,motivo,elegido,izquierdaFue']
-    .concat(respuestas.map(r => [r.juez, r.a, r.b, r.puntosA, r.puntosB,
-                                 r.motivo, r.elegido, r.izquierdaFue].join(',')))
-    .join('
-');
+  const csv = ['quienContesta,juez,a,b,puntosA,puntosB,motivo,elegido,apoyo,izquierdaFue']
+    .concat(respuestas.map(r => [quienContesta, r.juez, r.a, r.b, r.puntosA, r.puntosB,
+                                 r.motivo, r.elegido, r.apoyo, r.izquierdaFue].join(',')))
+    .join('\n');
 
   // Se intenta guardar en el registro compartido, que es lo que hace que las
   // respuestas lleguen solas. Puede no estar permitido —quien abre un enlace
@@ -207,8 +268,8 @@ function terminar() {
     const sesion = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     respuestas.forEach(r => {
       lista.insertAdjacentHTML('beforeend',
-        '<li>' + [sesion, r.juez, r.a, r.b, r.puntosA, r.puntosB,
-                  r.motivo, r.elegido, r.izquierdaFue].join(' | ') + '</li>');
+        '<li>' + [sesion, quienContesta, r.juez, r.a, r.b, r.puntosA, r.puntosB,
+                  r.motivo, r.elegido, r.apoyo, r.izquierdaFue].join(' | ') + '</li>');
     });
     guardado = lista.children.length > 0;
   } catch (e) {
@@ -233,7 +294,14 @@ function terminar() {
   };
 }
 
-pintar();
+let quienContesta = '';
+
+document.querySelectorAll('#antes [data-perfil]').forEach(b => b.onclick = () => {
+  quienContesta = b.dataset.perfil;
+  document.getElementById('antes').remove();
+  document.querySelector('.barra').hidden = false;
+  pintar();
+});
 </script>
 </body>
 </html>

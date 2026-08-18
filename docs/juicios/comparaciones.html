@@ -81,6 +81,15 @@
             border-color: var(--acento); font-weight: 600; }
   .ninguna { display: block; margin: 1.15rem auto 0; }
 
+  .opciones { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0 .3rem; }
+
+  /* La segunda pregunta: en qué se apoyó quien contesta. Es la que permite
+     comparar el reparto de pesos del motor con el reparto de atención de una
+     persona — y la única que se puede contestar sin saber de gimnasios. */
+  .porque { margin-top: 1.15rem; padding: 1rem 1.15rem; background: var(--acento-suave);
+            border: 1px solid var(--borde); border-radius: 12px; }
+  .porque p { margin: 0 0 .5rem; font-size: .93rem; }
+
   .fin { text-align: center; padding: 2.5rem 1rem; }
   .fin textarea { width: 100%; height: 11rem; font-family: ui-monospace, monospace;
                   font-size: .8rem; margin-top: 1rem; padding: .7rem;
@@ -90,14 +99,27 @@
 </head>
 <body>
 <main>
-  <h1>¿Con cuál entrenarías?</h1>
+  <h1>¿Quién le encaja mejor?</h1>
   <p class="sub">
-    Imagina que eres la persona de arriba. Abajo tienes dos posibles compañeros
-    de entrenamiento: elige con cuál entrenarías tú. No hay respuesta correcta —
-    lo que interesa es tu criterio.
+    Arriba tienes a alguien que busca compañero de entrenamiento, y debajo dos
+    candidatos. Elige cuál de los dos le encaja mejor <em>a esa persona</em>.
+    No hace falta que entrenes ni que entiendas la jerga: lo que interesa es tu
+    criterio sobre si dos personas van a funcionar juntas.
   </p>
 
-  <div class="barra"><div id="progreso" style="width:0"></div></div>
+  <section id="antes" class="tu">
+    <h2>Antes de empezar — una sola pregunta</h2>
+    <p>¿Entrenas tú?</p>
+    <div class="opciones">
+      <button data-perfil="gimnasio">Sí, en un gimnasio</button>
+      <button data-perfil="otro">Sí, otro deporte</button>
+      <button data-perfil="no">No entreno</button>
+    </div>
+    <p class="constancia">Solo sirve para separar las respuestas al analizarlas.
+      Se responde igual de bien en los tres casos.</p>
+  </section>
+
+  <div class="barra" hidden><div id="progreso" style="width:0"></div></div>
   <div id="pantalla"></div>
 
   <!-- El registro compartido. Cada respuesta se añade aquí como un <li> y eso
@@ -113,116 +135,116 @@
 // file://, y montar un servidor para veinte preguntas espantaría a la mitad.
 const COMPARACIONES = [
 {"juez": {"nombre": "Alex Moreno", "iniciales": "AM", "color": "ascua", "edad": 28, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años entrenando en serio y ya he pasado la fase de venir cuando me apetece. Lo que busco es alguien que no falle: prefiero un compañero más flojo que aparezca siempre a uno fuerte que cancele la mitad de las semanas.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años en esto y ya se me pasó la fase de venir solo cuando me apetece. Prefiero alguien más flojo que aparezca siempre a uno fuerte que cancele media semana. Y agradezco que me metan prisa: si me dejan, me quedo con el móvil entre series.",
  "horarios": "Lunes 18:00-20:00 (fijo) · Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:30", "marcas": "Peso muerto 160 kg × 2 · Press de banca 90 kg × 5 · Sentadilla 130 kg × 3", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Noa Prieto", "iniciales": "NP", "color": "oliva", "edad": 29, "nivel": "Intermedio",
- "objetivo": "Resistencia", "rutina": "Sin rutina fija", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del running y este año he empezado a meter fuerza porque me lesionaba. No tengo una rutina cerrada y me da bastante igual lo que toque: me amoldo a lo que entrene el otro, que además así aprendo.",
+ "objetivo": "Resistencia", "rutina": "Sin rutina fija", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del running y este año he empezado con las pesas porque me lesionaba. No tengo un plan cerrado y me da bastante igual lo que toque: me adapto a lo que haga el otro y así aprendo. Eso sí, no quiero meterme en nada demasiado serio.",
  "horarios": "Miércoles 18:00-19:30 · Viernes 18:00-20:00", "marcas": "Sentadilla 70 kg × 6", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Pablo Nieto", "iniciales": "PN", "color": "ascua", "edad": 33, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Entreno a mediodía porque es cuando puedo escaparme del trabajo, y voy con el tiempo justo: hora y media contando ducha. Eso significa poco descanso y nada de charla, que no es por antipatía.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo a mediodía escapándome del trabajo, con el tiempo justo: hora y media contando ducha. Eso es poco descanso y nada de charla, y no es por antipatía. Busco a alguien con la misma prisa, que si no acabo viniendo solo.",
  "horarios": "Lunes 13:00-14:30 (fijo) · Miércoles 13:00-14:30 (fijo)", "marcas": "Press de banca 85 kg × 5", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 52, "puntosB": 48, "motivo": "cercanos"},
 {"juez": {"nombre": "Alex Moreno", "iniciales": "AM", "color": "ascua", "edad": 28, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años entrenando en serio y ya he pasado la fase de venir cuando me apetece. Lo que busco es alguien que no falle: prefiero un compañero más flojo que aparezca siempre a uno fuerte que cancele la mitad de las semanas.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años en esto y ya se me pasó la fase de venir solo cuando me apetece. Prefiero alguien más flojo que aparezca siempre a uno fuerte que cancele media semana. Y agradezco que me metan prisa: si me dejan, me quedo con el móvil entre series.",
  "horarios": "Lunes 18:00-20:00 (fijo) · Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:30", "marcas": "Peso muerto 160 kg × 2 · Press de banca 90 kg × 5 · Sentadilla 130 kg × 3", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Pablo Nieto", "iniciales": "PN", "color": "ascua", "edad": 33, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Entreno a mediodía porque es cuando puedo escaparme del trabajo, y voy con el tiempo justo: hora y media contando ducha. Eso significa poco descanso y nada de charla, que no es por antipatía.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo a mediodía escapándome del trabajo, con el tiempo justo: hora y media contando ducha. Eso es poco descanso y nada de charla, y no es por antipatía. Busco a alguien con la misma prisa, que si no acabo viniendo solo.",
  "horarios": "Lunes 13:00-14:30 (fijo) · Miércoles 13:00-14:30 (fijo)", "marcas": "Press de banca 85 kg × 5", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Diego Salas", "iniciales": "DS", "color": "pizarra", "edad": 34, "nivel": "Avanzado",
- "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Empuje/tirón/pierna, y entreno a las siete de la mañana porque es la única hora en la que nadie me cambia los planes. A esa hora el gimnasio está vacío y se puede entrenar de verdad.",
+ "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Entreno a las siete de la mañana porque es la única hora que nadie me toca. A esa hora no hay nadie y se está bien. Busco a alguien que aguante madrugar, que es la parte difícil; lo demás se apaña sobre la marcha.",
  "horarios": "Jueves 07:00-09:00 (fijo) · Martes 07:00-09:00 (fijo) · Miércoles 19:00-20:30", "marcas": "Peso muerto 200 kg × 1 · Press de banca 115 kg × 3", "constancia": "23 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 48, "puntosB": 44, "motivo": "cercanos"},
 {"juez": {"nombre": "Alex Moreno", "iniciales": "AM", "color": "ascua", "edad": 28, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años entrenando en serio y ya he pasado la fase de venir cuando me apetece. Lo que busco es alguien que no falle: prefiero un compañero más flojo que aparezca siempre a uno fuerte que cancele la mitad de las semanas.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años en esto y ya se me pasó la fase de venir solo cuando me apetece. Prefiero alguien más flojo que aparezca siempre a uno fuerte que cancele media semana. Y agradezco que me metan prisa: si me dejan, me quedo con el móvil entre series.",
  "horarios": "Lunes 18:00-20:00 (fijo) · Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:30", "marcas": "Peso muerto 160 kg × 2 · Press de banca 90 kg × 5 · Sentadilla 130 kg × 3", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Diego Salas", "iniciales": "DS", "color": "pizarra", "edad": 34, "nivel": "Avanzado",
- "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Empuje/tirón/pierna, y entreno a las siete de la mañana porque es la única hora en la que nadie me cambia los planes. A esa hora el gimnasio está vacío y se puede entrenar de verdad.",
+ "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Entreno a las siete de la mañana porque es la única hora que nadie me toca. A esa hora no hay nadie y se está bien. Busco a alguien que aguante madrugar, que es la parte difícil; lo demás se apaña sobre la marcha.",
  "horarios": "Jueves 07:00-09:00 (fijo) · Martes 07:00-09:00 (fijo) · Miércoles 19:00-20:30", "marcas": "Peso muerto 200 kg × 1 · Press de banca 115 kg × 3", "constancia": "23 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Tomás Gil", "iniciales": "TG", "color": "pizarra", "edad": null, "nivel": "Intermedio",
  "objetivo": "", "rutina": "—", "gimnasio": "McFit Madrid Centro", "bio": ",                 null, centro, null, ",
  "horarios": "Lunes 18:00-20:00", "marcas": "sin marcas apuntadas", "constancia": "sin entrenamientos apuntados"}, "puntosA": 44, "puntosB": 35, "motivo": "factores enfrentados"},
 {"juez": {"nombre": "Alex Moreno", "iniciales": "AM", "color": "ascua", "edad": 28, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años entrenando en serio y ya he pasado la fase de venir cuando me apetece. Lo que busco es alguien que no falle: prefiero un compañero más flojo que aparezca siempre a uno fuerte que cancele la mitad de las semanas.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años en esto y ya se me pasó la fase de venir solo cuando me apetece. Prefiero alguien más flojo que aparezca siempre a uno fuerte que cancele media semana. Y agradezco que me metan prisa: si me dejan, me quedo con el móvil entre series.",
  "horarios": "Lunes 18:00-20:00 (fijo) · Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:30", "marcas": "Peso muerto 160 kg × 2 · Press de banca 90 kg × 5 · Sentadilla 130 kg × 3", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Tomás Gil", "iniciales": "TG", "color": "pizarra", "edad": null, "nivel": "Intermedio",
  "objetivo": "", "rutina": "—", "gimnasio": "McFit Madrid Centro", "bio": ",                 null, centro, null, ",
  "horarios": "Lunes 18:00-20:00", "marcas": "sin marcas apuntadas", "constancia": "sin entrenamientos apuntados"}, "b": {"nombre": "Lucía Ferrer", "iniciales": "LF", "color": "ambar", "edad": 25, "nivel": "Principiante",
- "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara.",
+ "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da corte la zona donde están los que van en serio. Acabo escondiéndome en las máquinas aunque sé que no me conviene. Busco a alguien con paciencia que me deje preguntar tonterías sin poner cara.",
  "horarios": "Jueves 19:00-21:00 · Lunes 19:00-21:00", "marcas": "Press de banca 30 kg × 8 · Sentadilla 45 kg × 8", "constancia": "sin entrenamientos apuntados"}, "puntosA": 35, "puntosB": 32, "motivo": "cercanos"},
 {"juez": {"nombre": "Alex Moreno", "iniciales": "AM", "color": "ascua", "edad": 28, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años entrenando en serio y ya he pasado la fase de venir cuando me apetece. Lo que busco es alguien que no falle: prefiero un compañero más flojo que aparezca siempre a uno fuerte que cancele la mitad de las semanas.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Llevo dos años en esto y ya se me pasó la fase de venir solo cuando me apetece. Prefiero alguien más flojo que aparezca siempre a uno fuerte que cancele media semana. Y agradezco que me metan prisa: si me dejan, me quedo con el móvil entre series.",
  "horarios": "Lunes 18:00-20:00 (fijo) · Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:30", "marcas": "Peso muerto 160 kg × 2 · Press de banca 90 kg × 5 · Sentadilla 130 kg × 3", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Lucía Ferrer", "iniciales": "LF", "color": "ambar", "edad": 25, "nivel": "Principiante",
- "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara.",
+ "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da corte la zona donde están los que van en serio. Acabo escondiéndome en las máquinas aunque sé que no me conviene. Busco a alguien con paciencia que me deje preguntar tonterías sin poner cara.",
  "horarios": "Jueves 19:00-21:00 · Lunes 19:00-21:00", "marcas": "Press de banca 30 kg × 8 · Sentadilla 45 kg × 8", "constancia": "sin entrenamientos apuntados"}, "b": {"nombre": "Elena Sanz", "iniciales": "ES", "color": "oliva", "edad": 38, "nivel": "Avanzado",
- "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Compito en -63 y entreno de mañana porque por la tarde no rindo. Estoy en una planificación cerrada, así que no puedo cambiarla para adaptarme a nadie: quien entrene conmigo tiene que ir a lo suyo en paralelo.",
+ "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Compito, así que sigo un plan cerrado que no puedo cambiar para adaptarme a nadie: quien venga conmigo tiene que ir a lo suyo en paralelo. A cambio no falto nunca y sé asegurar bien cuando hace falta.",
  "horarios": "Martes 08:00-10:00 (fijo) · Viernes 08:00-10:00 (fijo)", "marcas": "Peso muerto 145 kg × 1 · Sentadilla 120 kg × 2", "constancia": "23 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 32, "puntosB": 30, "motivo": "cercanos"},
 {"juez": {"nombre": "Lucía Ferrer", "iniciales": "LF", "color": "ambar", "edad": 25, "nivel": "Principiante",
- "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara.",
+ "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da corte la zona donde están los que van en serio. Acabo escondiéndome en las máquinas aunque sé que no me conviene. Busco a alguien con paciencia que me deje preguntar tonterías sin poner cara.",
  "horarios": "Jueves 19:00-21:00 · Lunes 19:00-21:00", "marcas": "Press de banca 30 kg × 8 · Sentadilla 45 kg × 8", "constancia": "sin entrenamientos apuntados"}, "a": {"nombre": "Hugo Bermejo", "iniciales": "HB", "color": "ascua", "edad": 22, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Weider (un grupo por día)", "gimnasio": "McFit Madrid Centro", "bio": "Un grupo por día, sin prisa, y sí, pecho los lunes como todo el mundo. Llevo años así y no pienso cambiarlo. Vengo también a despejarme, así que me gusta charlar entre series; si buscas a alguien que te cronometre los descansos, no soy yo.",
+ "objetivo": "Hipertrofia", "rutina": "Weider (un grupo por día)", "gimnasio": "McFit Madrid Centro", "bio": "Llevo años con la misma rutina y no pienso cambiarla. Vengo tanto a entrenar como a despejarme, así que me gusta charlar entre series. Si buscas a alguien que te cronometre los descansos y no abra la boca, no soy yo.",
  "horarios": "Lunes 19:00-21:00 (fijo) · Martes 19:00-21:00", "marcas": "Press de banca 80 kg × 6 · Remo con barra 70 kg × 8", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Javi Ortega", "iniciales": "JO", "color": "acero", "edad": 30, "nivel": "Intermedio",
- "objetivo": "Fuerza", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del powerlifting y sigo entrenando como si compitiera: series de tres a cinco, descansos largos y mucha barra. Necesito a alguien que pueda con mi banca para las series pesadas, porque solo no las saco.",
+ "objetivo": "Fuerza", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo de competir y sigo entrenando como si compitiera: mucho peso, pocas repeticiones y descansos largos. Necesito a alguien que pueda ayudarme en las series fuertes, solo no las saco. Aviso: soy pesado con la técnica y no me callo si veo que alguien va a hacerse daño.",
  "horarios": "Lunes 18:00-20:00 (fijo) · Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:00 (fijo)", "marcas": "Peso muerto 180 kg × 1 · Press de banca 100 kg × 3 · Sentadilla 145 kg × 2", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 31, "puntosB": 30, "motivo": "cercanos"},
 {"juez": {"nombre": "Lucía Ferrer", "iniciales": "LF", "color": "ambar", "edad": 25, "nivel": "Principiante",
- "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara.",
+ "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da corte la zona donde están los que van en serio. Acabo escondiéndome en las máquinas aunque sé que no me conviene. Busco a alguien con paciencia que me deje preguntar tonterías sin poner cara.",
  "horarios": "Jueves 19:00-21:00 · Lunes 19:00-21:00", "marcas": "Press de banca 30 kg × 8 · Sentadilla 45 kg × 8", "constancia": "sin entrenamientos apuntados"}, "a": {"nombre": "Javi Ortega", "iniciales": "JO", "color": "acero", "edad": 30, "nivel": "Intermedio",
- "objetivo": "Fuerza", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del powerlifting y sigo entrenando como si compitiera: series de tres a cinco, descansos largos y mucha barra. Necesito a alguien que pueda con mi banca para las series pesadas, porque solo no las saco.",
+ "objetivo": "Fuerza", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo de competir y sigo entrenando como si compitiera: mucho peso, pocas repeticiones y descansos largos. Necesito a alguien que pueda ayudarme en las series fuertes, solo no las saco. Aviso: soy pesado con la técnica y no me callo si veo que alguien va a hacerse daño.",
  "horarios": "Lunes 18:00-20:00 (fijo) · Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:00 (fijo)", "marcas": "Peso muerto 180 kg × 1 · Press de banca 100 kg × 3 · Sentadilla 145 kg × 2", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Noa Prieto", "iniciales": "NP", "color": "oliva", "edad": 29, "nivel": "Intermedio",
- "objetivo": "Resistencia", "rutina": "Sin rutina fija", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del running y este año he empezado a meter fuerza porque me lesionaba. No tengo una rutina cerrada y me da bastante igual lo que toque: me amoldo a lo que entrene el otro, que además así aprendo.",
+ "objetivo": "Resistencia", "rutina": "Sin rutina fija", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del running y este año he empezado con las pesas porque me lesionaba. No tengo un plan cerrado y me da bastante igual lo que toque: me adapto a lo que haga el otro y así aprendo. Eso sí, no quiero meterme en nada demasiado serio.",
  "horarios": "Miércoles 18:00-19:30 · Viernes 18:00-20:00", "marcas": "Sentadilla 70 kg × 6", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 30, "puntosB": 26, "motivo": "cercanos"},
 {"juez": {"nombre": "Lucía Ferrer", "iniciales": "LF", "color": "ambar", "edad": 25, "nivel": "Principiante",
- "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara.",
+ "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da corte la zona donde están los que van en serio. Acabo escondiéndome en las máquinas aunque sé que no me conviene. Busco a alguien con paciencia que me deje preguntar tonterías sin poner cara.",
  "horarios": "Jueves 19:00-21:00 · Lunes 19:00-21:00", "marcas": "Press de banca 30 kg × 8 · Sentadilla 45 kg × 8", "constancia": "sin entrenamientos apuntados"}, "a": {"nombre": "Noa Prieto", "iniciales": "NP", "color": "oliva", "edad": 29, "nivel": "Intermedio",
- "objetivo": "Resistencia", "rutina": "Sin rutina fija", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del running y este año he empezado a meter fuerza porque me lesionaba. No tengo una rutina cerrada y me da bastante igual lo que toque: me amoldo a lo que entrene el otro, que además así aprendo.",
+ "objetivo": "Resistencia", "rutina": "Sin rutina fija", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del running y este año he empezado con las pesas porque me lesionaba. No tengo un plan cerrado y me da bastante igual lo que toque: me adapto a lo que haga el otro y así aprendo. Eso sí, no quiero meterme en nada demasiado serio.",
  "horarios": "Miércoles 18:00-19:30 · Viernes 18:00-20:00", "marcas": "Sentadilla 70 kg × 6", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Carmen Vidal", "iniciales": "CV", "color": "ciruela", "edad": 31, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Entreno en Chamberí casi siempre por la tarde, aunque si hace falta me muevo a otro sitio sin problema —vivo a medio camino entre dos gimnasios—.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Voy por la tarde, y si hace falta me muevo de sitio sin problema porque vivo entre dos. Voy a mi ritmo, ni compito ni pretendo. Lo único que quiero es no volver a dejarlo como me pasó hace dos años.",
  "horarios": "Jueves 18:00-20:00 (fijo) · Lunes 18:00-20:00 (fijo)", "marcas": "Hip thrust 120 kg × 8 · Sentadilla 90 kg × 5", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 26, "puntosB": 26, "motivo": "cercanos"},
 {"juez": {"nombre": "Lucía Ferrer", "iniciales": "LF", "color": "ambar", "edad": 25, "nivel": "Principiante",
- "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara.",
+ "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da corte la zona donde están los que van en serio. Acabo escondiéndome en las máquinas aunque sé que no me conviene. Busco a alguien con paciencia que me deje preguntar tonterías sin poner cara.",
  "horarios": "Jueves 19:00-21:00 · Lunes 19:00-21:00", "marcas": "Press de banca 30 kg × 8 · Sentadilla 45 kg × 8", "constancia": "sin entrenamientos apuntados"}, "a": {"nombre": "Carmen Vidal", "iniciales": "CV", "color": "ciruela", "edad": 31, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Entreno en Chamberí casi siempre por la tarde, aunque si hace falta me muevo a otro sitio sin problema —vivo a medio camino entre dos gimnasios—.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Voy por la tarde, y si hace falta me muevo de sitio sin problema porque vivo entre dos. Voy a mi ritmo, ni compito ni pretendo. Lo único que quiero es no volver a dejarlo como me pasó hace dos años.",
  "horarios": "Jueves 18:00-20:00 (fijo) · Lunes 18:00-20:00 (fijo)", "marcas": "Hip thrust 120 kg × 8 · Sentadilla 90 kg × 5", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Rubén Casas", "iniciales": "RC", "color": "acero", "edad": 26, "nivel": "Principiante",
- "objetivo": "Hipertrofia", "rutina": "Cuerpo completo", "gimnasio": "Altafit Retiro", "bio": "Me acabo de mudar al barrio y no conozco a nadie, así que más que un compañero de entreno busco no venir solo. Entreno de todo un poco y me adapto sin problema al plan de otro.",
+ "objetivo": "Hipertrofia", "rutina": "Cuerpo completo", "gimnasio": "Altafit Retiro", "bio": "Me acabo de mudar al barrio y no conozco a nadie, así que más que un compañero busco no venir solo. Hago un poco de todo y me adapto al plan de otro sin problema. Voy justito de nivel, aviso, pero vengo cuando digo que vengo.",
  "horarios": "Martes 20:00-22:00 · Sábado 11:00-13:00", "marcas": "sin marcas apuntadas", "constancia": "sin entrenamientos apuntados"}, "puntosA": 26, "puntosB": 26, "motivo": "cercanos"},
 {"juez": {"nombre": "Hugo Bermejo", "iniciales": "HB", "color": "ascua", "edad": 22, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Weider (un grupo por día)", "gimnasio": "McFit Madrid Centro", "bio": "Un grupo por día, sin prisa, y sí, pecho los lunes como todo el mundo. Llevo años así y no pienso cambiarlo. Vengo también a despejarme, así que me gusta charlar entre series; si buscas a alguien que te cronometre los descansos, no soy yo.",
+ "objetivo": "Hipertrofia", "rutina": "Weider (un grupo por día)", "gimnasio": "McFit Madrid Centro", "bio": "Llevo años con la misma rutina y no pienso cambiarla. Vengo tanto a entrenar como a despejarme, así que me gusta charlar entre series. Si buscas a alguien que te cronometre los descansos y no abra la boca, no soy yo.",
  "horarios": "Lunes 19:00-21:00 (fijo) · Martes 19:00-21:00", "marcas": "Press de banca 80 kg × 6 · Remo con barra 70 kg × 8", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Sara Ollero", "iniciales": "SO", "color": "oliva", "edad": 27, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vuelvo después de una lesión de hombro. Voy con calma en empuje.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vuelvo de una lesión de hombro y voy con mucho cuidado. Sigo lo que me dijo el fisio, así que hay cosas que no voy a hacer aunque me digan que ya estoy bien. Busco a alguien tranquilo que no me anime a levantar de más.",
  "horarios": "Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:00", "marcas": "Press de banca 50 kg × 8 · Sentadilla 100 kg × 5", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Lucía Ferrer", "iniciales": "LF", "color": "ambar", "edad": 25, "nivel": "Principiante",
- "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara.",
+ "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da corte la zona donde están los que van en serio. Acabo escondiéndome en las máquinas aunque sé que no me conviene. Busco a alguien con paciencia que me deje preguntar tonterías sin poner cara.",
  "horarios": "Jueves 19:00-21:00 · Lunes 19:00-21:00", "marcas": "Press de banca 30 kg × 8 · Sentadilla 45 kg × 8", "constancia": "sin entrenamientos apuntados"}, "puntosA": 38, "puntosB": 31, "motivo": "cercanos"},
 {"juez": {"nombre": "Hugo Bermejo", "iniciales": "HB", "color": "ascua", "edad": 22, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Weider (un grupo por día)", "gimnasio": "McFit Madrid Centro", "bio": "Un grupo por día, sin prisa, y sí, pecho los lunes como todo el mundo. Llevo años así y no pienso cambiarlo. Vengo también a despejarme, así que me gusta charlar entre series; si buscas a alguien que te cronometre los descansos, no soy yo.",
+ "objetivo": "Hipertrofia", "rutina": "Weider (un grupo por día)", "gimnasio": "McFit Madrid Centro", "bio": "Llevo años con la misma rutina y no pienso cambiarla. Vengo tanto a entrenar como a despejarme, así que me gusta charlar entre series. Si buscas a alguien que te cronometre los descansos y no abra la boca, no soy yo.",
  "horarios": "Lunes 19:00-21:00 (fijo) · Martes 19:00-21:00", "marcas": "Press de banca 80 kg × 6 · Remo con barra 70 kg × 8", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Lucía Ferrer", "iniciales": "LF", "color": "ambar", "edad": 25, "nivel": "Principiante",
- "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da respeto la zona de peso libre: acabo yendo a las máquinas aunque sé que no es lo que más me conviene. Lo que necesito es alguien con paciencia que me deje preguntar tonterías sin poner cara.",
+ "objetivo": "Pérdida de peso", "rutina": "Cuerpo completo", "gimnasio": "McFit Madrid Centro", "bio": "Empecé en enero y todavía me da corte la zona donde están los que van en serio. Acabo escondiéndome en las máquinas aunque sé que no me conviene. Busco a alguien con paciencia que me deje preguntar tonterías sin poner cara.",
  "horarios": "Jueves 19:00-21:00 · Lunes 19:00-21:00", "marcas": "Press de banca 30 kg × 8 · Sentadilla 45 kg × 8", "constancia": "sin entrenamientos apuntados"}, "b": {"nombre": "Tomás Gil", "iniciales": "TG", "color": "pizarra", "edad": null, "nivel": "Intermedio",
  "objetivo": "", "rutina": "—", "gimnasio": "McFit Madrid Centro", "bio": ",                 null, centro, null, ",
  "horarios": "Lunes 18:00-20:00", "marcas": "sin marcas apuntadas", "constancia": "sin entrenamientos apuntados"}, "puntosA": 31, "puntosB": 31, "motivo": "cercanos"},
 {"juez": {"nombre": "Hugo Bermejo", "iniciales": "HB", "color": "ascua", "edad": 22, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Weider (un grupo por día)", "gimnasio": "McFit Madrid Centro", "bio": "Un grupo por día, sin prisa, y sí, pecho los lunes como todo el mundo. Llevo años así y no pienso cambiarlo. Vengo también a despejarme, así que me gusta charlar entre series; si buscas a alguien que te cronometre los descansos, no soy yo.",
+ "objetivo": "Hipertrofia", "rutina": "Weider (un grupo por día)", "gimnasio": "McFit Madrid Centro", "bio": "Llevo años con la misma rutina y no pienso cambiarla. Vengo tanto a entrenar como a despejarme, así que me gusta charlar entre series. Si buscas a alguien que te cronometre los descansos y no abra la boca, no soy yo.",
  "horarios": "Lunes 19:00-21:00 (fijo) · Martes 19:00-21:00", "marcas": "Press de banca 80 kg × 6 · Remo con barra 70 kg × 8", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Tomás Gil", "iniciales": "TG", "color": "pizarra", "edad": null, "nivel": "Intermedio",
  "objetivo": "", "rutina": "—", "gimnasio": "McFit Madrid Centro", "bio": ",                 null, centro, null, ",
  "horarios": "Lunes 18:00-20:00", "marcas": "sin marcas apuntadas", "constancia": "sin entrenamientos apuntados"}, "b": {"nombre": "Diego Salas", "iniciales": "DS", "color": "pizarra", "edad": 34, "nivel": "Avanzado",
- "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Empuje/tirón/pierna, y entreno a las siete de la mañana porque es la única hora en la que nadie me cambia los planes. A esa hora el gimnasio está vacío y se puede entrenar de verdad.",
+ "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Entreno a las siete de la mañana porque es la única hora que nadie me toca. A esa hora no hay nadie y se está bien. Busco a alguien que aguante madrugar, que es la parte difícil; lo demás se apaña sobre la marcha.",
  "horarios": "Jueves 07:00-09:00 (fijo) · Martes 07:00-09:00 (fijo) · Miércoles 19:00-20:30", "marcas": "Peso muerto 200 kg × 1 · Press de banca 115 kg × 3", "constancia": "23 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 31, "puntosB": 29, "motivo": "cercanos"},
 {"juez": {"nombre": "Elena Sanz", "iniciales": "ES", "color": "oliva", "edad": 38, "nivel": "Avanzado",
- "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Compito en -63 y entreno de mañana porque por la tarde no rindo. Estoy en una planificación cerrada, así que no puedo cambiarla para adaptarme a nadie: quien entrene conmigo tiene que ir a lo suyo en paralelo.",
+ "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Compito, así que sigo un plan cerrado que no puedo cambiar para adaptarme a nadie: quien venga conmigo tiene que ir a lo suyo en paralelo. A cambio no falto nunca y sé asegurar bien cuando hace falta.",
  "horarios": "Martes 08:00-10:00 (fijo) · Viernes 08:00-10:00 (fijo)", "marcas": "Peso muerto 145 kg × 1 · Sentadilla 120 kg × 2", "constancia": "23 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Diego Salas", "iniciales": "DS", "color": "pizarra", "edad": 34, "nivel": "Avanzado",
- "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Empuje/tirón/pierna, y entreno a las siete de la mañana porque es la única hora en la que nadie me cambia los planes. A esa hora el gimnasio está vacío y se puede entrenar de verdad.",
+ "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Entreno a las siete de la mañana porque es la única hora que nadie me toca. A esa hora no hay nadie y se está bien. Busco a alguien que aguante madrugar, que es la parte difícil; lo demás se apaña sobre la marcha.",
  "horarios": "Jueves 07:00-09:00 (fijo) · Martes 07:00-09:00 (fijo) · Miércoles 19:00-20:30", "marcas": "Peso muerto 200 kg × 1 · Press de banca 115 kg × 3", "constancia": "23 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Carmen Vidal", "iniciales": "CV", "color": "ciruela", "edad": 31, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Entreno en Chamberí casi siempre por la tarde, aunque si hace falta me muevo a otro sitio sin problema —vivo a medio camino entre dos gimnasios—.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Voy por la tarde, y si hace falta me muevo de sitio sin problema porque vivo entre dos. Voy a mi ritmo, ni compito ni pretendo. Lo único que quiero es no volver a dejarlo como me pasó hace dos años.",
  "horarios": "Jueves 18:00-20:00 (fijo) · Lunes 18:00-20:00 (fijo)", "marcas": "Hip thrust 120 kg × 8 · Sentadilla 90 kg × 5", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 49, "puntosB": 36, "motivo": "factores enfrentados"},
 {"juez": {"nombre": "Elena Sanz", "iniciales": "ES", "color": "oliva", "edad": 38, "nivel": "Avanzado",
- "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Compito en -63 y entreno de mañana porque por la tarde no rindo. Estoy en una planificación cerrada, así que no puedo cambiarla para adaptarme a nadie: quien entrene conmigo tiene que ir a lo suyo en paralelo.",
+ "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Compito, así que sigo un plan cerrado que no puedo cambiar para adaptarme a nadie: quien venga conmigo tiene que ir a lo suyo en paralelo. A cambio no falto nunca y sé asegurar bien cuando hace falta.",
  "horarios": "Martes 08:00-10:00 (fijo) · Viernes 08:00-10:00 (fijo)", "marcas": "Peso muerto 145 kg × 1 · Sentadilla 120 kg × 2", "constancia": "23 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Carmen Vidal", "iniciales": "CV", "color": "ciruela", "edad": 31, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Entreno en Chamberí casi siempre por la tarde, aunque si hace falta me muevo a otro sitio sin problema —vivo a medio camino entre dos gimnasios—.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Voy por la tarde, y si hace falta me muevo de sitio sin problema porque vivo entre dos. Voy a mi ritmo, ni compito ni pretendo. Lo único que quiero es no volver a dejarlo como me pasó hace dos años.",
  "horarios": "Jueves 18:00-20:00 (fijo) · Lunes 18:00-20:00 (fijo)", "marcas": "Hip thrust 120 kg × 8 · Sentadilla 90 kg × 5", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Javi Ortega", "iniciales": "JO", "color": "acero", "edad": 30, "nivel": "Intermedio",
- "objetivo": "Fuerza", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del powerlifting y sigo entrenando como si compitiera: series de tres a cinco, descansos largos y mucha barra. Necesito a alguien que pueda con mi banca para las series pesadas, porque solo no las saco.",
+ "objetivo": "Fuerza", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo de competir y sigo entrenando como si compitiera: mucho peso, pocas repeticiones y descansos largos. Necesito a alguien que pueda ayudarme en las series fuertes, solo no las saco. Aviso: soy pesado con la técnica y no me callo si veo que alguien va a hacerse daño.",
  "horarios": "Lunes 18:00-20:00 (fijo) · Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:00 (fijo)", "marcas": "Peso muerto 180 kg × 1 · Press de banca 100 kg × 3 · Sentadilla 145 kg × 2", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 36, "puntosB": 32, "motivo": "cercanos"},
 {"juez": {"nombre": "Sara Ollero", "iniciales": "SO", "color": "oliva", "edad": 27, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vuelvo después de una lesión de hombro. Voy con calma en empuje.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vuelvo de una lesión de hombro y voy con mucho cuidado. Sigo lo que me dijo el fisio, así que hay cosas que no voy a hacer aunque me digan que ya estoy bien. Busco a alguien tranquilo que no me anime a levantar de más.",
  "horarios": "Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:00", "marcas": "Press de banca 50 kg × 8 · Sentadilla 100 kg × 5", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Noa Prieto", "iniciales": "NP", "color": "oliva", "edad": 29, "nivel": "Intermedio",
- "objetivo": "Resistencia", "rutina": "Sin rutina fija", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del running y este año he empezado a meter fuerza porque me lesionaba. No tengo una rutina cerrada y me da bastante igual lo que toque: me amoldo a lo que entrene el otro, que además así aprendo.",
+ "objetivo": "Resistencia", "rutina": "Sin rutina fija", "gimnasio": "McFit Madrid Centro", "bio": "Vengo del running y este año he empezado con las pesas porque me lesionaba. No tengo un plan cerrado y me da bastante igual lo que toque: me adapto a lo que haga el otro y así aprendo. Eso sí, no quiero meterme en nada demasiado serio.",
  "horarios": "Miércoles 18:00-19:30 · Viernes 18:00-20:00", "marcas": "Sentadilla 70 kg × 6", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Carmen Vidal", "iniciales": "CV", "color": "ciruela", "edad": 31, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Entreno en Chamberí casi siempre por la tarde, aunque si hace falta me muevo a otro sitio sin problema —vivo a medio camino entre dos gimnasios—.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "Basic-Fit Chamberí", "bio": "Voy por la tarde, y si hace falta me muevo de sitio sin problema porque vivo entre dos. Voy a mi ritmo, ni compito ni pretendo. Lo único que quiero es no volver a dejarlo como me pasó hace dos años.",
  "horarios": "Jueves 18:00-20:00 (fijo) · Lunes 18:00-20:00 (fijo)", "marcas": "Hip thrust 120 kg × 8 · Sentadilla 90 kg × 5", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 55, "puntosB": 45, "motivo": "factores enfrentados"},
 {"juez": {"nombre": "Sara Ollero", "iniciales": "SO", "color": "oliva", "edad": 27, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vuelvo después de una lesión de hombro. Voy con calma en empuje.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vuelvo de una lesión de hombro y voy con mucho cuidado. Sigo lo que me dijo el fisio, así que hay cosas que no voy a hacer aunque me digan que ya estoy bien. Busco a alguien tranquilo que no me anime a levantar de más.",
  "horarios": "Miércoles 18:00-20:00 (fijo) · Viernes 18:00-20:00", "marcas": "Press de banca 50 kg × 8 · Sentadilla 100 kg × 5", "constancia": "12 entrenamientos el último mes (se propone 4 por semana)"}, "a": {"nombre": "Pablo Nieto", "iniciales": "PN", "color": "ascua", "edad": 33, "nivel": "Intermedio",
- "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Entreno a mediodía porque es cuando puedo escaparme del trabajo, y voy con el tiempo justo: hora y media contando ducha. Eso significa poco descanso y nada de charla, que no es por antipatía.",
+ "objetivo": "Hipertrofia", "rutina": "Torso / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Vengo a mediodía escapándome del trabajo, con el tiempo justo: hora y media contando ducha. Eso es poco descanso y nada de charla, y no es por antipatía. Busco a alguien con la misma prisa, que si no acabo viniendo solo.",
  "horarios": "Lunes 13:00-14:30 (fijo) · Miércoles 13:00-14:30 (fijo)", "marcas": "Press de banca 85 kg × 5", "constancia": "8 entrenamientos el último mes (se propone 4 por semana)"}, "b": {"nombre": "Diego Salas", "iniciales": "DS", "color": "pizarra", "edad": 34, "nivel": "Avanzado",
- "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Empuje/tirón/pierna, y entreno a las siete de la mañana porque es la única hora en la que nadie me cambia los planes. A esa hora el gimnasio está vacío y se puede entrenar de verdad.",
+ "objetivo": "Fuerza", "rutina": "Empuje / Tirón / Pierna", "gimnasio": "McFit Madrid Centro", "bio": "Entreno a las siete de la mañana porque es la única hora que nadie me toca. A esa hora no hay nadie y se está bien. Busco a alguien que aguante madrugar, que es la parte difícil; lo demás se apaña sobre la marcha.",
  "horarios": "Jueves 07:00-09:00 (fijo) · Martes 07:00-09:00 (fijo) · Miércoles 19:00-20:30", "marcas": "Peso muerto 200 kg × 1 · Press de banca 115 kg × 3", "constancia": "23 entrenamientos el último mes (se propone 4 por semana)"}, "puntosA": 41, "puntosB": 40, "motivo": "cercanos"}
 ];
 
@@ -252,7 +274,7 @@ function ficha(p, lado) {
         <dt>Marcas</dt><dd>${p.marcas}</dd>
       </dl>
       <p class="bio">«${p.bio}»</p>
-      <button class="elegir" data-lado="${lado}">Entrenaría con ${p.nombre.split(' ')[0]}</button>
+      <button class="elegir" data-lado="${lado}">Le encaja mejor ${p.nombre.split(' ')[0]}</button>
     </article>`;
 }
 
@@ -270,24 +292,37 @@ function pintar() {
 
   pantalla.innerHTML = `
     <section class="tu">
-      <h2>Eres ${c.juez.nombre} — comparación ${actual + 1} de ${orden.length}</h2>
+      <h2>${c.juez.nombre} busca compañero — ${actual + 1} de ${orden.length}</h2>
       <p><strong>${c.juez.nivel}</strong> · ${c.juez.objetivo} · ${c.juez.rutina} · ${c.juez.gimnasio}</p>
       <p>${c.juez.constancia}</p>
-      <p>Tus marcas: ${c.juez.marcas}</p>
+      <p>Sus marcas: ${c.juez.marcas}</p>
       <p>${c.juez.horarios}</p>
       <p class="bio">«${c.juez.bio}»</p>
     </section>
     <div class="pareja">${ficha(izq, alReves ? 'b' : 'a')}${ficha(der, alReves ? 'a' : 'b')}</div>
-    <button class="ninguna">No sabría decidir</button>`;
+    <button class="ninguna">Los dos igual / no sabría decidir</button>`;
 
   pantalla.querySelectorAll('.elegir').forEach(b =>
     b.onclick = () => responder(b.dataset.lado, alReves));
   pantalla.querySelector('.ninguna').onclick = () => responder('ninguna', alReves);
 }
 
+// Las cuatro cosas en las que se puede apoyar una decisión, que son las mismas
+// que reparte el motor. Aquí no se pregunta cuánto encajan: se pregunta EN QUÉ
+// se fijó quien contesta, y eso es lo que se puede comparar con el reparto de
+// pesos — 40 al horario, 6 a lo escrito. Es además la única pregunta del
+// cuadernillo que se contesta igual de bien sin haber pisado un gimnasio.
+const APOYOS = [
+  ['horario', 'Cuándo pueden entrenar'],
+  ['texto', 'Lo que cuentan de sí mismos'],
+  ['nivel', 'El nivel y la fuerza'],
+  ['sitio', 'El gimnasio y la rutina'],
+];
+
 function responder(elegido, alReves) {
   const c = COMPARACIONES[orden[actual]];
-  respuestas.push({
+
+  const pendiente = {
     juez: c.juez.nombre,
     a: c.a.nombre, b: c.b.nombre,
     // Se guarda lo que dijo el motor para poder comparar después, pero nunca se
@@ -295,8 +330,35 @@ function responder(elegido, alReves) {
     puntosA: c.puntosA, puntosB: c.puntosB,
     motivo: c.motivo,
     elegido,
-    izquierdaFue: alReves ? 'b' : 'a'
+    izquierdaFue: alReves ? 'b' : 'a',
+    apoyo: ''
+  };
+
+  // A quien no ha sabido decidir no se le pregunta en qué se apoyó: no se apoyó
+  // en nada, y obligarle a elegir algo inventaría el dato.
+  if (elegido === 'ninguna') return guardarYSeguir(pendiente);
+
+  const zona = document.createElement('div');
+  zona.className = 'porque';
+  zona.innerHTML = '<p><strong>¿Qué ha pesado más en tu decisión?</strong></p>'
+    + '<div class="opciones">'
+    + APOYOS.map(([k, t]) => `<button data-apoyo="${k}">${t}</button>`).join('')
+    + '<button data-apoyo="mezcla">Un poco de todo</button></div>';
+
+  pantalla.appendChild(zona);
+  zona.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+
+  // El resto se desactiva para que no se pueda cambiar la elección a medias.
+  pantalla.querySelectorAll('.elegir, .ninguna').forEach(b => b.disabled = true);
+
+  zona.querySelectorAll('[data-apoyo]').forEach(b => b.onclick = () => {
+    pendiente.apoyo = b.dataset.apoyo;
+    guardarYSeguir(pendiente);
   });
+}
+
+function guardarYSeguir(respuesta) {
+  respuestas.push(respuesta);
   actual++;
   pintar();
 }
@@ -304,11 +366,10 @@ function responder(elegido, alReves) {
 function terminar() {
   progreso.style.width = '100%';
 
-  const csv = ['juez,a,b,puntosA,puntosB,motivo,elegido,izquierdaFue']
-    .concat(respuestas.map(r => [r.juez, r.a, r.b, r.puntosA, r.puntosB,
-                                 r.motivo, r.elegido, r.izquierdaFue].join(',')))
-    .join('
-');
+  const csv = ['quienContesta,juez,a,b,puntosA,puntosB,motivo,elegido,apoyo,izquierdaFue']
+    .concat(respuestas.map(r => [quienContesta, r.juez, r.a, r.b, r.puntosA, r.puntosB,
+                                 r.motivo, r.elegido, r.apoyo, r.izquierdaFue].join(',')))
+    .join('\n');
 
   // Se intenta guardar en el registro compartido, que es lo que hace que las
   // respuestas lleguen solas. Puede no estar permitido —quien abre un enlace
@@ -320,8 +381,8 @@ function terminar() {
     const sesion = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     respuestas.forEach(r => {
       lista.insertAdjacentHTML('beforeend',
-        '<li>' + [sesion, r.juez, r.a, r.b, r.puntosA, r.puntosB,
-                  r.motivo, r.elegido, r.izquierdaFue].join(' | ') + '</li>');
+        '<li>' + [sesion, quienContesta, r.juez, r.a, r.b, r.puntosA, r.puntosB,
+                  r.motivo, r.elegido, r.apoyo, r.izquierdaFue].join(' | ') + '</li>');
     });
     guardado = lista.children.length > 0;
   } catch (e) {
@@ -346,7 +407,14 @@ function terminar() {
   };
 }
 
-pintar();
+let quienContesta = '';
+
+document.querySelectorAll('#antes [data-perfil]').forEach(b => b.onclick = () => {
+  quienContesta = b.dataset.perfil;
+  document.getElementById('antes').remove();
+  document.querySelector('.barra').hidden = false;
+  pintar();
+});
 </script>
 </body>
 </html>
